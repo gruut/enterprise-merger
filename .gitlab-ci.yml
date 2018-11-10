@@ -9,6 +9,8 @@ build:
   before_script:
     - apt-get update -y && apt-get upgrade -y
     - apt-get install -y python3 python3-pip clang-tidy clang-6.0 lld-6.0
+    #  boost
+    - apt-get install -y libboost1.65-all-dev
     - pip3 install cmake
   script:
     - mkdir -p build && cd build
@@ -25,4 +27,4 @@ build:
       else
         echo -e "\033[1;32m\xE2\x9C\x93 passed:\033[0m $1";
       fi
-    - make gruut_hana_merger
+#    - make gruut_hana_merger

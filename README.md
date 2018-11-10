@@ -2,7 +2,7 @@
 
 ### Prerequisite
   - CMake (**3.12**)
-  - vcpkg
+  - vcpkg (**optional**)
     * 라이브러리 패키지 매니저(https://github.com/Microsoft/vcpkg)
   - clang-tidy
     * CLion -> Preference -> Inspection -> Clang-Tidy -> Option에서 `Use IDE setting`을 해제
