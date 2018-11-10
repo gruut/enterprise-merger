@@ -1,0 +1,25 @@
+image: ubuntu
+
+stages:
+  - build
+
+lint:
+  stage: build
+#  only: [merge-request]
+  before_script:
+    - apt-get update -y && apt-get upgrade -y
+    - apt-get install -y python-pip clang-tidy clang-6.0 lld-6.0
+    - pip install cmake
+  script:
+    - mkdir -p build && cd build
+    - cmake -DENABLE_CLANG_TIDY=ON -DCMAKE_CXX_COMPILER="clang++-6.0" ..
+    - make gruut_hana_merger > lint_output.txt
+    - |
+      if [[ -n $(grep "warning: " lint_output.txt) ]] || [[ -n $(grep "error: " lint_output.txt) ]]; then
+        echo "You must pass the clang tidy checks before submitting a pull request"
+        echo ""
+        grep --color -E '^|warning: |error: ' lint_output.txt
+        exit -1;
+      else
+        echo -e "\033[1;32m\xE2\x9C\x93 passed:\033[0m $1";
+      fi

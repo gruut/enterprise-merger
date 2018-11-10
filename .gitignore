@@ -34,4 +34,12 @@
 *.app
 
 .idea
-cmake*
+
+# Cmake
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+cmake-build-debug/
+cmake-build-release/
+Makefile
+*output.txt
