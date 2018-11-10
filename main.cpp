@@ -2,6 +2,8 @@
 #include <nlohmann/json.hpp>
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    int *a = nullptr;
+//    std::cout << A << std::endl;
+
     return 0;
 }
