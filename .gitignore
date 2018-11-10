@@ -42,4 +42,5 @@ cmake_install.cmake
 cmake-build-debug/
 cmake-build-release/
 Makefile
-*output.txt
+output.txt
+build

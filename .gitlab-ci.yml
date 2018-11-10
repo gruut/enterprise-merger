@@ -14,6 +14,7 @@ lint:
     - mkdir -p build && cd build
     - cmake -DENABLE_CLANG_TIDY=ON -DCMAKE_CXX_COMPILER="clang++-6.0" ..
     - make gruut_hana_merger > lint_output.txt
+    - cat lint_output.txt
     - |
       if [[ -n $(grep "warning: " lint_output.txt) ]] || [[ -n $(grep "error: " lint_output.txt) ]]; then
         echo "You must pass the clang tidy checks before submitting a pull request"
