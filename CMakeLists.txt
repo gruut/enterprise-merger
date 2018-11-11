@@ -13,9 +13,12 @@ ENDIF(Boost_FOUND)
 
 # header-only files
 add_library(include INTERFACE)
+add_subdirectory(src/modules)
+
 target_include_directories(include INTERFACE include/)
 target_link_libraries(gruut_hana_merger
         PRIVATE
             include
             ${Boost_LIBRARIES}
         )
+

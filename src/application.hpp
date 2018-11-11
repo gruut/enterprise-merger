@@ -3,7 +3,7 @@
 #include <boost/asio.hpp>
 #include <vector>
 
-#include "module.hpp"
+#include "modules/module.hpp"
 
 namespace gruut {
     using namespace std;
@@ -21,7 +21,7 @@ namespace gruut {
 
         boost::asio::io_service& get_io_service() { return *m_io_serv; }
 
-        void start(const vector<Module*>& modules) {
+        void start(const vector<shared_ptr<Module>>& modules) {
             try {
                 for(auto module : modules) {
                     module->start();
