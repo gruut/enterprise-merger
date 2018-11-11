@@ -3,7 +3,7 @@
 
 #include "src/application.hpp"
 #include "src/modules/module.hpp"
-#include "src/modules/message_fetcher.hpp"
+#include "src/modules/message_fetcher/message_fetcher.hpp"
 
 using namespace gruut;
 using namespace std;

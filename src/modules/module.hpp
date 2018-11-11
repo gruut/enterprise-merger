@@ -4,9 +4,7 @@
 namespace gruut {
     class Module {
     public:
-        virtual void start() {
-
-        };
+        virtual void start() = 0;
     };
 }
 #endif
