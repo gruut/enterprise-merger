@@ -17,5 +17,6 @@ target_link_libraries(gruut_hana_merger
             ${Boost_LIBRARIES}
         )
 
+
 enable_testing()
 add_subdirectory(tests)
