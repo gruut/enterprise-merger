@@ -2,14 +2,12 @@
 
 #include <iostream>
 #include <memory>
-#include "../module.hpp"
-#include "../../application.hpp"
-
-//grpc
 #include <grpcpp/grpcpp.h>
 #include <grpc/support/log.h>
 
-#include "protos/protobuf_MtoM.grpc.pb.h"
+#include "../module.hpp"
+#include "../../application.hpp"
+#include "protos/protobuf_merger.grpc.pb.h"
 
 using grpc::Server;
 using grpc::ServerAsyncResponseWriter;

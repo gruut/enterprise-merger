@@ -8,18 +8,12 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 add_executable(gruut_hana_merger main.cpp)
 
 IF(Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS})
-    target_include_directories(gruut_hana_merger PRIVATE ${Boost_LIBRARIES})
+    include_directories(${Boost_INCLUDE_DIR})
 ENDIF(Boost_FOUND)
 
-# header-only files
-add_library(include INTERFACE)
-add_subdirectory(src/modules)
-
-target_include_directories(include INTERFACE include/)
+target_include_directories(gruut_hana_merger PRIVATE src/modules include/)
 target_link_libraries(gruut_hana_merger
         PRIVATE
-            include
             ${Boost_LIBRARIES}
         )
 
