@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 find_package(Boost REQUIRED COMPONENTS system thread)
-add_executable(gruut_hana_merger main.cpp)
+add_executable(gruut_hana_merger main.cpp src/SignerPoolManager.hpp src/SignerCertPool.hpp)
 
 IF(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})

@@ -10,19 +10,23 @@
 
 namespace gruut {
     using namespace std;
+
     enum class InputMessageType {
         TRANSACTION,
         BLOCK,
+        SIGNATURE,
         SIGNER
     };
 
     struct Message {
-        InputMessageType type;
+        gruut::InputMessageType type;
         nlohmann::json data;
     };
 
     using InputQueue = shared_ptr<queue<Message>>;
     using OutputQueue = shared_ptr<queue<Message>>;
+
+    using InputQueue = std::shared_ptr<std::queue<gruut::Message>>;
 
     class Application {
     public:
@@ -41,7 +45,7 @@ namespace gruut {
 
         InputQueue &get_input_queue() { return m_input_queue; }
 
-        OutputQueue &getOuputQueue() {return m_output_queue;}
+        OutputQueue &getOuputQueue() { return m_output_queue; }
 
         void start(const vector<shared_ptr<Module>> &modules) {
             try {

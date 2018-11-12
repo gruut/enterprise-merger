@@ -8,7 +8,15 @@
 namespace gruut {
     constexpr int MESSAGE_FETCH_INTERVAL = 1000;
 
-    class MessageFetcher : public Module {
+    class MessageValidator {
+    public:
+        bool validate(){
+            return true;
+        }
+    private:
+    };
+
+    class MessageFetcher : public Module, MessageValidator {
     public:
         MessageFetcher() : m_timer(Application::app().get_io_service()) {}
 
@@ -24,6 +32,7 @@ namespace gruut {
                 if(!input_queue->empty()) {
                     auto message = input_queue->front();
                     input_queue->pop();
+                    validate();
                 }
                 // TODO: Fetcher 모듈은 지속적으로 메시지를 큐에서 꺼내와야 하기 때문에 loop를 돌아야 한다. 나중에 주석 제거할 것.
 //                this->start_message_fetch_loop();
