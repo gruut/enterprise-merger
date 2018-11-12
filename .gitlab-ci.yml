@@ -8,7 +8,7 @@ build:
 #  only: [merge-request]
   before_script:
     - apt-get update -y && apt-get upgrade -y
-    - apt-get install -y python3 python3-pip clang-tidy clang-6.0 lld-6.0
+    - apt-get install -y python3 python3-pip clang-tidy clang-6.0 lld-6.0 build-essential autoconf libtool pkg-config
     #  boost
     - apt-get install -y libboost1.65-all-dev
     - pip3 install cmake
