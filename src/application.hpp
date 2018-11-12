@@ -1,8 +1,13 @@
 #ifndef GRUUT_HANA_MERGER_APPLICATION_HPP
 #define GRUUT_HANA_MERGER_APPLICATION_HPP
 #include <boost/asio.hpp>
+#include <vector>
+
+#include "module.hpp"
 
 namespace gruut {
+    using namespace std;
+
     class Application {
     public:
         ~Application() {}
@@ -15,6 +20,22 @@ namespace gruut {
         Application operator=(Application const &) = delete;
 
         boost::asio::io_service& get_io_service() { return *m_io_serv; }
+
+        void start(const vector<Module*>& modules) {
+            try {
+                for(auto module : modules) {
+                    module->start();
+                }
+            } catch(...) {
+                quit();
+                throw;
+            }
+        }
+
+        void exec() {
+
+        }
+
         void quit() {
             m_io_serv->stop();
         }
