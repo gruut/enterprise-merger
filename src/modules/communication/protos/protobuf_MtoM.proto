@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package grpcMtoM;
+
+service communication {
+    rpc checkAlive (CheckAliveRequest) returns (CheckAliveReply) {}
+    rpc sendData (DataRequest) returns (DataReply) {}
+}
+
+message CheckAliveRequest {
+    bool checker = 1;
+}
+
+message CheckAliveReply {
+    bool message = 1;
+}
+
+message DataRequest{
+    bytes data = 1;
+}
+
+message DataReply{
+    bool checker = 1;
+}
+

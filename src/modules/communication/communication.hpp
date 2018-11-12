@@ -5,6 +5,22 @@
 #include "../module.hpp"
 #include "../../application.hpp"
 
+//grpc
+#include <grpcpp/grpcpp.h>
+#include <grpc/support/log.h>
+
+#include "protos/protobuf_MtoM.grpc.pb.h"
+
+using grpc::Server;
+using grpc::ServerAsyncResponseWriter;
+using grpc::ServerBuilder;
+using grpc::ServerContext;
+using grpc::ServerCompletionQueue;
+using grpc::Status;
+using grpc::Channel;
+
+using grpc::ClientContext;
+
 namespace gruut {
     class Communication : public Module {
     public:
@@ -33,5 +49,18 @@ namespace gruut {
         }
 
     private:
+    };
+
+    class MessageHandler {
+    public:
+        void Run()
+        {
+
+        }
+    private:
+        void sendDataToMerger(std::string &compressd_data)
+        {
+
+        }
     };
 }
