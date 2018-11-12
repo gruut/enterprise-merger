@@ -1,5 +1,4 @@
-#ifndef GRUUT_HANA_MERGER_COMMUNICATION_HPP
-#define GRUUT_HANA_MERGER_COMMUNICATION_HPP
+#pragma once
 
 #include <iostream>
 #include <memory>
@@ -21,5 +20,18 @@ namespace gruut {
             });
         }
     };
+
+    class ServerForMerger{
+    };
+
+    class MergerRpcClient {
+    public:
+        MergerRpcClient(){}
+
+        bool sendData(std::string &compressd_data){
+            return false;
+        }
+
+    private:
+    };
 }
-#endif //GRUUT_HANA_MERGER_COMMUNICATION_HPP
