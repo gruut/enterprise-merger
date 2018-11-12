@@ -1,9 +1,8 @@
 #include <iostream>
-#include <nlohmann/json.hpp>
-#include <boost/asio.hpp>
+#include "src/application.hpp"
 
 int main() {
-    boost::asio::io_service io_service;
+    gruut::Application::app().get_io_service();
 
     return 0;
 }
