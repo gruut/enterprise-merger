@@ -19,22 +19,6 @@ using grpc::Channel;
 
 using grpc::ClientContext;
 
-//grpc
-#include <grpcpp/grpcpp.h>
-#include <grpc/support/log.h>
-
-#include "protos/protobuf_MtoM.grpc.pb.h"
-
-using grpc::Server;
-using grpc::ServerAsyncResponseWriter;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::ServerCompletionQueue;
-using grpc::Status;
-using grpc::Channel;
-
-using grpc::ClientContext;
-
 namespace gruut {
     class Communication : public Module {
     public:
