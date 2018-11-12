@@ -8,6 +8,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(gruut_hana_merger main.cpp)
 
+
 IF(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
 ENDIF(Boost_FOUND)
