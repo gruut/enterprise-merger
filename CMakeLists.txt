@@ -8,6 +8,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 add_executable(gruut_hana_merger main.cpp)
 
 IF(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
     target_include_directories(gruut_hana_merger PRIVATE ${Boost_LIBRARIES})
 ENDIF(Boost_FOUND)
 
