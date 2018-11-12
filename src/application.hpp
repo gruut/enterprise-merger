@@ -23,6 +23,7 @@ namespace gruut {
         gruut::InputMessageType type;
         nlohmann::json data;
     };
+}
 
     using InputQueue = shared_ptr<queue<Message>>;
     using OutputQueue = shared_ptr<queue<Message>>;
