@@ -6,6 +6,12 @@
     * 라이브러리 패키지 매니저(https://github.com/Microsoft/vcpkg)
   - clang-tidy
     * CLion -> Preference -> Inspection -> Clang-Tidy -> Option에서 `Use IDE setting`을 해제
+  - **grpc**
+    * 각자 라이브러리를 설치해야 합니다.
+    * [링크](https://github.com/grpc/grpc)
+  - **LevelDB**
+    * 각자 라이브러리를 설치해야 합니다.
+    * [링크](https://github.com/google/leveldb)
 
 ### [Project Directory Structure](https://hiltmon.com/blog/2013/07/03/a-simple-c-plus-plus-project-structure/)
   - build: This folder contains all object files, and is removed on a clean.
