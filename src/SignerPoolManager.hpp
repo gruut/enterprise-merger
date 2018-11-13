@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "application.hpp"
 #include <iostream>
 #include <vector>
 
@@ -21,19 +22,27 @@ namespace gruut{
     class SignerPoolManager{
 
     public:
-        bool push(SignerInfoManager &entity) {
-            m_pool_manager.emplace_back(entity);
+        void push(SignerInfoManager &entity) {
+            m_pool_manager.emplace(entity);
         }
 
-        bool push(std::string &signer_id, std::string &cert, int last_update, int status){
+        void push(std::string &signer_id, std::string &cert, int last_update, int status){
             SignerInfoManager temp;
             temp.signer_id = signer_id;
             temp.cert = cert;
             temp.last_update = last_update;
             temp.status = status;
-            m_pool_manager.emplace_back(temp);
+            m_pool_manager.emplace(temp);
+        }
+
+        void getSingerInfo(){
+            auto signer_info = gruut::Application::app().getSignerInfo();
+            if(!signer_info->empty()){
+                m_pool_manager.emplace(signer_info->front());
+                signer_info->pop();
+            }
         }
     private:
-        std::vector<SignerInfoManager> m_pool_manager;
+        std::queue<SignerInfoManager> m_pool_manager;
     };
 }
