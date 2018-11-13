@@ -4,7 +4,7 @@ cache:
   key: ${CI_JOB_NAME}
   paths:
     - grpc/
-
+    - leveldb
 stages:
   - build
 
@@ -17,13 +17,24 @@ build:
     #  boost
     - apt-get install -y libboost1.65-all-dev
     - pip3 install cmake
-  script:
     - |
-      if [[ -z $(ls grpc) ]]; then
-        git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
-      fi
-    - cd grpc && git submodule update --init && make && make install && cd third_party/protobuf && make install
-    - cd ../../..
+        if [[ -z $(ls | grep grpc) ]]; then
+          git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
+        fi
+    - |
+        if [[ -z $(ls | grep leveldb) ]]; then
+          git clone https://github.com/google/leveldb.git
+        fi
+  script:
+    - ls
+    - cd grpc && git submodule update --init && make && make install && cd third_party/protobuf && make install && cd ../../..
+    - echo "grpc installed"
+    - pwd && ls
+    - |
+        if [[ -n $(ls | grep leveldb) ]]; then
+          cd leveldb && mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && make install && cd ../..
+        fi
+    - echo "leveldb installed"
     - pwd && ls
     - mkdir -p build && cd build
     - cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_CLANG_TIDY=ON -DCMAKE_CXX_COMPILER="clang++-6.0" ..
