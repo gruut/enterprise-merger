@@ -2,8 +2,22 @@
 
 #include <iostream>
 #include <memory>
+#include <grpcpp/grpcpp.h>
+#include <grpc/support/log.h>
+
 #include "../module.hpp"
 #include "../../application.hpp"
+#include "protos/protobuf_merger.grpc.pb.h"
+
+using grpc::Server;
+using grpc::ServerAsyncResponseWriter;
+using grpc::ServerBuilder;
+using grpc::ServerContext;
+using grpc::ServerCompletionQueue;
+using grpc::Status;
+using grpc::Channel;
+
+using grpc::ClientContext;
 
 namespace gruut {
     class Communication : public Module {
@@ -33,5 +47,18 @@ namespace gruut {
         }
 
     private:
+    };
+
+    class MessageHandler {
+    public:
+        void Run()
+        {
+
+        }
+    private:
+        void sendDataToMerger(std::string &compressd_data)
+        {
+
+        }
     };
 }
