@@ -22,6 +22,7 @@ namespace gruut {
     };
 
     using InputQueue = shared_ptr<queue<Message>>;
+    using OutputQueue = shared_ptr<queue<Message>>;
 
     class Application {
     public:
@@ -39,6 +40,8 @@ namespace gruut {
         boost::asio::io_service &get_io_service() { return *m_io_serv; }
 
         InputQueue &get_input_queue() { return m_input_queue; }
+
+        OutputQueue &getOuputQueue() {return m_output_queue;}
 
         void start(const vector<shared_ptr<Module>> &modules) {
             try {
@@ -62,10 +65,12 @@ namespace gruut {
     private:
         std::shared_ptr<boost::asio::io_service> m_io_serv;
         InputQueue m_input_queue;
+        OutputQueue m_output_queue;
 
         Application() {
             m_io_serv = make_shared<boost::asio::io_service>();
             m_input_queue = make_shared<queue<Message>>();
+            m_output_queue = make_shared<queue<Message>>();
         };
     };
 }

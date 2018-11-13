@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package grpc_merger;
 
-service communication {
+service MergerCommunication {
     rpc checkAlive (CheckAliveRequest) returns (CheckAliveReply) {}
-    rpc sendData (DataRequest) returns (DataReply) {}
+    rpc pushData (MergerDataRequest) returns (MergerDataReply) {}
 }
 
 message CheckAliveRequest {
@@ -15,11 +15,11 @@ message CheckAliveReply {
     bool message = 1;
 }
 
-message DataRequest{
+message MergerDataRequest{
     bytes data = 1;
 }
 
-message DataReply{
+message MergerDataReply{
     bool checker = 1;
 }
 
