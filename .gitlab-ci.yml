@@ -25,8 +25,14 @@ build:
         if [[ -z $(ls | grep leveldb) ]]; then
           git clone https://github.com/google/leveldb.git
         fi
+    - |
+        if [[ -z $(ls | grep lz4) ]]; then
+            git clone https://github.com/lz4/lz4.git
+        fi
   script:
     - ls
+    - cd lz4 && make && make install
+    - cd ..
     - cd grpc && git submodule update --init && make && make install && cd third_party/protobuf && make install && cd ../../..
     - echo "grpc installed"
     - pwd && ls
