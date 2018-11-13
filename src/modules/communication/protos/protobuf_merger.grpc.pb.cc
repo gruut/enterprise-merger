@@ -13,72 +13,72 @@
 #include <grpcpp/impl/codegen/rpc_service_method.h>
 #include <grpcpp/impl/codegen/service_type.h>
 #include <grpcpp/impl/codegen/sync_stream.h>
-namespace grpcMtoM {
+namespace grpc_merger {
 
-static const char* communication_method_names[] = {
-  "/grpcMtoM.communication/checkAlive",
-  "/grpcMtoM.communication/sendData",
+static const char* MergerCommunication_method_names[] = {
+  "/grpc_merger.MergerCommunication/checkAlive",
+  "/grpc_merger.MergerCommunication/pushData",
 };
 
-std::unique_ptr< communication::Stub> communication::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
+std::unique_ptr< MergerCommunication::Stub> MergerCommunication::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
   (void)options;
-  std::unique_ptr< communication::Stub> stub(new communication::Stub(channel));
+  std::unique_ptr< MergerCommunication::Stub> stub(new MergerCommunication::Stub(channel));
   return stub;
 }
 
-communication::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
-  : channel_(channel), rpcmethod_checkAlive_(communication_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_sendData_(communication_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+MergerCommunication::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
+  : channel_(channel), rpcmethod_checkAlive_(MergerCommunication_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_pushData_(MergerCommunication_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
-::grpc::Status communication::Stub::checkAlive(::grpc::ClientContext* context, const ::grpcMtoM::CheckAliveRequest& request, ::grpcMtoM::CheckAliveReply* response) {
+::grpc::Status MergerCommunication::Stub::checkAlive(::grpc::ClientContext* context, const ::grpc_merger::CheckAliveRequest& request, ::grpc_merger::CheckAliveReply* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_checkAlive_, context, request, response);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpcMtoM::CheckAliveReply>* communication::Stub::AsynccheckAliveRaw(::grpc::ClientContext* context, const ::grpcMtoM::CheckAliveRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpcMtoM::CheckAliveReply>::Create(channel_.get(), cq, rpcmethod_checkAlive_, context, request, true);
+::grpc::ClientAsyncResponseReader< ::grpc_merger::CheckAliveReply>* MergerCommunication::Stub::AsynccheckAliveRaw(::grpc::ClientContext* context, const ::grpc_merger::CheckAliveRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_merger::CheckAliveReply>::Create(channel_.get(), cq, rpcmethod_checkAlive_, context, request, true);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpcMtoM::CheckAliveReply>* communication::Stub::PrepareAsynccheckAliveRaw(::grpc::ClientContext* context, const ::grpcMtoM::CheckAliveRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpcMtoM::CheckAliveReply>::Create(channel_.get(), cq, rpcmethod_checkAlive_, context, request, false);
+::grpc::ClientAsyncResponseReader< ::grpc_merger::CheckAliveReply>* MergerCommunication::Stub::PrepareAsynccheckAliveRaw(::grpc::ClientContext* context, const ::grpc_merger::CheckAliveRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_merger::CheckAliveReply>::Create(channel_.get(), cq, rpcmethod_checkAlive_, context, request, false);
 }
 
-::grpc::Status communication::Stub::sendData(::grpc::ClientContext* context, const ::grpcMtoM::DataRequest& request, ::grpcMtoM::DataReply* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_sendData_, context, request, response);
+::grpc::Status MergerCommunication::Stub::pushData(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc_merger::MergerDataReply* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_pushData_, context, request, response);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpcMtoM::DataReply>* communication::Stub::AsyncsendDataRaw(::grpc::ClientContext* context, const ::grpcMtoM::DataRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpcMtoM::DataReply>::Create(channel_.get(), cq, rpcmethod_sendData_, context, request, true);
+::grpc::ClientAsyncResponseReader< ::grpc_merger::MergerDataReply>* MergerCommunication::Stub::AsyncpushDataRaw(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_merger::MergerDataReply>::Create(channel_.get(), cq, rpcmethod_pushData_, context, request, true);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpcMtoM::DataReply>* communication::Stub::PrepareAsyncsendDataRaw(::grpc::ClientContext* context, const ::grpcMtoM::DataRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpcMtoM::DataReply>::Create(channel_.get(), cq, rpcmethod_sendData_, context, request, false);
+::grpc::ClientAsyncResponseReader< ::grpc_merger::MergerDataReply>* MergerCommunication::Stub::PrepareAsyncpushDataRaw(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_merger::MergerDataReply>::Create(channel_.get(), cq, rpcmethod_pushData_, context, request, false);
 }
 
-communication::Service::Service() {
+MergerCommunication::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      communication_method_names[0],
+      MergerCommunication_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< communication::Service, ::grpcMtoM::CheckAliveRequest, ::grpcMtoM::CheckAliveReply>(
-          std::mem_fn(&communication::Service::checkAlive), this)));
+      new ::grpc::internal::RpcMethodHandler< MergerCommunication::Service, ::grpc_merger::CheckAliveRequest, ::grpc_merger::CheckAliveReply>(
+          std::mem_fn(&MergerCommunication::Service::checkAlive), this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      communication_method_names[1],
+      MergerCommunication_method_names[1],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< communication::Service, ::grpcMtoM::DataRequest, ::grpcMtoM::DataReply>(
-          std::mem_fn(&communication::Service::sendData), this)));
+      new ::grpc::internal::RpcMethodHandler< MergerCommunication::Service, ::grpc_merger::MergerDataRequest, ::grpc_merger::MergerDataReply>(
+          std::mem_fn(&MergerCommunication::Service::pushData), this)));
 }
 
-communication::Service::~Service() {
+MergerCommunication::Service::~Service() {
 }
 
-::grpc::Status communication::Service::checkAlive(::grpc::ServerContext* context, const ::grpcMtoM::CheckAliveRequest* request, ::grpcMtoM::CheckAliveReply* response) {
+::grpc::Status MergerCommunication::Service::checkAlive(::grpc::ServerContext* context, const ::grpc_merger::CheckAliveRequest* request, ::grpc_merger::CheckAliveReply* response) {
   (void) context;
   (void) request;
   (void) response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
-::grpc::Status communication::Service::sendData(::grpc::ServerContext* context, const ::grpcMtoM::DataRequest* request, ::grpcMtoM::DataReply* response) {
+::grpc::Status MergerCommunication::Service::pushData(::grpc::ServerContext* context, const ::grpc_merger::MergerDataRequest* request, ::grpc_merger::MergerDataReply* response) {
   (void) context;
   (void) request;
   (void) response;
@@ -86,5 +86,5 @@ communication::Service::~Service() {
 }
 
 
-}  // namespace grpcMtoM
+}  // namespace grpc_merger
 

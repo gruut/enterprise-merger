@@ -1,19 +1,13 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "io.grpc.examples.helloworld";
-option java_outer_classname = "HelloWorldProto";
-option objc_class_prefix = "HLW";
+package grpc_signer;
 
-package helloworld;
-
-service Greeter {
-    rpc SayHello (HelloRequest) returns (HelloReply) {}
+service SignerCommunication {
+    rpc pullData (SignerDataRequest) returns (SignerDataReply) {}
 }
-message HelloRequest {
-    bytes name = 1;
+message SignerDataRequest {
+    int32 check = 1;
 }
-message HelloReply {
+message SignerDataReply {
     bytes message = 1;
-    int32 size = 2;
 }
