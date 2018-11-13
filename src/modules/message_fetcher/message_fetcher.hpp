@@ -10,17 +10,17 @@ namespace gruut {
 
     class MessageFetcher : public Module {
     public:
-        MessageFetcher() : m_timer(Application::app().get_io_service()) {}
+        MessageFetcher() : m_timer(Application::app().getIoService()) {}
 
         virtual void start() {
-            start_message_fetch_loop();
+            startMessageFetchLoop();
         }
 
     private:
-        void start_message_fetch_loop() {
+        void startMessageFetchLoop() {
             m_timer.expires_from_now(boost::posix_time::milliseconds(MESSAGE_FETCH_INTERVAL));
             m_timer.async_wait([=](const boost::system::error_code& ec){
-                auto input_queue = Application::app().get_input_queue();
+                auto input_queue = Application::app().getInputQueue();
                 if(!input_queue->empty()) {
                     auto message = input_queue->front();
                     input_queue->pop();

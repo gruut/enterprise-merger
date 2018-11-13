@@ -26,18 +26,14 @@ build:
           git clone https://github.com/google/leveldb.git
         fi
   script:
-    - ls
     - cd grpc && git submodule update --init && make && make install && cd third_party/protobuf && make install && cd ../../..
     - echo "grpc installed"
-    - pwd && ls
     - |
         if [[ -n $(ls | grep leveldb) ]]; then
-          cd leveldb && mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && make install && cd ../..
+          cd leveldb && mkdir -p build && cd build && cmake -DCMAKE_CXX_COMPILER="clang++-6.0" -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cd ../..
         fi
-    - echo "leveldb installed"
-    - pwd && ls
     - mkdir -p build && cd build
-    - cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_CLANG_TIDY=ON -DCMAKE_CXX_COMPILER="clang++-6.0" ..
+    - cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_COMPILER="clang++-6.0" ..
     - cp ../scripts/run-clang-tidy.py run-clang-tidy.py
     - pip3 install pyyaml
     - python3 run-clang-tidy.py > lint_output.txt
