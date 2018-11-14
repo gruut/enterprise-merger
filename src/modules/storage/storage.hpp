@@ -27,7 +27,7 @@ namespace gruut {
             m_db = nullptr;
         }
 
-        json read(const string &key) {
+        json find(const string &key) {
             string data;
             auto status = m_db->Get(m_readOptions, key, &data);
 
@@ -37,7 +37,7 @@ namespace gruut {
             return data;
         }
 
-        json readAll() {
+        json findAll() {
             multimap<string, string> map;
             unique_ptr<leveldb::Iterator> it(m_db->NewIterator(m_readOptions));
             for (it->SeekToFirst(); it->Valid(); it->Next())

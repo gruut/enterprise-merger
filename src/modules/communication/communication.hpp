@@ -44,7 +44,7 @@ namespace gruut {
 
     private:
         void startCommunicationLoop() {
-            auto& io_service = Application::app().get_io_service();
+            auto& io_service = Application::app().getIoService();
             io_service.post([](){
 
             });
@@ -324,7 +324,7 @@ namespace gruut {
     public:
         void run()
         {
-            auto output_queue = Application::app().getOuputQueue();
+            auto output_queue = Application::app().getOutputQueue();
             while(true)
             {
                 if(!output_queue->empty())

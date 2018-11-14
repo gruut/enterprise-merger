@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 find_package(Boost REQUIRED COMPONENTS system thread)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(gruut_hana_merger main.cpp)
 
 IF(Boost_FOUND)

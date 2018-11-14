@@ -37,11 +37,11 @@ namespace gruut {
 
         Application operator=(Application const &) = delete;
 
-        boost::asio::io_service &get_io_service() { return *m_io_serv; }
+        boost::asio::io_service &getIoService() { return *m_io_serv; }
 
-        InputQueue &get_input_queue() { return m_input_queue; }
+        InputQueue &getInputQueue() { return m_input_queue; }
 
-        OutputQueue &getOuputQueue() {return m_output_queue;}
+        OutputQueue &getOutputQueue() {return m_output_queue;}
 
         void start(const vector<shared_ptr<Module>> &modules) {
             try {
