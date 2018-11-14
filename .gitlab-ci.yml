@@ -20,7 +20,14 @@ build:
         if [[ -z $(ls | grep grpc) ]]; then
           git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
         fi
+    - |
+        if [[ -z $(ls | grep lz4) ]]; then
+            git clone https://github.com/lz4/lz4.git
+        fi
+
   script:
+    - cd lz4 && make && make install
+    - cd ..
     - cd grpc && git submodule update --init && make && make install && cd third_party/protobuf && make install && cd ../../..
     - cd include/leveldb && mkdir -p build && cd build
     - cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cd ../../../
