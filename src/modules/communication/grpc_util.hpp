@@ -59,5 +59,21 @@ namespace gruut{
 
             return (G==check_g && VERSION==check_version && MAC==check_mac);
         }
+        static int getJsonSize(std::string &raw_data)
+        {
+            int len = 0;
+            for(int i=4; i<7; i++) {
+                len|=raw_data[i];
+                len=len<<8;
+            }
+            len|=raw_data[7];
+            return len;
+        }
+        static uint8_t getMessageType(std::string &raw_data)
+        {
+            unsigned char message_type = 0;
+            message_type |=raw_data[2];
+            return message_type;
+        }
     };
 }

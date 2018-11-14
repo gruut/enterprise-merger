@@ -138,7 +138,7 @@ namespace gruut {
         class PushData final : public CallData {
         public:
             PushData(MergerCommunication::AsyncService *service, ServerCompletionQueue *cq)
-                    : m_push_service(service), m_push_cq(cq), m_push_responder(&m_push_ctx), m_push_status(CREATE) {
+                    : m_push_service(service), m_push_cq(cq), m_push_responder(&m_push_ctx), m_push_status(CallStatus::CREATE) {
 
                 proceed();
             }
@@ -150,24 +150,40 @@ namespace gruut {
                         m_push_service->RequestpushData(&m_push_ctx, &m_push_request, &m_push_responder, m_push_cq,
                                                         m_push_cq, this);
                     }
-                        break;
+                    break;
 
                     case CallStatus::PROCESS: {
                         new PushData(m_push_service, m_push_cq);
 
+                        std::string raw_data = m_push_request.data();
+                        if(!HeaderController::validateMessage(raw_data)) {
+                            m_push_reply.set_checker(false);
+                        }
+                        else {
+                            int json_size = HeaderController::getJsonSize(raw_data);
+                            std::string compressed_data = HeaderController::detachHeader(raw_data);
+                            std::string decompressed_data;
 
+                            Compressor::decompressData(compressed_data, decompressed_data,json_size);
 
-                        m_push_reply.set_checker(true);
+                            uint8_t message_type = HeaderController::getMessageType(raw_data);
+                            Message msg;
+                            msg.type = static_cast<InputMessageType>(message_type);
+                            msg.data = nlohmann::json::parse(decompressed_data);
+
+                            auto input_queue = Application::app().getInputQueue();
+                            input_queue->push(msg);
+                        }
                         m_push_status = CallStatus::FINISH;
                         m_push_responder.Finish(m_push_reply, Status::OK, this);
                     }
-                        break;
+                    break;
 
                     default: {
                         GPR_ASSERT(m_push_status == CallStatus::FINISH);
                         delete this;
                     }
-                        break;
+                    break;
                 }
             }
 
@@ -188,7 +204,7 @@ namespace gruut {
         class PullRequest final : public CallData {
         public:
             PullRequest(SignerCommunication::AsyncService *service, ServerCompletionQueue *cq)
-                    : m_pull_service(service), m_pull_cq(cq), m_pull_responder(&m_pull_ctx), m_pull_status(CREATE) {
+                    : m_pull_service(service), m_pull_cq(cq), m_pull_responder(&m_pull_ctx), m_pull_status(CallStatus ::CREATE) {
 
                 proceed();
             }
