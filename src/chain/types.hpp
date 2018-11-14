@@ -1,4 +1,4 @@
-#ifndef GRUUT_HANA_MERGER_TYPES_HPP
+
 #define GRUUT_HANA_MERGER_TYPES_HPP
 
 #include <string>
@@ -15,6 +15,7 @@ namespace gruut {
     using transaction_id_type = sha256;
     using timestamp = std::string;
     using requestor_id_type = sha256;
+    using transaction_type_type = int;
 
     using sender_id_type = sha256;
     using transaction_root_type = sha256;
