@@ -310,7 +310,7 @@ namespace gruut {
     public:
         void run() {
             m_pool = unique_ptr<ThreadPool>(new ThreadPool(5));
-            auto output_queue = Application::app().getOuputQueue();
+            auto output_queue = Application::app().getOutputQueue();
 
             if (!output_queue->empty()) {
                 Message msg = output_queue->front();

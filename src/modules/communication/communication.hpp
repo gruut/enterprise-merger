@@ -13,7 +13,7 @@ namespace gruut {
 
     private:
         void startCommunicationLoop() {
-            auto& io_service = Application::app().get_io_service();
+            auto& io_service = Application::app().getIoService();
             io_service.post([](){
 
             });

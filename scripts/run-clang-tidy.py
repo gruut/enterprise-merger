@@ -250,6 +250,12 @@ def main():
     files = [make_absolute(entry['file'], entry['directory'])
              for entry in database]
 
+    new_files = []
+    for file_name in files:
+        if(not ("include" in file_name)):
+            new_files.append(file_name)
+    files = new_files
+
     max_task = args.j
     if max_task == 0:
         max_task = multiprocessing.cpu_count()
