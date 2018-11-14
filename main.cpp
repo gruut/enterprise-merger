@@ -5,6 +5,7 @@
 #include "src/modules/module.hpp"
 #include "src/modules/message_fetcher/message_fetcher.hpp"
 #include "src/modules/communication/communication.hpp"
+#include "src/modules/signer_pool_manager/signer_pool_manager.hpp"
 
 using namespace gruut;
 using namespace std;
