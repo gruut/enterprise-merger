@@ -12,20 +12,37 @@ namespace gruut {
 
     using namespace std;
 
-    enum class InputMessageType {
-        TRANSACTION,
-        BLOCK,
-        SIGNATURE,
-        SIGNER
+    enum class OuputMessageType : uint8_t{
+        MSG_CHALLENGE = 0x55,
+        MSG_ACCEPT= 0x57,
+        MSG_ECHO = 0x58,
+        MSG_LEAVE = 0x59,
+        MSG_REQ_SSIG = 0xB2,
+        MSG_BLOCK = 0xB4,
+        MSG_ERROR = 0xFF
     };
 
-    struct Message {
-        InputMessageType type;
+    enum class InputMessageType :uint8_t{
+        MSG_JOIN = 0x54,
+        MSG_RESPONSE = 0x56,
+        MSG_ECHO = 0x58,
+        MSG_LEAVE = 0x59,
+        MSG_SSIG = 0xB3,
+        MSG_BLOCK = 0xB4
+    };
+
+    struct OutputMessage{
+        gruut::OuputMessageType type;
         nlohmann::json data;
     };
 
-    using InputQueue = shared_ptr<queue<Message>>;
-    using OutputQueue = shared_ptr<queue<Message>>;
+    struct InputMessage {
+        gruut::InputMessageType type;
+        nlohmann::json data;
+    };
+
+    using InputQueue = shared_ptr<queue<InputMessage>>;
+    using OutputQueue = shared_ptr<queue<OutputMessage>>;
 
     class Application {
     public:
@@ -72,8 +89,8 @@ namespace gruut {
 
         Application() {
             m_io_serv = make_shared<boost::asio::io_service>();
-            m_input_queue = make_shared<queue<Message>>();
-            m_output_queue = make_shared<queue<Message>>();
+            m_input_queue = make_shared<queue<InputMessage>>();
+            m_output_queue = make_shared<queue<OutputMessage>>();
         };
     };
 }

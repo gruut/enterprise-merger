@@ -334,7 +334,7 @@ namespace gruut {
 
             //아래 if문을 포함하는 무한루프 필요.
             if (!output_queue->empty()) {
-                Message msg = output_queue->front();
+                OutputMessage msg = output_queue->front();
 
                 std::string compressed_json;
                 std::string json_dump = msg.data.dump();
@@ -344,11 +344,11 @@ namespace gruut {
 
                 switch(msg.type)
                 {
-                    case InputMessageType::BLOCK: {
+                    case OuputMessageType ::MSG_BLOCK: {
                         sendDataToMerger(header_added_data);
                     }
                     break;
-                    case InputMessageType::SIGNER: {
+                    case OuputMessageType::MSG_REQ_SSIG {
                         m_merger_q->push(header_added_data);
                     }
                     break;

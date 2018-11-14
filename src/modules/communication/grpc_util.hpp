@@ -71,7 +71,7 @@ namespace gruut{
         }
         static uint8_t getMessageType(std::string &raw_data)
         {
-            unsigned char message_type = 0;
+            uint8_t message_type = 0;
             message_type |=raw_data[2];
             return message_type;
         }
