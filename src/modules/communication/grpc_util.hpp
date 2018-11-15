@@ -1,6 +1,6 @@
 #pragma once
 #include<string>
-#include<lz4.h>
+#include "../../include/lz4.h"
 #include "../../application.hpp"
 
 namespace gruut{
