@@ -252,7 +252,7 @@ def main():
 
     new_files = []
     for file_name in files:
-        if(not ("include" in file_name)):
+        if(not ("include" in file_name) and not ("lib" in file_name)):
             new_files.append(file_name)
     files = new_files
 
