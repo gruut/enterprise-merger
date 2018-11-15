@@ -12,14 +12,14 @@ IF(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
 ENDIF(Boost_FOUND)
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/include/leveldb)
+add_subdirectory(lib/leveldb)
 target_include_directories(gruut_hana_merger PRIVATE src/modules include/)
 target_link_libraries(gruut_hana_merger
         PRIVATE
             ${Boost_LIBRARIES}
             leveldb
-            ${CMAKE_SOURCE_DIR}/lib/libcryptopp.a
         )
 
 enable_testing()
-add_subdirectory(tests)
+add_subdirectory(tests/modules)
+add_subdirectory(tests/utils)
