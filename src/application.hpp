@@ -20,14 +20,12 @@ namespace gruut {
     };
 
     struct Message {
-        gruut::InputMessageType type;
+        InputMessageType type;
         nlohmann::json data;
     };
 
     using InputQueue = shared_ptr<queue<Message>>;
     using OutputQueue = shared_ptr<queue<Message>>;
-
-    using InputQueue = std::shared_ptr<std::queue<gruut::Message>>;
 
     class Application {
     public:
