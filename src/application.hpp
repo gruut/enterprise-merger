@@ -12,15 +12,21 @@ namespace gruut {
 
     using namespace std;
 
-    enum class InputMessageType {
-        TRANSACTION,
-        BLOCK,
-        SIGNATURE,
-        SIGNER
+    enum class MessageType : uint8_t{
+        MSG_JOIN = 0x54,
+        MSG_CHALLENGE = 0x55,
+        MSG_RESPONSE = 0x56,
+        MSG_ACCEPT= 0x57,
+        MSG_ECHO = 0x58,
+        MSG_LEAVE = 0x59,
+        MSG_REQ_SSIG = 0xB2,
+        MSG_SSIG = 0xB3,
+        MSG_BLOCK = 0xB4,
+        MSG_ERROR = 0xFF,
     };
 
-    struct Message {
-        InputMessageType type;
+    struct Message{
+        gruut::MessageType type;
         nlohmann::json data;
     };
 

@@ -32,7 +32,7 @@ using grpc_signer::SignerDataReply;
 
 namespace gruut {
 
-    enum CallStatus {
+    enum class CallStatus {
         CREATE, PROCESS, FINISH
     };
 
@@ -89,31 +89,31 @@ namespace gruut {
 
             CheckAlive(MergerCommunication::AsyncService *service, ServerCompletionQueue *cq)
                     : m_check_service(service), m_check_cq(cq), m_check_responder(&m_check_ctx),
-                      m_check_status(CREATE) {
+                      m_check_status(CallStatus::CREATE) {
 
                 proceed();
             }
 
             void proceed() {
                 switch (m_check_status) {
-                    case CREATE: {
-                        m_check_status = PROCESS;
+                    case CallStatus::CREATE: {
+                        m_check_status = CallStatus::PROCESS;
                         m_check_service->RequestcheckAlive(&m_check_ctx, &m_check_request, &m_check_responder,
                                                            m_check_cq, m_check_cq, this);
                     }
                         break;
 
-                    case PROCESS: {
+                    case CallStatus::PROCESS: {
                         new CheckAlive(m_check_service, m_check_cq);
 
                         m_check_reply.set_message(true);
-                        m_check_status = FINISH;
+                        m_check_status = CallStatus::FINISH;
                         m_check_responder.Finish(m_check_reply, Status::OK, this);
                     }
                         break;
 
                     default: {
-                        GPR_ASSERT(m_check_status == FINISH);
+                        GPR_ASSERT(m_check_status == CallStatus::FINISH);
                         delete this;
                     }
                         break;
@@ -137,35 +137,53 @@ namespace gruut {
         class PushData final : public CallData {
         public:
             PushData(MergerCommunication::AsyncService *service, ServerCompletionQueue *cq)
-                    : m_push_service(service), m_push_cq(cq), m_push_responder(&m_push_ctx), m_push_status(CREATE) {
+                    : m_push_service(service), m_push_cq(cq), m_push_responder(&m_push_ctx), m_push_status(CallStatus::CREATE) {
 
                 proceed();
             }
 
             void proceed() {
                 switch (m_push_status) {
-                    case CREATE: {
-                        m_push_status = PROCESS;
+                    case CallStatus::CREATE: {
+                        m_push_status = CallStatus::PROCESS;
                         m_push_service->RequestpushData(&m_push_ctx, &m_push_request, &m_push_responder, m_push_cq,
                                                         m_push_cq, this);
                     }
-                        break;
+                    break;
 
-                    case PROCESS: {
+                    case CallStatus::PROCESS: {
                         new PushData(m_push_service, m_push_cq);
 
+                        std::string raw_data = m_push_request.data();
+                        if(!HeaderController::validateMessage(raw_data)) {
+                            m_push_reply.set_checker(false);
+                        }
+                        else {
+                            int json_size = HeaderController::getJsonSize(raw_data);
+                            std::string compressed_data = HeaderController::detachHeader(raw_data);
+                            std::string decompressed_data;
 
-                        m_push_reply.set_checker(true);
-                        m_push_status = FINISH;
+                            Compressor::decompressData(compressed_data, decompressed_data,json_size);
+
+                            uint8_t message_type = HeaderController::getMessageType(raw_data);
+
+                            Message msg;
+                            msg.type = static_cast<MessageType>(message_type);
+                            msg.data = nlohmann::json::parse(decompressed_data);
+
+                            auto input_queue = Application::app().getInputQueue();
+                            input_queue->push(msg);
+                        }
+                        m_push_status = CallStatus::FINISH;
                         m_push_responder.Finish(m_push_reply, Status::OK, this);
                     }
-                        break;
+                    break;
 
                     default: {
-                        GPR_ASSERT(m_push_status == FINISH);
+                        GPR_ASSERT(m_push_status == CallStatus::FINISH);
                         delete this;
                     }
-                        break;
+                    break;
                 }
             }
 
@@ -186,31 +204,31 @@ namespace gruut {
         class PullRequest final : public CallData {
         public:
             PullRequest(SignerCommunication::AsyncService *service, ServerCompletionQueue *cq)
-                    : m_pull_service(service), m_pull_cq(cq), m_pull_responder(&m_pull_ctx), m_pull_status(CREATE) {
+                    : m_pull_service(service), m_pull_cq(cq), m_pull_responder(&m_pull_ctx), m_pull_status(CallStatus ::CREATE) {
 
                 proceed();
             }
 
             void proceed() {
                 switch (m_pull_status) {
-                    case CREATE: {
-                        m_pull_status = PROCESS;
+                    case CallStatus::CREATE: {
+                        m_pull_status = CallStatus::PROCESS;
                         m_pull_service->RequestpullData(&m_pull_ctx, &m_pull_request, &m_pull_responder, m_pull_cq,
                                                         m_pull_cq, this);
                     }
                         break;
 
-                    case PROCESS: {
+                    case CallStatus::PROCESS: {
                         new PullRequest(m_pull_service, m_pull_cq);
 
                         m_pull_reply.set_message("someData");
-                        m_pull_status = FINISH;
+                        m_pull_status = CallStatus::FINISH;
                         m_pull_responder.Finish(m_pull_reply, Status::OK, this);
                     }
                         break;
 
                     default: {
-                        GPR_ASSERT(m_pull_status == FINISH);
+                        GPR_ASSERT(m_pull_status == CallStatus::FINISH);
                         delete this;
                     }
                         break;
@@ -312,20 +330,39 @@ namespace gruut {
             m_pool = unique_ptr<ThreadPool>(new ThreadPool(5));
             auto output_queue = Application::app().getOutputQueue();
 
+            //아래 if문을 포함하는 무한루프 필요.
             if (!output_queue->empty()) {
                 Message msg = output_queue->front();
 
                 std::string compressed_json;
                 std::string json_dump = msg.data.dump();
-            }
 
+                Compressor::compressData(json_dump, compressed_json);
+                std::string header_added_data = HeaderController::attachHeader(compressed_json, msg.type);
+
+                switch(msg.type)
+                {
+                    case MessageType ::MSG_BLOCK: {
+                        sendDataToMerger(header_added_data);
+                    }
+                    break;
+                    default:{
+
+                    }
+                    break;
+                }
+                output_queue->pop();
+            }
         }
 
     private:
-        void sendDataToMerger(std::string &compressd_data) {
+        void sendDataToMerger(std::string &header_added_data) {
 
+            std::unique_ptr<MergerRpcClient> merger_client
+            (new MergerRpcClient(grpc::CreateChannel("ip and port",grpc::InsecureChannelCredentials())));
+
+            m_pool->enqueue([&](){merger_client->pushData(header_added_data);});
         }
-
         std::unique_ptr<ThreadPool> m_pool;
     };
 }
