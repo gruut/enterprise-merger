@@ -9,6 +9,7 @@
 #include "../include/nlohmann/json.hpp"
 
 namespace gruut {
+
     using namespace std;
 
     enum class InputMessageType {
