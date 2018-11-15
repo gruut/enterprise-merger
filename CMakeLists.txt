@@ -18,7 +18,6 @@ target_link_libraries(gruut_hana_merger
         PRIVATE
             ${Boost_LIBRARIES}
             leveldb
-            ${CMAKE_SOURCE_DIR}/lib/liblz4.a
         )
 
 enable_testing()
