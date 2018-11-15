@@ -62,8 +62,7 @@ namespace gruut {
             handleMergerRpcs();
         }
 
-        void runSignerServ(char *port_for_signer, std::shared_ptr<std::queue<std::string>> merger_q) {
-            m_merger_q = merger_q;
+        void runSignerServ(char *port_for_signer) {
             std::string port_num(port_for_signer);
             std::string server_address("0.0.0.0:");
             server_address += port_num;
@@ -167,8 +166,9 @@ namespace gruut {
                             Compressor::decompressData(compressed_data, decompressed_data,json_size);
 
                             uint8_t message_type = HeaderController::getMessageType(raw_data);
+
                             Message msg;
-                            msg.type = static_cast<InputMessageType>(message_type);
+                            msg.type = static_cast<MessageType>(message_type);
                             msg.data = nlohmann::json::parse(decompressed_data);
 
                             auto input_queue = Application::app().getInputQueue();
@@ -279,8 +279,6 @@ namespace gruut {
         std::unique_ptr<ServerCompletionQueue> m_cq_signer;
         SignerCommunication::AsyncService m_service_signer;
         std::unique_ptr<Server> m_server_signer;
-
-        std::shared_ptr<std::queue<std::string>> m_merger_q;
     };
 
     class MergerRpcClient {
@@ -334,22 +332,18 @@ namespace gruut {
 
             //아래 if문을 포함하는 무한루프 필요.
             if (!output_queue->empty()) {
-                OutputMessage msg = output_queue->front();
+                Message msg = output_queue->front();
 
                 std::string compressed_json;
                 std::string json_dump = msg.data.dump();
 
                 Compressor::compressData(json_dump, compressed_json);
-                std::string header_added_data = HeaderController::attachHeader(json_dump, static_cast<uint8_t >(msg.type));
+                std::string header_added_data = HeaderController::attachHeader(compressed_json, msg.type);
 
                 switch(msg.type)
                 {
-                    case OuputMessageType ::MSG_BLOCK: {
+                    case MessageType ::MSG_BLOCK: {
                         sendDataToMerger(header_added_data);
-                    }
-                    break;
-                    case OuputMessageType::MSG_REQ_SSIG {
-                        m_merger_q->push(header_added_data);
                     }
                     break;
                     default:{
@@ -370,6 +364,5 @@ namespace gruut {
             m_pool->enqueue([&](){merger_client->pushData(header_added_data);});
         }
         std::unique_ptr<ThreadPool> m_pool;
-        std::shared_ptr<std::queue<std::string>> m_merger_q;
     };
 }

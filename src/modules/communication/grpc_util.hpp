@@ -1,6 +1,7 @@
 #pragma once
 #include<string>
 #include<lz4.h>
+#include "../../application.hpp"
 
 namespace gruut{
     constexpr uint8_t G = 0x47;
@@ -8,7 +9,7 @@ namespace gruut{
     constexpr uint8_t MAC = 0x02;
     constexpr uint16_t RESERVED = 0x00;
     constexpr uint64_t LOCAL_CHAIN_ID = 0xFF;
-    constexpr uint64_t SENDER = 0x77;
+    constexpr uint64_t SENDER =0x77;
     constexpr size_t HEADER_LENGTH = 26;
 
     class Compressor {
@@ -16,30 +17,49 @@ namespace gruut{
         static int compressData(std::string &src, std::string &dest) {
             size_t src_size = src.size();
             dest.resize(src_size);
-            return LZ4_compress_default((const char *) src.data(), (char *) (dest.data()),
-                    static_cast<int>(src_size), static_cast<int>(src_size));
+            return LZ4_compress_default((const char *) (src.data()), (char *) (dest.data()) ,src_size, src_size);
         }
-
         static int decompressData(std::string &src, std::string &dest, int origin_size) {
-            dest.resize(static_cast<size_t>(origin_size));
-            return LZ4_decompress_safe((const char *) src.data(), (char *)(dest.data()), static_cast<int>(src.size()), origin_size);
+            dest.resize(origin_size);
+            return LZ4_decompress_fast((const char *) (src.data()), (char *)(dest.data()), origin_size);
         }
     };
-
     class HeaderController {
     public:
-        static std::string attachHeader(std::string &compressed_json, uint8_t message_type) {
+        static std::string attachHeader(std::string &compressed_json, MessageType message_type) {
             std::string header;
             uint32_t total_length = static_cast<uint32_t>(HEADER_LENGTH + compressed_json.size());
 
-            header+=G;
-            header+=VERSION;
-            header+=message_type;
-            header+=MAC;
-            header+=total_length;
-            header+=LOCAL_CHAIN_ID;
-            header+=SENDER;
-            header+=RESERVED;
+            header.resize(26);
+            header[0]=G;
+            header[1]=VERSION;
+            header[2]= static_cast<u_int8_t>(message_type);
+            header[3]=MAC;
+            for(int i=7; i>4; i--) {
+                header[i]|=total_length;
+                total_length = (total_length>>8);
+            }
+            header[4] |= total_length;
+
+            uint64_t local_chain_id = LOCAL_CHAIN_ID;
+            for(int i=15; i>8; i--){
+                header[i]|=local_chain_id;
+                local_chain_id =(local_chain_id>>8);
+            }
+            header[8] |=local_chain_id;
+
+            uint64_t sender_id = SENDER;
+            for(int i=23; i>16; i--){
+                header[i]|=sender_id;
+                sender_id=(sender_id>>8);
+            }
+            header[15] |= sender_id;
+
+            uint16_t reserved = RESERVED;
+            header[25] |= reserved;
+            reserved = (reserved>>8);
+            header[24] |=reserved;
+
             return header+compressed_json;
         }
         static std::string detachHeader(std::string &raw_data)
@@ -49,7 +69,6 @@ namespace gruut{
 
             return json_dump;
         }
-
         static bool validateMessage(std::string &raw_data)
         {
             uint8_t checker = 0xFF;
@@ -67,12 +86,11 @@ namespace gruut{
                 len=len<<8;
             }
             len|=raw_data[7];
-            return len;
+            return len-26;
         }
-        static uint8_t getMessageType(std::string &raw_data)
-        {
+        static uint8_t getMessageType(std::string &raw_data) {
             uint8_t message_type = 0;
-            message_type |=raw_data[2];
+            message_type |= raw_data[2];
             return message_type;
         }
     };
