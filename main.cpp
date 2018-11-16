@@ -4,7 +4,7 @@
 #include "src/application.hpp"
 #include "src/modules/module.hpp"
 #include "src/modules/communication/communication.hpp"
-#include "src/modules/signature_requester/signature_requester.hpp"
+#include "src/services/signature_requester.hpp"
 #include "src/modules/transaction_collector/transaction_collector.hpp"
 
 using namespace gruut;

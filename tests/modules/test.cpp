@@ -6,7 +6,7 @@
 #include "../../src/application.hpp"
 #include "../../src/modules/message_fetcher/message_fetcher.hpp"
 #include "../../src/modules/signer_pool_manager/signer_pool_manager.hpp"
-#include "../../src/modules/signature_requester/signature_requester.hpp"
+#include "../../src/services/signature_requester.hpp"
 #include "../../../src/modules/communication/grpc_util.hpp"
 #include "../../src/chain/transaction.hpp"
 
