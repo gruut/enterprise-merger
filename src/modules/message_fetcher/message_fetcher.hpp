@@ -1,47 +1,29 @@
 #ifndef GRUUT_HANA_MERGER_MESSAGE_FETCHER_HPP
 #define GRUUT_HANA_MERGER_MESSAGE_FETCHER_HPP
+
 #include "../module.hpp"
 #include "../../application.hpp"
+#include "../../chain/transaction.hpp"
+#include "message_validator.hpp"
+
 #include <iostream>
 #include <boost/asio.hpp>
 
 namespace gruut {
-    constexpr int MESSAGE_FETCH_INTERVAL = 1000;
-
-    class MessageValidator {
+    class MessageFetcher {
     public:
-        bool validate(){
-            return true;
-        }
-    private:
-    };
+        template <typename MessageType>
+        static MessageType fetch() {
+            // TODO: MessageType에 따라 다르게 리턴시키도록 구현해야함
+            MessageType temp;
 
-    class MessageFetcher : public Module {
-    public:
-        MessageFetcher() : m_timer(Application::app().getIoService()) {}
+            do_nothing();
 
-        virtual void start() {
-            startMessageFetchLoop();
+            return temp;
         }
 
     private:
-        MessageValidator validator;
-
-        void startMessageFetchLoop() {
-            m_timer.expires_from_now(boost::posix_time::milliseconds(MESSAGE_FETCH_INTERVAL));
-            m_timer.async_wait([=](const boost::system::error_code& ec){
-                auto input_queue = Application::app().getInputQueue();
-                if(!input_queue->empty()) {
-                    auto message = input_queue->front();
-                    input_queue->pop();
-                    validator.validate();
-                }
-                // TODO: Fetcher 모듈은 지속적으로 메시지를 큐에서 꺼내와야 하기 때문에 loop를 돌아야 한다. 나중에 주석 제거할 것.
-//                this->start_message_fetch_loop();
-            });
-        }
-
-        boost::asio::deadline_timer m_timer;
+        static void do_nothing() {}
     };
 }
 #endif

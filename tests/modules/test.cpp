@@ -1,20 +1,24 @@
 #define BOOST_TEST_MODULE
 #include <boost/test/unit_test.hpp>
+#include <typeinfo>
+
 #include "../../src/modules/module.hpp"
 #include "../../src/application.hpp"
 #include "../../src/modules/message_fetcher/message_fetcher.hpp"
 #include "../../src/modules/signer_pool_manager/signer_pool_manager.hpp"
 #include "../../src/modules/signature_requester/signature_requester.hpp"
 #include "../../../src/modules/communication/grpc_util.hpp"
+#include "../../src/chain/transaction.hpp"
 
 using namespace std;
 using namespace gruut;
 
 BOOST_AUTO_TEST_SUITE(Test_MessageFetcher)
     BOOST_AUTO_TEST_CASE(start) {
-        unique_ptr<MessageFetcher>p_msg_fetcher(new MessageFetcher());
-        p_msg_fetcher->start();
-        BOOST_TEST(true);
+        auto transaction = MessageFetcher::fetch<Transaction>();
+        string type_name = typeid(transaction).name();
+        bool result = type_name.find("Transaction") != string::npos;
+        BOOST_TEST(result);
     }
 BOOST_AUTO_TEST_SUITE_END()
 
