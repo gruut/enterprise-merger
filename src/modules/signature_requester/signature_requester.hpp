@@ -8,6 +8,8 @@
 #include "../signer_pool_manager/signer_pool_manager.hpp"
 #include "../../chain/partial_block.hpp"
 #include "../../chain/transaction.hpp"
+#include "../../services/transaction_fetcher.hpp"
+#include "../../chain/signer.hpp"
 
 namespace gruut {
     using namespace std;
@@ -32,31 +34,10 @@ namespace gruut {
         }
     private:
         Transaction makeTransaction(Signer signer) {
-            // TODO: Strategy 패턴으로 생성 (
-            auto sent_time = to_string(std::time(0));
+            TransactionFetcher transaction_fetcher {signer};
+            auto transaction = transaction_fetcher.fetch();
 
-            if(signer.isNew()) {
-                Transaction new_transaction;
-                new_transaction.transaction_type = TransactionType::CHECKSUM;
-                new_transaction.requestor_id = sent_time;
-                // TODO: signer(new or not)에 따라 signature 가 다름.
-//                new_transaction.signature =
-                // TODO: 유일하게 tx를 식별할 수 있는 transaction_id 결정
-                new_transaction.transaction_id = sent_time;
-                new_transaction.sent_time = sent_time;
-
-                return new_transaction;
-            }
-            else {
-                Transaction new_transaction;
-
-                new_transaction.transaction_type = TransactionType::CERTIFICATE;
-                new_transaction.requestor_id = sent_time;
-                // TODO: signer(new or not)에 따라 signature 가 다름.
-//                new_transaction.signature = new_transaction.makeSignature();
-
-                return new_transaction;
-            }
+            return transaction;
         }
 
         PartialBlock makePartialBlock(Transaction transaction) {
@@ -64,7 +45,7 @@ namespace gruut {
 
             return partial_block;
         }
-
+    private:
         weak_ptr<SignerPoolManager> m_signer_pool_manager;
     };
 }

@@ -23,3 +23,4 @@ target_link_libraries(gruut_hana_merger
 enable_testing()
 add_subdirectory(tests/modules)
 add_subdirectory(tests/utils)
+add_subdirectory(tests/services)

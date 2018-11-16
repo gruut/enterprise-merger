@@ -8,18 +8,10 @@
 
 #include "../module.hpp"
 #include "../../application.hpp"
+#include "../../chain/signer.hpp"
 
 namespace gruut {
     using namespace std;
-
-    struct Signer {
-        string cert;
-        string address;
-
-        bool isNew() {
-            return true;
-        }
-    };
 
     const unsigned int REQUEST_NUM_OF_SIGNER = 5;
 
