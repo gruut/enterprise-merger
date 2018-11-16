@@ -1,30 +1,26 @@
-
+#ifndef GRUUT_HANA_MERGER_TYPES_HPP
 #define GRUUT_HANA_MERGER_TYPES_HPP
 
 #include <string>
 #include <vector>
 
-#include "transaction.hpp"
-
 namespace gruut {
     enum class TransactionType {
-
+        CHECKSUM,
+        CERTIFICATE
     };
 
     using sha256 = std::string;
-    using transaction_id_type = sha256;
     using timestamp = std::string;
-    using requestor_id_type = sha256;
-    using transaction_type_type = int;
-
-    using sender_id_type = sha256;
-    using transaction_root_type = sha256;
-    using TransactionType = int;
-    using chain_id_type = sha256;
     using block_height_type = std::string;
 
-    using certification_array_type = vector<std::string>;
+    using transaction_id_type = sha256;
+    using requestor_id_type = sha256;
+    using sender_id_type = sha256;
+    using transaction_root_type = sha256;
+    using chain_id_type = sha256;
+    using signature_type = sha256;
+
+    using content_type = std::string;
 }
-
-
-#endif //GRUUT_HANA_MERGER_TYPES_HPP
+#endif

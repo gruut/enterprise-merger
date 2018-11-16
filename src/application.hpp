@@ -7,6 +7,7 @@
 
 #include "modules/module.hpp"
 #include "../include/nlohmann/json.hpp"
+#include "modules/signer_pool_manager/signer_pool_manager.hpp"
 
 namespace gruut {
 
@@ -32,6 +33,7 @@ namespace gruut {
 
     using InputQueue = shared_ptr<queue<Message>>;
     using OutputQueue = shared_ptr<queue<Message>>;
+    using SignerPoolManagerPointer = shared_ptr<SignerPoolManager>;
 
     class Application {
     public:
@@ -51,6 +53,10 @@ namespace gruut {
         InputQueue &getInputQueue() { return m_input_queue; }
 
         OutputQueue &getOutputQueue() {return m_output_queue;}
+
+        const SignerPoolManagerPointer &getSignerPoolManager() const {
+            return m_signer_pool_manager_pointer;
+        }
 
         void start(const vector<shared_ptr<Module>> &modules) {
             try {
@@ -75,11 +81,13 @@ namespace gruut {
         std::shared_ptr<boost::asio::io_service> m_io_serv;
         InputQueue m_input_queue;
         OutputQueue m_output_queue;
+        SignerPoolManagerPointer m_signer_pool_manager_pointer;
 
         Application() {
             m_io_serv = make_shared<boost::asio::io_service>();
             m_input_queue = make_shared<queue<Message>>();
             m_output_queue = make_shared<queue<Message>>();
+            m_signer_pool_manager_pointer = make_shared<SignerPoolManager>();
         };
     };
 }

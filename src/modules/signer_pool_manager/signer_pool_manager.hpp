@@ -10,9 +10,15 @@
 #include "../../application.hpp"
 
 namespace gruut {
+    using namespace std;
+
     struct Signer {
         string cert;
         string address;
+
+        bool isNew() {
+            return true;
+        }
     };
 
     const unsigned int REQUEST_NUM_OF_SIGNER = 5;
