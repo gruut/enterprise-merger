@@ -13,7 +13,7 @@ class Sha256 {
     using byte = CryptoPP::byte;
 
 public:
-    string encrypt(const string &message) {
+    static string encrypt(const string &message) {
         CryptoPP::SHA256 hash;
         byte digest[CryptoPP::SHA256::DIGESTSIZE];
         hash.CalculateDigest(digest, (byte *) message.c_str(), message.length());
@@ -29,8 +29,8 @@ public:
         return result;
     }
 
-    bool isMatch(const string &target_message, const string &encrypted_message) {
-        auto encrypted_target_message = this->encrypt(target_message);
+    static bool isMatch(const string &target_message, const string &encrypted_message) {
+        auto encrypted_target_message = Sha256::encrypt(target_message);
         bool result = encrypted_target_message == encrypted_message;
 
         return result;
