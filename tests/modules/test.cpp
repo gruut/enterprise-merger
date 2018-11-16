@@ -4,6 +4,7 @@
 #include "../../src/application.hpp"
 #include "../../src/modules/message_fetcher/message_fetcher.hpp"
 #include "../../src/modules/signer_pool_manager/signer_pool_manager.hpp"
+#include "../../src/modules/signature_requester/signature_requester.hpp"
 #include "../../../src/modules/communication/grpc_util.hpp"
 
 using namespace std;
@@ -32,6 +33,15 @@ BOOST_AUTO_TEST_SUITE(Test_SignerPoolManager)
 
         signers = manager.getSigners();
         BOOST_TEST(signers.size() == 1);
+    }
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_SignatureRequester)
+    BOOST_AUTO_TEST_CASE(requestSignatures) {
+        SignatureRequester requester;
+
+        auto result = requester.requestSignatures();
+        BOOST_TEST(result);
     }
 BOOST_AUTO_TEST_SUITE_END()
 
