@@ -1,7 +1,10 @@
 #pragma once
 #include<string>
+#include<iostream>
 #include <lz4.h>
 #include "../../application.hpp"
+#include "../../../include/json_schema.hpp"
+#include "msg_schema.hpp"
 
 namespace gruut{
     constexpr uint8_t G = 0x47;
@@ -92,6 +95,26 @@ namespace gruut{
             uint8_t message_type = 0;
             message_type |= raw_data[2];
             return message_type;
+        }
+    };
+    class JsonValidator{
+    public:
+        static bool validateSchema(json json_object, MessageType msg_type){
+            using nlohmann::json;
+            using nlohmann::json_schema_draft4::json_validator;
+
+            json_validator schema_validator;
+            schema_validator.set_root_schema(MessageSchema::schema_list[msg_type]);
+
+            try{
+                schema_validator.validate(json_object);
+                std::cout << "Validation succeeded"<<std::endl;
+                return true;
+            }
+            catch(const std::exception &e) {
+                std::cout << "Validation failed" << std::endl;
+                return false;
+            }
         }
     };
 }
