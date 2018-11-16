@@ -3,6 +3,7 @@
 #include "../../application.hpp"
 #include "../../chain/transaction.hpp"
 #include "../message_fetcher/message_fetcher.hpp"
+#include "../../services/signature_requester.hpp"
 
 #include <iostream>
 #include <queue>
@@ -18,9 +19,10 @@ namespace gruut {
     public:
         TransactionCollector() : m_timer(Application::app().getIoService()) {}
 
-        void start() override {
+        void start() {
             m_runnable = isRunnable();
             startTimer();
+            startSignatureRequest();
         }
 
     private:
@@ -49,6 +51,13 @@ namespace gruut {
                     m_transaction_pool.push(transaction);
                 }
             });
+        }
+
+        void startSignatureRequest() {
+            SignatureRequester signature_requester;
+            bool request_result = signature_requester.requestSignatures();
+
+            if(!request_result) throw;
         }
 
         boost::asio::deadline_timer m_timer;
