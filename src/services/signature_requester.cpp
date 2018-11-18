@@ -1,9 +1,12 @@
 #include <iostream>
 #include <boost/system/error_code.hpp>
+
+#include "../chain/types.hpp"
 #include "../chain/signer.hpp"
 #include "signature_requester.hpp"
 #include "../application.hpp"
 #include "transaction_fetcher.hpp"
+#include "block_generator.hpp"
 
 namespace gruut {
     SignatureRequester::SignatureRequester() {
@@ -12,7 +15,7 @@ namespace gruut {
 
     bool SignatureRequester::requestSignatures() {
         auto transactions = std::move(fetchTransactions());
-//                auto temporary_block = makePartialBlock(transactions);
+        auto partial_block = makePartialBlock(transactions);
 //                    makeMessage(temporary_block);
 
         startSignatureCollectTimer();
@@ -40,5 +43,12 @@ namespace gruut {
         TransactionFetcher transaction_fetcher{move(signers)};
 
         return transaction_fetcher.fetchAll();
+    }
+
+    PartialBlock SignatureRequester::makePartialBlock(Transactions transactions) {
+        BlockGenerator block_generator;
+        auto&& block = block_generator.generatePartialBlock(transactions);
+
+        return block;
     }
 }

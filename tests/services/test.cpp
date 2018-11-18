@@ -7,6 +7,8 @@
 #include "../../src/services/transaction_fetcher.hpp"
 #include "../../src/services/signer_pool_manager.hpp"
 #include "../../src/services/signature_requester.hpp"
+#include "../../src/services/block_generator.hpp"
+
 #include "../../src/chain/transaction.hpp"
 #include "../../src/chain/types.hpp"
 
@@ -69,6 +71,22 @@ BOOST_AUTO_TEST_SUITE(Test_SignatureRequester)
 
         auto result = requester.requestSignatures();
         BOOST_TEST(result);
+    }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_BlockGenerator)
+
+    BOOST_AUTO_TEST_CASE(generatePartialBlock) {
+            vector<Transaction> transactions;
+            transactions.push_back(Transaction());
+
+            BlockGenerator generator;
+
+            auto block = generator.generatePartialBlock(transactions);
+
+            bool result = stoi(block.sent_time) > 0;
+            BOOST_TEST(result);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
