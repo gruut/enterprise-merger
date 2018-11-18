@@ -1,14 +1,6 @@
 #ifndef GRUUT_HANA_MERGER_MESSAGE_FETCHER_HPP
 #define GRUUT_HANA_MERGER_MESSAGE_FETCHER_HPP
 
-#include "../module.hpp"
-#include "../../application.hpp"
-#include "../../chain/transaction.hpp"
-#include "message_validator.hpp"
-
-#include <iostream>
-#include <boost/asio.hpp>
-
 namespace gruut {
     class MessageFetcher {
     public:

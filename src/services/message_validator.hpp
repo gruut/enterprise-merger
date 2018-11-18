@@ -8,5 +8,4 @@ namespace gruut {
         }
     };
 }
-
 #endif

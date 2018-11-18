@@ -12,5 +12,11 @@ namespace gruut {
         signature_type signature;
         content_type content;
     };
+
+    struct NullTransaction : public Transaction {
+        NullTransaction() {
+            transaction_id = "";
+        }
+    };
 }
 #endif
