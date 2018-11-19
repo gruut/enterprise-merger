@@ -1,5 +1,5 @@
-#ifndef GRUUT_HANA_MERGER_TYPES_HPP
-#define GRUUT_HANA_MERGER_TYPES_HPP
+#ifndef GRUUT_ENTERPRISE_MERGER_TYPES_HPP
+#define GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 
 #include <string>
 #include <vector>

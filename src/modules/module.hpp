@@ -1,5 +1,5 @@
-#ifndef GRUUT_HANA_MERGER_MODULE_H
-#define GRUUT_HANA_MERGER_MODULE_H
+#ifndef GRUUT_ENTERPRISE_MERGER_MODULE_H
+#define GRUUT_ENTERPRISE_MERGER_MODULE_H
 
 namespace gruut {
     class Module {

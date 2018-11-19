@@ -1,5 +1,5 @@
-#ifndef GRUUT_HANA_MERGER_MESSAGE_HPP
-#define GRUUT_HANA_MERGER_MESSAGE_HPP
+#ifndef GRUUT_ENTERPRISE_MERGER_MESSAGE_HPP
+#define GRUUT_ENTERPRISE_MERGER_MESSAGE_HPP
 
 #include "../../include/nlohmann/json.hpp"
 #include "types.hpp"

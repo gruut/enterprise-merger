@@ -1,5 +1,5 @@
-#ifndef GRUUT_HANA_MERGER_SHA_256_HPP
-#define GRUUT_HANA_MERGER_SHA_256_HPP
+#ifndef GRUUT_ENTERPRISE_MERGER_SHA_256_HPP
+#define GRUUT_ENTERPRISE_MERGER_SHA_256_HPP
 
 #include <cryptopp/sha.h>
 #include <cryptopp/hex.h>

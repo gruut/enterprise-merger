@@ -1,5 +1,6 @@
 #include "grpc_merger.hpp"
 #include "grpc_util.hpp"
+#include "../../chain/message.hpp"
 
 namespace gruut {
 
