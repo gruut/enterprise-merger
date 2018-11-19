@@ -6,6 +6,8 @@
 #include <boost/asio.hpp>
 
 #include "../chain/block.hpp"
+#include "../chain/message.hpp"
+#include "../application.hpp"
 
 namespace gruut {
     class Transaction;
@@ -24,7 +26,9 @@ namespace gruut {
 
         Transactions fetchTransactions();
 
-        PartialBlock makePartialBlock(Transactions transactions);
+        PartialBlock makePartialBlock(Transactions& transactions);
+
+        Message makeMessage(PartialBlock &block);
 
         std::unique_ptr<boost::asio::steady_timer> m_timer;
     };
