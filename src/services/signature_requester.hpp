@@ -5,9 +5,9 @@
 #include <memory>
 #include <boost/asio.hpp>
 
-namespace gruut {
-    class PartialBlock;
+#include "../chain/block.hpp"
 
+namespace gruut {
     class Transaction;
 
     const int SIGNATURE_COLLECTION_INTERVAL = 10000;
@@ -24,7 +24,8 @@ namespace gruut {
 
         Transactions fetchTransactions();
 
-//        PartialBlock makePartialBlock(Transaction transaction);
+        PartialBlock makePartialBlock(Transactions transactions);
+
         std::unique_ptr<boost::asio::steady_timer> m_timer;
     };
 }

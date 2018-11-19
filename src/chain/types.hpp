@@ -10,6 +10,11 @@ namespace gruut {
         CERTIFICATE
     };
 
+    enum class BlockType {
+        PARTIAL,
+        NORMAL
+    };
+
     using sha256 = std::string;
     using timestamp = std::string;
     using block_height_type = std::string;
