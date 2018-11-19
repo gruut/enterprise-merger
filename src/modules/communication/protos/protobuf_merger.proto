@@ -3,16 +3,7 @@ syntax = "proto3";
 package grpc_merger;
 
 service MergerCommunication {
-    rpc checkAlive (CheckAliveRequest) returns (CheckAliveReply) {}
     rpc pushData (MergerDataRequest) returns (MergerDataReply) {}
-}
-
-message CheckAliveRequest {
-    bool checker = 1;
-}
-
-message CheckAliveReply {
-    bool message = 1;
 }
 
 message MergerDataRequest{

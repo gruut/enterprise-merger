@@ -46,6 +46,10 @@ namespace gruut
 
     class MessageSchema{
     public:
+        static json getSchema(MessageType msg_type) {
+            return schema_list[msg_type];
+        }
+    private:
         static std::map<MessageType, json> schema_list;
     };
     std::map<MessageType, json> MessageSchema::schema_list = {

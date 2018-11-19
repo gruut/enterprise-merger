@@ -20,16 +20,6 @@
 // @@protoc_insertion_point(includes)
 
 namespace grpc_merger {
-class CheckAliveRequestDefaultTypeInternal {
- public:
-  ::google::protobuf::internal::ExplicitlyConstructed<CheckAliveRequest>
-      _instance;
-} _CheckAliveRequest_default_instance_;
-class CheckAliveReplyDefaultTypeInternal {
- public:
-  ::google::protobuf::internal::ExplicitlyConstructed<CheckAliveReply>
-      _instance;
-} _CheckAliveReply_default_instance_;
 class MergerDataRequestDefaultTypeInternal {
  public:
   ::google::protobuf::internal::ExplicitlyConstructed<MergerDataRequest>
@@ -42,34 +32,6 @@ class MergerDataReplyDefaultTypeInternal {
 } _MergerDataReply_default_instance_;
 }  // namespace grpc_merger
 namespace protobuf_protobuf_5fmerger_2eproto {
-static void InitDefaultsCheckAliveRequest() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::grpc_merger::_CheckAliveRequest_default_instance_;
-    new (ptr) ::grpc_merger::CheckAliveRequest();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::grpc_merger::CheckAliveRequest::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_CheckAliveRequest =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsCheckAliveRequest}, {}};
-
-static void InitDefaultsCheckAliveReply() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::grpc_merger::_CheckAliveReply_default_instance_;
-    new (ptr) ::grpc_merger::CheckAliveReply();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::grpc_merger::CheckAliveReply::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_CheckAliveReply =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsCheckAliveReply}, {}};
-
 static void InitDefaultsMergerDataRequest() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -99,27 +61,13 @@ static void InitDefaultsMergerDataReply() {
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsMergerDataReply}, {}};
 
 void InitDefaults() {
-  ::google::protobuf::internal::InitSCC(&scc_info_CheckAliveRequest.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_CheckAliveReply.base);
   ::google::protobuf::internal::InitSCC(&scc_info_MergerDataRequest.base);
   ::google::protobuf::internal::InitSCC(&scc_info_MergerDataReply.base);
 }
 
-::google::protobuf::Metadata file_level_metadata[4];
+::google::protobuf::Metadata file_level_metadata[2];
 
 const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-  ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::CheckAliveRequest, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::CheckAliveRequest, checker_),
-  ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::CheckAliveReply, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::CheckAliveReply, message_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::MergerDataRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -134,15 +82,11 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::MergerDataReply, checker_),
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, sizeof(::grpc_merger::CheckAliveRequest)},
-  { 6, -1, sizeof(::grpc_merger::CheckAliveReply)},
-  { 12, -1, sizeof(::grpc_merger::MergerDataRequest)},
-  { 18, -1, sizeof(::grpc_merger::MergerDataReply)},
+  { 0, -1, sizeof(::grpc_merger::MergerDataRequest)},
+  { 6, -1, sizeof(::grpc_merger::MergerDataReply)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::google::protobuf::Message*>(&::grpc_merger::_CheckAliveRequest_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::grpc_merger::_CheckAliveReply_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::grpc_merger::_MergerDataRequest_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::grpc_merger::_MergerDataReply_default_instance_),
 };
@@ -162,25 +106,21 @@ void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 4);
+  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 2);
 }
 
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\025protobuf_merger.proto\022\013grpc_merger\"$\n\021"
-      "CheckAliveRequest\022\017\n\007checker\030\001 \001(\010\"\"\n\017Ch"
-      "eckAliveReply\022\017\n\007message\030\001 \001(\010\"!\n\021Merger"
-      "DataRequest\022\014\n\004data\030\001 \001(\014\"\"\n\017MergerDataR"
-      "eply\022\017\n\007checker\030\001 \001(\0102\257\001\n\023MergerCommunic"
-      "ation\022L\n\ncheckAlive\022\036.grpc_merger.CheckA"
-      "liveRequest\032\034.grpc_merger.CheckAliveRepl"
-      "y\"\000\022J\n\010pushData\022\036.grpc_merger.MergerData"
-      "Request\032\034.grpc_merger.MergerDataReply\"\000b"
-      "\006proto3"
+      "\n\025protobuf_merger.proto\022\013grpc_merger\"!\n\021"
+      "MergerDataRequest\022\014\n\004data\030\001 \001(\014\"\"\n\017Merge"
+      "rDataReply\022\017\n\007checker\030\001 \001(\0102a\n\023MergerCom"
+      "munication\022J\n\010pushData\022\036.grpc_merger.Mer"
+      "gerDataRequest\032\034.grpc_merger.MergerDataR"
+      "eply\"\000b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 367);
+      descriptor, 214);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "protobuf_merger.proto", &protobuf_RegisterTypes);
 }
@@ -197,448 +137,6 @@ struct StaticDescriptorInitializer {
 } static_descriptor_initializer;
 }  // namespace protobuf_protobuf_5fmerger_2eproto
 namespace grpc_merger {
-
-// ===================================================================
-
-void CheckAliveRequest::InitAsDefaultInstance() {
-}
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int CheckAliveRequest::kCheckerFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
-CheckAliveRequest::CheckAliveRequest()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_protobuf_5fmerger_2eproto::scc_info_CheckAliveRequest.base);
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:grpc_merger.CheckAliveRequest)
-}
-CheckAliveRequest::CheckAliveRequest(const CheckAliveRequest& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  checker_ = from.checker_;
-  // @@protoc_insertion_point(copy_constructor:grpc_merger.CheckAliveRequest)
-}
-
-void CheckAliveRequest::SharedCtor() {
-  checker_ = false;
-}
-
-CheckAliveRequest::~CheckAliveRequest() {
-  // @@protoc_insertion_point(destructor:grpc_merger.CheckAliveRequest)
-  SharedDtor();
-}
-
-void CheckAliveRequest::SharedDtor() {
-}
-
-void CheckAliveRequest::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
-}
-const ::google::protobuf::Descriptor* CheckAliveRequest::descriptor() {
-  ::protobuf_protobuf_5fmerger_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_protobuf_5fmerger_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
-const CheckAliveRequest& CheckAliveRequest::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_protobuf_5fmerger_2eproto::scc_info_CheckAliveRequest.base);
-  return *internal_default_instance();
-}
-
-
-void CheckAliveRequest::Clear() {
-// @@protoc_insertion_point(message_clear_start:grpc_merger.CheckAliveRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  checker_ = false;
-  _internal_metadata_.Clear();
-}
-
-bool CheckAliveRequest::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:grpc_merger.CheckAliveRequest)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // bool checker = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &checker_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
-      }
-    }
-  }
-success:
-  // @@protoc_insertion_point(parse_success:grpc_merger.CheckAliveRequest)
-  return true;
-failure:
-  // @@protoc_insertion_point(parse_failure:grpc_merger.CheckAliveRequest)
-  return false;
-#undef DO_
-}
-
-void CheckAliveRequest::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:grpc_merger.CheckAliveRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool checker = 1;
-  if (this->checker() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->checker(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:grpc_merger.CheckAliveRequest)
-}
-
-::google::protobuf::uint8* CheckAliveRequest::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:grpc_merger.CheckAliveRequest)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool checker = 1;
-  if (this->checker() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->checker(), target);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:grpc_merger.CheckAliveRequest)
-  return target;
-}
-
-size_t CheckAliveRequest::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:grpc_merger.CheckAliveRequest)
-  size_t total_size = 0;
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
-  // bool checker = 1;
-  if (this->checker() != 0) {
-    total_size += 1 + 1;
-  }
-
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
-}
-
-void CheckAliveRequest::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:grpc_merger.CheckAliveRequest)
-  GOOGLE_DCHECK_NE(&from, this);
-  const CheckAliveRequest* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const CheckAliveRequest>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:grpc_merger.CheckAliveRequest)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:grpc_merger.CheckAliveRequest)
-    MergeFrom(*source);
-  }
-}
-
-void CheckAliveRequest::MergeFrom(const CheckAliveRequest& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:grpc_merger.CheckAliveRequest)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (from.checker() != 0) {
-    set_checker(from.checker());
-  }
-}
-
-void CheckAliveRequest::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:grpc_merger.CheckAliveRequest)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-void CheckAliveRequest::CopyFrom(const CheckAliveRequest& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:grpc_merger.CheckAliveRequest)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool CheckAliveRequest::IsInitialized() const {
-  return true;
-}
-
-void CheckAliveRequest::Swap(CheckAliveRequest* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
-void CheckAliveRequest::InternalSwap(CheckAliveRequest* other) {
-  using std::swap;
-  swap(checker_, other->checker_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-}
-
-::google::protobuf::Metadata CheckAliveRequest::GetMetadata() const {
-  protobuf_protobuf_5fmerger_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_protobuf_5fmerger_2eproto::file_level_metadata[kIndexInFileMessages];
-}
-
-
-// ===================================================================
-
-void CheckAliveReply::InitAsDefaultInstance() {
-}
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int CheckAliveReply::kMessageFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
-CheckAliveReply::CheckAliveReply()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_protobuf_5fmerger_2eproto::scc_info_CheckAliveReply.base);
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:grpc_merger.CheckAliveReply)
-}
-CheckAliveReply::CheckAliveReply(const CheckAliveReply& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  message_ = from.message_;
-  // @@protoc_insertion_point(copy_constructor:grpc_merger.CheckAliveReply)
-}
-
-void CheckAliveReply::SharedCtor() {
-  message_ = false;
-}
-
-CheckAliveReply::~CheckAliveReply() {
-  // @@protoc_insertion_point(destructor:grpc_merger.CheckAliveReply)
-  SharedDtor();
-}
-
-void CheckAliveReply::SharedDtor() {
-}
-
-void CheckAliveReply::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
-}
-const ::google::protobuf::Descriptor* CheckAliveReply::descriptor() {
-  ::protobuf_protobuf_5fmerger_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_protobuf_5fmerger_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
-const CheckAliveReply& CheckAliveReply::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_protobuf_5fmerger_2eproto::scc_info_CheckAliveReply.base);
-  return *internal_default_instance();
-}
-
-
-void CheckAliveReply::Clear() {
-// @@protoc_insertion_point(message_clear_start:grpc_merger.CheckAliveReply)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  message_ = false;
-  _internal_metadata_.Clear();
-}
-
-bool CheckAliveReply::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:grpc_merger.CheckAliveReply)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // bool message = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &message_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
-      }
-    }
-  }
-success:
-  // @@protoc_insertion_point(parse_success:grpc_merger.CheckAliveReply)
-  return true;
-failure:
-  // @@protoc_insertion_point(parse_failure:grpc_merger.CheckAliveReply)
-  return false;
-#undef DO_
-}
-
-void CheckAliveReply::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:grpc_merger.CheckAliveReply)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool message = 1;
-  if (this->message() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->message(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:grpc_merger.CheckAliveReply)
-}
-
-::google::protobuf::uint8* CheckAliveReply::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:grpc_merger.CheckAliveReply)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool message = 1;
-  if (this->message() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->message(), target);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:grpc_merger.CheckAliveReply)
-  return target;
-}
-
-size_t CheckAliveReply::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:grpc_merger.CheckAliveReply)
-  size_t total_size = 0;
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
-  // bool message = 1;
-  if (this->message() != 0) {
-    total_size += 1 + 1;
-  }
-
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
-}
-
-void CheckAliveReply::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:grpc_merger.CheckAliveReply)
-  GOOGLE_DCHECK_NE(&from, this);
-  const CheckAliveReply* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const CheckAliveReply>(
-          &from);
-  if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:grpc_merger.CheckAliveReply)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:grpc_merger.CheckAliveReply)
-    MergeFrom(*source);
-  }
-}
-
-void CheckAliveReply::MergeFrom(const CheckAliveReply& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:grpc_merger.CheckAliveReply)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (from.message() != 0) {
-    set_message(from.message());
-  }
-}
-
-void CheckAliveReply::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:grpc_merger.CheckAliveReply)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-void CheckAliveReply::CopyFrom(const CheckAliveReply& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:grpc_merger.CheckAliveReply)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool CheckAliveReply::IsInitialized() const {
-  return true;
-}
-
-void CheckAliveReply::Swap(CheckAliveReply* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
-void CheckAliveReply::InternalSwap(CheckAliveReply* other) {
-  using std::swap;
-  swap(message_, other->message_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-}
-
-::google::protobuf::Metadata CheckAliveReply::GetMetadata() const {
-  protobuf_protobuf_5fmerger_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_protobuf_5fmerger_2eproto::file_level_metadata[kIndexInFileMessages];
-}
-
 
 // ===================================================================
 
@@ -1095,12 +593,6 @@ void MergerDataReply::InternalSwap(MergerDataReply* other) {
 }  // namespace grpc_merger
 namespace google {
 namespace protobuf {
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::grpc_merger::CheckAliveRequest* Arena::CreateMaybeMessage< ::grpc_merger::CheckAliveRequest >(Arena* arena) {
-  return Arena::CreateInternal< ::grpc_merger::CheckAliveRequest >(arena);
-}
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::grpc_merger::CheckAliveReply* Arena::CreateMaybeMessage< ::grpc_merger::CheckAliveReply >(Arena* arena) {
-  return Arena::CreateInternal< ::grpc_merger::CheckAliveReply >(arena);
-}
 template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::grpc_merger::MergerDataRequest* Arena::CreateMaybeMessage< ::grpc_merger::MergerDataRequest >(Arena* arena) {
   return Arena::CreateInternal< ::grpc_merger::MergerDataRequest >(arena);
 }

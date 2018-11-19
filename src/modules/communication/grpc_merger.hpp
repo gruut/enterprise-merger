@@ -21,8 +21,6 @@ using grpc::Channel;
 using grpc::ClientContext;
 
 using grpc_merger::MergerCommunication;
-using grpc_merger::CheckAliveRequest;
-using grpc_merger::CheckAliveReply;
 using grpc_merger::MergerDataRequest;
 using grpc_merger::MergerDataReply;
 
@@ -84,103 +82,59 @@ namespace gruut {
             virtual void proceed() = 0;
         };
 
-        class CheckAlive final : public CallData {
+        class ReceiveData final : public CallData {
         public:
-
-            CheckAlive(MergerCommunication::AsyncService *service, ServerCompletionQueue *cq)
-                    : m_check_service(service), m_check_cq(cq), m_check_responder(&m_check_ctx),
-                      m_check_status(CallStatus::CREATE) {
+            ReceiveData(MergerCommunication::AsyncService *service, ServerCompletionQueue *cq)
+                    : m_service(service), m_cq(cq), m_responder(&m_ctx), m_receive_status(CallStatus::CREATE) {
 
                 proceed();
             }
 
             void proceed() {
-                switch (m_check_status) {
+                switch (m_receive_status) {
                     case CallStatus::CREATE: {
-                        m_check_status = CallStatus::PROCESS;
-                        m_check_service->RequestcheckAlive(&m_check_ctx, &m_check_request, &m_check_responder,
-                                                           m_check_cq, m_check_cq, this);
-                    }
-                        break;
-
-                    case CallStatus::PROCESS: {
-                        new CheckAlive(m_check_service, m_check_cq);
-
-                        m_check_reply.set_message(true);
-                        m_check_status = CallStatus::FINISH;
-                        m_check_responder.Finish(m_check_reply, Status::OK, this);
-                    }
-                        break;
-
-                    default: {
-                        GPR_ASSERT(m_check_status == CallStatus::FINISH);
-                        delete this;
-                    }
-                        break;
-                }
-            }
-
-        private:
-            MergerCommunication::AsyncService *m_check_service;
-            ServerCompletionQueue *m_check_cq;
-
-            ServerContext m_check_ctx;
-
-            CheckAliveRequest m_check_request;
-            CheckAliveReply m_check_reply;
-
-            ServerAsyncResponseWriter<CheckAliveReply> m_check_responder;
-
-            CallStatus m_check_status;
-        };
-
-        class PushData final : public CallData {
-        public:
-            PushData(MergerCommunication::AsyncService *service, ServerCompletionQueue *cq)
-                    : m_push_service(service), m_push_cq(cq), m_push_responder(&m_push_ctx), m_push_status(CallStatus::CREATE) {
-
-                proceed();
-            }
-
-            void proceed() {
-                switch (m_push_status) {
-                    case CallStatus::CREATE: {
-                        m_push_status = CallStatus::PROCESS;
-                        m_push_service->RequestpushData(&m_push_ctx, &m_push_request, &m_push_responder, m_push_cq,
-                                                        m_push_cq, this);
+                        m_receive_status = CallStatus::PROCESS;
+                        m_service->RequestpushData(&m_ctx, &m_request, &m_responder, m_cq,
+                                                        m_cq, this);
                     }
                     break;
 
                     case CallStatus::PROCESS: {
-                        new PushData(m_push_service, m_push_cq);
+                        new ReceiveData(m_service, m_cq);
 
-                        std::string raw_data = m_push_request.data();
+                        std::string raw_data = m_request.data();
                         if(!HeaderController::validateMessage(raw_data)) {
-                            m_push_reply.set_checker(false);
+                            m_reply.set_checker(false);
                         }
                         else {
                             int json_size = HeaderController::getJsonSize(raw_data);
                             std::string compressed_data = HeaderController::detachHeader(raw_data);
                             std::string decompressed_data;
+                            //MAC verification 필요
 
-                            Compressor::decompressData(compressed_data, decompressed_data,json_size);
-
+                            Compressor::decompressData(compressed_data, decompressed_data, json_size);
                             uint8_t message_type = HeaderController::getMessageType(raw_data);
 
                             Message msg;
                             msg.type = static_cast<MessageType>(message_type);
                             msg.data = nlohmann::json::parse(decompressed_data);
 
-                            auto input_queue = Application::app().getInputQueue();
-                            input_queue->push(msg);
+                            if(JsonValidator::validateSchema(msg.data, msg.type)) {
+                                auto input_queue  = Application::app().getInputQueue();
+                                input_queue->push(msg);
+                                m_reply.set_checker(true);
+                            }
+                            else {
+                                m_reply.set_checker(false);
+                            }
                         }
-                        m_push_status = CallStatus::FINISH;
-                        m_push_responder.Finish(m_push_reply, Status::OK, this);
+                        m_receive_status = CallStatus::FINISH;
+                        m_responder.Finish(m_reply, Status::OK, this);
                     }
                     break;
 
                     default: {
-                        GPR_ASSERT(m_push_status == CallStatus::FINISH);
+                        GPR_ASSERT(m_receive_status == CallStatus::FINISH);
                         delete this;
                     }
                     break;
@@ -188,17 +142,17 @@ namespace gruut {
             }
 
         private:
-            MergerCommunication::AsyncService *m_push_service;
-            ServerCompletionQueue *m_push_cq;
+            MergerCommunication::AsyncService *m_service;
+            ServerCompletionQueue *m_cq;
 
-            ServerContext m_push_ctx;
+            ServerContext m_ctx;
 
-            MergerDataRequest m_push_request;
-            MergerDataReply m_push_reply;
+            MergerDataRequest m_request;
+            MergerDataReply m_reply;
 
-            ServerAsyncResponseWriter<MergerDataReply> m_push_responder;
+            ServerAsyncResponseWriter<MergerDataReply> m_responder;
 
-            CallStatus m_push_status;
+            CallStatus m_receive_status;
         };
 
         class PullRequest final : public CallData {
@@ -250,8 +204,7 @@ namespace gruut {
         };
 
         void handleMergerRpcs() {
-            new CheckAlive(&m_service_merger, m_cq_merger.get());
-            new PushData(&m_service_merger, m_cq_merger.get());
+            new ReceiveData(&m_service_merger, m_cq_merger.get());
             void *tag;
             bool ok;
             while (true) {
@@ -283,34 +236,35 @@ namespace gruut {
 
     class MergerRpcClient {
     public:
-        MergerRpcClient(std::shared_ptr<Channel> channel)
-                : m_stub(MergerCommunication::NewStub(channel)) {}
+        void run() {
+            m_pool =unique_ptr<ThreadPool>(new ThreadPool(5));
+            auto output_queue = Application::app().getOutputQueue();
 
-        bool checkAlive(bool checker) {
-            CheckAliveRequest request;
+            //아래 if문을 포함하는 무한루프 필요
+            if(!output_queue->empty()) {
+                 Message msg = output_queue->front();
+                 if(checkMsgType(msg.type)) {
+                     std::string compressed_json;
+                     std::string json_dump = msg.data.dump();
+                     Compressor::compressData(json_dump,compressed_json);
+                     std::string header_added_data = HeaderController::attachHeader(compressed_json, msg.type);
 
-            request.set_checker(true);
+                     //MAC 붙이는 것 필요
 
-            CheckAliveReply reply;
-            ClientContext context;
-
-            Status status = m_stub->checkAlive(&context, request, &reply);
-            if (status.ok()) {
-                return reply.message();
-            } else {
-                std::cout << status.error_code() << ": " << status.error_message()
-                          << std::endl;
-                return false;
+                     sendData(header_added_data);
+                 }
             }
+
         }
 
-        bool pushData(std::string &compressed_data) {
+    private:
+        bool pushData(std::string &compressed_data, unique_ptr<MergerCommunication::Stub> stub) {
             MergerDataRequest request;
             request.set_data(compressed_data);
 
             MergerDataReply reply;
             ClientContext context;
-            Status status = m_stub->pushData(&context, request, &reply);
+            Status status = stub->pushData(&context, request, &reply);
 
             if (status.ok())
                 return reply.checker();
@@ -320,48 +274,16 @@ namespace gruut {
             }
         }
 
-    private:
-        std::unique_ptr<MergerCommunication::Stub> m_stub;
-    };
-
-    class MessageHandler {
-    public:
-        void run() {
-            m_pool = unique_ptr<ThreadPool>(new ThreadPool(5));
-            auto output_queue = Application::app().getOutputQueue();
-
-            //아래 if문을 포함하는 무한루프 필요.
-            if (!output_queue->empty()) {
-                Message msg = output_queue->front();
-
-                std::string compressed_json;
-                std::string json_dump = msg.data.dump();
-
-                Compressor::compressData(json_dump, compressed_json);
-                std::string header_added_data = HeaderController::attachHeader(compressed_json, msg.type);
-
-                switch(msg.type)
-                {
-                    case MessageType ::MSG_BLOCK: {
-                        sendDataToMerger(header_added_data);
-                    }
-                    break;
-                    default:{
-
-                    }
-                    break;
-                }
-                output_queue->pop();
-            }
+        bool checkMsgType(MessageType msg_type){
+            return (msg_type==MessageType::MSG_ECHO || msg_type==MessageType::MSG_BLOCK);
         }
 
-    private:
-        void sendDataToMerger(std::string &header_added_data) {
+        void sendData(std::string &header_added_data){
+            //현재는 로컬호스트로 받는곳 지정 해놓음 변경 필요.
+            unique_ptr<MergerCommunication::Stub> stub =
+                    MergerCommunication::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
 
-            std::unique_ptr<MergerRpcClient> merger_client
-            (new MergerRpcClient(grpc::CreateChannel("ip and port",grpc::InsecureChannelCredentials())));
-
-            m_pool->enqueue([&](){merger_client->pushData(header_added_data);});
+            m_pool->enqueue([&](){pushData(header_added_data, move(stub));});
         }
         std::unique_ptr<ThreadPool> m_pool;
     };
