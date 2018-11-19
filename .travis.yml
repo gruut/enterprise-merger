@@ -1,10 +1,11 @@
 sudo: required
+dist: trusty
 language: cpp
 compiler:
 - clang
 
-install:
-- sudo apt-get update -y && sudo apt-get upgrade -y
+before_install:
+- sudo apt-get update
 - sudo apt-get install -y curl git python3 python3-pip clang-tidy clang-6.0 lld-6.0 build-essential autoconf libtool pkg-config
 #  boost
 - sudo apt-get install -y libboost1.65-all-dev
