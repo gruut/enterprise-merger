@@ -1,14 +1,15 @@
-sudo: required
-dist: trusty
+dist: xenial
 language: cpp
+os: linux
 compiler:
 - clang
 
 before_install:
 - sudo apt-get update
-- sudo apt-get install -y curl git python3 python3-pip clang-tidy clang-6.0 lld-6.0 build-essential autoconf libtool pkg-config
+install:
+- sudo apt-get install -y python3-pip
 #  boost
-- sudo apt-get install -y libboost1.65-all-dev
+- sudo apt-get install -y libboost-all-dev
 - pip3 install cmake
 - |
   if [[ -z $(ls | grep grpc) ]]; then
@@ -22,12 +23,12 @@ before_install:
   if [[ -z $(ls | grep lz4) ]]; then
     git clone https://github.com/lz4/lz4.git
   fi
-
 script:
-- cd lz4 && make && make install && cd ..
+- cd lz4 && sudo make install && cd ..
 - cd lib/leveldb && mkdir -p build && cd build
+- ls
 - cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cd ../../../
-- cd grpc && git submodule update --init && make && make install && cd third_party/protobuf && make install && cd ../../..
+- cd grpc && git submodule update --init && sudo make && sudo make install && cd third_party/protobuf && sudo make install && cd ../../..
 - |
   cd cryptopp
   git submodule add https://github.com/noloader/cryptopp-cmake.git cmake
