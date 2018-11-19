@@ -7,6 +7,7 @@
 #include "../application.hpp"
 #include "transaction_fetcher.hpp"
 #include "block_generator.hpp"
+#include "message_factory.hpp"
 
 namespace gruut {
     SignatureRequester::SignatureRequester() {
@@ -16,7 +17,7 @@ namespace gruut {
     bool SignatureRequester::requestSignatures() {
         auto transactions = std::move(fetchTransactions());
         auto partial_block = makePartialBlock(transactions);
-//                    makeMessage(temporary_block);
+        auto message = makeMessage(partial_block);
 
         startSignatureCollectTimer();
         return true;
@@ -45,10 +46,15 @@ namespace gruut {
         return transaction_fetcher.fetchAll();
     }
 
-    PartialBlock SignatureRequester::makePartialBlock(Transactions transactions) {
+    PartialBlock SignatureRequester::makePartialBlock(Transactions& transactions) {
         BlockGenerator block_generator;
         auto&& block = block_generator.generatePartialBlock(transactions);
 
         return block;
+    }
+
+    Message SignatureRequester::makeMessage(PartialBlock &block) {
+        auto message = MessageFactory::create(block);
+        return message;
     }
 }
