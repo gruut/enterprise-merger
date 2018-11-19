@@ -10,6 +10,10 @@ file(GLOB SRC_FILES
         "../../src/*.hpp"
         "../../src/modules/message_fetcher/*.hpp"
         "../../src/modules/signer_pool_manager/*.hpp"
+        "../../src/modules/communication/grpc_merger.hpp"
+        "../../src/modules/communication/grpc_merger.cpp"
+        "../../src/modules/communication/grpc_util.hpp"
+        "../../src/modules/communication/grpc_util.cpp"
         "../../include/*.hpp"
         )
 
