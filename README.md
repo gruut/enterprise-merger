@@ -1,4 +1,4 @@
-# Gruut-Hana Merger Project
+# Gruut-Enterprise Merger Project
 
 ### Prerequisite
   - CMake (**3.12**)
@@ -12,6 +12,8 @@
   - **LevelDB**
     * 각자 라이브러리를 설치해야 합니다.
     * [링크](https://github.com/google/leveldb)
+  - **lz4**
+    * 각자 라이브러리를 설치해야 합니다.
 
 ### [Project Directory Structure](https://hiltmon.com/blog/2013/07/03/a-simple-c-plus-plus-project-structure/)
   - build: This folder contains all object files, and is removed on a clean.
