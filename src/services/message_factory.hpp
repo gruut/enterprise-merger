@@ -2,6 +2,7 @@
 #define GRUUT_HANA_MERGER_MESSAGE_FACTORY_HPP
 
 #include "../chain/message.hpp"
+#include "../utils/compressor.hpp"
 
 namespace gruut {
     class MessageFactory {

@@ -21,6 +21,7 @@ file(GLOB HEADER_FILES
         "src/services/*.hpp"
         "src/application.hpp"
         "src/module.hpp"
+        "src/utils/*.hpp"
         )
 
 target_sources(gruut_hana_merger

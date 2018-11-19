@@ -10,19 +10,6 @@
 using namespace std;
 using namespace gruut;
 
-BOOST_AUTO_TEST_SUITE(Test_Compressor)
-    BOOST_AUTO_TEST_CASE(compressData_decompressData) {
-        string original = "2013-01-07 00:00:04,0.98644,0.98676 2013-01-07 00:01:19,0.98654,0.98676 2013-01-07 00:01:38,0.98644,0.98696";
-        int origin_size = original.size();
-        string compressed_data, decompressed_data;
-
-        Compressor::compressData(original,compressed_data);
-        Compressor::decompressData(compressed_data, decompressed_data, origin_size);
-
-        BOOST_TEST(decompressed_data==original);
-    }
-BOOST_AUTO_TEST_SUITE_END()
-
 BOOST_AUTO_TEST_SUITE(Test_HeaderController)
     BOOST_AUTO_TEST_CASE(attchHeader) {
         string data = "1234";

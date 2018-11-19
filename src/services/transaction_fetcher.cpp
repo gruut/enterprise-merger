@@ -1,6 +1,6 @@
 #include <algorithm>
 
-#include "../utils/sha_256.hpp"
+#include "../utils/sha256.hpp"
 #include "transaction_fetcher.hpp"
 #include "../application.hpp"
 #include "../../include/nlohmann/json.hpp"

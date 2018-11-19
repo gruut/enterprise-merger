@@ -1,4 +1,5 @@
 #include "src/application.hpp"
+#include "src/modules/transaction_collector/transaction_collector.hpp"
 //#include "src/modules/communication/communication.hpp"
 
 using namespace gruut;
