@@ -38,7 +38,7 @@ namespace protobuf_protobuf_5fmerger_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[4];
+  static const ::google::protobuf::internal::ParseTable schema[2];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -46,12 +46,6 @@ struct TableStruct {
 void AddDescriptors();
 }  // namespace protobuf_protobuf_5fmerger_2eproto
 namespace grpc_merger {
-class CheckAliveReply;
-class CheckAliveReplyDefaultTypeInternal;
-extern CheckAliveReplyDefaultTypeInternal _CheckAliveReply_default_instance_;
-class CheckAliveRequest;
-class CheckAliveRequestDefaultTypeInternal;
-extern CheckAliveRequestDefaultTypeInternal _CheckAliveRequest_default_instance_;
 class MergerDataReply;
 class MergerDataReplyDefaultTypeInternal;
 extern MergerDataReplyDefaultTypeInternal _MergerDataReply_default_instance_;
@@ -61,8 +55,6 @@ extern MergerDataRequestDefaultTypeInternal _MergerDataRequest_default_instance_
 }  // namespace grpc_merger
 namespace google {
 namespace protobuf {
-template<> ::grpc_merger::CheckAliveReply* Arena::CreateMaybeMessage<::grpc_merger::CheckAliveReply>(Arena*);
-template<> ::grpc_merger::CheckAliveRequest* Arena::CreateMaybeMessage<::grpc_merger::CheckAliveRequest>(Arena*);
 template<> ::grpc_merger::MergerDataReply* Arena::CreateMaybeMessage<::grpc_merger::MergerDataReply>(Arena*);
 template<> ::grpc_merger::MergerDataRequest* Arena::CreateMaybeMessage<::grpc_merger::MergerDataRequest>(Arena*);
 }  // namespace protobuf
@@ -70,212 +62,6 @@ template<> ::grpc_merger::MergerDataRequest* Arena::CreateMaybeMessage<::grpc_me
 namespace grpc_merger {
 
 // ===================================================================
-
-class CheckAliveRequest : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_merger.CheckAliveRequest) */ {
- public:
-  CheckAliveRequest();
-  virtual ~CheckAliveRequest();
-
-  CheckAliveRequest(const CheckAliveRequest& from);
-
-  inline CheckAliveRequest& operator=(const CheckAliveRequest& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  CheckAliveRequest(CheckAliveRequest&& from) noexcept
-    : CheckAliveRequest() {
-    *this = ::std::move(from);
-  }
-
-  inline CheckAliveRequest& operator=(CheckAliveRequest&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const CheckAliveRequest& default_instance();
-
-  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const CheckAliveRequest* internal_default_instance() {
-    return reinterpret_cast<const CheckAliveRequest*>(
-               &_CheckAliveRequest_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    0;
-
-  void Swap(CheckAliveRequest* other);
-  friend void swap(CheckAliveRequest& a, CheckAliveRequest& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline CheckAliveRequest* New() const final {
-    return CreateMaybeMessage<CheckAliveRequest>(NULL);
-  }
-
-  CheckAliveRequest* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<CheckAliveRequest>(arena);
-  }
-  void CopyFrom(const ::google::protobuf::Message& from) final;
-  void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const CheckAliveRequest& from);
-  void MergeFrom(const CheckAliveRequest& from);
-  void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) final;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const final;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* target) const final;
-  int GetCachedSize() const final { return _cached_size_.Get(); }
-
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(CheckAliveRequest* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // bool checker = 1;
-  void clear_checker();
-  static const int kCheckerFieldNumber = 1;
-  bool checker() const;
-  void set_checker(bool value);
-
-  // @@protoc_insertion_point(class_scope:grpc_merger.CheckAliveRequest)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  bool checker_;
-  mutable ::google::protobuf::internal::CachedSize _cached_size_;
-  friend struct ::protobuf_protobuf_5fmerger_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
-class CheckAliveReply : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_merger.CheckAliveReply) */ {
- public:
-  CheckAliveReply();
-  virtual ~CheckAliveReply();
-
-  CheckAliveReply(const CheckAliveReply& from);
-
-  inline CheckAliveReply& operator=(const CheckAliveReply& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  CheckAliveReply(CheckAliveReply&& from) noexcept
-    : CheckAliveReply() {
-    *this = ::std::move(from);
-  }
-
-  inline CheckAliveReply& operator=(CheckAliveReply&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const CheckAliveReply& default_instance();
-
-  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const CheckAliveReply* internal_default_instance() {
-    return reinterpret_cast<const CheckAliveReply*>(
-               &_CheckAliveReply_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    1;
-
-  void Swap(CheckAliveReply* other);
-  friend void swap(CheckAliveReply& a, CheckAliveReply& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline CheckAliveReply* New() const final {
-    return CreateMaybeMessage<CheckAliveReply>(NULL);
-  }
-
-  CheckAliveReply* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<CheckAliveReply>(arena);
-  }
-  void CopyFrom(const ::google::protobuf::Message& from) final;
-  void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const CheckAliveReply& from);
-  void MergeFrom(const CheckAliveReply& from);
-  void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) final;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const final;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* target) const final;
-  int GetCachedSize() const final { return _cached_size_.Get(); }
-
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(CheckAliveReply* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // bool message = 1;
-  void clear_message();
-  static const int kMessageFieldNumber = 1;
-  bool message() const;
-  void set_message(bool value);
-
-  // @@protoc_insertion_point(class_scope:grpc_merger.CheckAliveReply)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  bool message_;
-  mutable ::google::protobuf::internal::CachedSize _cached_size_;
-  friend struct ::protobuf_protobuf_5fmerger_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
 
 class MergerDataRequest : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_merger.MergerDataRequest) */ {
  public:
@@ -312,7 +98,7 @@ class MergerDataRequest : public ::google::protobuf::Message /* @@protoc_inserti
                &_MergerDataRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    2;
+    0;
 
   void Swap(MergerDataRequest* other);
   friend void swap(MergerDataRequest& a, MergerDataRequest& b) {
@@ -423,7 +209,7 @@ class MergerDataReply : public ::google::protobuf::Message /* @@protoc_insertion
                &_MergerDataReply_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    3;
+    1;
 
   void Swap(MergerDataReply* other);
   friend void swap(MergerDataReply& a, MergerDataReply& b) {
@@ -498,42 +284,6 @@ class MergerDataReply : public ::google::protobuf::Message /* @@protoc_insertion
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// CheckAliveRequest
-
-// bool checker = 1;
-inline void CheckAliveRequest::clear_checker() {
-  checker_ = false;
-}
-inline bool CheckAliveRequest::checker() const {
-  // @@protoc_insertion_point(field_get:grpc_merger.CheckAliveRequest.checker)
-  return checker_;
-}
-inline void CheckAliveRequest::set_checker(bool value) {
-  
-  checker_ = value;
-  // @@protoc_insertion_point(field_set:grpc_merger.CheckAliveRequest.checker)
-}
-
-// -------------------------------------------------------------------
-
-// CheckAliveReply
-
-// bool message = 1;
-inline void CheckAliveReply::clear_message() {
-  message_ = false;
-}
-inline bool CheckAliveReply::message() const {
-  // @@protoc_insertion_point(field_get:grpc_merger.CheckAliveReply.message)
-  return message_;
-}
-inline void CheckAliveReply::set_message(bool value) {
-  
-  message_ = value;
-  // @@protoc_insertion_point(field_set:grpc_merger.CheckAliveReply.message)
-}
-
-// -------------------------------------------------------------------
-
 // MergerDataRequest
 
 // bytes data = 1;
@@ -610,10 +360,6 @@ inline void MergerDataReply::set_checker(bool value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
-// -------------------------------------------------------------------
-
-// -------------------------------------------------------------------
-
 // -------------------------------------------------------------------
 
 
