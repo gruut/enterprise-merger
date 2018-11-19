@@ -1,4 +1,5 @@
 #include "grpc_merger.hpp"
+#include "grpc_util.hpp"
 
 namespace gruut {
 

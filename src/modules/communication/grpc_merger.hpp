@@ -5,30 +5,29 @@
 #include <memory>
 #include <grpcpp/grpcpp.h>
 #include <grpc/support/log.h>
-#include "grpc_util.hpp"
-#include "../../application.hpp"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
-
-using grpc::Server;
-using grpc::ServerAsyncResponseWriter;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::ServerCompletionQueue;
-using grpc::Status;
-using grpc::Channel;
-
-using grpc::ClientContext;
-
-using grpc_merger::MergerCommunication;
-using grpc_merger::MergerDataRequest;
-using grpc_merger::MergerDataReply;
-
-using grpc_signer::SignerCommunication;
-using grpc_signer::SignerDataRequest;
-using grpc_signer::SignerDataReply;
+#include "../../application.hpp"
 
 namespace gruut {
+    using grpc::Server;
+    using grpc::ServerAsyncResponseWriter;
+    using grpc::ServerBuilder;
+    using grpc::ServerContext;
+    using grpc::ServerCompletionQueue;
+    using grpc::Status;
+    using grpc::Channel;
+
+    using grpc::ClientContext;
+
+    using grpc_merger::MergerCommunication;
+    using grpc_merger::MergerDataRequest;
+    using grpc_merger::MergerDataReply;
+
+    using grpc_signer::SignerCommunication;
+    using grpc_signer::SignerDataRequest;
+    using grpc_signer::SignerDataReply;
+
 
     enum class CallStatus {
         CREATE, PROCESS, FINISH

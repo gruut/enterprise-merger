@@ -4,8 +4,7 @@
 #include <lz4.h>
 #include <cstring>
 #include "../../application.hpp"
-#include "../../../include/json_schema.hpp"
-#include "msg_schema.hpp"
+#include "../../../include/nlohmann/json.hpp"
 
 namespace gruut{
     constexpr uint8_t G = 0x47;
@@ -43,6 +42,6 @@ namespace gruut{
     };
     class JsonValidator{
     public:
-        static bool validateSchema(json json_object, MessageType msg_type);
+        static bool validateSchema(nlohmann::json json_object, MessageType msg_type);
     };
 }

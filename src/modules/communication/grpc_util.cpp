@@ -1,5 +1,6 @@
 #include "grpc_util.hpp"
-
+#include "../../../include/json_schema.hpp"
+#include "msg_schema.hpp"
 namespace gruut{
     std::string HeaderController::attachHeader(std::string &compressed_json, MessageType message_type) {
         std::string header;
