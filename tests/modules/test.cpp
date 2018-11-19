@@ -1,52 +1,14 @@
 #define BOOST_TEST_MODULE
 #include <boost/test/unit_test.hpp>
+#include <typeinfo>
+
 #include "../../src/modules/module.hpp"
 #include "../../src/application.hpp"
-#include "../../src/modules/message_fetcher/message_fetcher.hpp"
-#include "../../src/modules/signer_pool_manager/signer_pool_manager.hpp"
 #include "../../../src/modules/communication/grpc_util.hpp"
+#include "../../src/chain/transaction.hpp"
 
 using namespace std;
 using namespace gruut;
-
-BOOST_AUTO_TEST_SUITE(Test_MessageFetcher)
-    BOOST_AUTO_TEST_CASE(start) {
-        unique_ptr<MessageFetcher>p_msg_fetcher(new MessageFetcher());
-        p_msg_fetcher->start();
-        BOOST_TEST(true);
-    }
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_SUITE(Test_SignerPoolManager)
-    BOOST_AUTO_TEST_CASE(getSigners) {
-        SignerPoolManager manager;
-
-        auto signers = manager.getSigners();
-        BOOST_TEST(signers.size() == 0);
-
-        Signer signer;
-        signer.cert = "1234";
-        signer.address = "1234";
-
-        manager.putSigner(std::move(signer));
-
-        signers = manager.getSigners();
-    BOOST_TEST(signers.size() == 1);
-}
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_SUITE(Test_Compressor)
-    BOOST_AUTO_TEST_CASE(compressData_decompressData) {
-        string original = "2013-01-07 00:00:04,0.98644,0.98676 2013-01-07 00:01:19,0.98654,0.98676 2013-01-07 00:01:38,0.98644,0.98696";
-        int origin_size = original.size();
-        string compressed_data, decompressed_data;
-
-        Compressor::compressData(original,compressed_data);
-        Compressor::decompressData(compressed_data, decompressed_data, origin_size);
-
-        BOOST_TEST(decompressed_data==original);
-    }
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_HeaderController)
     BOOST_AUTO_TEST_CASE(attchHeader) {

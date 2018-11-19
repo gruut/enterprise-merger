@@ -45,7 +45,7 @@ target_sources(modules_test
         ${HEADER_FILES}
         )
 
-target_include_directories(modules_test PRIVATE ${Boost_INCLUDE_DIR})
+target_include_directories(modules_test PRIVATE ${Boost_INCLUDE_DIR} /usr/local/include)
 target_link_libraries(modules_test
         PRIVATE
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
@@ -54,6 +54,7 @@ target_link_libraries(modules_test
         ${PROTOBUF_LIBS}
         ${GRPC_LIBS}
         leveldb
+        /usr/local/lib/libcryptopp.a
         )
 
 add_test(
