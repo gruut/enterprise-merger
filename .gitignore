@@ -50,7 +50,7 @@ compile_commands.json
 # Test
 Testing
 *_test
-gruut_hana_merger
+gruut_enterprise_merger
 
 lib/leveldb/include/port/port_config\.h
 
