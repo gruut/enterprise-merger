@@ -19,18 +19,18 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_SignerPoolManager)
     BOOST_AUTO_TEST_CASE(getSigners) {
-    SignerPoolManager manager;
+        SignerPoolManager manager;
 
-    auto signers = manager.getSigners();
-    BOOST_TEST(signers.size() == 0);
+        auto signers = manager.getSigners();
+        BOOST_TEST(signers.size() == 0);
 
-    Signer signer;
-    signer.cert = "1234";
-    signer.address = "1234";
+        Signer signer;
+        signer.cert = "1234";
+        signer.address = "1234";
 
-    manager.putSigner(std::move(signer));
+        manager.putSigner(std::move(signer));
 
-    signers = manager.getSigners();
+        signers = manager.getSigners();
     BOOST_TEST(signers.size() == 1);
 }
 BOOST_AUTO_TEST_SUITE_END()
@@ -167,6 +167,7 @@ BOOST_AUTO_TEST_SUITE(Test_JsonValidator)
         bool true_sample = JsonValidator::validateSchema(sample_true_json, MessageType::MSG_ECHO);
         bool false_sample = JsonValidator::validateSchema(sample_false_json, MessageType::MSG_ECHO);
 
-        BOOST_TEST(true_sample==!false_sample);
+        BOOST_TEST(true_sample);
+        BOOST_TEST(!false_sample);
     }
 BOOST_AUTO_TEST_SUITE_END()

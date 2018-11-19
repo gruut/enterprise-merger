@@ -12,10 +12,10 @@ namespace gruut{
     constexpr uint8_t VERSION = 0x11;
     constexpr uint8_t MAC = 0x02;
     constexpr uint8_t COMPRESSION_TYPE = 0x01;
-    constexpr uint8_t NOT_USED =0x00;
+    constexpr uint8_t NOT_USED = 0x00;
     constexpr uint8_t RESERVED[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF,0xFF};
     constexpr uint64_t LOCAL_CHAIN_ID = 0xFF;
-    constexpr uint64_t SENDER =0x77;
+    constexpr uint64_t SENDER = 0x77;
 
     constexpr size_t HEADER_LENGTH = 32;
 
@@ -122,7 +122,7 @@ namespace gruut{
                 return true;
             }
             catch(const std::exception &e) {
-                std::cout << "Validation failed : " <<e.what() <<std::endl;
+                std::cout << "Validation failed : " << e.what() << std::endl;
                 return false;
             }
         }

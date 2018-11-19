@@ -1,12 +1,12 @@
 #pragma once
 
+#include <thread>
 #include <iostream>
 #include <memory>
 #include <grpcpp/grpcpp.h>
 #include <grpc/support/log.h>
 #include "grpc_util.hpp"
 #include "../../application.hpp"
-#include "../../../include/thread_pool.hpp"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
 
@@ -102,6 +102,7 @@ namespace gruut {
                     case CallStatus::PROCESS: {
                         new ReceiveData(m_service, m_cq);
 
+                        Status st;
                         std::string raw_data = m_request.data();
                         if(!HeaderController::validateMessage(raw_data)) {
                             m_reply.set_checker(false);
@@ -110,7 +111,7 @@ namespace gruut {
                             int json_size = HeaderController::getJsonSize(raw_data);
                             std::string compressed_data = HeaderController::detachHeader(raw_data);
                             std::string decompressed_data;
-                            //MAC verification 필요
+                            //TODO: MAC verification 필요
 
                             Compressor::decompressData(compressed_data, decompressed_data, json_size);
                             uint8_t message_type = HeaderController::getMessageType(raw_data);
@@ -123,13 +124,15 @@ namespace gruut {
                                 auto input_queue  = Application::app().getInputQueue();
                                 input_queue->push(msg);
                                 m_reply.set_checker(true);
+                                st = Status::OK;
                             }
                             else {
                                 m_reply.set_checker(false);
+                                st = Status(grpc::StatusCode::CANCELLED , "Json schema check fail");
                             }
                         }
                         m_receive_status = CallStatus::FINISH;
-                        m_responder.Finish(m_reply, Status::OK, this);
+                        m_responder.Finish(m_reply, st, this);
                     }
                     break;
 
@@ -237,28 +240,27 @@ namespace gruut {
     class MergerRpcClient {
     public:
         void run() {
-            m_pool =unique_ptr<ThreadPool>(new ThreadPool(5));
             auto output_queue = Application::app().getOutputQueue();
 
-            //아래 if문을 포함하는 무한루프 필요
+            //TODO: 아래 if문을 포함하는 무한루프 필요
             if(!output_queue->empty()) {
                  Message msg = output_queue->front();
                  if(checkMsgType(msg.type)) {
+                     output_queue->pop();
                      std::string compressed_json;
                      std::string json_dump = msg.data.dump();
                      Compressor::compressData(json_dump,compressed_json);
                      std::string header_added_data = HeaderController::attachHeader(compressed_json, msg.type);
 
-                     //MAC 붙이는 것 필요
+                     //TODO: MAC 붙이는 것 필요
 
                      sendData(header_added_data);
                  }
             }
-
         }
 
     private:
-        bool pushData(std::string &compressed_data, unique_ptr<MergerCommunication::Stub> stub) {
+        bool pushData(std::string &compressed_data, std::unique_ptr<MergerCommunication::Stub> stub) {
             MergerDataRequest request;
             request.set_data(compressed_data);
 
@@ -271,20 +273,19 @@ namespace gruut {
             else {
                 std::cout << status.error_code() << ": " << status.error_message() << std::endl;
                 return false;
-            }
+                }
         }
 
         bool checkMsgType(MessageType msg_type){
-            return (msg_type==MessageType::MSG_ECHO || msg_type==MessageType::MSG_BLOCK);
+            return (msg_type == MessageType::MSG_ECHO || msg_type == MessageType::MSG_BLOCK);
         }
 
         void sendData(std::string &header_added_data){
-            //현재는 로컬호스트로 받는곳 지정 해놓음 변경 필요.
-            unique_ptr<MergerCommunication::Stub> stub =
+            //TODO: 현재는 로컬호스트로 받는곳 지정 해놓음 변경 필요.
+            std::unique_ptr<MergerCommunication::Stub> stub =
                     MergerCommunication::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
 
-            m_pool->enqueue([&](){pushData(header_added_data, move(stub));});
+            std::thread th([&](){pushData(header_added_data, move(stub));});
         }
-        std::unique_ptr<ThreadPool> m_pool;
     };
 }
