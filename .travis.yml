@@ -1,15 +1,28 @@
+notifications:
+  slack:
+    on_success: always
+    on_failure: always
+
 dist: xenial
 language: cpp
 os: linux
 compiler:
 - clang
+cache:
+- grpc
 
+addons:
+  apt:
+    update: true
+    sources:
+    - sourceline: 'ppa:mhier/libboost-latest'
+    packages:
+    - boost1.67
 before_install:
 - sudo apt-get update
+
 install:
-- sudo apt-get install -y python3-pip
-#  boost
-- sudo apt-get install -y libboost-all-dev
+- sudo apt-get install -y python3-pip python3-setuptools
 - pip3 install cmake
 - |
   if [[ -z $(ls | grep grpc) ]]; then
@@ -23,6 +36,13 @@ install:
   if [[ -z $(ls | grep lz4) ]]; then
     git clone https://github.com/lz4/lz4.git
   fi
+
+before_script:
+- sudo -i  which clang
+- sudo -i clang --version
+- sudo ln -s /usr/local/clang-7.0.0/bin/clang++ /usr/bin/clang++
+- sudo ln -s /usr/local/clang-7.0.0/bin/clang /usr/bin/clang
+
 script:
 - cd lz4 && sudo make install && cd ..
 - cd lib/leveldb && mkdir -p build && cd build
@@ -40,8 +60,9 @@ script:
   make install
   cd ..
 - mkdir -p build && cd build
-- cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_COMPILER="clang++-6.0" ..
+- cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_COMPILER="clang++" ..
 - cp ../scripts/run-clang-tidy.py run-clang-tidy.py
+- pip3 install wheel
 - pip3 install pyyaml
 - python3 run-clang-tidy.py > lint_output.txt
 - |
@@ -54,6 +75,7 @@ script:
   else
     echo -e "\033[1;32m\xE2\x9C\x93 passed:\033[0m $1";
   fi
+- ls
 - cmake --build .
 - ctest > test_output.txt
 - |
