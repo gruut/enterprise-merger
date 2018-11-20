@@ -4,6 +4,7 @@
 #include <vector>
 #include "../chain/signer.hpp"
 #include "../chain/transaction.hpp"
+#include "../chain/types.hpp"
 
 namespace gruut {
     using Transactions = std::vector<Transaction>;
@@ -18,6 +19,7 @@ namespace gruut {
         Transactions fetchAll();
     private:
         Transaction fetch(Signer &signer);
+        transaction_id_type generateTransactionId();
 
         Transactions m_selected_transaction_list;
         Signers m_signers;

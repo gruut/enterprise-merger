@@ -6,7 +6,7 @@ project(gruut_enterprise_merger LANGUAGES CXX)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_ASIO_ENABLE_HANDLER_TRACKING)
 
-find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Boost REQUIRED COMPONENTS system thread random)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(gruut_enterprise_merger main.cpp)
 
@@ -33,6 +33,9 @@ target_sources(gruut_enterprise_merger
         ${HEADER_FILES}
         )
 
+set(LIB_PREFIX "/usr/local/lib")
+set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
+
 IF (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
 ENDIF (Boost_FOUND)
@@ -43,6 +46,7 @@ target_link_libraries(gruut_enterprise_merger
         PRIVATE
         ${Boost_LIBRARIES}
         leveldb
+        ${LZ4_LIBS}
         /usr/local/lib/libbotan-2.a
         )
 
