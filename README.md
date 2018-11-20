@@ -24,6 +24,10 @@
   - build: This folder contains all object files, and is removed on a clean.
   - include: All project header files. All necessary third-party header files that do not exist under /usr/local/include are also placed here.
   - src: The application and only the application’s source files.
+    * chain: Data structure files.
+    * services: Non-module files.
+    * utils
+
   - tests: All test code files.
   - scripts: script files. i.e., run-clang-tidy 
   
