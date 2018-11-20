@@ -9,7 +9,7 @@ using namespace std;
 
 namespace gruut {
     TransactionCollector::TransactionCollector() {
-        m_timer.reset(new boost::asio::steady_timer(Application::app().getIoService()));
+        m_timer.reset(new boost::asio::deadline_timer(Application::app().getIoService()));
         m_signature_requester = make_shared<SignatureRequester>();
     }
 
@@ -25,7 +25,7 @@ namespace gruut {
     }
 
     void TransactionCollector::startTimer() {
-        m_timer->expires_after(chrono::milliseconds(TRANSACTION_COLLECTION_INTERVAL));
+        m_timer->expires_from_now(boost::posix_time::milliseconds(TRANSACTION_COLLECTION_INTERVAL));
         m_timer->async_wait([this](const boost::system::error_code &ec) {
             if (ec == boost::asio::error::operation_aborted) {
                 cout << "startTimer: Timer was cancelled or retriggered." << endl;

@@ -23,7 +23,7 @@ namespace gruut {
 
         void startSignatureRequest();
 
-        std::unique_ptr<boost::asio::steady_timer> m_timer;
+        std::unique_ptr<boost::asio::deadline_timer> m_timer;
         std::shared_ptr<SignatureRequester> m_signature_requester;
 
         bool m_runnable = false;
