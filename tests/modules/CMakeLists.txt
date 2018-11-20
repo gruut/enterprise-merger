@@ -54,7 +54,7 @@ target_link_libraries(modules_test
         ${PROTOBUF_LIBS}
         ${GRPC_LIBS}
         leveldb
-        /usr/local/lib/libcryptopp.a
+        /usr/local/lib/libbotan-2.a
         )
 
 add_test(

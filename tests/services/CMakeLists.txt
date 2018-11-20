@@ -32,7 +32,7 @@ target_include_directories(services_test PRIVATE ${Boost_INCLUDE_DIR} ../../incl
 target_link_libraries(services_test
         PRIVATE
         ${Boost_LIBRARIES}
-        /usr/local/lib/libcryptopp.a
+        /usr/local/lib/libbotan-2.a
         )
 
 add_test(
