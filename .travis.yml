@@ -1,8 +1,7 @@
 notifications:
   slack:
-    on_success: always
-    on_failure: always
-
+    secure: JK36/ekCeSFhBWynVFio7/CSJct2ccd+RNiCt6rc33EuYp2hYd7854LfSsqzFFU/E3ES+9rXVoOGeZ62YnEKeYF3CjatHVQ6NXXW5IPFshxLsOuJQvQ/DdERTf/mxvlbyNyErlS+dwhHZjU/sXTnj4P11xcZztMkV/ZIs3mceQnp6pdAhub/6aq3kxwvRsLE05Phvf5ar4mZyhlSUXIxHimlToOwvMDJ5x5zR8r9w0JDUkOU3qgfOQe3G+T8cXn3U1N84riRkCh8HCsaROaL0TGy8plHZ2OqFU8HbXvHFmVy7E94plhRDI/iNtWr7+VTE06qpjTO2CdjPNqt12Zc5vdBjXE743scKKsRfak/kamjQY2QIdhec4ng9h2DAiPFSHA5f44uoSaPVcUr8ThNSKUtOoT9EHCJCKSXCF2QlEgt/ULO+gHveJsyncjlLxQ7FqTzh9p2WVFVVZcghhYhVi85agAbpNtRZWeAEwq2Yz9Jdc3NMwUGS9tb1ZG9goVFU5nRFIixNxn4wGEan66LIgfaOlvZ6fAC895IrT6CuwPmt2Yqh/vsIgdKE0TfD8RtQ6RxzPV9GWioOefuRIUkeHYYyxwEyMcoBzYCJHBwUglSluhZx6uSHW4urUoCU7rDNLhiG4KsHzoVENsmypXplcP5mxVbs/szubEAdhzKdQQ=
+  email: false
 dist: xenial
 language: cpp
 os: linux
@@ -10,18 +9,14 @@ compiler:
 - clang
 cache:
 - ccache
-  directories:
-  - $HOME/grpc
-  - $HOME/botan
 addons:
   apt:
     sources:
-    - sourceline: 'ppa:mhier/libboost-latest'
+    - sourceline: ppa:mhier/libboost-latest
     packages:
     - boost1.67
 before_install:
 - sudo apt-get update
-
 install:
 - sudo apt-get install -y python3-pip python3-setuptools
 - pip3 install cmake
@@ -37,13 +32,11 @@ install:
   if [[ -z $(ls | grep lz4) ]]; then
     git clone https://github.com/lz4/lz4.git
   fi
-
 before_script:
 - sudo -i  which clang
 - sudo -i clang --version
 - sudo ln -s /usr/local/clang-7.0.0/bin/clang++ /usr/bin/clang++
 - sudo ln -s /usr/local/clang-7.0.0/bin/clang /usr/bin/clang
-
 script:
 - |
   cd lz4
@@ -70,7 +63,6 @@ script:
   sudo make install
   sudo ln -s /usr/local/include/botan-2/botan /usr/local/include
   cd ..
-
 - mkdir -p build && cd build
 - cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_COMPILER="clang++" ..
 - cp ../scripts/run-clang-tidy.py run-clang-tidy.py
@@ -90,7 +82,7 @@ script:
 - ls
 - cmake --build .
 - ctest > test_output.txt
-- |
+- |-
   if [[ -n $(grep "warning: " test_ouput.txt) ]] || [[ -n $(grep "error: " test_output.txt) ]]; then
     echo "You must pass tests, checks before submitting a pull request"
     echo ""
