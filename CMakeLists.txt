@@ -14,6 +14,7 @@ file(GLOB SOURCE_FILES
         "src/modules/*/*.cpp"
         "src/services/*.cpp"
         "src/application.cpp"
+        "src/chain/*.cpp"
         )
 
 file(GLOB HEADER_FILES
@@ -22,6 +23,7 @@ file(GLOB HEADER_FILES
         "src/application.hpp"
         "src/module.hpp"
         "src/utils/*.hpp"
+        "src/chain/*.hpp"
         )
 
 target_sources(gruut_enterprise_merger
@@ -45,6 +47,7 @@ target_link_libraries(gruut_enterprise_merger
         )
 
 enable_testing()
+add_subdirectory(tests/chain)
 add_subdirectory(tests/modules)
 add_subdirectory(tests/utils)
 add_subdirectory(tests/services)
