@@ -7,11 +7,6 @@ language: cpp
 os: linux
 compiler:
 - clang
-cache:
-  directories:
-  - ${TRAVIS_BUILD_DIR}/grpc
-  - ${TRAVIS_BUILD_DIR}/leveldb
-  - ${TRAVIS_BUILD_DIR}/botan
 addons:
   apt:
     sources:

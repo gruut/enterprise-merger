@@ -4,6 +4,7 @@
 #include <vector>
 #include "../chain/block.hpp"
 #include "../chain/transaction.hpp"
+#include "../chain/types.hpp"
 
 #include "signature_requester.hpp"
 
@@ -13,7 +14,7 @@ namespace gruut {
     using Transactions = vector<Transaction>;
     class BlockGenerator {
     public:
-        PartialBlock generatePartialBlock(Transactions transactions);
+        PartialBlock generatePartialBlock(sha256 transaction_root_id);
     };
 }
 

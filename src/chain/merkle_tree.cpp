@@ -2,7 +2,7 @@
 #include "../utils/sha256.hpp"
 
 namespace gruut {
-    sha256 MerkleTree::generate(std::vector<sha256> transaction_ids) {
+    sha256 MerkleTree::generate(std::vector<sha256> &transaction_ids) {
         if (transaction_ids.empty()) return sha256();
 
         while (transaction_ids.size() > 1) {
@@ -10,7 +10,12 @@ namespace gruut {
                 transaction_ids.push_back(transaction_ids.back());
 
             for (auto i = 0; i < transaction_ids.size() / 2; i++) {
-                transaction_ids[i] = makeParentNode(transaction_ids[2 * i], transaction_ids[2 * i + 1]);
+                auto left = transaction_ids[2 * i];
+                auto right = transaction_ids[2 * i + 1];
+                auto parent_node = makeParentNode(left, right);
+
+                m_tree.emplace(parent_node, std::make_pair(left, right));
+                transaction_ids[i] = parent_node;
             }
 
             transaction_ids.resize(transaction_ids.size() / 2);
@@ -23,6 +28,8 @@ namespace gruut {
         const sha256 parent_node = l + r;
         return Sha256::encrypt(parent_node);
     }
+
+    const unordered_map<sha256, pair<sha256, sha256>> &MerkleTree::getTree() const {
+        return m_tree;
+    }
 }
-
-

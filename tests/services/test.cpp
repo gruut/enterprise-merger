@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator)
 
         BlockGenerator generator;
 
-        auto block = generator.generatePartialBlock(transactions);
+        auto block = generator.generatePartialBlock("1");
 
         bool result = stoi(block.sent_time) > 0;
         BOOST_TEST(result);
