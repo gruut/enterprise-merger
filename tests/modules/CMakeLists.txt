@@ -27,15 +27,25 @@ set(LIB_PREFIX "/usr/local/lib")
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
 
 set(PROTOBUF_LIBS "${LIB_PREFIX}/libprotobuf.a")
-set(GRPC_LIBS
-        "${LIB_PREFIX}/libgrpc++.so"
-        "${LIB_PREFIX}/libgrpc.so"
-        "${LIB_PREFIX}/libgrpc++_cronet.so"
-        "${LIB_PREFIX}/libgrpc++_error_details.so"
-        "${LIB_PREFIX}/libgrpc++_reflection.so"
-        "${LIB_PREFIX}/libgrpc++_unsecure.so"
-        "${LIB_PREFIX}/libgrpcpp_channelz.so"
-        )
+if (APPLE)
+    set(GRPC_LIBS
+            "${LIB_PREFIX}/libgrpc++.dylib"
+            "${LIB_PREFIX}/libgrpc.dylib"
+            "${LIB_PREFIX}/libgrpc++_cronet.dylib"
+            "${LIB_PREFIX}/libgrpc++_error_details.dylib"
+            "${LIB_PREFIX}/libgrpc++_reflection.dylib"
+            "${LIB_PREFIX}/libgrpc++_unsecure.dylib"
+            "${LIB_PREFIX}/libgrpcpp_channelz.dylib")
+else()
+    set(GRPC_LIBS
+            "${LIB_PREFIX}/libgrpc++.so"
+            "${LIB_PREFIX}/libgrpc.so"
+            "${LIB_PREFIX}/libgrpc++_cronet.so"
+            "${LIB_PREFIX}/libgrpc++_error_details.so"
+            "${LIB_PREFIX}/libgrpc++_reflection.so"
+            "${LIB_PREFIX}/libgrpc++_unsecure.so"
+            "${LIB_PREFIX}/libgrpcpp_channelz.so")
+endif ()
 
 add_definitions(-DBOOST_TEST_DYN_LINK)
 add_executable(modules_test ${UNIT_TEST_SOURCE_FILES})

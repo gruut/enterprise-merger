@@ -8,7 +8,10 @@ os: linux
 compiler:
 - clang
 cache:
-- ccache
+  directories:
+  - ${TRAVIS_BUILD_DIR}/grpc
+  - ${TRAVIS_BUILD_DIR}/leveldb
+  - ${TRAVIS_BUILD_DIR}/botan
 addons:
   apt:
     sources:
@@ -81,13 +84,4 @@ script:
   fi
 - ls
 - cmake --build .
-- ctest > test_output.txt
-- |-
-  if [[ -n $(grep "warning: " test_ouput.txt) ]] || [[ -n $(grep "error: " test_output.txt) ]]; then
-    echo "You must pass tests, checks before submitting a pull request"
-    echo ""
-    grep --color -E '^|warning: |error: ' test_output.txt
-    exit -1;
-  else
-    echo -e "\033[1;32m\xE2\x9C\x93 passed:\033[0m $1";
-  fi
+- ctest --verbose

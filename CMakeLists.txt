@@ -35,21 +35,12 @@ target_sources(gruut_enterprise_merger
         ${HEADER_FILES}
         )
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 set(LIB_PREFIX "/usr/local/lib")
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
 set(PROTOBUF_LIBS "${LIB_PREFIX}/protobuf.a")
 set(PROTOBUF_LIBS "${LIB_PREFIX}/libprotobuf.a")
-if (LINUX)
-    set(GRPC_LIBS
-            "${LIB_PREFIX}/libgrpc++.so"
-            "${LIB_PREFIX}/libgrpc.so"
-            "${LIB_PREFIX}/libgrpc++_cronet.so"
-            "${LIB_PREFIX}/libgrpc++_error_details.so"
-            "${LIB_PREFIX}/libgrpc++_reflection.so"
-            "${LIB_PREFIX}/libgrpc++_unsecure.so"
-            "${LIB_PREFIX}/libgrpcpp_channelz.so"
-            )
-elseif (APPLE)
+if (APPLE)
     set(GRPC_LIBS
             "${LIB_PREFIX}/libgrpc++.dylib"
             "${LIB_PREFIX}/libgrpc.dylib"
@@ -57,8 +48,16 @@ elseif (APPLE)
             "${LIB_PREFIX}/libgrpc++_error_details.dylib"
             "${LIB_PREFIX}/libgrpc++_reflection.dylib"
             "${LIB_PREFIX}/libgrpc++_unsecure.dylib"
-            "${LIB_PREFIX}/libgrpcpp_channelz.dylib"
-            )
+            "${LIB_PREFIX}/libgrpcpp_channelz.dylib")
+else()
+    set(GRPC_LIBS
+            "${LIB_PREFIX}/libgrpc++.so"
+            "${LIB_PREFIX}/libgrpc.so"
+            "${LIB_PREFIX}/libgrpc++_cronet.so"
+            "${LIB_PREFIX}/libgrpc++_error_details.so"
+            "${LIB_PREFIX}/libgrpc++_reflection.so"
+            "${LIB_PREFIX}/libgrpc++_unsecure.so"
+            "${LIB_PREFIX}/libgrpcpp_channelz.so")
 endif ()
 
 IF (Boost_FOUND)
@@ -76,7 +75,7 @@ target_link_libraries(gruut_enterprise_merger
         ${PROTOBUF_LIBS}
         ${GRPC_LIBS}
         )
-
+message("${GRPC_LIBS}")
 enable_testing()
 add_subdirectory(tests/chain)
 add_subdirectory(tests/modules)
