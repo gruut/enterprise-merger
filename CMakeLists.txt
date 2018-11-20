@@ -36,9 +36,8 @@ target_sources(gruut_enterprise_merger
         )
 
 set(LIB_PREFIX "/usr/local/lib")
-
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
-
+set(PROTOBUF_LIBS "${LIB_PREFIX}/protobuf.a")
 set(PROTOBUF_LIBS "${LIB_PREFIX}/libprotobuf.a")
 set(GRPC_LIBS
         "${LIB_PREFIX}/libgrpc++.so"
@@ -60,7 +59,10 @@ target_link_libraries(gruut_enterprise_merger
         PRIVATE
         ${Boost_LIBRARIES}
         leveldb
+        ${LZ4_LIBS}
         /usr/local/lib/libbotan-2.a
+        ${PROTOBUF_LIBS}
+        ${GRPC_LIBS}
         )
 
 enable_testing()
