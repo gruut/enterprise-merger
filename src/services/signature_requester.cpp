@@ -19,6 +19,7 @@ namespace gruut {
         auto partial_block = makePartialBlock(transactions);
         auto message = makeMessage(partial_block);
 
+        Application::app().getOutputQueue()->push(message);
         startSignatureCollectTimer();
         return true;
     }
@@ -28,7 +29,7 @@ namespace gruut {
         m_timer->async_wait([this](const boost::system::error_code &ec) {
             if (ec == boost::asio::error::operation_aborted) {
                 std::cout << "startSignatureCollectTimer: Timer was cancelled or retriggered." << std::endl;
-            } else if(ec.value() == 0){
+            } else if (ec.value() == 0) {
                 // Sig -> Block generator
                 std::cout << "RUN" << std::endl;
             } else {
@@ -45,15 +46,16 @@ namespace gruut {
         return transaction_fetcher.fetchAll();
     }
 
-    PartialBlock SignatureRequester::makePartialBlock(Transactions& transactions) {
+    PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
         BlockGenerator block_generator;
-        auto&& block = block_generator.generatePartialBlock(transactions);
+        auto &&block = block_generator.generatePartialBlock(transactions);
 
         return block;
     }
 
     Message SignatureRequester::makeMessage(PartialBlock &block) {
-        auto message = MessageFactory::create(block);
+        auto message = MessageFactory::createSigRequestMessage(block);
+
         return message;
     }
 }

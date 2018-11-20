@@ -9,11 +9,12 @@ os: linux
 compiler:
 - clang
 cache:
-- grpc
-
+- ccache
+  directories:
+  - $HOME/grpc
+  - $HOME/botan
 addons:
   apt:
-    update: true
     sources:
     - sourceline: 'ppa:mhier/libboost-latest'
     packages:
@@ -30,7 +31,7 @@ install:
   fi
 - |
   if [[ -z $(ls | grep botan) ]]; then
-      https://github.com/randombit/botan.git
+    git clone https://github.com/randombit/botan.git
   fi
 - |
   if [[ -z $(ls | grep lz4) ]]; then
@@ -67,7 +68,7 @@ script:
   cd botan
   ./configure.py
   sudo make install
-  ln -s /usr/local/include/botan-2/botan /usr/local/include
+  sudo ln -s /usr/local/include/botan-2/botan /usr/local/include
   cd ..
 
 - mkdir -p build && cd build

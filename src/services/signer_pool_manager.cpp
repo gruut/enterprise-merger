@@ -7,15 +7,19 @@ namespace gruut {
     const unsigned int REQUEST_NUM_OF_SIGNER = 5;
 
     SignerPool SignerPoolManager::getSigners() {
-        SignerPool random_signers;
+        m_selected_signers_pool = std::make_shared<SignerPool>();
 
         const auto requested_signers_size = min(static_cast<unsigned int>(m_signer_pool.size()), REQUEST_NUM_OF_SIGNER);
         auto chosen_signers_index_set = generateRandomNumbers(requested_signers_size);
 
         for(auto index : chosen_signers_index_set)
-            random_signers.emplace_back(m_signer_pool[index]);
+            m_selected_signers_pool->emplace_back(m_signer_pool[index]);
 
-        return random_signers;
+        return *m_selected_signers_pool;
+    }
+
+    SignerPool SignerPoolManager::getSelectedSigners() {
+        return *m_selected_signers_pool;
     }
 
     void SignerPoolManager::putSigner(Signer &&s) {

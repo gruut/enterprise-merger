@@ -6,7 +6,7 @@ project(gruut_enterprise_merger LANGUAGES CXX)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_ASIO_ENABLE_HANDLER_TRACKING)
 
-find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(Boost REQUIRED COMPONENTS system thread random)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(gruut_enterprise_merger main.cpp)
 
@@ -39,15 +39,27 @@ set(LIB_PREFIX "/usr/local/lib")
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
 set(PROTOBUF_LIBS "${LIB_PREFIX}/protobuf.a")
 set(PROTOBUF_LIBS "${LIB_PREFIX}/libprotobuf.a")
-set(GRPC_LIBS
-        "${LIB_PREFIX}/libgrpc++.so"
-        "${LIB_PREFIX}/libgrpc.so"
-        "${LIB_PREFIX}/libgrpc++_cronet.so"
-        "${LIB_PREFIX}/libgrpc++_error_details.so"
-        "${LIB_PREFIX}/libgrpc++_reflection.so"
-        "${LIB_PREFIX}/libgrpc++_unsecure.so"
-        "${LIB_PREFIX}/libgrpcpp_channelz.so"
-        )
+if (LINUX)
+    set(GRPC_LIBS
+            "${LIB_PREFIX}/libgrpc++.so"
+            "${LIB_PREFIX}/libgrpc.so"
+            "${LIB_PREFIX}/libgrpc++_cronet.so"
+            "${LIB_PREFIX}/libgrpc++_error_details.so"
+            "${LIB_PREFIX}/libgrpc++_reflection.so"
+            "${LIB_PREFIX}/libgrpc++_unsecure.so"
+            "${LIB_PREFIX}/libgrpcpp_channelz.so"
+            )
+elseif (APPLE)
+    set(GRPC_LIBS
+            "${LIB_PREFIX}/libgrpc++.dylib"
+            "${LIB_PREFIX}/libgrpc.dylib"
+            "${LIB_PREFIX}/libgrpc++_cronet.dylib"
+            "${LIB_PREFIX}/libgrpc++_error_details.dylib"
+            "${LIB_PREFIX}/libgrpc++_reflection.dylib"
+            "${LIB_PREFIX}/libgrpc++_unsecure.dylib"
+            "${LIB_PREFIX}/libgrpcpp_channelz.dylib"
+            )
+endif ()
 
 IF (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
