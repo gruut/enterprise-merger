@@ -19,6 +19,7 @@ namespace gruut {
         auto partial_block = makePartialBlock(transactions);
         auto message = makeMessage(partial_block);
 
+        Application::app().getOutputQueue()->push(message);
         startSignatureCollectTimer();
         return true;
     }
