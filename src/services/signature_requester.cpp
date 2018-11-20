@@ -11,7 +11,7 @@
 
 namespace gruut {
     SignatureRequester::SignatureRequester() {
-        m_timer.reset(new boost::asio::steady_timer(Application::app().getIoService()));
+        m_timer.reset(new boost::asio::deadline_timer(Application::app().getIoService()));
     }
 
     bool SignatureRequester::requestSignatures() {

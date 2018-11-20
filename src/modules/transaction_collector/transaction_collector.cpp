@@ -9,7 +9,7 @@ using namespace std;
 
 namespace gruut {
     TransactionCollector::TransactionCollector() {
-        m_timer.reset(new boost::asio::steady_timer(Application::app().getIoService()));
+        m_timer.reset(new boost::asio::deadline_timer(Application::app().getIoService()));
         m_signature_requester = make_shared<SignatureRequester>();
     }
 
