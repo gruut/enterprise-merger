@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 11)
-find_package(Boost REQUIRED COMPONENTS system thread unit_test_framework)
+find_package(Boost REQUIRED COMPONENTS system thread random unit_test_framework)
 
 file(GLOB UNIT_TEST_SOURCE_FILES
         "test.cpp"
         )
 
 file(GLOB HEADER_FILES
+        "../../include/nlohmann/json.hpp"
         "../../src/services/*.hpp"
         "../../src/chain/*.hpp"
         "../../src/utils/*.hpp"
@@ -14,9 +15,13 @@ file(GLOB HEADER_FILES
         )
 
 file(GLOB SOURCE_FILES
+        "../../src/chain/*.cpp"
         "../../src/services/*.cpp"
         "../../src/application.cpp"
         )
+
+set(LIB_PREFIX "/usr/local/lib")
+set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
 
 add_definitions(-DBOOST_TEST_DYN_LINK)
 add_executable(services_test ${UNIT_TEST_SOURCE_FILES})
@@ -32,6 +37,7 @@ target_include_directories(services_test PRIVATE ${Boost_INCLUDE_DIR} ../../incl
 target_link_libraries(services_test
         PRIVATE
         ${Boost_LIBRARIES}
+        ${LZ4_LIBS}
         /usr/local/lib/libbotan-2.a
         )
 

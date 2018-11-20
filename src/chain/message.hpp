@@ -23,7 +23,7 @@ namespace gruut {
 
         Message(MessageHeader &header) : MessageHeader(header) {}
 
-        nlohmann::json data;
+        std::string data;
     };
 }
 #endif

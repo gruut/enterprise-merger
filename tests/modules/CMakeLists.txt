@@ -21,7 +21,6 @@ file(GLOB SOURCE_FILES
         )
 
 set(LIB_PREFIX "/usr/local/lib")
-
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
 
 set(PROTOBUF_LIBS "${LIB_PREFIX}/libprotobuf.a")

@@ -14,7 +14,12 @@
 #include "../../src/chain/message.hpp"
 #include "../../src/chain/types.hpp"
 
+#include "../../include/nlohmann/json.hpp"
+
+#include "../../src/utils/compressor.hpp"
+
 using namespace gruut;
+using namespace nlohmann;
 using namespace std;
 
 BOOST_AUTO_TEST_SUITE(Test_MessageFetcher)
@@ -41,6 +46,11 @@ BOOST_AUTO_TEST_SUITE(Test_TransactionFetcher)
         auto transactions = tf.fetchAll();
 
         auto result = transactions.front().transaction_type == TransactionType::CERTIFICATE;
+        BOOST_TEST(result);
+
+        //  check transaction_id_size
+        auto transaction = transactions.front();
+        result = transaction.transaction_id.size() == 32;
         BOOST_TEST(result);
     }
 
@@ -80,27 +90,42 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(Test_BlockGenerator)
 
     BOOST_AUTO_TEST_CASE(generatePartialBlock) {
-            vector<Transaction> transactions;
-            transactions.push_back(Transaction());
+        vector<Transaction> transactions;
+        transactions.push_back(Transaction());
 
-            BlockGenerator generator;
+        BlockGenerator generator;
 
-            auto block = generator.generatePartialBlock(transactions);
+        auto block = generator.generatePartialBlock(transactions);
 
-            bool result = stoi(block.sent_time) > 0;
-            BOOST_TEST(result);
+        bool result = stoi(block.sent_time) > 0;
+        BOOST_TEST(result);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_MessageFactory)
 
-    BOOST_AUTO_TEST_CASE(create) {
-        Transaction temp_transaction;
+    BOOST_AUTO_TEST_CASE(createSigRequestMessage) {
+        PartialBlock block;
         MessageHeader message_header;
-        auto message = MessageFactory::create(temp_transaction);
+        auto message = MessageFactory::createSigRequestMessage(block);
 
         bool result = message.mac_algo_type == MACAlgorithmType::RSA;
+        BOOST_TEST(result);
+
+        json j_string2;
+        j_string2["cID"] = "";
+        j_string2["hgt"] = "";
+        j_string2["mID"] = "";
+        j_string2["time"] = "";
+        j_string2["txrt"] = "";
+
+        auto tmp = message.data;
+        string original_data = j_string2.dump();
+        string compressed_data;
+        Compressor::compressData(original_data, compressed_data);
+
+        result = tmp == compressed_data;
         BOOST_TEST(result);
     }
 

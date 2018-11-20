@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <boost/random/random_device.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 
 #include "../utils/sha256.hpp"
 #include "transaction_fetcher.hpp"
@@ -10,7 +12,7 @@ namespace gruut {
 
     TransactionFetcher::TransactionFetcher(Signers &&signers) {
         m_signers = signers;
-        auto& transaction_pool = Application::app().getTransactionPool();
+        auto &transaction_pool = Application::app().getTransactionPool();
 
         const int transaciton_size = transaction_pool.size();
         auto t_size = std::min(transaciton_size, MAX_COLLECT_TRANSACTION_SIZE);
@@ -37,8 +39,7 @@ namespace gruut {
         if (signer.isNew()) {
             Transaction new_transaction;
 
-            // TODO: 유일하게 tx를 식별할 수 있는 transaction_id 결정
-            new_transaction.transaction_id = sent_time;
+            new_transaction.transaction_id = generateTransactionId();
             new_transaction.transaction_type = TransactionType::CERTIFICATE;
 
             // TODO: requestor_id <- Merger Id, 임시로 sent_time
@@ -72,5 +73,23 @@ namespace gruut {
                 return null_transaction;
             }
         }
+    }
+
+    transaction_id_type TransactionFetcher::generateTransactionId() {
+        std::string chars(
+                "abcdefghijklmnopqrstuvwxyz"
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "1234567890"
+                "!@#$%^&*()"
+                "`~-_=+[{]}\\|;:'\",<.>/? ");
+        boost::random::random_device rng;
+        boost::random::uniform_int_distribution<> index_dist(0, chars.size() - 1);
+
+        stringstream s;
+        for (int i = 0; i < 32; ++i) {
+            s << chars[index_dist(rng)];
+        }
+
+        return s.str();
     }
 }
