@@ -43,7 +43,7 @@ target_link_libraries(gruut_enterprise_merger
         PRIVATE
         ${Boost_LIBRARIES}
         leveldb
-        /usr/local/lib/libcryptopp.a
+        /usr/local/lib/libbotan-2.a
         )
 
 enable_testing()

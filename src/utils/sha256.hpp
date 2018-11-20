@@ -1,32 +1,23 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SHA_256_HPP
 #define GRUUT_ENTERPRISE_MERGER_SHA_256_HPP
 
-#include <cryptopp/sha.h>
-#include <cryptopp/hex.h>
-
+#include <botan/hash.h>
+#include <botan/hex.h>
 #include <string>
-#include <iostream>
+#include <sstream>
+#include "../chain/types.hpp"
 
 using namespace std;
+using namespace Botan;
 
 class Sha256 {
-    using byte = CryptoPP::byte;
-
 public:
     static string encrypt(const string &message) {
-        CryptoPP::SHA256 hash;
-        byte digest[CryptoPP::SHA256::DIGESTSIZE];
-        hash.CalculateDigest(digest, (byte *) message.c_str(), message.length());
+        std::unique_ptr<Botan::HashFunction> hash_function(Botan::HashFunction::create("SHA-256"));
+        secure_vector<uint8_t> v(message.begin(), message.end());
+        hash_function->update(v);
 
-        CryptoPP::HexEncoder encoder;
-        string result;
-        encoder.Attach(new CryptoPP::StringSink(result));
-        encoder.Put(digest, sizeof(digest));
-        encoder.MessageEnd();
-
-        std::cout << result << std::endl;
-
-        return result;
+        return Botan::hex_encode(hash_function->final());
     }
 
     static bool isMatch(const string &target_message, const string &encrypted_message) {
@@ -35,8 +26,6 @@ public:
 
         return result;
     }
-
-private:
 };
 
 #endif

@@ -28,7 +28,7 @@ target_include_directories(chain_test PRIVATE ${Boost_INCLUDE_DIR} /usr/local/in
 target_link_libraries(chain_test
         PRIVATE
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-        /usr/local/lib/libcryptopp.a
+        /usr/local/lib/libbotan-2.a
         )
 
 add_test(

@@ -29,8 +29,8 @@ install:
     git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
   fi
 - |
-  if [[ -z $(ls | grep cryptopp) ]]; then
-      git clone https://github.com/weidai11/cryptopp.git
+  if [[ -z $(ls | grep botan) ]]; then
+      https://github.com/randombit/botan.git
   fi
 - |
   if [[ -z $(ls | grep lz4) ]]; then
@@ -44,20 +44,30 @@ before_script:
 - sudo ln -s /usr/local/clang-7.0.0/bin/clang /usr/bin/clang
 
 script:
-- cd lz4 && sudo make install && cd ..
-- cd lib/leveldb && mkdir -p build && cd build
-- ls
-- cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cd ../../../
-- cd grpc && git submodule update --init && sudo make && sudo make install && cd third_party/protobuf && sudo make install && cd ../../..
 - |
-  cd cryptopp
-  git submodule add https://github.com/noloader/cryptopp-cmake.git cmake
-  git submodule update --remote
-  cp "$PWD/cmake/cryptopp-config.cmake" "$PWD"
-  cp "$PWD/cmake/CMakeLists.txt" "$PWD"
-
-  cmake . && cmake --build .
-  make install
+  cd lz4
+  sudo make install
+  cd ..
+- |
+  cd lib/leveldb
+  mkdir -p build
+  cd build
+  cmake -DCMAKE_BUILD_TYPE=Release ..
+  cmake --build .
+  cd ../../../
+- |
+  cd grpc
+  git submodule update --init
+  sudo make
+  sudo make install
+  cd third_party/protobuf
+  sudo make install
+  cd ../../..
+- |
+  cd botan
+  ./configure.py
+  sudo make install
+  ln -s /usr/local/include/botan-2/botan /usr/local/include
   cd ..
 
 - mkdir -p build && cd build

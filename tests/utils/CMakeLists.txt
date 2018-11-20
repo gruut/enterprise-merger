@@ -20,7 +20,7 @@ target_link_libraries(utils_test
         PRIVATE
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
         ${Boost_LIBRARIES}
-        /usr/local/lib/libcryptopp.a
+        /usr/local/lib/libbotan-2.a
         /usr/local/lib/liblz4.a
         )
 
