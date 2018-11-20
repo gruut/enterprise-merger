@@ -1,4 +1,5 @@
 # Gruut-Enterprise Merger Project
+[![Build Status](https://travis-ci.com/gruut/enterprise-merger.svg?branch=develop)](https://travis-ci.com/gruut/enterprise-merger)
 
 ### Prerequisite
   - CMake (**3.12**)
