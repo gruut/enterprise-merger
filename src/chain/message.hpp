@@ -6,14 +6,15 @@
 
 namespace gruut {
     struct MessageHeader {
-        const uint8_t version = (1 << 6) | (1 << 2) | (1 << 1) | 1;
+        uint8_t identifier;
+        uint8_t version;
         MessageType message_type;
         MACAlgorithmType mac_algo_type = MACAlgorithmType::RSA;
         CompressionAlgorithmType compression_algo_type;
         uint8_t dummy;
-        uint32_t total_length;
-        local_chain_id_type local_chain_id;
-        uint64_t sender_id;
+        uint8_t total_length[4];
+        local_chain_id_type local_chain_id[8];
+        uint8_t sender_id[8];
         uint8_t reserved_space[6];
         signature_type hmac;
     };

@@ -1,6 +1,6 @@
 #include "grpc_merger.hpp"
 #include "grpc_util.hpp"
-#include "../../chain/message.hpp"
+#include "../../utils/compressor.hpp"
 
 namespace gruut {
 
@@ -47,23 +47,22 @@ namespace gruut {
 
                 Status st;
                 std::string raw_data = m_request.data();
-                if(!HeaderController::validateMessage(raw_data)) {
+                MessageHeader msg_header = HeaderController::parseHeader(raw_data);
+                if(!HeaderController::validateMessage(msg_header)) {
                     m_reply.set_checker(false);
                 }
                 else {
-                    int json_size = HeaderController::getJsonSize(raw_data);
+                    int json_size = HeaderController::getJsonSize(msg_header);
                     std::string compressed_data = HeaderController::detachHeader(raw_data);
                     std::string decompressed_data;
                     //TODO: MAC verification 필요
 
                     Compressor::decompressData(compressed_data, decompressed_data, json_size);
-                    uint8_t message_type = HeaderController::getMessageType(raw_data);
 
-                    Message msg;
-                    msg.type = static_cast<MessageType>(message_type);
+                    Message msg(msg_header);
                     msg.data = nlohmann::json::parse(decompressed_data);
 
-                    if(JsonValidator::validateSchema(msg.data, msg.type)) {
+                    if(JsonValidator::validateSchema(msg.data, msg.message_type)) {
                         auto input_queue  = Application::app().getInputQueue();
                         input_queue->push(msg);
                         m_reply.set_checker(true);
@@ -139,12 +138,15 @@ namespace gruut {
         //TODO: 아래 if문을 포함하는 무한루프 필요
         if(!output_queue->empty()) {
             Message msg = output_queue->front();
-            if(checkMsgType(msg.type)) {
+            if(checkMsgType(msg.message_type)) {
                 output_queue->pop();
                 std::string compressed_json;
                 std::string json_dump = msg.data.dump();
                 Compressor::compressData(json_dump,compressed_json);
-                std::string header_added_data = HeaderController::attachHeader(compressed_json, msg.type);
+                std::string header_added_data = HeaderController::attachHeader(compressed_json,
+                                                                               msg.message_type,
+                                                                               msg.mac_algo_type,
+                                                                               msg.compression_algo_type);
 
                 //TODO: MAC 붙이는 것 필요
 

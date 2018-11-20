@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 11)
+
 find_package(Boost REQUIRED COMPONENTS system thread unit_test_framework)
 
 file(GLOB UNIT_TEST_SOURCE_FILES
@@ -11,13 +12,15 @@ file(GLOB HEADER_FILES
         "../../src/modules/message_fetcher/*.hpp"
         "../../src/modules/signer_pool_manager/*.hpp"
         "../../src/modules/communication/*.hpp"
-        "../../src/modules/communication/protos*.h"
+        "../../src/modules/communication/protos/*.h"
         "../../include/*.hpp"
+        "../../utils/*.hpp"
         )
 
 file(GLOB SOURCE_FILES
         "../../src/modules/communication/*.cpp"
         "../../src/modules/communication/protos/*.cc"
+        "../../src/*.cpp"
         )
 
 set(LIB_PREFIX "/usr/local/lib")
@@ -54,7 +57,6 @@ target_link_libraries(modules_test
         ${PROTOBUF_LIBS}
         ${GRPC_LIBS}
         leveldb
-        /usr/local/lib/libbotan-2.a
         )
 
 add_test(

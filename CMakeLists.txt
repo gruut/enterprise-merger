@@ -15,6 +15,7 @@ file(GLOB SOURCE_FILES
         "src/services/*.cpp"
         "src/application.cpp"
         "src/chain/*.cpp"
+        "src/modules/communication/protos/*.cc"
         )
 
 file(GLOB HEADER_FILES
@@ -24,6 +25,7 @@ file(GLOB HEADER_FILES
         "src/module.hpp"
         "src/utils/*.hpp"
         "src/chain/*.hpp"
+        "src/modules/communication/protos/*.h"
         )
 
 target_sources(gruut_enterprise_merger
@@ -31,6 +33,21 @@ target_sources(gruut_enterprise_merger
         ${SOURCE_FILES}
         PUBLIC
         ${HEADER_FILES}
+        )
+
+set(LIB_PREFIX "/usr/local/lib")
+
+set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
+
+set(PROTOBUF_LIBS "${LIB_PREFIX}/libprotobuf.a")
+set(GRPC_LIBS
+        "${LIB_PREFIX}/libgrpc++.so"
+        "${LIB_PREFIX}/libgrpc.so"
+        "${LIB_PREFIX}/libgrpc++_cronet.so"
+        "${LIB_PREFIX}/libgrpc++_error_details.so"
+        "${LIB_PREFIX}/libgrpc++_reflection.so"
+        "${LIB_PREFIX}/libgrpc++_unsecure.so"
+        "${LIB_PREFIX}/libgrpcpp_channelz.so"
         )
 
 IF (Boost_FOUND)
