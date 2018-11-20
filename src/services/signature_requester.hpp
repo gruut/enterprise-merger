@@ -30,7 +30,7 @@ namespace gruut {
 
         Message makeMessage(PartialBlock &block);
 
-        std::unique_ptr<boost::asio::steady_timer> m_timer;
+        std::unique_ptr<boost::asio::deadline_timer> m_timer;
     };
 }
 #endif
