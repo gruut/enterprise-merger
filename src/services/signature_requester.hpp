@@ -14,6 +14,8 @@ namespace gruut {
     class Transaction;
 
     const int SIGNATURE_COLLECTION_INTERVAL = 10000;
+    const int SIGNATURE_COLLECT_SIZE = 10;
+
     using Transactions = std::vector<Transaction>;
 
     class SignatureRequester {
@@ -32,7 +34,8 @@ namespace gruut {
         Message makeMessage(PartialBlock &block);
 
         std::unique_ptr<boost::asio::deadline_timer> m_timer;
-        MerkleTree m_merkle_tree;
+        std::thread *m_signature_check_thread;
+        bool m_runnable = false;
     };
 }
 #endif

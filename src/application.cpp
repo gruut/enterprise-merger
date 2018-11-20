@@ -24,6 +24,10 @@ namespace gruut {
         return *m_transaction_pool;
     }
 
+    SignaturePool &Application::getSignaturePool() {
+        return *m_signature_pool;
+    }
+
     void Application::start(const vector<shared_ptr<Module>> &modules) {
         try {
             for (auto module : modules) {

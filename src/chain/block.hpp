@@ -11,5 +11,9 @@ namespace gruut {
         block_height_type height;
         transaction_root_type transaction_root;
     };
+
+    struct Block {
+
+    };
 }
 #endif
