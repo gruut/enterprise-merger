@@ -15,6 +15,7 @@ file(GLOB SOURCE_FILES
         "src/services/*.cpp"
         "src/application.cpp"
         "src/chain/*.cpp"
+        "src/modules/communication/protos/*.cc"
         )
 
 file(GLOB HEADER_FILES
@@ -24,6 +25,7 @@ file(GLOB HEADER_FILES
         "src/module.hpp"
         "src/utils/*.hpp"
         "src/chain/*.hpp"
+        "src/modules/communication/protos/*.h"
         )
 
 target_sources(gruut_enterprise_merger
@@ -35,6 +37,29 @@ target_sources(gruut_enterprise_merger
 
 set(LIB_PREFIX "/usr/local/lib")
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
+set(PROTOBUF_LIBS "${LIB_PREFIX}/protobuf.a")
+set(PROTOBUF_LIBS "${LIB_PREFIX}/libprotobuf.a")
+if (LINUX)
+    set(GRPC_LIBS
+            "${LIB_PREFIX}/libgrpc++.so"
+            "${LIB_PREFIX}/libgrpc.so"
+            "${LIB_PREFIX}/libgrpc++_cronet.so"
+            "${LIB_PREFIX}/libgrpc++_error_details.so"
+            "${LIB_PREFIX}/libgrpc++_reflection.so"
+            "${LIB_PREFIX}/libgrpc++_unsecure.so"
+            "${LIB_PREFIX}/libgrpcpp_channelz.so"
+            )
+elseif (APPLE)
+    set(GRPC_LIBS
+            "${LIB_PREFIX}/libgrpc++.dylib"
+            "${LIB_PREFIX}/libgrpc.dylib"
+            "${LIB_PREFIX}/libgrpc++_cronet.dylib"
+            "${LIB_PREFIX}/libgrpc++_error_details.dylib"
+            "${LIB_PREFIX}/libgrpc++_reflection.dylib"
+            "${LIB_PREFIX}/libgrpc++_unsecure.dylib"
+            "${LIB_PREFIX}/libgrpcpp_channelz.dylib"
+            )
+endif ()
 
 IF (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
@@ -48,6 +73,8 @@ target_link_libraries(gruut_enterprise_merger
         leveldb
         ${LZ4_LIBS}
         /usr/local/lib/libbotan-2.a
+        ${PROTOBUF_LIBS}
+        ${GRPC_LIBS}
         )
 
 enable_testing()

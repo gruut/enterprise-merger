@@ -144,12 +144,7 @@ BOOST_AUTO_TEST_SUITE(Test_MessageFactory)
         j_string2["time"] = "";
         j_string2["txrt"] = "";
 
-        auto tmp = message.data;
-        string original_data = j_string2.dump();
-        string compressed_data;
-        Compressor::compressData(original_data, compressed_data);
-
-        result = tmp == compressed_data;
+        result = message.data == j_string2;
         BOOST_TEST(result);
     }
 

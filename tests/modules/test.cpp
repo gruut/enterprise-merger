@@ -12,42 +12,26 @@ using namespace gruut;
 
 BOOST_AUTO_TEST_SUITE(Test_HeaderController)
     BOOST_AUTO_TEST_CASE(attchHeader) {
-        string data = "1234";
-        string header_added_data = HeaderController::attachHeader(data, MessageType::MSG_BLOCK);
+        MessageHeader msg_hdr;
+        msg_hdr.identifier = 'G';
+        msg_hdr.version = '1';
+        msg_hdr.message_type = MessageType::MSG_ECHO;
+        msg_hdr.mac_algo_type = MACAlgorithmType::RSA;
+        msg_hdr.compression_algo_type = CompressionAlgorithmType::LZ4;
+        msg_hdr.dummy = '1';
 
-        uint32_t total_length = data.size()+HEADER_LENGTH;
-        string header;
-        header.resize(32);
-        header[0] = G;
-        header[1] = VERSION;
-        header[2] = static_cast<uint8_t>(MessageType::MSG_BLOCK);
-        header[3] = MAC;
-        header[4] = COMPRESSION_TYPE;
-        header[5] = NOT_USED;
-        for(int i=9; i>6; i--) {
-            header[i]|=total_length;
-            total_length = (total_length>>8);
-        }
-        header[6] |= total_length;
+        string data("ggg");
+        string header_added_data("G1123112341234567812345678123456ggg");
+        header_added_data[2] = 0x58;
+        header_added_data[3] = 0x00;
+        header_added_data[4] = 0x04;
+        header_added_data[6] = 0x00;
+        header_added_data[7] = 0x00;
+        header_added_data[8] = 0x00;
+        header_added_data[9] = 0x23;
 
-        uint64_t local_chain_id = LOCAL_CHAIN_ID;
-        for(int i=17; i>10; i--){
-            header[i]|=local_chain_id;
-            local_chain_id =(local_chain_id>>8);
-        }
-        header[10] |=local_chain_id;
-
-        uint64_t sender_id = SENDER;
-        for(int i=25; i>18; i--){
-            header[i]|=sender_id;
-            sender_id=(sender_id>>8);
-        }
-        header[18] |= sender_id;
-
-        for(int i=0; i<6; i++) {
-            header[26 + i] = RESERVED[i];
-        }
-        BOOST_TEST(header_added_data==header+data);
+        BOOST_TEST(header_added_data ==
+                   HeaderController::attachHeader(data, msg_hdr.message_type, msg_hdr.mac_algo_type, msg_hdr.compression_algo_type));
     }
     BOOST_AUTO_TEST_CASE(detachHeader) {
         string header_added_data = "11111111111111111111111111111111data";
@@ -57,57 +41,64 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
         BOOST_TEST(header_detached_data==data);
     }
     BOOST_AUTO_TEST_CASE(validateMessage) {
-        string header;
-        header+=G;
-        header+=VERSION;
-        header+=0x58;
-        header+=MAC;
+        MessageHeader msg_hdr;
+        msg_hdr.identifier = 'G';
+        msg_hdr.version = '1';
+        msg_hdr.message_type = MessageType::MSG_ECHO;
+        msg_hdr.mac_algo_type = MACAlgorithmType::RSA;
+        msg_hdr.compression_algo_type = CompressionAlgorithmType::LZ4;
+        msg_hdr.dummy = '1';
 
-        BOOST_TEST(HeaderController::validateMessage(header));
+        BOOST_TEST(HeaderController::validateMessage(msg_hdr));
     }
     BOOST_AUTO_TEST_CASE(getJsonSize) {
-        string header;
-        header.resize(10);
-        int total_length = 50;
-        header[0]=G;
-        header[1]=VERSION;
-        header[2]=0x58;
-        header[3]=MAC;
-        header[4]=COMPRESSION_TYPE;
-        header[5] = NOT_USED;
-        for(int i=9; i>6; i--) {
-            header[i]|=total_length;
-            total_length = (total_length>>8);
+        MessageHeader msg_hdr;
+        msg_hdr.total_length[3] = 0x00;
+        msg_hdr.total_length[2] = 0x00;
+        msg_hdr.total_length[1] = 0x00;
+        msg_hdr.total_length[0] = 0x41;
+
+        BOOST_TEST(HeaderController::getJsonSize(msg_hdr) == (65 - HEADER_LENGTH));
+    }
+    BOOST_AUTO_TEST_CASE(parseHeader) {
+        string header_added_data("G1123112341234567812345678123456ggg");
+        header_added_data[2] = 0x58;
+        header_added_data[3] = 0x00;
+        header_added_data[4] = 0x04;
+        header_added_data[6] = 0x00;
+        header_added_data[7] = 0x00;
+        header_added_data[8] = 0x00;
+        header_added_data[9] = 0x23;
+
+        MessageHeader compare_hdr;
+        compare_hdr.identifier = 'G';
+        compare_hdr.version = '1';
+        compare_hdr.message_type = MessageType::MSG_ECHO;
+        compare_hdr.mac_algo_type = MACAlgorithmType::RSA;
+        compare_hdr.compression_algo_type = CompressionAlgorithmType::LZ4;
+        compare_hdr.dummy = '1';
+        for(int i=0; i<3; i++)
+            compare_hdr.total_length[i] = 0x00;
+        compare_hdr.total_length[3] = 0x23;
+        for(int i=0; i<8; i++){
+            compare_hdr.local_chain_id[i] = LOCAL_CHAIN_ID[i];
+            compare_hdr.sender_id[i] = SENDER_ID[i];
         }
-        header[6] |= total_length;
+        for(int i=0; i<6; i++)
+            compare_hdr.reserved_space[i] = RESERVED[i];
 
-        BOOST_TEST(HeaderController::getJsonSize(header)==18);
-    }
-    BOOST_AUTO_TEST_CASE(getMessageType) {
-        string header;
-        int total_length = 50;
-        header+=G;
-        header+=VERSION;
-        header+=0x58;
-        header+=MAC;
-        uint8_t msg_type = HeaderController::getMessageType(header);
+        MessageHeader origin_hdr = HeaderController::parseHeader(header_added_data);
 
-        BOOST_TEST(msg_type == static_cast<uint8_t>(MessageType::MSG_ECHO));
-    }
-    BOOST_AUTO_TEST_CASE(getCompressionType)
-    {
-        string header;
-        header.resize(10);
-        int total_length = 50;
-        header[0]=G;
-        header[1]=VERSION;
-        header[2]=0x58;
-        header[3]=MAC;
-        header[4]=COMPRESSION_TYPE;
-        header[5] = NOT_USED;
-        uint8_t compress_type = HeaderController::getCompressionType(header);
-
-        BOOST_TEST(compress_type == COMPRESSION_TYPE);
+        BOOST_TEST(origin_hdr.identifier == compare_hdr.identifier);
+        BOOST_TEST(origin_hdr.version == compare_hdr.version);
+        BOOST_TEST(static_cast<uint8_t>(origin_hdr.message_type) == static_cast<uint8_t>(compare_hdr.message_type));
+        BOOST_TEST(static_cast<uint8_t>(origin_hdr.mac_algo_type) == static_cast<uint8_t>(compare_hdr.mac_algo_type));
+        BOOST_TEST(static_cast<uint8_t>(origin_hdr.compression_algo_type) == static_cast<uint8_t>(compare_hdr.compression_algo_type));
+        BOOST_TEST(origin_hdr.dummy == compare_hdr.dummy);
+        BOOST_TEST(memcmp(origin_hdr.total_length, compare_hdr.total_length, 4)==0);
+        BOOST_TEST(memcmp(origin_hdr.local_chain_id, compare_hdr.local_chain_id, 8)==0);
+        BOOST_TEST(memcmp(origin_hdr.sender_id, compare_hdr.sender_id, 8)==0);
+        BOOST_TEST(memcmp(origin_hdr.reserved_space, compare_hdr.reserved_space, 6)==0);
     }
 
 BOOST_AUTO_TEST_SUITE_END()

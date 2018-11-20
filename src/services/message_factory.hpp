@@ -36,8 +36,7 @@ namespace gruut {
             };
             nlohmann::json j_block_map(block_map);
             message_pointer.reset(new Message(message_header));
-            string raw_data = j_block_map.dump();
-            Compressor::compressData(raw_data, message_pointer->data);
+            message_pointer->data = j_block_map;
 
             return *message_pointer;
         }

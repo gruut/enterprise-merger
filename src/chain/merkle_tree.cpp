@@ -10,7 +10,7 @@ namespace gruut {
                 transaction_ids.push_back(transaction_ids.back());
 
             for (auto i = 0; i < transaction_ids.size() / 2; i++) {
-                transaction_ids[i] = make_parent_node(transaction_ids[2 * i], transaction_ids[2 * i + 1]);
+                transaction_ids[i] = makeParentNode(transaction_ids[2 * i], transaction_ids[2 * i + 1]);
             }
 
             transaction_ids.resize(transaction_ids.size() / 2);
@@ -19,9 +19,9 @@ namespace gruut {
         return transaction_ids.front();
     }
 
-    sha256 MerkleTree::make_parent_node(const sha256 &l, const sha256 &r) {
-        const sha256 parentNode = l + r;
-        return Sha256::encrypt(parentNode);
+    sha256 MerkleTree::makeParentNode(const sha256 &l, const sha256 &r) {
+        const sha256 parent_node = l + r;
+        return Sha256::encrypt(parent_node);
     }
 }
 

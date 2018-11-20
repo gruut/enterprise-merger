@@ -9,7 +9,7 @@ namespace gruut {
     public:
         sha256 generate(std::vector<sha256> ids);
     private:
-        sha256 make_parent_node(const sha256& l, const sha256& r);
+        sha256 makeParentNode(const sha256& l, const sha256& r);
     };
 }
 #endif

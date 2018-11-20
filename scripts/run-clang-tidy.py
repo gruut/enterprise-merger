@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 #
-#===- run-clang-tidy.py - Parallel clang-tidy runner ---------*- python -*--===#
+# ===- run-clang-tidy.py - Parallel clang-tidy runner ---------*- python -*--===#
 #
 #                     The LLVM Compiler Infrastructure
 #
 # This file is distributed under the University of Illinois Open Source
 # License. See LICENSE.TXT for details.
 #
-#===------------------------------------------------------------------------===#
+# ===------------------------------------------------------------------------===#
 # FIXME: Integrate with clang-tidy-diff.py
 
 """
@@ -56,6 +56,7 @@ if is_py2:
     import Queue as queue
 else:
     import queue as queue
+
 
 def find_compilation_database(path):
     """Adjusts the directory until a compilation database is found."""
@@ -110,12 +111,12 @@ def merge_replacement_files(tmpdir, mergefile):
     """Merge all replacement files in a directory into a single file"""
     # The fixes suggested by clang-tidy >= 4.0.0 are given under
     # the top level key 'Diagnostics' in the output yaml files
-    mergekey="Diagnostics"
-    merged=[]
+    mergekey = "Diagnostics"
+    merged = []
     for replacefile in glob.iglob(os.path.join(tmpdir, '*.yaml')):
         content = yaml.safe_load(open(replacefile, 'r'))
         if not content:
-            continue # Skip empty files.
+            continue  # Skip empty files.
         merged.extend(content.get(mergekey, []))
 
     if merged:
@@ -123,7 +124,7 @@ def merge_replacement_files(tmpdir, mergefile):
         # include/clang/Tooling/ReplacementsYaml.h, but the value
         # is actually never used inside clang-apply-replacements,
         # so we set it to '' here.
-        output = { 'MainSourceFile': '', mergekey: merged }
+        output = {'MainSourceFile': '', mergekey: merged}
         with open(mergefile, 'w') as out:
             yaml.safe_dump(output, out)
     else:
@@ -252,7 +253,11 @@ def main():
 
     new_files = []
     for file_name in files:
-        if(not ("include" in file_name) and not ("lib" in file_name)):
+        if (
+                not ("include" in file_name)
+                and not ("lib" in file_name)
+                and not (".pb" in file_name)
+                and not (".proto" in file_name)):
             new_files.append(file_name)
     files = new_files
 
@@ -306,7 +311,7 @@ def main():
         except:
             print('Error exporting fixes.\n', file=sys.stderr)
             traceback.print_exc()
-            return_code=1
+            return_code = 1
 
     if args.fix:
         print('Applying fixes ...')
@@ -315,11 +320,12 @@ def main():
         except:
             print('Error applying fixes.\n', file=sys.stderr)
             traceback.print_exc()
-            return_code=1
+            return_code = 1
 
     if tmpdir:
         shutil.rmtree(tmpdir)
     sys.exit(return_code)
+
 
 if __name__ == '__main__':
     main()

@@ -58,6 +58,6 @@ namespace gruut {
     using content_type = std::string;
 
     // Message
-    using local_chain_id_type = uint64_t;
+    using local_chain_id_type = uint8_t;
 }
 #endif
