@@ -3,6 +3,8 @@
 #include <boost/test/unit_test.hpp>
 #include <vector>
 
+#include "../../src/application.hpp"
+
 #include "../../src/services/message_fetcher.hpp"
 #include "../../src/services/transaction_fetcher.hpp"
 #include "../../src/services/signer_pool_manager.hpp"
@@ -74,6 +76,25 @@ BOOST_AUTO_TEST_SUITE(Test_SignerPoolManager)
         BOOST_TEST(signers.size() == 1);
     }
 
+    BOOST_AUTO_TEST_CASE(getSelectedSigners) {
+            SignerPoolManager manager;
+
+            auto signers = manager.getSigners();
+            BOOST_TEST(signers.size() == 0);
+
+            Signer signer;
+            signer.cert = "1234";
+            signer.address = "1234";
+
+            manager.putSigner(std::move(signer));
+
+            BOOST_TEST(manager.getSelectedSigners().size() == 0);
+
+            manager.getSigners();
+
+            BOOST_TEST(manager.getSelectedSigners().size() == 1);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_SignatureRequester)
@@ -82,6 +103,9 @@ BOOST_AUTO_TEST_SUITE(Test_SignatureRequester)
         SignatureRequester requester;
 
         auto result = requester.requestSignatures();
+        BOOST_TEST(result);
+
+        result = Application::app().getOutputQueue()->size() > 0;
         BOOST_TEST(result);
     }
 

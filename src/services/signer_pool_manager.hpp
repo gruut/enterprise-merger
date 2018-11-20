@@ -13,10 +13,12 @@ namespace gruut {
     class SignerPoolManager {
     public:
         SignerPool getSigners();
+        SignerPool getSelectedSigners();
         void putSigner(Signer&& s);
     private:
         RandomSignerIndices generateRandomNumbers(unsigned int size);
         SignerPool m_signer_pool;
+        shared_ptr<SignerPool> m_selected_signers_pool;
     };
 }
 #endif
