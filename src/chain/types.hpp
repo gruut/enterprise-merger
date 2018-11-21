@@ -51,6 +51,7 @@ namespace gruut {
     using requestor_id_type = sha256;
     // TODO: Trnasaction에서는 256비트임
     using sender_id_type = sha256;
+    using signer_id_type = sender_id_type;
     using transaction_root_type = sha256;
     using chain_id_type = sha256;
     using signature_type = sha256;

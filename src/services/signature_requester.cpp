@@ -28,13 +28,33 @@ namespace gruut {
         m_timer->expires_from_now(boost::posix_time::milliseconds(SIGNATURE_COLLECTION_INTERVAL));
         m_timer->async_wait([this](const boost::system::error_code &ec) {
             if (ec == boost::asio::error::operation_aborted) {
+                m_runnable = false;
                 std::cout << "startSignatureCollectTimer: Timer was cancelled or retriggered." << std::endl;
             } else if (ec.value() == 0) {
-                // Sig -> Block generator
-                std::cout << "RUN" << std::endl;
+                m_runnable = false;
+                auto& signature_pool = Application::app().getSignaturePool();
+                if(!signature_pool.empty() && signature_pool.size() == SIGNATURE_COLLECT_SIZE) {
+                    std::cout << "CREATE BLOCK!" << std::endl;
+                    BlockGenerator generator;
+
+//                    generator.generateBlock();
+                }
             } else {
+                m_runnable = false;
                 std::cout << "ERROR: " << ec.message() << std::endl;
+                this->m_signature_check_thread->join();
                 throw;
+            }
+
+            this->m_signature_check_thread->join();
+        });
+
+        m_runnable = true;
+        m_signature_check_thread = new thread([this]() {
+            while (this->m_runnable) {
+                auto& signature_pool = Application::app().getSignaturePool();
+                if(signature_pool.size() > SIGNATURE_COLLECT_SIZE)
+                    m_runnable = false;
             }
         });
     }

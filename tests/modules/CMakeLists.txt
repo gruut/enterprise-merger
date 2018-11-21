@@ -11,41 +11,19 @@ file(GLOB HEADER_FILES
         "../../src/*.hpp"
         "../../src/modules/message_fetcher/*.hpp"
         "../../src/modules/signer_pool_manager/*.hpp"
-        "../../src/modules/communication/*.hpp"
-        "../../src/modules/communication/protos/*.h"
         "../../include/*.hpp"
         "../../utils/*.hpp"
+        "../../src/modules/communication/msg_schema.hpp"
+        "../../src/modules/communication/grpc_util.hpp"
         )
 
 file(GLOB SOURCE_FILES
-        "../../src/modules/communication/*.cpp"
-        "../../src/modules/communication/protos/*.cc"
-        "../../src/*.cpp"
+        "../../src/modules/*.cpp"
+        "../../src/modules/communication/grpc_util.cpp"
         )
 
 set(LIB_PREFIX "/usr/local/lib")
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
-
-set(PROTOBUF_LIBS "${LIB_PREFIX}/libprotobuf.a")
-if (APPLE)
-    set(GRPC_LIBS
-            "${LIB_PREFIX}/libgrpc++.dylib"
-            "${LIB_PREFIX}/libgrpc.dylib"
-            "${LIB_PREFIX}/libgrpc++_cronet.dylib"
-            "${LIB_PREFIX}/libgrpc++_error_details.dylib"
-            "${LIB_PREFIX}/libgrpc++_reflection.dylib"
-            "${LIB_PREFIX}/libgrpc++_unsecure.dylib"
-            "${LIB_PREFIX}/libgrpcpp_channelz.dylib")
-else()
-    set(GRPC_LIBS
-            "${LIB_PREFIX}/libgrpc++.so"
-            "${LIB_PREFIX}/libgrpc.so"
-            "${LIB_PREFIX}/libgrpc++_cronet.so"
-            "${LIB_PREFIX}/libgrpc++_error_details.so"
-            "${LIB_PREFIX}/libgrpc++_reflection.so"
-            "${LIB_PREFIX}/libgrpc++_unsecure.so"
-            "${LIB_PREFIX}/libgrpcpp_channelz.so")
-endif ()
 
 add_definitions(-DBOOST_TEST_DYN_LINK)
 add_executable(modules_test ${UNIT_TEST_SOURCE_FILES})
@@ -63,9 +41,6 @@ target_link_libraries(modules_test
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
         ${Boost_LIBRARIES}
         ${LZ4_LIBS}
-        ${PROTOBUF_LIBS}
-        ${GRPC_LIBS}
-        leveldb
         )
 
 add_test(

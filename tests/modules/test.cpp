@@ -4,7 +4,7 @@
 
 #include "../../src/modules/module.hpp"
 #include "../../src/application.hpp"
-#include "../../../src/modules/communication/grpc_util.hpp"
+#include "../../src/modules/communication/grpc_util.hpp"
 #include "../../src/chain/transaction.hpp"
 
 using namespace std;
