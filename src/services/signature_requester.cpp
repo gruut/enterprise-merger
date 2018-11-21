@@ -37,7 +37,7 @@ namespace gruut {
                     std::cout << "CREATE BLOCK!" << std::endl;
                     BlockGenerator generator;
 
-                    generator.generateBlock();
+//                    generator.generateBlock();
                 }
             } else {
                 m_runnable = false;

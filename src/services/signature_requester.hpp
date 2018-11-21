@@ -36,6 +36,7 @@ namespace gruut {
         std::unique_ptr<boost::asio::deadline_timer> m_timer;
         std::thread *m_signature_check_thread;
         bool m_runnable = false;
+        MerkleTree m_merkle_tree;
     };
 }
 #endif

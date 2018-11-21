@@ -19,8 +19,8 @@ namespace gruut {
         return block;
     }
 
-    Block BlockGenerator::generateBlock() {
-        return Block();
-    }
+//    Block BlockGenerator::generateBlock() {
+//        return Block();
+//    }
 }
 
