@@ -2,63 +2,63 @@
 #define GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 
 #include <boost/asio.hpp>
-#include <vector>
 #include <queue>
+#include <vector>
 
 #include "modules/module.hpp"
 #include "services/signer_pool_manager.hpp"
 
-#include "chain/transaction.hpp"
 #include "chain/message.hpp"
 #include "chain/signature.cpp"
+#include "chain/transaction.hpp"
 
 using namespace std;
 
 namespace gruut {
-    using InputQueue = shared_ptr<queue<Message>>;
-    using OutputQueue = shared_ptr<queue<Message>>;
-    using TransactionPool = vector<Transaction>;
-    using SignaturePool = vector<Signature>;
+using InputQueue = shared_ptr<queue<Message>>;
+using OutputQueue = shared_ptr<queue<Message>>;
+using TransactionPool = vector<Transaction>;
+using SignaturePool = vector<Signature>;
 
-    class Application {
-    public:
-        static Application &app() {
-            static Application application;
-            return application;
-        }
+class Application {
+public:
+  static Application &app() {
+    static Application application;
+    return application;
+  }
 
-        Application(Application const &) = delete;
+  Application(Application const &) = delete;
 
-        Application operator=(Application const &) = delete;
+  Application operator=(Application const &) = delete;
 
-        boost::asio::io_service &getIoService();
+  boost::asio::io_service &getIoService();
 
-        InputQueue &getInputQueue();
+  InputQueue &getInputQueue();
 
-        OutputQueue &getOutputQueue();
+  OutputQueue &getOutputQueue();
 
-        SignerPoolManager &getSignerPoolManager();
+  SignerPoolManager &getSignerPoolManager();
 
-        TransactionPool &getTransactionPool();
+  TransactionPool &getTransactionPool();
 
-        SignaturePool &getSignaturePool();
+  SignaturePool &getSignaturePool();
 
-        void start(const vector<shared_ptr<Module>> &modules);
+  void start(const vector<shared_ptr<Module>> &modules);
 
-        void exec();
+  void exec();
 
-        void quit();
+  void quit();
 
-    private:
-        shared_ptr<boost::asio::io_service> m_io_serv;
-        InputQueue m_input_queue;
-        OutputQueue m_output_queue;
-        shared_ptr<gruut::SignerPoolManager> m_signer_pool_manager;
-        shared_ptr<TransactionPool> m_transaction_pool;
-        shared_ptr<SignaturePool> m_signature_pool;
-        Application();
+private:
+  shared_ptr<boost::asio::io_service> m_io_serv;
+  InputQueue m_input_queue;
+  OutputQueue m_output_queue;
+  shared_ptr<gruut::SignerPoolManager> m_signer_pool_manager;
+  shared_ptr<TransactionPool> m_transaction_pool;
+  shared_ptr<SignaturePool> m_signature_pool;
+  Application();
 
-        ~Application() {}
-    };
+  ~Application() {}
+};
 }
 #endif

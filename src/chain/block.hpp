@@ -4,16 +4,14 @@
 #include "types.hpp"
 
 namespace gruut {
-    struct PartialBlock {
-        timestamp sent_time;
-        sender_id_type sender_id;
-        chain_id_type chain_id;
-        block_height_type height;
-        transaction_root_type transaction_root;
-    };
+struct PartialBlock {
+  timestamp sent_time;
+  sender_id_type sender_id;
+  chain_id_type chain_id;
+  block_height_type height;
+  transaction_root_type transaction_root;
+};
 
-    struct Block {
-
-    };
+struct Block {};
 }
 #endif

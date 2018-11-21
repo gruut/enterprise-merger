@@ -4,15 +4,13 @@
 #include <string>
 
 namespace gruut {
-    using namespace std;
-    struct Signer {
-        string cert;
-        string address;
+using namespace std;
+struct Signer {
+  string cert;
+  string address;
 
-        bool isNew() {
-            return true;
-        }
-    };
+  bool isNew() { return true; }
+};
 }
 
 #endif

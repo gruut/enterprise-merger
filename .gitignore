@@ -44,7 +44,6 @@ Makefile
 output.txt
 build
 *.cbp
-*.cmake
 compile_commands.json
 
 # Test
@@ -57,3 +56,7 @@ lib/leveldb/include/port/port_config\.h
 lib/leveldb/leveldbutil
 
 lib/leveldb/libleveldb\.a
+
+CTestTestfile\.cmake
+
+lib/leveldb/leveldbConfigVersion\.cmake

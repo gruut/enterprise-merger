@@ -2,10 +2,8 @@
 #define GRUUT_ENTERPRISE_MERGER_MESSAGE_VALIDATOR_HPP
 
 namespace gruut {
-    class MessageValidator {
-        static bool validate() {
-            return true;
-        }
-    };
+class MessageValidator {
+  static bool validate() { return true; }
+};
 }
 #endif

@@ -6,6 +6,7 @@ project(gruut_enterprise_merger LANGUAGES CXX)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_ASIO_ENABLE_HANDLER_TRACKING)
 
+include(cmake/clang-cxx-dev-tools.cmake)
 find_package(Boost REQUIRED COMPONENTS system thread random)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(gruut_enterprise_merger main.cpp)
@@ -49,7 +50,7 @@ if (APPLE)
             "${LIB_PREFIX}/libgrpc++_reflection.dylib"
             "${LIB_PREFIX}/libgrpc++_unsecure.dylib"
             "${LIB_PREFIX}/libgrpcpp_channelz.dylib")
-else()
+else ()
     set(GRPC_LIBS
             "${LIB_PREFIX}/libgrpc++.so"
             "${LIB_PREFIX}/libgrpc.so"
@@ -75,9 +76,16 @@ target_link_libraries(gruut_enterprise_merger
         ${PROTOBUF_LIBS}
         ${GRPC_LIBS}
         )
-message("${GRPC_LIBS}")
+
 enable_testing()
 add_subdirectory(tests/chain)
 add_subdirectory(tests/modules)
 add_subdirectory(tests/utils)
 add_subdirectory(tests/services)
+
+IF (NOT $ENV{TRAVIS_BUILD})
+    add_custom_command(TARGET gruut_enterprise_merger
+            POST_BUILD
+            COMMAND make clang-format
+            )
+ENDIF ()
