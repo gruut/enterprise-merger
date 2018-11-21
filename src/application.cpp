@@ -53,5 +53,6 @@ namespace gruut {
         m_output_queue = make_shared<queue<Message>>();
         m_signer_pool_manager = make_shared<SignerPoolManager>();
         m_transaction_pool = make_shared<TransactionPool>();
+        m_signature_pool = make_shared<SignaturePool>();
     }
 }

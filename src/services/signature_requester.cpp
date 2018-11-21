@@ -53,8 +53,9 @@ namespace gruut {
         m_signature_check_thread = new thread([this]() {
             while (this->m_runnable) {
                 auto& signature_pool = Application::app().getSignaturePool();
-                if(signature_pool.size() > SIGNATURE_COLLECT_SIZE)
-                    m_runnable = false;
+                // TODO: SignaturePool에 sig가 들어올때 주석 해제할 것
+//                if(signature_pool.size() > SIGNATURE_COLLECT_SIZE)
+                m_runnable = false;
             }
         });
     }
