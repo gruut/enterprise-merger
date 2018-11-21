@@ -20,11 +20,11 @@ namespace gruut {
         auto message = makeMessage(partial_block);
 
         Application::app().getOutputQueue()->push(message);
-        startSignatureCollectTimer();
+        startSignatureCollectTimer(transactions);
         return true;
     }
 
-    void SignatureRequester::startSignatureCollectTimer() {
+    void SignatureRequester::startSignatureCollectTimer(Transactions &transactions) {
         m_timer->expires_from_now(boost::posix_time::milliseconds(SIGNATURE_COLLECTION_INTERVAL));
         m_timer->async_wait([this](const boost::system::error_code &ec) {
             if (ec == boost::asio::error::operation_aborted) {
@@ -48,7 +48,14 @@ namespace gruut {
 
     PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
         BlockGenerator block_generator;
-        auto &&block = block_generator.generatePartialBlock(transactions);
+        vector<sha256> transaction_ids;
+
+        transaction_ids.reserve(transactions.size());
+        for (auto &transaction : transactions)
+            transaction_ids.emplace_back(transaction.transaction_id);
+
+        auto root_id = m_merkle_tree.generate(transaction_ids);
+        auto &&block = block_generator.generatePartialBlock(root_id);
 
         return block;
     }

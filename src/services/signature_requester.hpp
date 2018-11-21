@@ -7,6 +7,7 @@
 
 #include "../chain/block.hpp"
 #include "../chain/message.hpp"
+#include "../chain/merkle_tree.hpp"
 #include "../application.hpp"
 
 namespace gruut {
@@ -22,15 +23,16 @@ namespace gruut {
         bool requestSignatures();
 
     private:
-        void startSignatureCollectTimer();
+        void startSignatureCollectTimer(Transactions &transactions);
 
         Transactions fetchTransactions();
 
-        PartialBlock makePartialBlock(Transactions& transactions);
+        PartialBlock makePartialBlock(Transactions &transactions);
 
         Message makeMessage(PartialBlock &block);
 
         std::unique_ptr<boost::asio::deadline_timer> m_timer;
+        MerkleTree m_merkle_tree;
     };
 }
 #endif

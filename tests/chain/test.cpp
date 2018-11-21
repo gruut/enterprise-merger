@@ -1,6 +1,7 @@
 #define BOOST_TEST_MODULE
 
 #include <boost/test/unit_test.hpp>
+#include <utility>
 
 #include "../../src/chain/merkle_tree.hpp"
 
@@ -34,6 +35,11 @@ BOOST_AUTO_TEST_SUITE(Test_MerkleTree)
 
         bool result = transaction_root == "63CD9C509AA5F6B9B3257123C01D2D1037797271BD4294CA74763F65E4B84812";
         BOOST_TEST(result);
+
+        auto &tree = t.getTree();
+        auto childs = *tree.find("63CD9C509AA5F6B9B3257123C01D2D1037797271BD4294CA74763F65E4B84812");
+        BOOST_TEST(childs.second.first == "CC220774E4FA38B49110107C4DE38DF2C28328B00345E403EF415A577C476E90");
+        BOOST_TEST(childs.second.second == "614FBDFCE3A9A8A500A369369FC98B3AB96F34E62A604B0D1FFA8C9611363066");
     }
 
 BOOST_AUTO_TEST_SUITE_END()
