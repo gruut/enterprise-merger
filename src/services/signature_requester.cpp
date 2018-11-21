@@ -31,12 +31,12 @@ namespace gruut {
                 m_runnable = false;
                 std::cout << "startSignatureCollectTimer: Timer was cancelled or retriggered." << std::endl;
             } else if (ec.value() == 0) {
-                // Sig -> Block generator
                 m_runnable = false;
                 auto& signature_pool = Application::app().getSignaturePool();
-                if(signature_pool.size() != 0 && signature_pool.size() == SIGNATURE_COLLECT_SIZE) {
+                if(!signature_pool.empty() && signature_pool.size() == SIGNATURE_COLLECT_SIZE) {
                     std::cout << "CREATE BLOCK!" << std::endl;
                     BlockGenerator generator;
+
                     generator.generateBlock();
                 }
             } else {
