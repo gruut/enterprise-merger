@@ -5,123 +5,106 @@
 #include "protos/protobuf_signer.grpc.pb.h"
 #include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
+#include <unordered_map>
+#include <thread>
 #include <iostream>
 #include <memory>
 #include <thread>
 
+using namespace grpc;
+using namespace grpc_merger;
+using namespace grpc_signer;
+
 namespace gruut {
-using grpc::Server;
-using grpc::ServerAsyncResponseWriter;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::ServerCompletionQueue;
-using grpc::Status;
-using grpc::Channel;
 
-using grpc::ClientContext;
+enum class CallStatus {
+    CREATE, PROCESS, FINISH
+};
 
-using grpc_merger::MergerCommunication;
-using grpc_merger::MergerDataRequest;
-using grpc_merger::MergerDataReply;
-
-using grpc_signer::SignerCommunication;
-using grpc_signer::SignerDataRequest;
-using grpc_signer::SignerDataReply;
-
-enum class CallStatus { CREATE, PROCESS, FINISH };
+struct ReceiverRpcData{
+    ServerReaderWriter<GrpcMsgReqSsig, Identity>* stream;
+    GrpcMsgChallenge* msg_challenge;
+    GrpcMsgResponse2* msg_response2;
+    GrpcMsgAccept* msg_accept;
+    NoReply* no_reply;
+};
 
 class MergerRpcServer {
 public:
-  ~MergerRpcServer() {
-    m_server_merger->Shutdown();
-    m_cq_merger->Shutdown();
+    MergerRpcServer() : m_service_signer(*this){}
+    ~MergerRpcServer() {
+        m_server_merger->Shutdown();
+        m_cq_merger->Shutdown();
 
-    m_server_signer->Shutdown();
-    m_cq_signer->Shutdown();
-  }
-
-  void runMergerServ(char *port_for_merger);
-
-  void runSignerServ(char *port_for_signer);
-
+        m_server_signer->Shutdown();
+    }
+    void runMergerServ(char *port_for_merger);
+    void runSignerServ(char *port_for_signer);
 private:
-  class CallData {
-  public:
-    virtual void proceed() = 0;
-  };
+    class CallData {
+    public:
+        virtual void proceed() = 0;
+    };
 
-  class ReceiveData final : public CallData {
-  public:
-    ReceiveData(MergerCommunication::AsyncService *service,
-                ServerCompletionQueue *cq)
-        : m_service(service), m_cq(cq), m_responder(&m_ctx),
-          m_receive_status(CallStatus::CREATE) {
+    class ReceiveData final : public CallData {
+    public:
+        ReceiveData(MergerCommunication::AsyncService *service,
+                    ServerCompletionQueue *cq)
+            : m_service(service), m_cq(cq), m_responder(&m_ctx),
+              m_receive_status(CallStatus::CREATE) {
 
-      proceed();
-    }
+            proceed();
+        }
 
-    void proceed();
+        void proceed();
 
-  private:
-    MergerCommunication::AsyncService *m_service;
-    ServerCompletionQueue *m_cq;
+    private:
+        MergerCommunication::AsyncService *m_service;
+        ServerCompletionQueue *m_cq;
 
-    ServerContext m_ctx;
+        ServerContext m_ctx;
 
-    MergerDataRequest m_request;
-    MergerDataReply m_reply;
+        MergerDataRequest m_request;
+        MergerDataReply m_reply;
 
-    ServerAsyncResponseWriter<MergerDataReply> m_responder;
+        ServerAsyncResponseWriter<MergerDataReply> m_responder;
 
-    CallStatus m_receive_status;
-  };
+        CallStatus m_receive_status;
+    };
 
-  class PullRequest final : public CallData {
-  public:
-    PullRequest(SignerCommunication::AsyncService *service,
-                ServerCompletionQueue *cq)
-        : m_pull_service(service), m_pull_cq(cq), m_pull_responder(&m_pull_ctx),
-          m_pull_status(CallStatus::CREATE) {
+    class SignerService final : public GruutNetworkService::Service{
+    public:
+        explicit SignerService(MergerRpcServer &server) : m_server(server){}
+        Status openChannel(ServerContext* context, ServerReaderWriter<GrpcMsgReqSsig, Identity>* stream);
+        Status join(ServerContext* context, const GrpcMsgJoin* msg_join, GrpcMsgChallenge* msg_challenge);
+        //TODO: Response1 , Response2 에 대한 이름이 모호 합니다. 차후 수정 될 수 있습니다.
+        Status dhKeyEx(ServerContext* context, const GrpcMsgResponse1* msg_response1, GrpcMsgResponse2* msg_response2);
+        Status keyExFinished(ServerContext* context, const GrpcMsgSuccess* msg_success, GrpcMsgAccept* msg_accept);
+        Status sigSend(ServerContext* context, const GrpcMsgSsig* msg_ssig, NoReply* no_reply);
+    private:
+        Status analyzeData(std::string &raw_data, uint64_t &receiver_id);
+        MergerRpcServer &m_server;
+    };
+    void handleMergerRpcs();
 
-      proceed();
-    }
+    std::unique_ptr<ServerCompletionQueue> m_cq_merger;
+    MergerCommunication::AsyncService m_service_merger;
+    std::unique_ptr<Server> m_server_signer;
+    std::unique_ptr<Server> m_server_merger;
 
-    void proceed();
+    std::unordered_map<uint64_t, ReceiverRpcData> m_receiver_list;
+    SignerService m_service_signer;
 
-  private:
-    SignerCommunication::AsyncService *m_pull_service;
-    ServerCompletionQueue *m_pull_cq;
-
-    ServerContext m_pull_ctx;
-
-    SignerDataRequest m_pull_request;
-    SignerDataReply m_pull_reply;
-
-    ServerAsyncResponseWriter<SignerDataReply> m_pull_responder;
-
-    CallStatus m_pull_status;
-  };
-
-  void handleMergerRpcs();
-  void handleSignerRpcs();
-
-  std::unique_ptr<ServerCompletionQueue> m_cq_merger;
-  MergerCommunication::AsyncService m_service_merger;
-  std::unique_ptr<Server> m_server_merger;
-
-  std::unique_ptr<ServerCompletionQueue> m_cq_signer;
-  SignerCommunication::AsyncService m_service_signer;
-  std::unique_ptr<Server> m_server_signer;
 };
 
 class MergerRpcClient {
 public:
-  void run();
+    void run();
 
 private:
-  bool pushData(std::string &compressed_data,
-                std::unique_ptr<MergerCommunication::Stub> stub);
-  bool checkMsgType(MessageType msg_type);
-  void sendData(std::string &header_added_data);
+    bool pushData(std::string &compressed_data,
+                  std::unique_ptr<MergerCommunication::Stub> stub);
+    bool checkMsgType(MessageType msg_type);
+    void sendData(std::string &header_added_data);
 };
 }

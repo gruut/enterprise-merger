@@ -26,41 +26,126 @@ class ServerContext;
 
 namespace grpc_signer {
 
-class SignerCommunication final {
+class GruutNetworkService final {
  public:
   static constexpr char const* service_full_name() {
-    return "grpc_signer.SignerCommunication";
+    return "grpc_signer.GruutNetworkService";
   }
   class StubInterface {
    public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status pullData(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc_signer::SignerDataReply* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::SignerDataReply>> AsyncpullData(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::SignerDataReply>>(AsyncpullDataRaw(context, request, cq));
+    virtual ::grpc::Status Join(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc_signer::GrpcMsgChallenge* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgChallenge>> AsyncJoin(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgChallenge>>(AsyncJoinRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::SignerDataReply>> PrepareAsyncpullData(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::SignerDataReply>>(PrepareAsyncpullDataRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgChallenge>> PrepareAsyncJoin(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgChallenge>>(PrepareAsyncJoinRaw(context, request, cq));
+    }
+    virtual ::grpc::Status DHKeyEx(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc_signer::GrpcMsgResponse2* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgResponse2>> AsyncDHKeyEx(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgResponse2>>(AsyncDHKeyExRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgResponse2>> PrepareAsyncDHKeyEx(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgResponse2>>(PrepareAsyncDHKeyExRaw(context, request, cq));
+    }
+    virtual ::grpc::Status KeyExFinished(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc_signer::GrpcMsgAccept* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgAccept>> AsyncKeyExFinished(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgAccept>>(AsyncKeyExFinishedRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgAccept>> PrepareAsyncKeyExFinished(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgAccept>>(PrepareAsyncKeyExFinishedRaw(context, request, cq));
+    }
+    virtual ::grpc::Status SigSend(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc_signer::NoReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::NoReply>> AsyncSigSend(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::NoReply>>(AsyncSigSendRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::NoReply>> PrepareAsyncSigSend(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::NoReply>>(PrepareAsyncSigSendRaw(context, request, cq));
+    }
+    // 네트워크 참여가 완료 되었을 때 채널 그랜드 오픈!
+    // M: Accept Signer에게 보냄과 동시에 채널을 오픈
+    // S: Accept 수신 시 채널 오픈
+    std::unique_ptr< ::grpc::ClientReaderWriterInterface< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>> OpenChannel(::grpc::ClientContext* context) {
+      return std::unique_ptr< ::grpc::ClientReaderWriterInterface< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>>(OpenChannelRaw(context));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>> AsyncOpenChannel(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>>(AsyncOpenChannelRaw(context, cq, tag));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>> PrepareAsyncOpenChannel(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>>(PrepareAsyncOpenChannelRaw(context, cq));
     }
   private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::SignerDataReply>* AsyncpullDataRaw(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::SignerDataReply>* PrepareAsyncpullDataRaw(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgChallenge>* AsyncJoinRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgChallenge>* PrepareAsyncJoinRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgResponse2>* AsyncDHKeyExRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgResponse2>* PrepareAsyncDHKeyExRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgAccept>* AsyncKeyExFinishedRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::GrpcMsgAccept>* PrepareAsyncKeyExFinishedRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::NoReply>* AsyncSigSendRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_signer::NoReply>* PrepareAsyncSigSendRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientReaderWriterInterface< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>* OpenChannelRaw(::grpc::ClientContext* context) = 0;
+    virtual ::grpc::ClientAsyncReaderWriterInterface< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>* AsyncOpenChannelRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) = 0;
+    virtual ::grpc::ClientAsyncReaderWriterInterface< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>* PrepareAsyncOpenChannelRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
     Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
-    ::grpc::Status pullData(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc_signer::SignerDataReply* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::SignerDataReply>> AsyncpullData(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::SignerDataReply>>(AsyncpullDataRaw(context, request, cq));
+    ::grpc::Status Join(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc_signer::GrpcMsgChallenge* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgChallenge>> AsyncJoin(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgChallenge>>(AsyncJoinRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::SignerDataReply>> PrepareAsyncpullData(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::SignerDataReply>>(PrepareAsyncpullDataRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgChallenge>> PrepareAsyncJoin(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgChallenge>>(PrepareAsyncJoinRaw(context, request, cq));
+    }
+    ::grpc::Status DHKeyEx(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc_signer::GrpcMsgResponse2* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgResponse2>> AsyncDHKeyEx(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgResponse2>>(AsyncDHKeyExRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgResponse2>> PrepareAsyncDHKeyEx(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgResponse2>>(PrepareAsyncDHKeyExRaw(context, request, cq));
+    }
+    ::grpc::Status KeyExFinished(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc_signer::GrpcMsgAccept* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgAccept>> AsyncKeyExFinished(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgAccept>>(AsyncKeyExFinishedRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgAccept>> PrepareAsyncKeyExFinished(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgAccept>>(PrepareAsyncKeyExFinishedRaw(context, request, cq));
+    }
+    ::grpc::Status SigSend(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc_signer::NoReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::NoReply>> AsyncSigSend(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::NoReply>>(AsyncSigSendRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::NoReply>> PrepareAsyncSigSend(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_signer::NoReply>>(PrepareAsyncSigSendRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>> OpenChannel(::grpc::ClientContext* context) {
+      return std::unique_ptr< ::grpc::ClientReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>>(OpenChannelRaw(context));
+    }
+    std::unique_ptr<  ::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>> AsyncOpenChannel(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>>(AsyncOpenChannelRaw(context, cq, tag));
+    }
+    std::unique_ptr<  ::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>> PrepareAsyncOpenChannel(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>>(PrepareAsyncOpenChannelRaw(context, cq));
     }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    ::grpc::ClientAsyncResponseReader< ::grpc_signer::SignerDataReply>* AsyncpullDataRaw(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::grpc_signer::SignerDataReply>* PrepareAsyncpullDataRaw(::grpc::ClientContext* context, const ::grpc_signer::SignerDataRequest& request, ::grpc::CompletionQueue* cq) override;
-    const ::grpc::internal::RpcMethod rpcmethod_pullData_;
+    ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgChallenge>* AsyncJoinRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgChallenge>* PrepareAsyncJoinRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgResponse2>* AsyncDHKeyExRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgResponse2>* PrepareAsyncDHKeyExRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgAccept>* AsyncKeyExFinishedRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgAccept>* PrepareAsyncKeyExFinishedRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_signer::NoReply>* AsyncSigSendRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_signer::NoReply>* PrepareAsyncSigSendRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>* OpenChannelRaw(::grpc::ClientContext* context) override;
+    ::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>* AsyncOpenChannelRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) override;
+    ::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>* PrepareAsyncOpenChannelRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) override;
+    const ::grpc::internal::RpcMethod rpcmethod_Join_;
+    const ::grpc::internal::RpcMethod rpcmethod_DHKeyEx_;
+    const ::grpc::internal::RpcMethod rpcmethod_KeyExFinished_;
+    const ::grpc::internal::RpcMethod rpcmethod_SigSend_;
+    const ::grpc::internal::RpcMethod rpcmethod_OpenChannel_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -68,89 +153,384 @@ class SignerCommunication final {
    public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status pullData(::grpc::ServerContext* context, const ::grpc_signer::SignerDataRequest* request, ::grpc_signer::SignerDataReply* response);
+    virtual ::grpc::Status Join(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgJoin* request, ::grpc_signer::GrpcMsgChallenge* response);
+    virtual ::grpc::Status DHKeyEx(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgResponse1* request, ::grpc_signer::GrpcMsgResponse2* response);
+    virtual ::grpc::Status KeyExFinished(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSuccess* request, ::grpc_signer::GrpcMsgAccept* response);
+    virtual ::grpc::Status SigSend(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSsig* request, ::grpc_signer::NoReply* response);
+    // 네트워크 참여가 완료 되었을 때 채널 그랜드 오픈!
+    // M: Accept Signer에게 보냄과 동시에 채널을 오픈
+    // S: Accept 수신 시 채널 오픈
+    virtual ::grpc::Status OpenChannel(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::grpc_signer::GrpcMsgReqSsig, ::grpc_signer::Identity>* stream);
   };
   template <class BaseClass>
-  class WithAsyncMethod_pullData : public BaseClass {
+  class WithAsyncMethod_Join : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
-    WithAsyncMethod_pullData() {
+    WithAsyncMethod_Join() {
       ::grpc::Service::MarkMethodAsync(0);
     }
-    ~WithAsyncMethod_pullData() override {
+    ~WithAsyncMethod_Join() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status pullData(::grpc::ServerContext* context, const ::grpc_signer::SignerDataRequest* request, ::grpc_signer::SignerDataReply* response) override {
+    ::grpc::Status Join(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgJoin* request, ::grpc_signer::GrpcMsgChallenge* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestpullData(::grpc::ServerContext* context, ::grpc_signer::SignerDataRequest* request, ::grpc::ServerAsyncResponseWriter< ::grpc_signer::SignerDataReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestJoin(::grpc::ServerContext* context, ::grpc_signer::GrpcMsgJoin* request, ::grpc::ServerAsyncResponseWriter< ::grpc_signer::GrpcMsgChallenge>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_pullData<Service > AsyncService;
   template <class BaseClass>
-  class WithGenericMethod_pullData : public BaseClass {
+  class WithAsyncMethod_DHKeyEx : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
-    WithGenericMethod_pullData() {
+    WithAsyncMethod_DHKeyEx() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_DHKeyEx() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status DHKeyEx(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgResponse1* request, ::grpc_signer::GrpcMsgResponse2* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestDHKeyEx(::grpc::ServerContext* context, ::grpc_signer::GrpcMsgResponse1* request, ::grpc::ServerAsyncResponseWriter< ::grpc_signer::GrpcMsgResponse2>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_KeyExFinished : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_KeyExFinished() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_KeyExFinished() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status KeyExFinished(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSuccess* request, ::grpc_signer::GrpcMsgAccept* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestKeyExFinished(::grpc::ServerContext* context, ::grpc_signer::GrpcMsgSuccess* request, ::grpc::ServerAsyncResponseWriter< ::grpc_signer::GrpcMsgAccept>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_SigSend : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_SigSend() {
+      ::grpc::Service::MarkMethodAsync(3);
+    }
+    ~WithAsyncMethod_SigSend() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SigSend(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSsig* request, ::grpc_signer::NoReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSigSend(::grpc::ServerContext* context, ::grpc_signer::GrpcMsgSsig* request, ::grpc::ServerAsyncResponseWriter< ::grpc_signer::NoReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_OpenChannel : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_OpenChannel() {
+      ::grpc::Service::MarkMethodAsync(4);
+    }
+    ~WithAsyncMethod_OpenChannel() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status OpenChannel(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::grpc_signer::GrpcMsgReqSsig, ::grpc_signer::Identity>* stream)  override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestOpenChannel(::grpc::ServerContext* context, ::grpc::ServerAsyncReaderWriter< ::grpc_signer::GrpcMsgReqSsig, ::grpc_signer::Identity>* stream, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncBidiStreaming(4, context, stream, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_Join<WithAsyncMethod_DHKeyEx<WithAsyncMethod_KeyExFinished<WithAsyncMethod_SigSend<WithAsyncMethod_OpenChannel<Service > > > > > AsyncService;
+  template <class BaseClass>
+  class WithGenericMethod_Join : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_Join() {
       ::grpc::Service::MarkMethodGeneric(0);
     }
-    ~WithGenericMethod_pullData() override {
+    ~WithGenericMethod_Join() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status pullData(::grpc::ServerContext* context, const ::grpc_signer::SignerDataRequest* request, ::grpc_signer::SignerDataReply* response) override {
+    ::grpc::Status Join(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgJoin* request, ::grpc_signer::GrpcMsgChallenge* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
-  class WithRawMethod_pullData : public BaseClass {
+  class WithGenericMethod_DHKeyEx : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
-    WithRawMethod_pullData() {
-      ::grpc::Service::MarkMethodRaw(0);
+    WithGenericMethod_DHKeyEx() {
+      ::grpc::Service::MarkMethodGeneric(1);
     }
-    ~WithRawMethod_pullData() override {
+    ~WithGenericMethod_DHKeyEx() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status pullData(::grpc::ServerContext* context, const ::grpc_signer::SignerDataRequest* request, ::grpc_signer::SignerDataReply* response) override {
+    ::grpc::Status DHKeyEx(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgResponse1* request, ::grpc_signer::GrpcMsgResponse2* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestpullData(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+  };
+  template <class BaseClass>
+  class WithGenericMethod_KeyExFinished : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_KeyExFinished() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_KeyExFinished() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status KeyExFinished(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSuccess* request, ::grpc_signer::GrpcMsgAccept* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_SigSend : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_SigSend() {
+      ::grpc::Service::MarkMethodGeneric(3);
+    }
+    ~WithGenericMethod_SigSend() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SigSend(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSsig* request, ::grpc_signer::NoReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_OpenChannel : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_OpenChannel() {
+      ::grpc::Service::MarkMethodGeneric(4);
+    }
+    ~WithGenericMethod_OpenChannel() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status OpenChannel(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::grpc_signer::GrpcMsgReqSsig, ::grpc_signer::Identity>* stream)  override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_Join : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_Join() {
+      ::grpc::Service::MarkMethodRaw(0);
+    }
+    ~WithRawMethod_Join() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Join(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgJoin* request, ::grpc_signer::GrpcMsgChallenge* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestJoin(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
-  class WithStreamedUnaryMethod_pullData : public BaseClass {
+  class WithRawMethod_DHKeyEx : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
-    WithStreamedUnaryMethod_pullData() {
-      ::grpc::Service::MarkMethodStreamed(0,
-        new ::grpc::internal::StreamedUnaryHandler< ::grpc_signer::SignerDataRequest, ::grpc_signer::SignerDataReply>(std::bind(&WithStreamedUnaryMethod_pullData<BaseClass>::StreamedpullData, this, std::placeholders::_1, std::placeholders::_2)));
+    WithRawMethod_DHKeyEx() {
+      ::grpc::Service::MarkMethodRaw(1);
     }
-    ~WithStreamedUnaryMethod_pullData() override {
+    ~WithRawMethod_DHKeyEx() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status DHKeyEx(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgResponse1* request, ::grpc_signer::GrpcMsgResponse2* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestDHKeyEx(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_KeyExFinished : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_KeyExFinished() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
+    ~WithRawMethod_KeyExFinished() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status KeyExFinished(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSuccess* request, ::grpc_signer::GrpcMsgAccept* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestKeyExFinished(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_SigSend : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_SigSend() {
+      ::grpc::Service::MarkMethodRaw(3);
+    }
+    ~WithRawMethod_SigSend() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SigSend(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSsig* request, ::grpc_signer::NoReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSigSend(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_OpenChannel : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_OpenChannel() {
+      ::grpc::Service::MarkMethodRaw(4);
+    }
+    ~WithRawMethod_OpenChannel() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status OpenChannel(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::grpc_signer::GrpcMsgReqSsig, ::grpc_signer::Identity>* stream)  override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestOpenChannel(::grpc::ServerContext* context, ::grpc::ServerAsyncReaderWriter< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* stream, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncBidiStreaming(4, context, stream, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_Join : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_Join() {
+      ::grpc::Service::MarkMethodStreamed(0,
+        new ::grpc::internal::StreamedUnaryHandler< ::grpc_signer::GrpcMsgJoin, ::grpc_signer::GrpcMsgChallenge>(std::bind(&WithStreamedUnaryMethod_Join<BaseClass>::StreamedJoin, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_Join() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status pullData(::grpc::ServerContext* context, const ::grpc_signer::SignerDataRequest* request, ::grpc_signer::SignerDataReply* response) override {
+    ::grpc::Status Join(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgJoin* request, ::grpc_signer::GrpcMsgChallenge* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedpullData(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::grpc_signer::SignerDataRequest,::grpc_signer::SignerDataReply>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedJoin(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::grpc_signer::GrpcMsgJoin,::grpc_signer::GrpcMsgChallenge>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_pullData<Service > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_DHKeyEx : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_DHKeyEx() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler< ::grpc_signer::GrpcMsgResponse1, ::grpc_signer::GrpcMsgResponse2>(std::bind(&WithStreamedUnaryMethod_DHKeyEx<BaseClass>::StreamedDHKeyEx, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_DHKeyEx() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status DHKeyEx(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgResponse1* request, ::grpc_signer::GrpcMsgResponse2* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedDHKeyEx(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::grpc_signer::GrpcMsgResponse1,::grpc_signer::GrpcMsgResponse2>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_KeyExFinished : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_KeyExFinished() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler< ::grpc_signer::GrpcMsgSuccess, ::grpc_signer::GrpcMsgAccept>(std::bind(&WithStreamedUnaryMethod_KeyExFinished<BaseClass>::StreamedKeyExFinished, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_KeyExFinished() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status KeyExFinished(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSuccess* request, ::grpc_signer::GrpcMsgAccept* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedKeyExFinished(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::grpc_signer::GrpcMsgSuccess,::grpc_signer::GrpcMsgAccept>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_SigSend : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_SigSend() {
+      ::grpc::Service::MarkMethodStreamed(3,
+        new ::grpc::internal::StreamedUnaryHandler< ::grpc_signer::GrpcMsgSsig, ::grpc_signer::NoReply>(std::bind(&WithStreamedUnaryMethod_SigSend<BaseClass>::StreamedSigSend, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_SigSend() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status SigSend(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSsig* request, ::grpc_signer::NoReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedSigSend(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::grpc_signer::GrpcMsgSsig,::grpc_signer::NoReply>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_Join<WithStreamedUnaryMethod_DHKeyEx<WithStreamedUnaryMethod_KeyExFinished<WithStreamedUnaryMethod_SigSend<Service > > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_pullData<Service > StreamedService;
+  typedef WithStreamedUnaryMethod_Join<WithStreamedUnaryMethod_DHKeyEx<WithStreamedUnaryMethod_KeyExFinished<WithStreamedUnaryMethod_SigSend<Service > > > > StreamedService;
 };
 
 }  // namespace grpc_signer

@@ -1,13 +1,49 @@
 syntax = "proto3";
 
+option java_multiple_files = true;
+option java_package = "com.gruutnetworks.gruutsigner";
+option java_outer_classname = "GruutNetwork";
+
 package grpc_signer;
 
-service SignerCommunication {
-    rpc pullData (SignerDataRequest) returns (SignerDataReply) {}
+service  GruutNetworkService {
+    rpc Join(GrpcMsgJoin) returns (GrpcMsgChallenge) {}
+    rpc DHKeyEx(GrpcMsgResponse1) returns (GrpcMsgResponse2) {}
+    rpc KeyExFinished(GrpcMsgSuccess) returns (GrpcMsgAccept) {}
+    rpc SigSend(GrpcMsgSsig) returns (NoReply) {}
+
+    // 네트워크 참여가 완료 되었을 때 채널 그랜드 오픈!
+    // M: Accept Signer에게 보냄과 동시에 채널을 오픈
+    // S: Accept 수신 시 채널 오픈
+    rpc OpenChannel(stream Identity) returns (stream GrpcMsgReqSsig) {}
 }
-message SignerDataRequest {
-    int32 check = 1;
-}
-message SignerDataReply {
+
+message GrpcMsgJoin {
     bytes message = 1;
 }
+message GrpcMsgChallenge {
+    bytes message = 1;
+}
+message GrpcMsgResponse1 {
+    bytes message = 1;
+}
+message GrpcMsgResponse2 {
+    bytes message = 1;
+}
+message GrpcMsgSuccess {
+    bytes message = 1;
+}
+message GrpcMsgAccept {
+    bytes message = 1;
+}
+message GrpcMsgSsig {
+    bytes message = 1;
+}
+message GrpcMsgReqSsig {
+    bytes message = 1;
+}
+
+message Identity {
+    bytes sender = 1;
+}
+message NoReply {}
