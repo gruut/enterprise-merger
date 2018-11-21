@@ -35,14 +35,14 @@
   - .clang-tidy 파일에 명세한대로 변수명, 클래스명 등을 작성해주세요. 
     * local에서 테스트하는 방법
        * `python3 scripts/run-clang-tidy`
-    * 기본적으로 CLion에서 체크해주고, Gitlab에서도 소스코드를 push할때 검사하도록 설정했습니다.
+    * 기본적으로 CLion에서 체크해주고, Github에서도 소스코드를 push할때 검사하도록 설정했습니다.
   - Git Branches
     * `master` 브랜치: 최종적으로 production에 반영될 브랜치입니다. 절대 `master`에서 작업하면 안됩니다.
     * `develop` 브랜치: 기본적으로 사용될 브랜치입니다. 항상 작업하기전에 `git pull` 명령어를 통해 브랜치를 최신화하고, 자신의 작업 브랜치를 새로 생성합니다.
     * `feature/*` 브랜치: `develop`에서 `git checkout -B feature/*(zsh에서는 gcb로 간단하게 실행할 수 있음)` 후에 새로운 브랜치에서 작업을 합니다.
   - Work Flow
     * 위에서도 언급했듯 개발자는 `develop`에서 `git pull`를 통해 소스코드를 최신화하고, `feature/*` 브랜치를 생성해서 작업을 시작합니다.
-    * 작업이 완료되면 `featrue/*` -> `develop`으로 Merge 할 것이라는 Merge Request를 Gitlab에 올려야 합니다.    
+    * 작업이 완료되면 `featrue/*` -> `develop`으로 Merge 할 것이라는 Merge Request를 Github에 올려야 합니다.    
   - 개발자간 반드시 지켜야할 것
     * 읽기 좋은 코드가 좋은 코드입니다.
       * 자신만 알수있는 코드를 작성하지 말아주세요. (함수명, 변수명 등등) 
