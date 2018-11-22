@@ -11,6 +11,7 @@ file(GLOB HEADER_FILES
         "../../src/*.hpp"
         "../../src/modules/message_fetcher/*.hpp"
         "../../src/modules/signer_pool_manager/*.hpp"
+        "../../src/modules/storage/storage.hpp"
         "../../include/*.hpp"
         "../../utils/*.hpp"
         "../../src/modules/communication/msg_schema.hpp"
@@ -18,6 +19,7 @@ file(GLOB HEADER_FILES
         )
 
 file(GLOB SOURCE_FILES
+        "../../src/modules/storage/storage.cpp"
         "../../src/modules/*.cpp"
         "../../src/modules/communication/grpc_util.cpp"
         )
@@ -35,12 +37,13 @@ target_sources(modules_test
         ${HEADER_FILES}
         )
 
-target_include_directories(modules_test PRIVATE ${Boost_INCLUDE_DIR} /usr/local/include)
+target_include_directories(modules_test PRIVATE ${Boost_INCLUDE_DIR} ../../lib/leveldb ../../include /usr/local/include)
 target_link_libraries(modules_test
         PRIVATE
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
         ${Boost_LIBRARIES}
         ${LZ4_LIBS}
+        leveldb
         )
 
 add_test(
