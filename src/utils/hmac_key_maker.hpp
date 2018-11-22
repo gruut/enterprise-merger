@@ -43,26 +43,26 @@ public:
     }
 
     Botan::secure_vector<uint8_t>
-    getSharedSecretKey(std::pair<std::string, std::string> &your_private_key, int ssk_len = 32) {
-        return getSharedSecretKey(your_private_key.first, your_private_key.second, ssk_len);
+    getSharedSecretKey(std::pair<std::string, std::string> &your_public_key, int ssk_len = 32) {
+        return getSharedSecretKey(your_public_key.first, your_public_key.second, ssk_len);
     }
 
     Botan::secure_vector<uint8_t>
-    getSharedSecretKey(std::string &your_private_key_x, std::string &your_private_key_y, int ssk_len = 32) {
+    getSharedSecretKey(std::string &your_public_key_x, std::string &your_public_key_y, int ssk_len = 32) {
 
         // my_secret_key
         Botan::ECDH_PrivateKey my_secret_key(m_rng, m_group_domain, m_secret_key);
 
         // your_pk
-        Botan::PointGFp your_private_key_point(m_curve, Botan::BigInt(your_private_key_x),
-                                               Botan::BigInt(your_private_key_y));
-        Botan::ECDH_PublicKey your_private_key(m_group_domain, your_private_key_point);
+        Botan::PointGFp your_public_key_point(m_curve, Botan::BigInt(your_public_key_x),
+                                               Botan::BigInt(your_public_key_y));
+        Botan::ECDH_PublicKey your_public_key(m_group_domain, your_public_key_point);
 
         // ECDH object
         Botan::PK_Key_Agreement new_ecdh(my_secret_key, m_rng, m_kdf);
 
         // make shared secret
-        Botan::secure_vector<uint8_t> ssk = new_ecdh.derive_key(ssk_len, your_private_key.public_value()).bits_of();
+        Botan::secure_vector<uint8_t> ssk = new_ecdh.derive_key(ssk_len, your_public_key.public_value()).bits_of();
 
         return ssk;
     }
