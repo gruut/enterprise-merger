@@ -20,15 +20,15 @@ constexpr size_t HEADER_LENGTH = 32;
 
 class HeaderController {
 public:
-	static std::string attachHeader(std::string &compressed_json, MessageType msg_type, MACAlgorithmType mac_algo_type, CompressionAlgorithmType compression_algo_type);
-	static std::string detachHeader(std::string &raw_data);
-	static bool validateMessage(MessageHeader &msg_header);
-	static int getJsonSize(MessageHeader &meg_header);
-	static nlohmann::json getJsonMessage(CompressionAlgorithmType compression_type, std::string &no_header_data, int json_size);
-	static MessageHeader parseHeader(std::string &raw_data);
+  static std::string attachHeader(std::string &compressed_json, MessageType msg_type, MACAlgorithmType mac_algo_type, CompressionAlgorithmType compression_algo_type);
+  static std::string detachHeader(std::string &raw_data);
+  static bool validateMessage(MessageHeader &msg_header);
+  static int getJsonSize(MessageHeader &meg_header);
+  static nlohmann::json getJsonMessage(CompressionAlgorithmType compression_type, std::string &no_header_data, int json_size);
+  static MessageHeader parseHeader(std::string &raw_data);
 };
 class JsonValidator{
 public:
-	static bool validateSchema(nlohmann::json json_object, MessageType msg_type);
+  static bool validateSchema(nlohmann::json json_object, MessageType msg_type);
 };
 }
