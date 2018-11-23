@@ -53,4 +53,4 @@ private:
 std::map<MessageType, json> MessageSchema::schema_list = {
     {MessageType::MSG_ECHO, SCHEMA_ECHO},
     {MessageType::MSG_BLOCK, SCHEMA_BLOCK}};
-}
+} // namespace gruut

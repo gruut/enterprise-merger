@@ -93,4 +93,4 @@ Message SignatureRequester::makeMessage(PartialBlock &block) {
 
   return message;
 }
-}
+} // namespace gruut

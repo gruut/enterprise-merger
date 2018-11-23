@@ -107,4 +107,4 @@ private:
   bool checkMsgType(MessageType msg_type);
   void sendData(std::string &header_added_data);
 };
-}
+} // namespace gruut

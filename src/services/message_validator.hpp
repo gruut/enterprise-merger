@@ -5,5 +5,5 @@ namespace gruut {
 class MessageValidator {
   static bool validate() { return true; }
 };
-}
+} // namespace gruut
 #endif

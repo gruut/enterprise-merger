@@ -31,4 +31,4 @@ class JsonValidator{
 public:
   static bool validateSchema(nlohmann::json json_object, MessageType msg_type);
 };
-}
+} // namespace gruut

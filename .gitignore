@@ -63,6 +63,6 @@ lib/leveldb/leveldbConfigVersion\.cmake
 
 tests/modules/blk/*
 tests/modules/blkhash/*
-tests/modules/blkmeta/*
+tests/modules/block_meta/*
 tests/modules/cert/*
 tests/modules/secure/*

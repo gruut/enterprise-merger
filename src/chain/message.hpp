@@ -26,5 +26,5 @@ struct Message : public MessageHeader {
 
   nlohmann::json data;
 };
-}
+} // namespace gruut
 #endif

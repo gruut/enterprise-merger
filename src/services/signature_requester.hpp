@@ -38,5 +38,5 @@ private:
   bool m_runnable = false;
   MerkleTree m_merkle_tree;
 };
-}
+} // namespace gruut
 #endif

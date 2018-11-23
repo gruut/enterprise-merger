@@ -9,5 +9,5 @@ struct Signature {
   timestamp sent_time;
   signature_type signer_signature;
 };
-}
+} // namespace gruut
 #endif

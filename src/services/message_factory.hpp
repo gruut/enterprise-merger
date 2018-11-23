@@ -40,5 +40,5 @@ public:
     return *message_pointer;
   }
 };
-}
+} // namespace gruut
 #endif

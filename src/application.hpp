@@ -60,5 +60,5 @@ private:
 
   ~Application() {}
 };
-}
+} // namespace gruut
 #endif

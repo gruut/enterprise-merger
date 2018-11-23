@@ -43,4 +43,4 @@ Application::Application() {
   m_transaction_pool = make_shared<TransactionPool>();
   m_signature_pool = make_shared<SignaturePool>();
 }
-}
+} // namespace gruut
