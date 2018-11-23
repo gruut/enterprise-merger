@@ -141,6 +141,13 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(Test_Storage)
 
     BOOST_AUTO_TEST_CASE(write_block) {
+        string tx_list;
+        for (unsigned int idx = 0; idx < block["tx"].size() - 1; ++idx) {
+            tx_list += block["tx"][idx]["txID"];
+            tx_list += '_';
+        }
+        block["block"]["txList"] = tx_list;
+
         Storage storage;
         storage.openDB("./block");
 
@@ -182,5 +189,41 @@ BOOST_AUTO_TEST_SUITE(Test_Storage)
         auto b_id = result1["block"]["bID"].get<string>();
         BOOST_TEST(b_id == "3fffffffffffffffffff");
     }
+
+    BOOST_AUTO_TEST_CASE(write_cert) {
+        Storage storage;
+        storage.openDB("./cert");
+
+        json cert_json = cert;
+        string n_id = cert["nid"];
+
+        storage.write(cert, "cert", n_id);
+        auto data = storage.findBy("cert", "aw98wueiwejnkwe", "").get<string>();
+
+        bool result = data == "sdfnajksdfauweiuaweuiahweiu";
+        BOOST_TEST(result);
+    }
+
+    BOOST_AUTO_TEST_CASE(write_block_header_hash) {
+        Storage storage;
+        storage.openDB("./block_header_hash");
+
+        json block_header_hash_json = blkhash;
+        string block_id = blkhash["block_id"];
+
+        storage.write(blkhash, "block_header_hash", block_id);
+        auto data = storage.findBy("block_header_hash", "123", "").get<string>();
+
+        bool result = data == "oosdmkbjectTobinary";
+        BOOST_TEST(result);
+    }
+
+    /*BOOST_AUTO_TEST_CASE(find_txid_pos){
+
+    }*/
+
+    /*BOOST_AUTO_TEST_CASE(find_sibling){
+
+    }*/
 
 BOOST_AUTO_TEST_SUITE_END()
