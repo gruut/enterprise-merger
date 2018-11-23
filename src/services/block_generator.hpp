@@ -16,6 +16,6 @@ class BlockGenerator {
 public:
   PartialBlock generatePartialBlock(sha256 transaction_root_id);
 };
-}
+} // namespace gruut
 
 #endif

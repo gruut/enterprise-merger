@@ -33,4 +33,4 @@ sha256 MerkleTree::makeParentNode(const sha256 &l, const sha256 &r) {
 const unordered_map<sha256, pair<sha256, sha256>> &MerkleTree::getTree() const {
   return m_tree;
 }
-}
+} // namespace gruut

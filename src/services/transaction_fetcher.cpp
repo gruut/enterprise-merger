@@ -93,4 +93,4 @@ transaction_id_type TransactionFetcher::generateTransactionId() {
 
   return s.str();
 }
-}
+} // namespace gruut

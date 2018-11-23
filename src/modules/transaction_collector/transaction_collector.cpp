@@ -58,4 +58,4 @@ void TransactionCollector::startSignatureRequest() {
   if (!request_result)
     throw;
 }
-}
+} // namespace gruut

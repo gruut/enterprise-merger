@@ -13,5 +13,5 @@ struct PartialBlock {
 };
 
 struct Block {};
-}
+} // namespace gruut
 #endif

@@ -16,5 +16,5 @@ public:
 private:
   static void do_nothing() {}
 };
-}
+} // namespace gruut
 #endif

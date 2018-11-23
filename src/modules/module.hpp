@@ -6,5 +6,5 @@ class Module {
 public:
   virtual void start() = 0;
 };
-}
+} // namespace gruut
 #endif

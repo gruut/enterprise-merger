@@ -40,4 +40,4 @@ SignerPoolManager::generateRandomNumbers(unsigned int size) {
 
   return number_set;
 }
-}
+} // namespace gruut

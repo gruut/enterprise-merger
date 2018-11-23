@@ -9,37 +9,31 @@
 #include "nlohmann/json.hpp"
 
 namespace gruut {
-    using namespace std;
-    using namespace nlohmann;
+using namespace std;
+using namespace nlohmann;
 
-    class Storage {
-    public:
-        Storage();
+class Storage {
+public:
+  Storage();
 
-        ~Storage();
+  ~Storage();
 
-        void openDB(const string &path);
+  void openDB(const string &path);
 
-        void destroyDB();
+  void write(json &val, const string &what, string &blk_id);
 
-        bool write(json &val, const string &what, string blk_id = "");
+  json findBy(const string &what, const string &id, const string &field);
 
-        bool write(const string &key, const string &value);
+private:
+  void handleCriticalError(const leveldb::Status &status);
 
-        json find(const string &key, const string &field);
+  void handleTrivialError(const leveldb::Status &status);
 
-        json find(const string &key);
-
-        int findTxIdPos(const string &blk_id, const string &tx_id);
-
-        void findSilbing(const string &tx_id);
-
-    private:
-        string m_path;
-        leveldb::Options m_options;
-        leveldb::DB *m_db;
-        leveldb::WriteBatch m_writeBatch;
-        vector<string> silbing;
-    };
-}
+  string m_path;
+  leveldb::Options m_options;
+  leveldb::WriteOptions m_write_options;
+  leveldb::ReadOptions m_read_options;
+  leveldb::DB *m_db;
+};
+} // namespace gruut
 #endif
