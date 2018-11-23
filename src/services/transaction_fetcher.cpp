@@ -27,7 +27,7 @@ Transactions TransactionFetcher::fetchAll() {
   for_each(m_signers.begin(), m_signers.end(),
            [this, &transactions](Signer &signer) {
              auto transaction = fetch(signer);
-             if (!(transaction.transaction_id == sha256())) {
+             if (!(transaction.sent_time == "")) {
                transactions.push_back(transaction);
              }
            });
@@ -59,7 +59,7 @@ Transaction TransactionFetcher::fetch(Signer &signer) {
     // TOOD: 임시로 sent_time
     j["data_id"] = sent_time;
     // TODO: 공증서에 대한 내용이 들어가야 하지만, 임시로 sent_time 해싱
-    j["digest"] = Sha256::hash(sent_time);
+    j["digest"] = Sha256::toString(Sha256::hash(sent_time));
     new_transaction.content = j.dump();
 
     return new_transaction;

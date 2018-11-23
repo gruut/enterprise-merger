@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage)
     BOOST_AUTO_TEST_CASE(write_block) {
         string tx_list;
         for (unsigned int idx = 0; idx < block["tx"].size() - 1; ++idx) {
-            tx_list += block["tx"][idx]["txID"];
+            tx_list += block["tx"][idx]["txID"].dump();
             tx_list += '_';
         }
         block["block"]["txList"] = tx_list;

@@ -44,6 +44,7 @@ target_link_libraries(modules_test
         ${Boost_LIBRARIES}
         ${LZ4_LIBS}
         leveldb
+        /usr/local/lib/libbotan-2.a
         )
 
 add_test(

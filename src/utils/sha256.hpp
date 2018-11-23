@@ -30,7 +30,7 @@ public:
         return result;
     }
 
-    static string toString(sha256 &hashed_list) {
+    static string toString(sha256 hashed_list) {
         return base64_encode(hashed_list);
     }
 };

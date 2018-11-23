@@ -27,6 +27,7 @@ public:
     MessageHeader message_header;
 
     message_header.message_type = MessageType::MSG_REQ_SSIG;
+    // TODO: sender_id sha256으로 refactor하면 주석해제할것
     std::unordered_map<std::string, std::string> block_map{
         {"time", block.sent_time},
 //        {"mID", block.sender_id},
