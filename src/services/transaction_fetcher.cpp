@@ -48,7 +48,7 @@ Transaction TransactionFetcher::fetch(Signer &signer) {
     new_transaction.requestor_id = sent_time;
 
     // TODO: Merger의 signature, 임시로 sent_time
-    new_transaction.signature = Sha256::encrypt(sent_time);
+    new_transaction.signature = Sha256::hash(sent_time);
 
     new_transaction.sent_time = sent_time;
 
@@ -59,7 +59,7 @@ Transaction TransactionFetcher::fetch(Signer &signer) {
     // TOOD: 임시로 sent_time
     j["data_id"] = sent_time;
     // TODO: 공증서에 대한 내용이 들어가야 하지만, 임시로 sent_time 해싱
-    j["digest"] = Sha256::encrypt(sent_time);
+    j["digest"] = Sha256::hash(sent_time);
     new_transaction.content = j.dump();
 
     return new_transaction;

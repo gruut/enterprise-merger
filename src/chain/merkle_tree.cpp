@@ -27,7 +27,7 @@ sha256 MerkleTree::generate(std::vector<sha256> &transaction_ids) {
 
 sha256 MerkleTree::makeParentNode(const sha256 &l, const sha256 &r) {
   const sha256 parent_node = l + r;
-  return Sha256::encrypt(parent_node);
+  return Sha256::hash(parent_node);
 }
 
 const unordered_map<sha256, pair<sha256, sha256>> &MerkleTree::getTree() const {

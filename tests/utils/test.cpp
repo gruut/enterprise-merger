@@ -10,15 +10,17 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(Test_SHA256)
 
-    BOOST_AUTO_TEST_CASE(encrypt) {
-        std::string message = "Hello World";
-        Sha256::encrypt(message);
-        BOOST_TEST(true);
+    BOOST_AUTO_TEST_CASE(hash) {
+        std::string message = "1";
+        auto hashed_message = Sha256::hash(message);
+
+        bool result = hashed_message == "a4ayc/80/OGda4BO/1o/V0etpOqiLx1JwB5S3beHW0s=";
+        BOOST_TEST(result);
     }
 
-    BOOST_AUTO_TEST_CASE(decrypt) {
+    BOOST_AUTO_TEST_CASE(isMatch) {
         std::string message = "Hello World";
-        auto encrypt_message = Sha256::encrypt(message);
+        auto encrypt_message = Sha256::hash(message);
 
         bool result = Sha256::isMatch(message, encrypt_message);
         BOOST_TEST(result);
