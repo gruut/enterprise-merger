@@ -38,7 +38,7 @@ namespace protobuf_protobuf_5fsigner_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[2];
+  static const ::google::protobuf::internal::ParseTable schema[10];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -46,41 +46,73 @@ struct TableStruct {
 void AddDescriptors();
 }  // namespace protobuf_protobuf_5fsigner_2eproto
 namespace grpc_signer {
-class SignerDataReply;
-class SignerDataReplyDefaultTypeInternal;
-extern SignerDataReplyDefaultTypeInternal _SignerDataReply_default_instance_;
-class SignerDataRequest;
-class SignerDataRequestDefaultTypeInternal;
-extern SignerDataRequestDefaultTypeInternal _SignerDataRequest_default_instance_;
+class GrpcMsgAccept;
+class GrpcMsgAcceptDefaultTypeInternal;
+extern GrpcMsgAcceptDefaultTypeInternal _GrpcMsgAccept_default_instance_;
+class GrpcMsgChallenge;
+class GrpcMsgChallengeDefaultTypeInternal;
+extern GrpcMsgChallengeDefaultTypeInternal _GrpcMsgChallenge_default_instance_;
+class GrpcMsgJoin;
+class GrpcMsgJoinDefaultTypeInternal;
+extern GrpcMsgJoinDefaultTypeInternal _GrpcMsgJoin_default_instance_;
+class GrpcMsgReqSsig;
+class GrpcMsgReqSsigDefaultTypeInternal;
+extern GrpcMsgReqSsigDefaultTypeInternal _GrpcMsgReqSsig_default_instance_;
+class GrpcMsgResponse1;
+class GrpcMsgResponse1DefaultTypeInternal;
+extern GrpcMsgResponse1DefaultTypeInternal _GrpcMsgResponse1_default_instance_;
+class GrpcMsgResponse2;
+class GrpcMsgResponse2DefaultTypeInternal;
+extern GrpcMsgResponse2DefaultTypeInternal _GrpcMsgResponse2_default_instance_;
+class GrpcMsgSsig;
+class GrpcMsgSsigDefaultTypeInternal;
+extern GrpcMsgSsigDefaultTypeInternal _GrpcMsgSsig_default_instance_;
+class GrpcMsgSuccess;
+class GrpcMsgSuccessDefaultTypeInternal;
+extern GrpcMsgSuccessDefaultTypeInternal _GrpcMsgSuccess_default_instance_;
+class Identity;
+class IdentityDefaultTypeInternal;
+extern IdentityDefaultTypeInternal _Identity_default_instance_;
+class NoReply;
+class NoReplyDefaultTypeInternal;
+extern NoReplyDefaultTypeInternal _NoReply_default_instance_;
 }  // namespace grpc_signer
 namespace google {
 namespace protobuf {
-template<> ::grpc_signer::SignerDataReply* Arena::CreateMaybeMessage<::grpc_signer::SignerDataReply>(Arena*);
-template<> ::grpc_signer::SignerDataRequest* Arena::CreateMaybeMessage<::grpc_signer::SignerDataRequest>(Arena*);
+template<> ::grpc_signer::GrpcMsgAccept* Arena::CreateMaybeMessage<::grpc_signer::GrpcMsgAccept>(Arena*);
+template<> ::grpc_signer::GrpcMsgChallenge* Arena::CreateMaybeMessage<::grpc_signer::GrpcMsgChallenge>(Arena*);
+template<> ::grpc_signer::GrpcMsgJoin* Arena::CreateMaybeMessage<::grpc_signer::GrpcMsgJoin>(Arena*);
+template<> ::grpc_signer::GrpcMsgReqSsig* Arena::CreateMaybeMessage<::grpc_signer::GrpcMsgReqSsig>(Arena*);
+template<> ::grpc_signer::GrpcMsgResponse1* Arena::CreateMaybeMessage<::grpc_signer::GrpcMsgResponse1>(Arena*);
+template<> ::grpc_signer::GrpcMsgResponse2* Arena::CreateMaybeMessage<::grpc_signer::GrpcMsgResponse2>(Arena*);
+template<> ::grpc_signer::GrpcMsgSsig* Arena::CreateMaybeMessage<::grpc_signer::GrpcMsgSsig>(Arena*);
+template<> ::grpc_signer::GrpcMsgSuccess* Arena::CreateMaybeMessage<::grpc_signer::GrpcMsgSuccess>(Arena*);
+template<> ::grpc_signer::Identity* Arena::CreateMaybeMessage<::grpc_signer::Identity>(Arena*);
+template<> ::grpc_signer::NoReply* Arena::CreateMaybeMessage<::grpc_signer::NoReply>(Arena*);
 }  // namespace protobuf
 }  // namespace google
 namespace grpc_signer {
 
 // ===================================================================
 
-class SignerDataRequest : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.SignerDataRequest) */ {
+class GrpcMsgJoin : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.GrpcMsgJoin) */ {
  public:
-  SignerDataRequest();
-  virtual ~SignerDataRequest();
+  GrpcMsgJoin();
+  virtual ~GrpcMsgJoin();
 
-  SignerDataRequest(const SignerDataRequest& from);
+  GrpcMsgJoin(const GrpcMsgJoin& from);
 
-  inline SignerDataRequest& operator=(const SignerDataRequest& from) {
+  inline GrpcMsgJoin& operator=(const GrpcMsgJoin& from) {
     CopyFrom(from);
     return *this;
   }
   #if LANG_CXX11
-  SignerDataRequest(SignerDataRequest&& from) noexcept
-    : SignerDataRequest() {
+  GrpcMsgJoin(GrpcMsgJoin&& from) noexcept
+    : GrpcMsgJoin() {
     *this = ::std::move(from);
   }
 
-  inline SignerDataRequest& operator=(SignerDataRequest&& from) noexcept {
+  inline GrpcMsgJoin& operator=(GrpcMsgJoin&& from) noexcept {
     if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
       if (this != &from) InternalSwap(&from);
     } else {
@@ -90,34 +122,34 @@ class SignerDataRequest : public ::google::protobuf::Message /* @@protoc_inserti
   }
   #endif
   static const ::google::protobuf::Descriptor* descriptor();
-  static const SignerDataRequest& default_instance();
+  static const GrpcMsgJoin& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const SignerDataRequest* internal_default_instance() {
-    return reinterpret_cast<const SignerDataRequest*>(
-               &_SignerDataRequest_default_instance_);
+  static inline const GrpcMsgJoin* internal_default_instance() {
+    return reinterpret_cast<const GrpcMsgJoin*>(
+               &_GrpcMsgJoin_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     0;
 
-  void Swap(SignerDataRequest* other);
-  friend void swap(SignerDataRequest& a, SignerDataRequest& b) {
+  void Swap(GrpcMsgJoin* other);
+  friend void swap(GrpcMsgJoin& a, GrpcMsgJoin& b) {
     a.Swap(&b);
   }
 
   // implements Message ----------------------------------------------
 
-  inline SignerDataRequest* New() const final {
-    return CreateMaybeMessage<SignerDataRequest>(NULL);
+  inline GrpcMsgJoin* New() const final {
+    return CreateMaybeMessage<GrpcMsgJoin>(NULL);
   }
 
-  SignerDataRequest* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<SignerDataRequest>(arena);
+  GrpcMsgJoin* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<GrpcMsgJoin>(arena);
   }
   void CopyFrom(const ::google::protobuf::Message& from) final;
   void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const SignerDataRequest& from);
-  void MergeFrom(const SignerDataRequest& from);
+  void CopyFrom(const GrpcMsgJoin& from);
+  void MergeFrom(const GrpcMsgJoin& from);
   void Clear() final;
   bool IsInitialized() const final;
 
@@ -134,110 +166,7 @@ class SignerDataRequest : public ::google::protobuf::Message /* @@protoc_inserti
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(SignerDataRequest* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // int32 check = 1;
-  void clear_check();
-  static const int kCheckFieldNumber = 1;
-  ::google::protobuf::int32 check() const;
-  void set_check(::google::protobuf::int32 value);
-
-  // @@protoc_insertion_point(class_scope:grpc_signer.SignerDataRequest)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::int32 check_;
-  mutable ::google::protobuf::internal::CachedSize _cached_size_;
-  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
-class SignerDataReply : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.SignerDataReply) */ {
- public:
-  SignerDataReply();
-  virtual ~SignerDataReply();
-
-  SignerDataReply(const SignerDataReply& from);
-
-  inline SignerDataReply& operator=(const SignerDataReply& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  SignerDataReply(SignerDataReply&& from) noexcept
-    : SignerDataReply() {
-    *this = ::std::move(from);
-  }
-
-  inline SignerDataReply& operator=(SignerDataReply&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const SignerDataReply& default_instance();
-
-  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const SignerDataReply* internal_default_instance() {
-    return reinterpret_cast<const SignerDataReply*>(
-               &_SignerDataReply_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    1;
-
-  void Swap(SignerDataReply* other);
-  friend void swap(SignerDataReply& a, SignerDataReply& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline SignerDataReply* New() const final {
-    return CreateMaybeMessage<SignerDataReply>(NULL);
-  }
-
-  SignerDataReply* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<SignerDataReply>(arena);
-  }
-  void CopyFrom(const ::google::protobuf::Message& from) final;
-  void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const SignerDataReply& from);
-  void MergeFrom(const SignerDataReply& from);
-  void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) final;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const final;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* target) const final;
-  int GetCachedSize() const final { return _cached_size_.Get(); }
-
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(SignerDataReply* other);
+  void InternalSwap(GrpcMsgJoin* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -267,11 +196,995 @@ class SignerDataReply : public ::google::protobuf::Message /* @@protoc_insertion
   ::std::string* release_message();
   void set_allocated_message(::std::string* message);
 
-  // @@protoc_insertion_point(class_scope:grpc_signer.SignerDataReply)
+  // @@protoc_insertion_point(class_scope:grpc_signer.GrpcMsgJoin)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr message_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class GrpcMsgChallenge : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.GrpcMsgChallenge) */ {
+ public:
+  GrpcMsgChallenge();
+  virtual ~GrpcMsgChallenge();
+
+  GrpcMsgChallenge(const GrpcMsgChallenge& from);
+
+  inline GrpcMsgChallenge& operator=(const GrpcMsgChallenge& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  GrpcMsgChallenge(GrpcMsgChallenge&& from) noexcept
+    : GrpcMsgChallenge() {
+    *this = ::std::move(from);
+  }
+
+  inline GrpcMsgChallenge& operator=(GrpcMsgChallenge&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GrpcMsgChallenge& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const GrpcMsgChallenge* internal_default_instance() {
+    return reinterpret_cast<const GrpcMsgChallenge*>(
+               &_GrpcMsgChallenge_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    1;
+
+  void Swap(GrpcMsgChallenge* other);
+  friend void swap(GrpcMsgChallenge& a, GrpcMsgChallenge& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline GrpcMsgChallenge* New() const final {
+    return CreateMaybeMessage<GrpcMsgChallenge>(NULL);
+  }
+
+  GrpcMsgChallenge* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<GrpcMsgChallenge>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const GrpcMsgChallenge& from);
+  void MergeFrom(const GrpcMsgChallenge& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(GrpcMsgChallenge* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bytes message = 1;
+  void clear_message();
+  static const int kMessageFieldNumber = 1;
+  const ::std::string& message() const;
+  void set_message(const ::std::string& value);
+  #if LANG_CXX11
+  void set_message(::std::string&& value);
+  #endif
+  void set_message(const char* value);
+  void set_message(const void* value, size_t size);
+  ::std::string* mutable_message();
+  ::std::string* release_message();
+  void set_allocated_message(::std::string* message);
+
+  // @@protoc_insertion_point(class_scope:grpc_signer.GrpcMsgChallenge)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr message_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class GrpcMsgResponse1 : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.GrpcMsgResponse1) */ {
+ public:
+  GrpcMsgResponse1();
+  virtual ~GrpcMsgResponse1();
+
+  GrpcMsgResponse1(const GrpcMsgResponse1& from);
+
+  inline GrpcMsgResponse1& operator=(const GrpcMsgResponse1& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  GrpcMsgResponse1(GrpcMsgResponse1&& from) noexcept
+    : GrpcMsgResponse1() {
+    *this = ::std::move(from);
+  }
+
+  inline GrpcMsgResponse1& operator=(GrpcMsgResponse1&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GrpcMsgResponse1& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const GrpcMsgResponse1* internal_default_instance() {
+    return reinterpret_cast<const GrpcMsgResponse1*>(
+               &_GrpcMsgResponse1_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  void Swap(GrpcMsgResponse1* other);
+  friend void swap(GrpcMsgResponse1& a, GrpcMsgResponse1& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline GrpcMsgResponse1* New() const final {
+    return CreateMaybeMessage<GrpcMsgResponse1>(NULL);
+  }
+
+  GrpcMsgResponse1* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<GrpcMsgResponse1>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const GrpcMsgResponse1& from);
+  void MergeFrom(const GrpcMsgResponse1& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(GrpcMsgResponse1* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bytes message = 1;
+  void clear_message();
+  static const int kMessageFieldNumber = 1;
+  const ::std::string& message() const;
+  void set_message(const ::std::string& value);
+  #if LANG_CXX11
+  void set_message(::std::string&& value);
+  #endif
+  void set_message(const char* value);
+  void set_message(const void* value, size_t size);
+  ::std::string* mutable_message();
+  ::std::string* release_message();
+  void set_allocated_message(::std::string* message);
+
+  // @@protoc_insertion_point(class_scope:grpc_signer.GrpcMsgResponse1)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr message_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class GrpcMsgResponse2 : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.GrpcMsgResponse2) */ {
+ public:
+  GrpcMsgResponse2();
+  virtual ~GrpcMsgResponse2();
+
+  GrpcMsgResponse2(const GrpcMsgResponse2& from);
+
+  inline GrpcMsgResponse2& operator=(const GrpcMsgResponse2& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  GrpcMsgResponse2(GrpcMsgResponse2&& from) noexcept
+    : GrpcMsgResponse2() {
+    *this = ::std::move(from);
+  }
+
+  inline GrpcMsgResponse2& operator=(GrpcMsgResponse2&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GrpcMsgResponse2& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const GrpcMsgResponse2* internal_default_instance() {
+    return reinterpret_cast<const GrpcMsgResponse2*>(
+               &_GrpcMsgResponse2_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    3;
+
+  void Swap(GrpcMsgResponse2* other);
+  friend void swap(GrpcMsgResponse2& a, GrpcMsgResponse2& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline GrpcMsgResponse2* New() const final {
+    return CreateMaybeMessage<GrpcMsgResponse2>(NULL);
+  }
+
+  GrpcMsgResponse2* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<GrpcMsgResponse2>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const GrpcMsgResponse2& from);
+  void MergeFrom(const GrpcMsgResponse2& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(GrpcMsgResponse2* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bytes message = 1;
+  void clear_message();
+  static const int kMessageFieldNumber = 1;
+  const ::std::string& message() const;
+  void set_message(const ::std::string& value);
+  #if LANG_CXX11
+  void set_message(::std::string&& value);
+  #endif
+  void set_message(const char* value);
+  void set_message(const void* value, size_t size);
+  ::std::string* mutable_message();
+  ::std::string* release_message();
+  void set_allocated_message(::std::string* message);
+
+  // @@protoc_insertion_point(class_scope:grpc_signer.GrpcMsgResponse2)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr message_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class GrpcMsgSuccess : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.GrpcMsgSuccess) */ {
+ public:
+  GrpcMsgSuccess();
+  virtual ~GrpcMsgSuccess();
+
+  GrpcMsgSuccess(const GrpcMsgSuccess& from);
+
+  inline GrpcMsgSuccess& operator=(const GrpcMsgSuccess& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  GrpcMsgSuccess(GrpcMsgSuccess&& from) noexcept
+    : GrpcMsgSuccess() {
+    *this = ::std::move(from);
+  }
+
+  inline GrpcMsgSuccess& operator=(GrpcMsgSuccess&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GrpcMsgSuccess& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const GrpcMsgSuccess* internal_default_instance() {
+    return reinterpret_cast<const GrpcMsgSuccess*>(
+               &_GrpcMsgSuccess_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    4;
+
+  void Swap(GrpcMsgSuccess* other);
+  friend void swap(GrpcMsgSuccess& a, GrpcMsgSuccess& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline GrpcMsgSuccess* New() const final {
+    return CreateMaybeMessage<GrpcMsgSuccess>(NULL);
+  }
+
+  GrpcMsgSuccess* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<GrpcMsgSuccess>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const GrpcMsgSuccess& from);
+  void MergeFrom(const GrpcMsgSuccess& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(GrpcMsgSuccess* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bytes message = 1;
+  void clear_message();
+  static const int kMessageFieldNumber = 1;
+  const ::std::string& message() const;
+  void set_message(const ::std::string& value);
+  #if LANG_CXX11
+  void set_message(::std::string&& value);
+  #endif
+  void set_message(const char* value);
+  void set_message(const void* value, size_t size);
+  ::std::string* mutable_message();
+  ::std::string* release_message();
+  void set_allocated_message(::std::string* message);
+
+  // @@protoc_insertion_point(class_scope:grpc_signer.GrpcMsgSuccess)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr message_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class GrpcMsgAccept : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.GrpcMsgAccept) */ {
+ public:
+  GrpcMsgAccept();
+  virtual ~GrpcMsgAccept();
+
+  GrpcMsgAccept(const GrpcMsgAccept& from);
+
+  inline GrpcMsgAccept& operator=(const GrpcMsgAccept& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  GrpcMsgAccept(GrpcMsgAccept&& from) noexcept
+    : GrpcMsgAccept() {
+    *this = ::std::move(from);
+  }
+
+  inline GrpcMsgAccept& operator=(GrpcMsgAccept&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GrpcMsgAccept& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const GrpcMsgAccept* internal_default_instance() {
+    return reinterpret_cast<const GrpcMsgAccept*>(
+               &_GrpcMsgAccept_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    5;
+
+  void Swap(GrpcMsgAccept* other);
+  friend void swap(GrpcMsgAccept& a, GrpcMsgAccept& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline GrpcMsgAccept* New() const final {
+    return CreateMaybeMessage<GrpcMsgAccept>(NULL);
+  }
+
+  GrpcMsgAccept* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<GrpcMsgAccept>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const GrpcMsgAccept& from);
+  void MergeFrom(const GrpcMsgAccept& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(GrpcMsgAccept* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bytes message = 1;
+  void clear_message();
+  static const int kMessageFieldNumber = 1;
+  const ::std::string& message() const;
+  void set_message(const ::std::string& value);
+  #if LANG_CXX11
+  void set_message(::std::string&& value);
+  #endif
+  void set_message(const char* value);
+  void set_message(const void* value, size_t size);
+  ::std::string* mutable_message();
+  ::std::string* release_message();
+  void set_allocated_message(::std::string* message);
+
+  // @@protoc_insertion_point(class_scope:grpc_signer.GrpcMsgAccept)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr message_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class GrpcMsgSsig : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.GrpcMsgSsig) */ {
+ public:
+  GrpcMsgSsig();
+  virtual ~GrpcMsgSsig();
+
+  GrpcMsgSsig(const GrpcMsgSsig& from);
+
+  inline GrpcMsgSsig& operator=(const GrpcMsgSsig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  GrpcMsgSsig(GrpcMsgSsig&& from) noexcept
+    : GrpcMsgSsig() {
+    *this = ::std::move(from);
+  }
+
+  inline GrpcMsgSsig& operator=(GrpcMsgSsig&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GrpcMsgSsig& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const GrpcMsgSsig* internal_default_instance() {
+    return reinterpret_cast<const GrpcMsgSsig*>(
+               &_GrpcMsgSsig_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    6;
+
+  void Swap(GrpcMsgSsig* other);
+  friend void swap(GrpcMsgSsig& a, GrpcMsgSsig& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline GrpcMsgSsig* New() const final {
+    return CreateMaybeMessage<GrpcMsgSsig>(NULL);
+  }
+
+  GrpcMsgSsig* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<GrpcMsgSsig>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const GrpcMsgSsig& from);
+  void MergeFrom(const GrpcMsgSsig& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(GrpcMsgSsig* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bytes message = 1;
+  void clear_message();
+  static const int kMessageFieldNumber = 1;
+  const ::std::string& message() const;
+  void set_message(const ::std::string& value);
+  #if LANG_CXX11
+  void set_message(::std::string&& value);
+  #endif
+  void set_message(const char* value);
+  void set_message(const void* value, size_t size);
+  ::std::string* mutable_message();
+  ::std::string* release_message();
+  void set_allocated_message(::std::string* message);
+
+  // @@protoc_insertion_point(class_scope:grpc_signer.GrpcMsgSsig)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr message_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class GrpcMsgReqSsig : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.GrpcMsgReqSsig) */ {
+ public:
+  GrpcMsgReqSsig();
+  virtual ~GrpcMsgReqSsig();
+
+  GrpcMsgReqSsig(const GrpcMsgReqSsig& from);
+
+  inline GrpcMsgReqSsig& operator=(const GrpcMsgReqSsig& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  GrpcMsgReqSsig(GrpcMsgReqSsig&& from) noexcept
+    : GrpcMsgReqSsig() {
+    *this = ::std::move(from);
+  }
+
+  inline GrpcMsgReqSsig& operator=(GrpcMsgReqSsig&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const GrpcMsgReqSsig& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const GrpcMsgReqSsig* internal_default_instance() {
+    return reinterpret_cast<const GrpcMsgReqSsig*>(
+               &_GrpcMsgReqSsig_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    7;
+
+  void Swap(GrpcMsgReqSsig* other);
+  friend void swap(GrpcMsgReqSsig& a, GrpcMsgReqSsig& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline GrpcMsgReqSsig* New() const final {
+    return CreateMaybeMessage<GrpcMsgReqSsig>(NULL);
+  }
+
+  GrpcMsgReqSsig* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<GrpcMsgReqSsig>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const GrpcMsgReqSsig& from);
+  void MergeFrom(const GrpcMsgReqSsig& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(GrpcMsgReqSsig* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bytes message = 1;
+  void clear_message();
+  static const int kMessageFieldNumber = 1;
+  const ::std::string& message() const;
+  void set_message(const ::std::string& value);
+  #if LANG_CXX11
+  void set_message(::std::string&& value);
+  #endif
+  void set_message(const char* value);
+  void set_message(const void* value, size_t size);
+  ::std::string* mutable_message();
+  ::std::string* release_message();
+  void set_allocated_message(::std::string* message);
+
+  // @@protoc_insertion_point(class_scope:grpc_signer.GrpcMsgReqSsig)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr message_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class Identity : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.Identity) */ {
+ public:
+  Identity();
+  virtual ~Identity();
+
+  Identity(const Identity& from);
+
+  inline Identity& operator=(const Identity& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Identity(Identity&& from) noexcept
+    : Identity() {
+    *this = ::std::move(from);
+  }
+
+  inline Identity& operator=(Identity&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Identity& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Identity* internal_default_instance() {
+    return reinterpret_cast<const Identity*>(
+               &_Identity_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    8;
+
+  void Swap(Identity* other);
+  friend void swap(Identity& a, Identity& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Identity* New() const final {
+    return CreateMaybeMessage<Identity>(NULL);
+  }
+
+  Identity* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<Identity>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const Identity& from);
+  void MergeFrom(const Identity& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Identity* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bytes sender = 1;
+  void clear_sender();
+  static const int kSenderFieldNumber = 1;
+  const ::std::string& sender() const;
+  void set_sender(const ::std::string& value);
+  #if LANG_CXX11
+  void set_sender(::std::string&& value);
+  #endif
+  void set_sender(const char* value);
+  void set_sender(const void* value, size_t size);
+  ::std::string* mutable_sender();
+  ::std::string* release_sender();
+  void set_allocated_sender(::std::string* sender);
+
+  // @@protoc_insertion_point(class_scope:grpc_signer.Identity)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr sender_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class NoReply : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_signer.NoReply) */ {
+ public:
+  NoReply();
+  virtual ~NoReply();
+
+  NoReply(const NoReply& from);
+
+  inline NoReply& operator=(const NoReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  NoReply(NoReply&& from) noexcept
+    : NoReply() {
+    *this = ::std::move(from);
+  }
+
+  inline NoReply& operator=(NoReply&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const NoReply& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const NoReply* internal_default_instance() {
+    return reinterpret_cast<const NoReply*>(
+               &_NoReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    9;
+
+  void Swap(NoReply* other);
+  friend void swap(NoReply& a, NoReply& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline NoReply* New() const final {
+    return CreateMaybeMessage<NoReply>(NULL);
+  }
+
+  NoReply* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<NoReply>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const NoReply& from);
+  void MergeFrom(const NoReply& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(NoReply* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:grpc_signer.NoReply)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::protobuf_protobuf_5fsigner_2eproto::TableStruct;
 };
@@ -284,82 +1197,540 @@ class SignerDataReply : public ::google::protobuf::Message /* @@protoc_insertion
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// SignerDataRequest
-
-// int32 check = 1;
-inline void SignerDataRequest::clear_check() {
-  check_ = 0;
-}
-inline ::google::protobuf::int32 SignerDataRequest::check() const {
-  // @@protoc_insertion_point(field_get:grpc_signer.SignerDataRequest.check)
-  return check_;
-}
-inline void SignerDataRequest::set_check(::google::protobuf::int32 value) {
-  
-  check_ = value;
-  // @@protoc_insertion_point(field_set:grpc_signer.SignerDataRequest.check)
-}
-
-// -------------------------------------------------------------------
-
-// SignerDataReply
+// GrpcMsgJoin
 
 // bytes message = 1;
-inline void SignerDataReply::clear_message() {
+inline void GrpcMsgJoin::clear_message() {
   message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& SignerDataReply::message() const {
-  // @@protoc_insertion_point(field_get:grpc_signer.SignerDataReply.message)
+inline const ::std::string& GrpcMsgJoin::message() const {
+  // @@protoc_insertion_point(field_get:grpc_signer.GrpcMsgJoin.message)
   return message_.GetNoArena();
 }
-inline void SignerDataReply::set_message(const ::std::string& value) {
+inline void GrpcMsgJoin::set_message(const ::std::string& value) {
   
   message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:grpc_signer.SignerDataReply.message)
+  // @@protoc_insertion_point(field_set:grpc_signer.GrpcMsgJoin.message)
 }
 #if LANG_CXX11
-inline void SignerDataReply::set_message(::std::string&& value) {
+inline void GrpcMsgJoin::set_message(::std::string&& value) {
   
   message_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.SignerDataReply.message)
+  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.GrpcMsgJoin.message)
 }
 #endif
-inline void SignerDataReply::set_message(const char* value) {
+inline void GrpcMsgJoin::set_message(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:grpc_signer.SignerDataReply.message)
+  // @@protoc_insertion_point(field_set_char:grpc_signer.GrpcMsgJoin.message)
 }
-inline void SignerDataReply::set_message(const void* value, size_t size) {
+inline void GrpcMsgJoin::set_message(const void* value, size_t size) {
   
   message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:grpc_signer.SignerDataReply.message)
+  // @@protoc_insertion_point(field_set_pointer:grpc_signer.GrpcMsgJoin.message)
 }
-inline ::std::string* SignerDataReply::mutable_message() {
+inline ::std::string* GrpcMsgJoin::mutable_message() {
   
-  // @@protoc_insertion_point(field_mutable:grpc_signer.SignerDataReply.message)
+  // @@protoc_insertion_point(field_mutable:grpc_signer.GrpcMsgJoin.message)
   return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* SignerDataReply::release_message() {
-  // @@protoc_insertion_point(field_release:grpc_signer.SignerDataReply.message)
+inline ::std::string* GrpcMsgJoin::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_signer.GrpcMsgJoin.message)
   
   return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void SignerDataReply::set_allocated_message(::std::string* message) {
+inline void GrpcMsgJoin::set_allocated_message(::std::string* message) {
   if (message != NULL) {
     
   } else {
     
   }
   message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
-  // @@protoc_insertion_point(field_set_allocated:grpc_signer.SignerDataReply.message)
+  // @@protoc_insertion_point(field_set_allocated:grpc_signer.GrpcMsgJoin.message)
 }
+
+// -------------------------------------------------------------------
+
+// GrpcMsgChallenge
+
+// bytes message = 1;
+inline void GrpcMsgChallenge::clear_message() {
+  message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GrpcMsgChallenge::message() const {
+  // @@protoc_insertion_point(field_get:grpc_signer.GrpcMsgChallenge.message)
+  return message_.GetNoArena();
+}
+inline void GrpcMsgChallenge::set_message(const ::std::string& value) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:grpc_signer.GrpcMsgChallenge.message)
+}
+#if LANG_CXX11
+inline void GrpcMsgChallenge::set_message(::std::string&& value) {
+  
+  message_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.GrpcMsgChallenge.message)
+}
+#endif
+inline void GrpcMsgChallenge::set_message(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:grpc_signer.GrpcMsgChallenge.message)
+}
+inline void GrpcMsgChallenge::set_message(const void* value, size_t size) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:grpc_signer.GrpcMsgChallenge.message)
+}
+inline ::std::string* GrpcMsgChallenge::mutable_message() {
+  
+  // @@protoc_insertion_point(field_mutable:grpc_signer.GrpcMsgChallenge.message)
+  return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GrpcMsgChallenge::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_signer.GrpcMsgChallenge.message)
+  
+  return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GrpcMsgChallenge::set_allocated_message(::std::string* message) {
+  if (message != NULL) {
+    
+  } else {
+    
+  }
+  message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
+  // @@protoc_insertion_point(field_set_allocated:grpc_signer.GrpcMsgChallenge.message)
+}
+
+// -------------------------------------------------------------------
+
+// GrpcMsgResponse1
+
+// bytes message = 1;
+inline void GrpcMsgResponse1::clear_message() {
+  message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GrpcMsgResponse1::message() const {
+  // @@protoc_insertion_point(field_get:grpc_signer.GrpcMsgResponse1.message)
+  return message_.GetNoArena();
+}
+inline void GrpcMsgResponse1::set_message(const ::std::string& value) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:grpc_signer.GrpcMsgResponse1.message)
+}
+#if LANG_CXX11
+inline void GrpcMsgResponse1::set_message(::std::string&& value) {
+  
+  message_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.GrpcMsgResponse1.message)
+}
+#endif
+inline void GrpcMsgResponse1::set_message(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:grpc_signer.GrpcMsgResponse1.message)
+}
+inline void GrpcMsgResponse1::set_message(const void* value, size_t size) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:grpc_signer.GrpcMsgResponse1.message)
+}
+inline ::std::string* GrpcMsgResponse1::mutable_message() {
+  
+  // @@protoc_insertion_point(field_mutable:grpc_signer.GrpcMsgResponse1.message)
+  return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GrpcMsgResponse1::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_signer.GrpcMsgResponse1.message)
+  
+  return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GrpcMsgResponse1::set_allocated_message(::std::string* message) {
+  if (message != NULL) {
+    
+  } else {
+    
+  }
+  message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
+  // @@protoc_insertion_point(field_set_allocated:grpc_signer.GrpcMsgResponse1.message)
+}
+
+// -------------------------------------------------------------------
+
+// GrpcMsgResponse2
+
+// bytes message = 1;
+inline void GrpcMsgResponse2::clear_message() {
+  message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GrpcMsgResponse2::message() const {
+  // @@protoc_insertion_point(field_get:grpc_signer.GrpcMsgResponse2.message)
+  return message_.GetNoArena();
+}
+inline void GrpcMsgResponse2::set_message(const ::std::string& value) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:grpc_signer.GrpcMsgResponse2.message)
+}
+#if LANG_CXX11
+inline void GrpcMsgResponse2::set_message(::std::string&& value) {
+  
+  message_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.GrpcMsgResponse2.message)
+}
+#endif
+inline void GrpcMsgResponse2::set_message(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:grpc_signer.GrpcMsgResponse2.message)
+}
+inline void GrpcMsgResponse2::set_message(const void* value, size_t size) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:grpc_signer.GrpcMsgResponse2.message)
+}
+inline ::std::string* GrpcMsgResponse2::mutable_message() {
+  
+  // @@protoc_insertion_point(field_mutable:grpc_signer.GrpcMsgResponse2.message)
+  return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GrpcMsgResponse2::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_signer.GrpcMsgResponse2.message)
+  
+  return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GrpcMsgResponse2::set_allocated_message(::std::string* message) {
+  if (message != NULL) {
+    
+  } else {
+    
+  }
+  message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
+  // @@protoc_insertion_point(field_set_allocated:grpc_signer.GrpcMsgResponse2.message)
+}
+
+// -------------------------------------------------------------------
+
+// GrpcMsgSuccess
+
+// bytes message = 1;
+inline void GrpcMsgSuccess::clear_message() {
+  message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GrpcMsgSuccess::message() const {
+  // @@protoc_insertion_point(field_get:grpc_signer.GrpcMsgSuccess.message)
+  return message_.GetNoArena();
+}
+inline void GrpcMsgSuccess::set_message(const ::std::string& value) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:grpc_signer.GrpcMsgSuccess.message)
+}
+#if LANG_CXX11
+inline void GrpcMsgSuccess::set_message(::std::string&& value) {
+  
+  message_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.GrpcMsgSuccess.message)
+}
+#endif
+inline void GrpcMsgSuccess::set_message(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:grpc_signer.GrpcMsgSuccess.message)
+}
+inline void GrpcMsgSuccess::set_message(const void* value, size_t size) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:grpc_signer.GrpcMsgSuccess.message)
+}
+inline ::std::string* GrpcMsgSuccess::mutable_message() {
+  
+  // @@protoc_insertion_point(field_mutable:grpc_signer.GrpcMsgSuccess.message)
+  return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GrpcMsgSuccess::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_signer.GrpcMsgSuccess.message)
+  
+  return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GrpcMsgSuccess::set_allocated_message(::std::string* message) {
+  if (message != NULL) {
+    
+  } else {
+    
+  }
+  message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
+  // @@protoc_insertion_point(field_set_allocated:grpc_signer.GrpcMsgSuccess.message)
+}
+
+// -------------------------------------------------------------------
+
+// GrpcMsgAccept
+
+// bytes message = 1;
+inline void GrpcMsgAccept::clear_message() {
+  message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GrpcMsgAccept::message() const {
+  // @@protoc_insertion_point(field_get:grpc_signer.GrpcMsgAccept.message)
+  return message_.GetNoArena();
+}
+inline void GrpcMsgAccept::set_message(const ::std::string& value) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:grpc_signer.GrpcMsgAccept.message)
+}
+#if LANG_CXX11
+inline void GrpcMsgAccept::set_message(::std::string&& value) {
+  
+  message_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.GrpcMsgAccept.message)
+}
+#endif
+inline void GrpcMsgAccept::set_message(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:grpc_signer.GrpcMsgAccept.message)
+}
+inline void GrpcMsgAccept::set_message(const void* value, size_t size) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:grpc_signer.GrpcMsgAccept.message)
+}
+inline ::std::string* GrpcMsgAccept::mutable_message() {
+  
+  // @@protoc_insertion_point(field_mutable:grpc_signer.GrpcMsgAccept.message)
+  return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GrpcMsgAccept::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_signer.GrpcMsgAccept.message)
+  
+  return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GrpcMsgAccept::set_allocated_message(::std::string* message) {
+  if (message != NULL) {
+    
+  } else {
+    
+  }
+  message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
+  // @@protoc_insertion_point(field_set_allocated:grpc_signer.GrpcMsgAccept.message)
+}
+
+// -------------------------------------------------------------------
+
+// GrpcMsgSsig
+
+// bytes message = 1;
+inline void GrpcMsgSsig::clear_message() {
+  message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GrpcMsgSsig::message() const {
+  // @@protoc_insertion_point(field_get:grpc_signer.GrpcMsgSsig.message)
+  return message_.GetNoArena();
+}
+inline void GrpcMsgSsig::set_message(const ::std::string& value) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:grpc_signer.GrpcMsgSsig.message)
+}
+#if LANG_CXX11
+inline void GrpcMsgSsig::set_message(::std::string&& value) {
+  
+  message_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.GrpcMsgSsig.message)
+}
+#endif
+inline void GrpcMsgSsig::set_message(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:grpc_signer.GrpcMsgSsig.message)
+}
+inline void GrpcMsgSsig::set_message(const void* value, size_t size) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:grpc_signer.GrpcMsgSsig.message)
+}
+inline ::std::string* GrpcMsgSsig::mutable_message() {
+  
+  // @@protoc_insertion_point(field_mutable:grpc_signer.GrpcMsgSsig.message)
+  return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GrpcMsgSsig::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_signer.GrpcMsgSsig.message)
+  
+  return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GrpcMsgSsig::set_allocated_message(::std::string* message) {
+  if (message != NULL) {
+    
+  } else {
+    
+  }
+  message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
+  // @@protoc_insertion_point(field_set_allocated:grpc_signer.GrpcMsgSsig.message)
+}
+
+// -------------------------------------------------------------------
+
+// GrpcMsgReqSsig
+
+// bytes message = 1;
+inline void GrpcMsgReqSsig::clear_message() {
+  message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& GrpcMsgReqSsig::message() const {
+  // @@protoc_insertion_point(field_get:grpc_signer.GrpcMsgReqSsig.message)
+  return message_.GetNoArena();
+}
+inline void GrpcMsgReqSsig::set_message(const ::std::string& value) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:grpc_signer.GrpcMsgReqSsig.message)
+}
+#if LANG_CXX11
+inline void GrpcMsgReqSsig::set_message(::std::string&& value) {
+  
+  message_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.GrpcMsgReqSsig.message)
+}
+#endif
+inline void GrpcMsgReqSsig::set_message(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:grpc_signer.GrpcMsgReqSsig.message)
+}
+inline void GrpcMsgReqSsig::set_message(const void* value, size_t size) {
+  
+  message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:grpc_signer.GrpcMsgReqSsig.message)
+}
+inline ::std::string* GrpcMsgReqSsig::mutable_message() {
+  
+  // @@protoc_insertion_point(field_mutable:grpc_signer.GrpcMsgReqSsig.message)
+  return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* GrpcMsgReqSsig::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_signer.GrpcMsgReqSsig.message)
+  
+  return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void GrpcMsgReqSsig::set_allocated_message(::std::string* message) {
+  if (message != NULL) {
+    
+  } else {
+    
+  }
+  message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
+  // @@protoc_insertion_point(field_set_allocated:grpc_signer.GrpcMsgReqSsig.message)
+}
+
+// -------------------------------------------------------------------
+
+// Identity
+
+// bytes sender = 1;
+inline void Identity::clear_sender() {
+  sender_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& Identity::sender() const {
+  // @@protoc_insertion_point(field_get:grpc_signer.Identity.sender)
+  return sender_.GetNoArena();
+}
+inline void Identity::set_sender(const ::std::string& value) {
+  
+  sender_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:grpc_signer.Identity.sender)
+}
+#if LANG_CXX11
+inline void Identity::set_sender(::std::string&& value) {
+  
+  sender_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:grpc_signer.Identity.sender)
+}
+#endif
+inline void Identity::set_sender(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  sender_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:grpc_signer.Identity.sender)
+}
+inline void Identity::set_sender(const void* value, size_t size) {
+  
+  sender_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:grpc_signer.Identity.sender)
+}
+inline ::std::string* Identity::mutable_sender() {
+  
+  // @@protoc_insertion_point(field_mutable:grpc_signer.Identity.sender)
+  return sender_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* Identity::release_sender() {
+  // @@protoc_insertion_point(field_release:grpc_signer.Identity.sender)
+  
+  return sender_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void Identity::set_allocated_sender(::std::string* sender) {
+  if (sender != NULL) {
+    
+  } else {
+    
+  }
+  sender_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), sender);
+  // @@protoc_insertion_point(field_set_allocated:grpc_signer.Identity.sender)
+}
+
+// -------------------------------------------------------------------
+
+// NoReply
 
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 

@@ -1,16 +1,17 @@
 #include "grpc_util.hpp"
 #include "../../../include/json_schema.hpp"
 #include "msg_schema.hpp"
+#include "../../utils/compressor.hpp"
 #include <cstring>
 namespace gruut {
 std::string
 HeaderController::attachHeader(std::string &compressed_json,
-                               MessageType msg_type,
-                               MACAlgorithmType mac_algo_type,
-                               CompressionAlgorithmType compression_algo_type) {
+							   MessageType msg_type,
+							   MACAlgorithmType mac_algo_type,
+							   CompressionAlgorithmType compression_algo_type) {
   std::string header;
   uint32_t total_length =
-      static_cast<uint32_t>(HEADER_LENGTH + compressed_json.size());
+	  static_cast<uint32_t>(HEADER_LENGTH + compressed_json.size());
 
   header.resize(32);
   header[0] = G;
@@ -20,8 +21,8 @@ HeaderController::attachHeader(std::string &compressed_json,
   header[4] = static_cast<uint8_t>(compression_algo_type);
   header[5] = NOT_USED;
   for (int i = 9; i > 6; i--) {
-    header[i] |= total_length;
-    total_length = (total_length >> 8);
+	header[i] |= total_length;
+	total_length = (total_length >> 8);
   }
   header[6] |= total_length;
 
@@ -31,37 +32,59 @@ HeaderController::attachHeader(std::string &compressed_json,
 
   return header + compressed_json;
 }
+
 std::string HeaderController::detachHeader(std::string &raw_data) {
   size_t json_length = raw_data.size() - HEADER_LENGTH;
   std::string json_dump(&raw_data[HEADER_LENGTH],
-                        &raw_data[HEADER_LENGTH] + json_length);
+						&raw_data[HEADER_LENGTH] + json_length);
 
   return json_dump;
 }
+
 bool HeaderController::validateMessage(MessageHeader &msg_header) {
-  // TODO: 메세지 검증할때 사용하는 값들은 변경될 수 있습니다.
+// TODO: 메세지 검증할때 사용하는 값들은 변경될 수 있습니다.
   return (msg_header.identifier == G && msg_header.version == VERSION &&
-          msg_header.mac_algo_type == static_cast<MACAlgorithmType>(MAC));
+	  msg_header.mac_algo_type == static_cast<MACAlgorithmType>(MAC));
 }
+
 int HeaderController::getJsonSize(MessageHeader &msg_header) {
   int json_size = 0;
   for (int i = 3; i > 0; i--) {
-    json_size |= msg_header.total_length[i];
-    json_size = (json_size << 8);
+	json_size |= msg_header.total_length[i];
+	json_size = (json_size << 8);
   }
   json_size |= msg_header.total_length[0];
   json_size -= HEADER_LENGTH;
   return json_size;
 }
 
-MessageHeader HeaderController::parseHeader(std::string &raw_data) {
+//TODO: compression algorithm 추가에따라 변경될 수있습니다.
+nlohmann::json HeaderController::getJsonMessage(CompressionAlgorithmType compression_type , std::string &no_header_data, int json_size){
+  nlohmann::json json_data;
+  switch(compression_type) {
+  case CompressionAlgorithmType::LZ4: {
+	std::string origin_data;
+	Compressor::decompressData (no_header_data, origin_data, json_size);
+	json_data = nlohmann::json::parse(origin_data);
+  }
+	break;
+  case CompressionAlgorithmType::NONE:{
+	json_data = nlohmann::json::parse(no_header_data);
+  }
+	break;
+  default:
+	break;
+  }
+  return json_data;
+}
+
+MessageHeader HeaderController::parseHeader (std::string &raw_data) {
   MessageHeader msg_header;
   msg_header.identifier = G;
   msg_header.version = VERSION;
   msg_header.message_type = static_cast<MessageType>(raw_data[2]);
   msg_header.mac_algo_type = static_cast<MACAlgorithmType>(raw_data[3]);
-  msg_header.compression_algo_type =
-      static_cast<CompressionAlgorithmType>(raw_data[4]);
+  msg_header.compression_algo_type = static_cast<CompressionAlgorithmType>(raw_data[4]);
   msg_header.dummy = static_cast<uint8_t>(raw_data[5]);
   memcpy(&msg_header.total_length[0], &raw_data[6], 4);
   memcpy(&msg_header.local_chain_id[0], &raw_data[10], 8);
@@ -79,12 +102,12 @@ bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {
   schema_validator.set_root_schema(MessageSchema::getSchema(msg_type));
 
   try {
-    schema_validator.validate(json_object);
-    std::cout << "Validation succeeded" << std::endl;
-    return true;
+	schema_validator.validate(json_object);
+	std::cout << "Validation succeeded" << std::endl;
+	return true;
   } catch (const std::exception &e) {
-    std::cout << "Validation failed : " << e.what() << std::endl;
-    return false;
+	std::cout << "Validation failed : " << e.what() << std::endl;
+	return false;
   }
 }
 } // namespace gruut
