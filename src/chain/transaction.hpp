@@ -14,7 +14,7 @@ struct Transaction {
 };
 
 struct NullTransaction : public Transaction {
-  NullTransaction() { transaction_id = ""; }
+  NullTransaction() { transaction_id = sha256(); }
 };
 } // namespace gruut
 #endif

@@ -21,17 +21,17 @@ BOOST_AUTO_TEST_SUITE(Test_MerkleTree)
            / \         /  \          / \
     6B86B2 D4735E 4E0740 4B2277 EF2D12 E7F6C0
         */
-
-        MerkleTree t;
-        vector<sha256> transaction_ids;
-        transaction_ids.emplace_back("1");
-        transaction_ids.emplace_back("2");
-        transaction_ids.emplace_back("3");
-        transaction_ids.emplace_back("4");
-        transaction_ids.emplace_back("5");
-        transaction_ids.emplace_back("6");
-
-        auto transaction_root = t.generate(transaction_ids);
+//
+//        MerkleTree t;
+//        vector<sha256> transaction_ids;
+//        transaction_ids.emplace_back("1");
+//        transaction_ids.emplace_back("2");
+//        transaction_ids.emplace_back("3");
+//        transaction_ids.emplace_back("4");
+//        transaction_ids.emplace_back("5");
+//        transaction_ids.emplace_back("6");
+//
+//        auto transaction_root = t.generate(transaction_ids);
 
 //        bool result = transaction_root == "63CD9C509AA5F6B9B3257123C01D2D1037797271BD4294CA74763F65E4B84812";
 //        BOOST_TEST(true);

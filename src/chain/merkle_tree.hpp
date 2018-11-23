@@ -11,12 +11,9 @@ using namespace std;
 namespace gruut {
 class MerkleTree {
 public:
-  sha256 generate(vector<sha256> &ids);
-  const unordered_map<sha256, pair<sha256, sha256>> &getTree() const;
-
+  void generate(vector<sha256> &ids);
 private:
-  sha256 makeParentNode(const sha256 &l, const sha256 &r);
-  unordered_map<sha256, pair<sha256, sha256>> m_tree;
+  void makeParentNode(const sha256 &l, const sha256 &r);
 };
 } // namespace gruut
 #endif

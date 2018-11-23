@@ -29,10 +29,11 @@ public:
     message_header.message_type = MessageType::MSG_REQ_SSIG;
     std::unordered_map<std::string, std::string> block_map{
         {"time", block.sent_time},
-        {"mID", block.sender_id},
-        {"cID", block.chain_id},
-        {"hgt", block.height},
-        {"txrt", block.transaction_root}};
+//        {"mID", block.sender_id},
+//        {"cID", block.chain_id},
+//        {"hgt", block.height},
+//        {"txrt", block.transaction_root}
+    };
     nlohmann::json j_block_map(block_map);
     message_pointer.reset(new Message(message_header));
     message_pointer->data = j_block_map;
