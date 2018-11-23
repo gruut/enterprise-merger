@@ -10,23 +10,23 @@
 #include <thread>
 
 namespace gruut {
+using grpc::Channel;
 using grpc::Server;
 using grpc::ServerAsyncResponseWriter;
 using grpc::ServerBuilder;
-using grpc::ServerContext;
 using grpc::ServerCompletionQueue;
+using grpc::ServerContext;
 using grpc::Status;
-using grpc::Channel;
 
 using grpc::ClientContext;
 
 using grpc_merger::MergerCommunication;
-using grpc_merger::MergerDataRequest;
 using grpc_merger::MergerDataReply;
+using grpc_merger::MergerDataRequest;
 
 using grpc_signer::SignerCommunication;
-using grpc_signer::SignerDataRequest;
 using grpc_signer::SignerDataReply;
+using grpc_signer::SignerDataRequest;
 
 enum class CallStatus { CREATE, PROCESS, FINISH };
 
@@ -124,4 +124,4 @@ private:
   bool checkMsgType(MessageType msg_type);
   void sendData(std::string &header_added_data);
 };
-}
+} // namespace gruut

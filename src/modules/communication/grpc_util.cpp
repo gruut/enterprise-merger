@@ -87,4 +87,4 @@ bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {
     return false;
   }
 }
-}
+} // namespace gruut

@@ -22,5 +22,5 @@ private:
   SignerPool m_signer_pool;
   std::shared_ptr<SignerPool> m_selected_signers_pool;
 };
-}
+} // namespace gruut
 #endif

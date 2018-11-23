@@ -18,5 +18,5 @@ private:
   sha256 makeParentNode(const sha256 &l, const sha256 &r);
   unordered_map<sha256, pair<sha256, sha256>> m_tree;
 };
-}
+} // namespace gruut
 #endif

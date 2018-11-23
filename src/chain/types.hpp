@@ -51,5 +51,5 @@ using content_type = std::string;
 
 // Message
 using local_chain_id_type = uint8_t;
-}
+} // namespace gruut
 #endif

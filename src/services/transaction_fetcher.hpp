@@ -25,5 +25,5 @@ private:
   Transactions m_selected_transaction_list;
   Signers m_signers;
 };
-}
+} // namespace gruut
 #endif

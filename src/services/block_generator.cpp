@@ -22,4 +22,4 @@ PartialBlock BlockGenerator::generatePartialBlock(sha256 transaction_root_id) {
 //    Block BlockGenerator::generateBlock() {
 //        return Block();
 //    }
-}
+} // namespace gruut

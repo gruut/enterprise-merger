@@ -16,5 +16,5 @@ struct Transaction {
 struct NullTransaction : public Transaction {
   NullTransaction() { transaction_id = ""; }
 };
-}
+} // namespace gruut
 #endif

@@ -181,4 +181,4 @@ void MergerRpcClient::sendData(std::string &header_added_data) {
 
   std::thread th([&]() { pushData(header_added_data, move(stub)); });
 }
-}
+} // namespace gruut

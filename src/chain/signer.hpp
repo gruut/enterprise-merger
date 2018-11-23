@@ -11,6 +11,6 @@ struct Signer {
 
   bool isNew() { return true; }
 };
-}
+} // namespace gruut
 
 #endif

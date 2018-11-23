@@ -30,5 +30,5 @@ private:
   bool m_runnable = false;
   std::thread *m_worker_thread;
 };
-}
+} // namespace gruut
 #endif
