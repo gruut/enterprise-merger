@@ -86,6 +86,8 @@ private:
     MergerRpcServer &m_server;
   };
   void handleMergerRpcs();
+  bool checkSignerMsgType(MessageType msg_type);
+  void sendDataToSigner(std::string &header_added_data, uint64_t receiver_id, MessageType msg_type);
 
   std::unique_ptr<ServerCompletionQueue> m_cq_merger;
   MergerCommunication::AsyncService m_service_merger;
@@ -105,6 +107,6 @@ private:
   bool pushData(std::string &compressed_data,
                 std::unique_ptr<MergerCommunication::Stub> stub);
   bool checkMsgType(MessageType msg_type);
-  void sendData(std::string &header_added_data);
+  void sendDataToSigner(std::string &header_added_data);
 };
 } // namespace gruut

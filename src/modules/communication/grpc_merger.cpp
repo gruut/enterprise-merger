@@ -1,6 +1,8 @@
 #include "grpc_merger.hpp"
 #include "../../utils/compressor.hpp"
 #include "grpc_util.hpp"
+#include <chrono>
+#include <thread>
 
 namespace gruut {
 
@@ -27,8 +29,8 @@ void MergerRpcServer::runSignerServ(char *port_for_signer) {
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService (&m_service_signer);
-
   m_server_signer = builder.BuildAndStart();
+  std::cout << "Server listening on " << server_address << " for Signer" << std::endl;
   m_server_signer->Wait();
 }
 
@@ -93,6 +95,41 @@ void MergerRpcServer::handleMergerRpcs(){
 	static_cast<CallData *>(tag)->proceed();
   }
 }
+bool MergerRpcServer::checkSignerMsgType(MessageType msg_type){
+  return (msg_type == MessageType::MSG_CHALLENGE ||
+	  msg_type == MessageType::MSG_RESPONSE_SECOND ||
+	  msg_type == MessageType::MSG_ACCEPT ||
+	  msg_type == MessageType::MSG_ECHO ||
+	  msg_type == MessageType::MSG_ERROR);
+}
+void MergerRpcServer::sendDataToSigner(std::string &header_added_data, uint64_t receiver_id, MessageType msg_type){
+  switch(msg_type){
+  case MessageType::MSG_CHALLENGE:{
+	m_receiver_list[receiver_id].msg_challenge->set_message(header_added_data);
+	m_receiver_list[receiver_id].msg_challenge = nullptr;
+  }
+	break;
+  case MessageType::MSG_ACCEPT:{
+	m_receiver_list[receiver_id].msg_accept->set_message(header_added_data);
+	m_receiver_list[receiver_id].msg_accept = nullptr;
+  }
+	break;
+  case MessageType::MSG_RESPONSE_SECOND:{
+	m_receiver_list[receiver_id].msg_response2->set_message(header_added_data);
+	m_receiver_list[receiver_id].msg_response2 = nullptr;
+  }
+	break;
+  case MessageType::MSG_REQ_SSIG:{
+	GrpcMsgReqSsig msg;
+	msg.set_message(header_added_data);
+	m_receiver_list[receiver_id].stream->Write(msg);
+  }
+	break;
+  default:
+	break;
+  }
+}
+
 Status MergerRpcServer::SignerService::openChannel (ServerContext *context,
 													ServerReaderWriter<GrpcMsgReqSsig, Identity> *stream) {
   ReceiverRpcData receiver_rpc = ReceiverRpcData();
@@ -103,7 +140,9 @@ Status MergerRpcServer::SignerService::openChannel (ServerContext *context,
   memcpy(&receiver_id, &receiver_data.sender()[0], sizeof(uint64_t));
   m_server.m_receiver_list[receiver_id] = receiver_rpc;
   //TODO: 보낼 데이터를 받을 때 까지 rpc 는 종료 되면 안됩니다. nullptr 이 됬다는건 데이터를 전송했다는 뜻이 됩니다.
-  while(m_server.m_receiver_list[receiver_id].stream != nullptr);
+  while(m_server.m_receiver_list[receiver_id].stream != nullptr){
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
   return Status(StatusCode::ABORTED , "Connection aborted");
 }
 
@@ -114,8 +153,9 @@ Status MergerRpcServer::SignerService::join (ServerContext *context, const GrpcM
   Status st = analyzeData(raw_data, receiver_id);
   if(st.ok()) {
 	m_server.m_receiver_list[receiver_id].msg_challenge = msg_challenge;
-	while(m_server.m_receiver_list[receiver_id].msg_challenge != nullptr);
-
+	while(m_server.m_receiver_list[receiver_id].msg_challenge != nullptr){
+	  std::this_thread::sleep_for(std::chrono::milliseconds(150));
+	}
 	return st;
   }
   return st;
@@ -129,7 +169,9 @@ Status MergerRpcServer::SignerService::dhKeyEx (grpc::ServerContext *context,
   Status st = analyzeData(raw_data, receiver_id);
   if(st.ok()) {
 	m_server.m_receiver_list[receiver_id].msg_response2 = msg_response2;
-	while(m_server.m_receiver_list[receiver_id].msg_response2 != nullptr);
+	while(m_server.m_receiver_list[receiver_id].msg_response2 != nullptr){
+	  std::this_thread::sleep_for(std::chrono::milliseconds(150));
+	}
 
 	return st;
   }
@@ -144,7 +186,9 @@ Status MergerRpcServer::SignerService::keyExFinished (ServerContext *context,
   Status st = analyzeData(raw_data, receiver_id);
   if(st.ok()) {
 	m_server.m_receiver_list[receiver_id].msg_accept = msg_accept;
-	while(m_server.m_receiver_list[receiver_id].msg_accept != nullptr);
+	while(m_server.m_receiver_list[receiver_id].msg_accept != nullptr){
+	  std::this_thread::sleep_for(std::chrono::milliseconds(150));
+	}
 
 	return st;
   }
@@ -159,7 +203,9 @@ Status MergerRpcServer::SignerService::sigSend (ServerContext *context,
   Status st = analyzeData(raw_data, receiver_id);
   if(st.ok()) {
 	m_server.m_receiver_list[receiver_id].no_reply = no_reply;
-	while(m_server.m_receiver_list[receiver_id].no_reply != nullptr);
+	while(m_server.m_receiver_list[receiver_id].no_reply != nullptr){
+	  std::this_thread::sleep_for(std::chrono::milliseconds(150));
+	}
 
 	return st;
   }
@@ -207,7 +253,7 @@ void MergerRpcClient::run() {
 																	 msg.compression_algo_type);
 
 	  // TODO: MAC 붙이는 것 필요
-	  sendData(header_added_data);
+	  sendDataToSigner(header_added_data);
 	}
   }
 }
@@ -236,7 +282,7 @@ bool MergerRpcClient::checkMsgType(MessageType msg_type) {
 	  msg_type == MessageType::MSG_BLOCK);
 }
 
-void MergerRpcClient::sendData(std::string &header_added_data) {
+void MergerRpcClient::sendDataToSigner(std::string &header_added_data){
   // TODO: 현재는 로컬호스트로 받는곳 지정 해놓음 변경 필요.
   std::unique_ptr<MergerCommunication::Stub> stub =
 	  MergerCommunication::NewStub(grpc::CreateChannel(
