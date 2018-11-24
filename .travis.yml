@@ -7,6 +7,7 @@ language: cpp
 os: linux
 compiler:
 - clang
+cache: ccache
 addons:
   apt:
     sources:
