@@ -10,15 +10,16 @@ using namespace std;
 using namespace Botan;
 
 class Sha256 {
-    using sha256 = string;
+    using sha256 = secure_vector<uint8_t>;
 public:
     static sha256 hash(const string &message) {
         std::unique_ptr<Botan::HashFunction> hash_function(
                 Botan::HashFunction::create("SHA-256"));
-        secure_vector<uint8_t> v(message.begin(), message.end());
+
+        sha256 v(message.begin(), message.end());
         hash_function->update(v);
 
-        return Botan::base64_encode(hash_function->final());
+        return hash_function->final();
     }
 
     static bool isMatch(const string &target_message,
@@ -27,6 +28,10 @@ public:
         bool result = encrypted_target_message == encrypted_message;
 
         return result;
+    }
+
+    static string toString(sha256 hashed_list) {
+        return base64_encode(hashed_list);
     }
 };
 

@@ -27,7 +27,7 @@ Transactions TransactionFetcher::fetchAll() {
   for_each(m_signers.begin(), m_signers.end(),
            [this, &transactions](Signer &signer) {
              auto transaction = fetch(signer);
-             if (!(transaction.transaction_id == "")) {
+             if (!(transaction.sent_time == "")) {
                transactions.push_back(transaction);
              }
            });
@@ -45,10 +45,10 @@ Transaction TransactionFetcher::fetch(Signer &signer) {
     new_transaction.transaction_type = TransactionType::CERTIFICATE;
 
     // TODO: requestor_id <- Merger Id, 임시로 sent_time
-    new_transaction.requestor_id = sent_time;
+//    new_transaction.requestor_id = sent_time;
 
     // TODO: Merger의 signature, 임시로 sent_time
-    new_transaction.signature = Sha256::hash(sent_time);
+//    new_transaction.signature = Sha256::hash(sent_time);
 
     new_transaction.sent_time = sent_time;
 
@@ -59,7 +59,7 @@ Transaction TransactionFetcher::fetch(Signer &signer) {
     // TOOD: 임시로 sent_time
     j["data_id"] = sent_time;
     // TODO: 공증서에 대한 내용이 들어가야 하지만, 임시로 sent_time 해싱
-    j["digest"] = Sha256::hash(sent_time);
+    j["digest"] = Sha256::toString(Sha256::hash(sent_time));
     new_transaction.content = j.dump();
 
     return new_transaction;
@@ -91,6 +91,7 @@ transaction_id_type TransactionFetcher::generateTransactionId() {
     s << chars[index_dist(rng)];
   }
 
-  return s.str();
+  // TODO: 임시로 sha256 객체 리턴하도록 함
+  return sha256();
 }
 } // namespace gruut

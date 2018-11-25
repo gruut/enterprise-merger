@@ -60,7 +60,7 @@ json block = {
       {{"mtree", {"h1", "h2", "h3", "h4", "h12", "h34", "h1234"}}}}}};
 json cert = {{"nid", "aw98wueiwejnkwe"},
              {"x.509", "sdfnajksdfauweiuaweuiahweiu"}};
-json BLKHASH = {{"block_id", "123"},
+json blkhash = {{"block_id", "123"},
                 {"block_header_hash", "oosdmkbjectTobinary"}};
 } // namespace gruut
 #endif

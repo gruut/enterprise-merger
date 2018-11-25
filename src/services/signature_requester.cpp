@@ -82,7 +82,7 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
   for (auto &transaction : transactions)
     transaction_ids.emplace_back(transaction.transaction_id);
 
-  auto root_id = m_merkle_tree.generate(transaction_ids);
+  auto root_id = sha256();
   auto &&block = block_generator.generatePartialBlock(root_id);
 
   return block;

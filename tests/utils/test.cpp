@@ -12,9 +12,9 @@ BOOST_AUTO_TEST_SUITE(Test_SHA256)
 
     BOOST_AUTO_TEST_CASE(hash) {
         std::string message = "1";
-        auto hashed_message = Sha256::hash(message);
+        auto hashed_list = Sha256::hash(message);
 
-        bool result = hashed_message == "a4ayc/80/OGda4BO/1o/V0etpOqiLx1JwB5S3beHW0s=";
+        bool result = Sha256::toString(hashed_list) == "a4ayc/80/OGda4BO/1o/V0etpOqiLx1JwB5S3beHW0s=";
         BOOST_TEST(result);
     }
 

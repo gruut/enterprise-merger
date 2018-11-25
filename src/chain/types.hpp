@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <botan/secmem.h>
 
 namespace gruut {
 enum class TransactionType { CHECKSUM, CERTIFICATE };
@@ -39,13 +40,12 @@ enum class MACAlgorithmType : uint8_t {
 
 enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
 
-using sha256 = std::string;
+using sha256 = Botan::secure_vector<uint8_t>;
 using timestamp = std::string;
 using block_height_type = std::string;
 
 using transaction_id_type = sha256;
 using requestor_id_type = sha256;
-// TODO: Trnasaction에서는 256비트임
 using sender_id_type = sha256;
 using signer_id_type = sender_id_type;
 using transaction_root_type = sha256;

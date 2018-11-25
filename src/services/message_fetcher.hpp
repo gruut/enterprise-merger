@@ -8,13 +8,13 @@ public:
     // TODO: MessageType에 따라 다르게 리턴시키도록 구현해야함
     MessageType temp;
 
-    do_nothing();
+    doNothing();
 
     return temp;
   }
 
 private:
-  static void do_nothing() {}
+  static void doNothing() {}
 };
 } // namespace gruut
 #endif
