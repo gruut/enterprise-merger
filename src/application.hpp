@@ -16,8 +16,6 @@
 using namespace std;
 
 namespace gruut {
-using InputStruct = tuple<MessageType ,nlohmann::json>;
-using OutputStruct = tuple<MessageType ,vector<uint64_t> ,nlohmann::json>;
 using InputQueue = shared_ptr<queue<InputStruct>>;
 using OutputQueue = shared_ptr<queue<OutputStruct>>;
 using TransactionPool = vector<Transaction>;

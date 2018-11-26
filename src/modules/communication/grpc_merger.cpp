@@ -35,13 +35,17 @@ void MergerRpcServer::runSignerServ(char *port_for_signer) {
   while(true) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(150));
 	if(!output_queue->empty()){
-	  Message msg = output_queue->front();
-	  if(checkSignerMsgType(msg.message_type)){
+	  OutputStruct msg = output_queue->front();
+	  MessageType msg_type = get<0>(msg);
+	  if(checkSignerMsgType(msg_type)){
 		output_queue->pop();
-		std::string header_added_data = HeaderController::makeHeaderAddedData(msg);
-		uint64_t receiver_id;
-		memcpy(&receiver_id, &msg.sender_id[0], sizeof(uint64_t));
-		sendDataToSigner(header_added_data, receiver_id, msg.message_type);
+		uint64_t receiver_id = get<1>(msg)[0];
+		nlohmann::json json_data = get<2>(msg);
+		MessageHeader msg_header;
+		msg_header.message_type = msg_type;
+		msg_header.compression_algo_type = CompressionAlgorithmType::NONE;
+		std::string header_added_data = HeaderController::makeHeaderAddedData(msg_header, json_data);
+		sendDataToSigner(header_added_data, receiver_id, msg_type);
 	  }
 	}
   }
@@ -208,11 +212,16 @@ void MergerRpcClient::run() {
   while(true){
 	std::this_thread::sleep_for(std::chrono::milliseconds(150));
 	if(!output_queue->empty()) {
-	  Message msg = output_queue->front();
-	  if(checkMergerMsgType(msg.message_type)) {
+	  OutputStruct msg = output_queue->front();
+	  MessageType msg_type = get<0>(msg);
+	  if(checkMergerMsgType(msg_type)) {
 		output_queue->pop();
-		std::string header_added_data = HeaderController::makeHeaderAddedData(msg);
-
+		uint64_t receiver_id = get<1>(msg)[0];
+		nlohmann::json json_data = get<2>(msg);
+		MessageHeader msg_header;
+		msg_header.message_type = msg_type;
+		msg_header.compression_algo_type = CompressionAlgorithmType::NONE;
+		std::string header_added_data = HeaderController::makeHeaderAddedData(msg_header, json_data);
 		sendDataToMerger(header_added_data);
 	  }
 	}

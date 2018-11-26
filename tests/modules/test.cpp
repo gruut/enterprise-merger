@@ -36,14 +36,13 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
         header_added_data[9] = 0x23;
 
         BOOST_TEST(header_added_data ==
-                   HeaderController::attachHeader(data, msg_hdr.message_type, msg_hdr.mac_algo_type,
-                                                  msg_hdr.compression_algo_type));
+                   HeaderController::attachHeader(data, msg_hdr.message_type,msg_hdr.compression_algo_type));
     }
 
     BOOST_AUTO_TEST_CASE(detachHeader) {
         string header_added_data = "11111111111111111111111111111111data";
         string data = "data";
-        string header_detached_data = HeaderController::detachHeader(header_added_data, data.length());
+        string header_detached_data = HeaderController::detachHeader(header_added_data);
 
         BOOST_TEST(header_detached_data == data);
     }

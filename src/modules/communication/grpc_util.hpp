@@ -21,13 +21,13 @@ constexpr size_t HEADER_LENGTH = 32;
 
 class HeaderController {
 public:
-  static std::string attachHeader(std::string &compressed_json, MessageType msg_type, MACAlgorithmType mac_algo_type, CompressionAlgorithmType compression_algo_type);
-  static std::string detachHeader(std::string &raw_data, int json_size);
+  static std::string attachHeader(std::string &compressed_json, MessageType msg_type, CompressionAlgorithmType compression_algo_type);
+  static std::string detachHeader(std::string &raw_data);
   static bool validateMessage(MessageHeader &msg_header);
-  static int getJsonSize(MessageHeader &meg_header);
-  static nlohmann::json getJsonMessage(CompressionAlgorithmType compression_type, std::string &no_header_data, int json_size);
+  static int getJsonSize(MessageHeader &msg_header);
+  static nlohmann::json getJsonMessage(CompressionAlgorithmType compression_type, std::string &no_header_data);
   static MessageHeader parseHeader(std::string &raw_data);
-  static std::string makeHeaderAddedData(MessageHeader &msg);
+  static std::string makeHeaderAddedData(MessageHeader &msg_hdr, nlohmann::json &json_obj);
   static grpc::Status analyzeData(std::string &raw_data, uint64_t &receiver_id);
 };
 class JsonValidator{

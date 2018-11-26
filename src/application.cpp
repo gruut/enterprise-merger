@@ -37,8 +37,8 @@ void Application::quit() { m_io_serv->stop(); }
 
 Application::Application() {
   m_io_serv = make_shared<boost::asio::io_service>();
-  m_input_queue = make_shared<queue<Message>>();
-  m_output_queue = make_shared<queue<Message>>();
+  m_input_queue = make_shared<queue<InputStruct>>();
+  m_output_queue = make_shared<queue<OutputStruct>>();
   m_signer_pool_manager = make_shared<SignerPoolManager>();
   m_transaction_pool = make_shared<TransactionPool>();
   m_signature_pool = make_shared<SignaturePool>();
