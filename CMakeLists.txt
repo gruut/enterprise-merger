@@ -39,6 +39,7 @@ target_sources(gruut_enterprise_merger
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 set(LIB_PREFIX "/usr/local/lib")
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
+set(BOTAN_LIBS "${LIB_PREFIX}/libbotan-2.a")
 set(PROTOBUF_LIBS "${LIB_PREFIX}/protobuf.a")
 set(PROTOBUF_LIBS "${LIB_PREFIX}/libprotobuf.a")
 if (APPLE)
@@ -66,16 +67,14 @@ IF (Boost_FOUND)
 ENDIF (Boost_FOUND)
 
 add_subdirectory(lib/leveldb)
-add_subdirectory(include/botan)
 
 target_include_directories(gruut_enterprise_merger PRIVATE include/ /usr/local/include)
 target_link_libraries(gruut_enterprise_merger
         PRIVATE
         ${Boost_LIBRARIES}
         leveldb
-        botan_all
         ${LZ4_LIBS}
-        /usr/local/lib/libbotan-2.a
+        ${BOTAN_LIBS}
         ${PROTOBUF_LIBS}
         ${GRPC_LIBS}
         )
