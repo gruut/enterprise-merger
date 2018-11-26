@@ -4,17 +4,9 @@
 namespace gruut {
 class MessageFetcher {
 public:
-  template <typename MessageType> static MessageType fetch() {
-    // TODO: MessageType에 따라 다르게 리턴시키도록 구현해야함
-    MessageType temp;
-
-    doNothing();
-
-    return temp;
-  }
+  static void fetch();
 
 private:
-  static void doNothing() {}
 };
 } // namespace gruut
 #endif

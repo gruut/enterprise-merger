@@ -27,10 +27,16 @@ using namespace std;
 BOOST_AUTO_TEST_SUITE(Test_MessageFetcher)
 
     BOOST_AUTO_TEST_CASE(fetch) {
-        auto transaction = MessageFetcher::fetch<Transaction>();
-        string type_name = typeid(transaction).name();
-        bool result = type_name.find("Transaction") != string::npos;
-        BOOST_TEST(result);
+        auto &input_queue = Application::app().getInputQueue();
+        json j({});
+        input_queue->emplace(std::make_tuple(MessageType::MSG_UP, j));
+        int input_queue_size = input_queue->size();
+        BOOST_TEST(input_queue_size == 1);
+
+        MessageFetcher::fetch();
+
+        input_queue_size = input_queue->size();
+        BOOST_TEST(input_queue_size == 0);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
