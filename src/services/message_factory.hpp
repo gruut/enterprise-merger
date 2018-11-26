@@ -22,11 +22,10 @@ public:
   //            return *message_pointer;
   //        }
 
-  static Message createSigRequestMessage(PartialBlock &block) {
+  static OutputMessage createSigRequestMessage(PartialBlock &block) {
     std::unique_ptr<Message> message_pointer;
     MessageHeader message_header;
 
-    message_header.message_type = MessageType::MSG_REQ_SSIG;
     // TODO: sender_id sha256으로 refactor하면 주석해제할것
     std::unordered_map<std::string, std::string> block_map{
         {"time", block.sent_time},
@@ -36,10 +35,13 @@ public:
         //        {"txrt", block.transaction_root}
     };
     nlohmann::json j_block_map(block_map);
-    message_pointer.reset(new Message(message_header));
-    message_pointer->data = j_block_map;
 
-    return *message_pointer;
+    // TODO: sender_list를 가져와야 함 (vector<uint8_t>)
+    vector<uint64_t> receivers_list;
+    auto output_message =
+        std::make_tuple(MessageType::MSG_REQ_SSIG, receivers_list, j_block_map);
+
+    return output_message;
   }
 };
 } // namespace gruut

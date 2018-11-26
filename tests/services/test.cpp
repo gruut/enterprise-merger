@@ -113,10 +113,9 @@ BOOST_AUTO_TEST_SUITE(Test_MessageFactory)
 
     BOOST_AUTO_TEST_CASE(createSigRequestMessage) {
         PartialBlock block;
-        MessageHeader message_header;
-        auto message = MessageFactory::createSigRequestMessage(block);
+        auto output_message = MessageFactory::createSigRequestMessage(block);
 
-        bool result = message.mac_algo_type == MACAlgorithmType::RSA;
+        bool result = std::get<0>(output_message) == MessageType::MSG_REQ_SSIG;
         BOOST_TEST(result);
 
         // TODO: src/services/message_factory.hpp:30 해결하면 주석해제할 것

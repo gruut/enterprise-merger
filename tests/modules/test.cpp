@@ -21,23 +21,22 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
         msg_hdr.identifier = 'G';
         msg_hdr.version = '1';
         msg_hdr.message_type = MessageType::MSG_ECHO;
-        msg_hdr.mac_algo_type = MACAlgorithmType::RSA;
+        msg_hdr.mac_algo_type = MACAlgorithmType::NONE;
         msg_hdr.compression_algo_type = CompressionAlgorithmType::LZ4;
         msg_hdr.dummy = '1';
 
         string data("ggg");
         string header_added_data("G1123112341234567812345678123456ggg");
         header_added_data[2] = 0x5A;
-        header_added_data[3] = 0x00;
+        header_added_data[3] = 0xFF;
         header_added_data[4] = 0x04;
         header_added_data[6] = 0x00;
         header_added_data[7] = 0x00;
         header_added_data[8] = 0x00;
         header_added_data[9] = 0x23;
 
-        BOOST_TEST(header_added_data ==
-                   HeaderController::attachHeader(data, msg_hdr.message_type, msg_hdr.mac_algo_type,
-                                                  msg_hdr.compression_algo_type));
+        auto header_added_data_test = HeaderController::attachHeader(data, msg_hdr.message_type, msg_hdr.compression_algo_type);
+        BOOST_TEST(header_added_data == header_added_data_test);
     }
 
     BOOST_AUTO_TEST_CASE(detachHeader) {
@@ -162,7 +161,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage)
         string block_id = block["block"]["bID"];
 
         storage.write(block_body_json, "transactions", block_id);
-        auto data = storage.findBy("transactions", "ccccccccc", "type").get<string>();
+        auto data = storage.findBy("transactions", "aaaaaaaaa", "type").get<string>();
 
         bool result = data == "notary";
         BOOST_TEST(result);
@@ -211,9 +210,10 @@ BOOST_AUTO_TEST_SUITE(Test_Storage)
         BOOST_TEST(result);
     }
 
-    /*BOOST_AUTO_TEST_CASE(find_txid_pos) {
+    /*BOOST_AUTO_TEST_CASE(find_txid_pos){
 
     }*/
+
     /*BOOST_AUTO_TEST_CASE(find_sibling){
 
     }*/

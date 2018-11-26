@@ -3,6 +3,7 @@
 
 #include <boost/asio.hpp>
 #include <queue>
+#include <tuple>
 #include <vector>
 
 #include "modules/module.hpp"
@@ -15,8 +16,8 @@
 using namespace std;
 
 namespace gruut {
-using InputQueue = shared_ptr<queue<Message>>;
-using OutputQueue = shared_ptr<queue<Message>>;
+using InputQueue = shared_ptr<queue<InputMessage>>;
+using OutputQueue = shared_ptr<queue<OutputMessage>>;
 using TransactionPool = vector<Transaction>;
 using SignaturePool = vector<Signature>;
 

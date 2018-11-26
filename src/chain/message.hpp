@@ -3,6 +3,9 @@
 
 #include "../../include/nlohmann/json.hpp"
 #include "types.hpp"
+#include <tuple>
+
+using namespace std;
 
 namespace gruut {
 struct MessageHeader {
@@ -16,8 +19,10 @@ struct MessageHeader {
   local_chain_id_type local_chain_id[8];
   uint8_t sender_id[8];
   uint8_t reserved_space[6];
-  signature_type hmac;
 };
+
+using InputMessage = tuple<MessageType, nlohmann::json>;
+using OutputMessage = tuple<MessageType, vector<uint64_t>, nlohmann::json>;
 
 struct Message : public MessageHeader {
   Message() = delete;
