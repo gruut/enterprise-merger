@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
     BOOST_AUTO_TEST_CASE(detachHeader) {
         string header_added_data = "11111111111111111111111111111111data";
         string data = "data";
-        string header_detached_data = HeaderController::detachHeader(header_added_data, data.length());
+        string header_detached_data = HeaderController::detachHeader(header_added_data);
 
         BOOST_TEST(header_detached_data == data);
     }

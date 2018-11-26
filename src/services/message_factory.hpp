@@ -30,10 +30,10 @@ public:
     // TODO: sender_id sha256으로 refactor하면 주석해제할것
     std::unordered_map<std::string, std::string> block_map{
         {"time", block.sent_time},
-//        {"mID", block.sender_id},
-//        {"cID", block.chain_id},
-//        {"hgt", block.height},
-//        {"txrt", block.transaction_root}
+        //        {"mID", block.sender_id},
+        //        {"cID", block.chain_id},
+        //        {"hgt", block.height},
+        //        {"txrt", block.transaction_root}
     };
     nlohmann::json j_block_map(block_map);
     message_pointer.reset(new Message(message_header));

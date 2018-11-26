@@ -309,25 +309,23 @@ const json SCHEMA_ERROR = R"({
 ]
 })"_json;
 
-class MessageSchema{
+class MessageSchema {
 public:
-  static json getSchema(MessageType msg_type) {
-	return schema_list[msg_type];
-  }
+  static json getSchema(MessageType msg_type) { return schema_list[msg_type]; }
+
 private:
   static std::map<MessageType, json> schema_list;
 };
 std::map<MessageType, json> MessageSchema::schema_list = {
-	{MessageType::MSG_UP, SCHEMA_UP},
-	{MessageType::MSG_PING, SCHEMA_PING},
-	{MessageType::MSG_REQ_BLOCK, SCHEMA_REQ_BLOCK},
-	{MessageType::MSG_ECHO, SCHEMA_ECHO},
-	{MessageType::MSG_BLOCK, SCHEMA_BLOCK},
-	{MessageType::MSG_JOIN, SCHEMA_JOIN},
-	{MessageType::MSG_RESPONSE_FIRST, SCHEMA_RESPONSE_FIRST},
-	{MessageType::MSG_SUCCESS, SCHEMA_SUCCESS},
-	{MessageType::MSG_LEAVE, SCHEMA_LEAVE},
-	{MessageType::MSG_SSIG, SCHEMA_SSIG},
-	{MessageType::MSG_ERROR, SCHEMA_ERROR}
-};
-};
+    {MessageType::MSG_UP, SCHEMA_UP},
+    {MessageType::MSG_PING, SCHEMA_PING},
+    {MessageType::MSG_REQ_BLOCK, SCHEMA_REQ_BLOCK},
+    {MessageType::MSG_ECHO, SCHEMA_ECHO},
+    {MessageType::MSG_BLOCK, SCHEMA_BLOCK},
+    {MessageType::MSG_JOIN, SCHEMA_JOIN},
+    {MessageType::MSG_RESPONSE_FIRST, SCHEMA_RESPONSE_FIRST},
+    {MessageType::MSG_SUCCESS, SCHEMA_SUCCESS},
+    {MessageType::MSG_LEAVE, SCHEMA_LEAVE},
+    {MessageType::MSG_SSIG, SCHEMA_SSIG},
+    {MessageType::MSG_ERROR, SCHEMA_ERROR}};
+}; // namespace gruut
