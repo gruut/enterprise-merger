@@ -88,7 +88,7 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
   return block;
 }
 
-Message SignatureRequester::makeMessage(PartialBlock &block) {
+OutputMessage SignatureRequester::makeMessage(PartialBlock &block) {
   auto message = MessageFactory::createSigRequestMessage(block);
 
   return message;

@@ -2,8 +2,8 @@
 #define GRUUT_ENTERPRISE_MERGER_SIGNATURE_REQUESTER_HPP
 
 #include <boost/asio.hpp>
-#include <thread>
 #include <memory>
+#include <thread>
 #include <vector>
 
 #include "../application.hpp"
@@ -32,7 +32,7 @@ private:
 
   PartialBlock makePartialBlock(Transactions &transactions);
 
-  Message makeMessage(PartialBlock &block);
+  OutputMessage makeMessage(PartialBlock &block);
 
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   std::thread *m_signature_check_thread;
