@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage)
         string block_id = block["block"]["bID"];
 
         storage.write(block_body_json, "transactions", block_id);
-        auto data = storage.findBy("transactions", "aaaaaaaaa", "type").get<string>();
+        auto data = storage.findBy("transactions", "ccccccccc", "type").get<string>();
 
         bool result = data == "notary";
         BOOST_TEST(result);
@@ -211,10 +211,9 @@ BOOST_AUTO_TEST_SUITE(Test_Storage)
         BOOST_TEST(result);
     }
 
-    /*BOOST_AUTO_TEST_CASE(find_txid_pos){
+    /*BOOST_AUTO_TEST_CASE(find_txid_pos) {
 
     }*/
-
     /*BOOST_AUTO_TEST_CASE(find_sibling){
 
     }*/
