@@ -1,9 +1,9 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 #define GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 
+#include <botan/secmem.h>
 #include <string>
 #include <vector>
-#include <botan/secmem.h>
 
 namespace gruut {
 enum class TransactionType { CHECKSUM, CERTIFICATE };

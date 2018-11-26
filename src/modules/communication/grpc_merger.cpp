@@ -18,10 +18,10 @@ void MergerRpcServer::runMergerServ(char *port_for_merger) {
   m_cq_merger = builder.AddCompletionQueue();
   m_server_merger = builder.BuildAndStart();
   std::cout << "Server listening on " << server_address << " for Merger"
-			<< std::endl;
+            << std::endl;
   handleMergerRpcs();
 }
-void MergerRpcServer::runSignerServ(char *port_for_signer) {
+void MergerRpcServer::runSignerServ(char const *port_for_signer) {
   std::string port_num(port_for_signer);
   std::string server_address("0.0.0.0:");
   server_address += port_num;
@@ -50,13 +50,13 @@ void MergerRpcServer::runSignerServ(char *port_for_signer) {
 void MergerRpcServer::ReceiveData::proceed() {
   switch (m_receive_status) {
   case CallStatus::CREATE: {
-	m_receive_status = CallStatus::PROCESS;
-	m_service->RequestpushData(&m_ctx, &m_request, &m_responder, m_cq, m_cq,
-							   this);
+    m_receive_status = CallStatus::PROCESS;
+    m_service->RequestpushData(&m_ctx, &m_request, &m_responder, m_cq, m_cq,
+                               this);
   } break;
 
   case CallStatus::PROCESS: {
-	new ReceiveData(m_service, m_cq);
+    new ReceiveData(m_service, m_cq);
 
 	std::string raw_data = m_request.data();
 	uint64_t receiver_id;
@@ -68,21 +68,20 @@ void MergerRpcServer::ReceiveData::proceed() {
 	break;
 
   default: {
-	GPR_ASSERT(m_receive_status == CallStatus::FINISH);
-	delete this;
-  }
-	break;
+    GPR_ASSERT(m_receive_status == CallStatus::FINISH);
+    delete this;
+  } break;
   }
 }
 
-void MergerRpcServer::handleMergerRpcs(){
+void MergerRpcServer::handleMergerRpcs() {
   new ReceiveData(&m_service_merger, m_cq_merger.get());
   void *tag;
   bool ok;
   while (true) {
-	GPR_ASSERT(m_cq_merger->Next(&tag, &ok));
-	GPR_ASSERT(ok);
-	static_cast<CallData *>(tag)->proceed();
+    GPR_ASSERT(m_cq_merger->Next(&tag, &ok));
+    GPR_ASSERT(ok);
+    static_cast<CallData *>(tag)->proceed();
   }
 }
 bool MergerRpcServer::checkSignerMsgType(MessageType msg_type){
@@ -136,8 +135,9 @@ Status MergerRpcServer::SignerService::openChannel (ServerContext *context,
   return Status(StatusCode::ABORTED , "Connection aborted");
 }
 
-Status MergerRpcServer::SignerService::join (ServerContext *context, const GrpcMsgJoin *msg_join,
-											 GrpcMsgChallenge *msg_challenge) {
+Status MergerRpcServer::SignerService::join(ServerContext *context,
+                                            const GrpcMsgJoin *msg_join,
+                                            GrpcMsgChallenge *msg_challenge) {
   std::string raw_data(msg_join->message());
   uint64_t receiver_id;
   Status st = HeaderController::analyzeData(raw_data, receiver_id);
@@ -151,9 +151,10 @@ Status MergerRpcServer::SignerService::join (ServerContext *context, const GrpcM
   return st;
 }
 
-Status MergerRpcServer::SignerService::dhKeyEx (grpc::ServerContext *context,
-												const GrpcMsgResponse1 *msg_response1,
-												GrpcMsgResponse2 *msg_response2) {
+Status
+MergerRpcServer::SignerService::dhKeyEx(grpc::ServerContext *context,
+                                        const GrpcMsgResponse1 *msg_response1,
+                                        GrpcMsgResponse2 *msg_response2) {
   std::string raw_data(msg_response1->message());
   uint64_t receiver_id;
   Status st = HeaderController::analyzeData(raw_data, receiver_id);
@@ -163,14 +164,15 @@ Status MergerRpcServer::SignerService::dhKeyEx (grpc::ServerContext *context,
 	  std::this_thread::sleep_for(std::chrono::milliseconds(150));
 	}
 
-	return st;
+    return st;
   }
   return st;
 }
 
-Status MergerRpcServer::SignerService::keyExFinished (ServerContext *context,
-													  const GrpcMsgSuccess *msg_success,
-													  GrpcMsgAccept *msg_accept) {
+Status
+MergerRpcServer::SignerService::keyExFinished(ServerContext *context,
+                                              const GrpcMsgSuccess *msg_success,
+                                              GrpcMsgAccept *msg_accept) {
   std::string raw_data(msg_success->message());
   uint64_t receiver_id;
   Status st = HeaderController::analyzeData(raw_data, receiver_id);
@@ -180,14 +182,14 @@ Status MergerRpcServer::SignerService::keyExFinished (ServerContext *context,
 	  std::this_thread::sleep_for(std::chrono::milliseconds(150));
 	}
 
-	return st;
+    return st;
   }
   return st;
 }
 
-Status MergerRpcServer::SignerService::sigSend (ServerContext *context,
-												const GrpcMsgSsig *msg_ssig,
-												NoReply *no_reply) {
+Status MergerRpcServer::SignerService::sigSend(ServerContext *context,
+                                               const GrpcMsgSsig *msg_ssig,
+                                               NoReply *no_reply) {
   std::string raw_data(msg_ssig->message());
   uint64_t receiver_id;
   Status st = HeaderController::analyzeData(raw_data, receiver_id);
@@ -197,7 +199,7 @@ Status MergerRpcServer::SignerService::sigSend (ServerContext *context,
 	  std::this_thread::sleep_for(std::chrono::milliseconds(150));
 	}
 
-	return st;
+    return st;
   }
   return st;
 }
@@ -220,8 +222,8 @@ void MergerRpcClient::run() {
 }
 
 bool MergerRpcClient::pushData(
-	std::string &compressed_data,
-	std::unique_ptr<MergerCommunication::Stub> stub) {
+    std::string &compressed_data,
+    std::unique_ptr<MergerCommunication::Stub> stub) {
   MergerDataRequest request;
   request.set_data(compressed_data);
 
@@ -230,24 +232,24 @@ bool MergerRpcClient::pushData(
   Status status = stub->pushData(&context, request, &reply);
 
   if (status.ok())
-	return reply.checker();
+    return reply.checker();
   else {
-	std::cout << status.error_code() << ": " << status.error_message()
-			  << std::endl;
-	return false;
+    std::cout << status.error_code() << ": " << status.error_message()
+              << std::endl;
+    return false;
   }
 }
 
 bool MergerRpcClient::checkMergerMsgType(MessageType msg_type) {
   return (msg_type == MessageType::MSG_ECHO ||
-	  msg_type == MessageType::MSG_BLOCK);
+          msg_type == MessageType::MSG_BLOCK);
 }
 
 void MergerRpcClient::sendDataToMerger(std::string &header_added_data){
   // TODO: 현재는 로컬호스트로 받는곳 지정 해놓음 변경 필요.
   std::unique_ptr<MergerCommunication::Stub> stub =
-	  MergerCommunication::NewStub(grpc::CreateChannel(
-		  "localhost:50051", grpc::InsecureChannelCredentials()));
+      MergerCommunication::NewStub(grpc::CreateChannel(
+          "localhost:50051", grpc::InsecureChannelCredentials()));
 
   std::thread th([&]() { pushData(header_added_data, move(stub)); });
 }

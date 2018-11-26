@@ -25,12 +25,14 @@ public:
   static std::string detachHeader(std::string &raw_data, int json_size);
   static bool validateMessage(MessageHeader &msg_header);
   static int getJsonSize(MessageHeader &meg_header);
-  static nlohmann::json getJsonMessage(CompressionAlgorithmType compression_type, std::string &no_header_data, int json_size);
+  static nlohmann::json
+  getJsonMessage(CompressionAlgorithmType compression_type,
+                 std::string &no_header_data, int json_size);
   static MessageHeader parseHeader(std::string &raw_data);
   static std::string makeHeaderAddedData(Message &msg);
   static grpc::Status analyzeData(std::string &raw_data, uint64_t &receiver_id);
 };
-class JsonValidator{
+class JsonValidator {
 public:
   static bool validateSchema(nlohmann::json json_object, MessageType msg_type);
 };

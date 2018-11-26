@@ -5,11 +5,10 @@
 #include "protos/protobuf_signer.grpc.pb.h"
 #include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
-#include <unordered_map>
-#include <thread>
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <unordered_map>
 
 using namespace grpc;
 using namespace grpc_merger;
@@ -17,21 +16,19 @@ using namespace grpc_signer;
 
 namespace gruut {
 
-enum class CallStatus {
-  CREATE, PROCESS, FINISH
-};
+enum class CallStatus { CREATE, PROCESS, FINISH };
 
-struct ReceiverRpcData{
-  ServerReaderWriter<GrpcMsgReqSsig, Identity>* stream;
-  GrpcMsgChallenge* msg_challenge;
-  GrpcMsgResponse2* msg_response2;
-  GrpcMsgAccept* msg_accept;
-  NoReply* no_reply;
+struct ReceiverRpcData {
+  ServerReaderWriter<GrpcMsgReqSsig, Identity> *stream;
+  GrpcMsgChallenge *msg_challenge;
+  GrpcMsgResponse2 *msg_response2;
+  GrpcMsgAccept *msg_accept;
+  NoReply *no_reply;
 };
 
 class MergerRpcServer {
 public:
-  MergerRpcServer() : m_service_signer(*this){}
+  MergerRpcServer() : m_service_signer(*this) {}
   ~MergerRpcServer() {
     m_server_merger->Shutdown();
     m_cq_merger->Shutdown();
@@ -39,7 +36,8 @@ public:
     m_server_signer->Shutdown();
   }
   void runMergerServ(char *port_for_merger);
-  void runSignerServ(char *port_for_signer);
+  void runSignerServ(char const *port_for_signer);
+
 private:
   class CallData {
   public:
@@ -72,15 +70,24 @@ private:
     CallStatus m_receive_status;
   };
 
-  class SignerService final : public GruutNetworkService::Service{
+  class SignerService final : public GruutNetworkService::Service {
   public:
-    explicit SignerService(MergerRpcServer &server) : m_server(server){}
-    Status openChannel(ServerContext* context, ServerReaderWriter<GrpcMsgReqSsig, Identity>* stream);
-    Status join(ServerContext* context, const GrpcMsgJoin* msg_join, GrpcMsgChallenge* msg_challenge);
-    //TODO: Response1 , Response2 에 대한 이름이 모호 합니다. 차후 수정 될 수 있습니다.
-    Status dhKeyEx(ServerContext* context, const GrpcMsgResponse1* msg_response1, GrpcMsgResponse2* msg_response2);
-    Status keyExFinished(ServerContext* context, const GrpcMsgSuccess* msg_success, GrpcMsgAccept* msg_accept);
-    Status sigSend(ServerContext* context, const GrpcMsgSsig* msg_ssig, NoReply* no_reply);
+    explicit SignerService(MergerRpcServer &server) : m_server(server) {}
+    Status openChannel(ServerContext *context,
+                       ServerReaderWriter<GrpcMsgReqSsig, Identity> *stream);
+    Status join(ServerContext *context, const GrpcMsgJoin *msg_join,
+                GrpcMsgChallenge *msg_challenge);
+    // TODO: Response1 , Response2 에 대한 이름이 모호 합니다. 차후 수정 될 수
+    // 있습니다.
+    Status dhKeyEx(ServerContext *context,
+                   const GrpcMsgResponse1 *msg_response1,
+                   GrpcMsgResponse2 *msg_response2);
+    Status keyExFinished(ServerContext *context,
+                         const GrpcMsgSuccess *msg_success,
+                         GrpcMsgAccept *msg_accept);
+    Status sigSend(ServerContext *context, const GrpcMsgSsig *msg_ssig,
+                   NoReply *no_reply);
+
   private:
     MergerRpcServer &m_server;
   };
@@ -95,7 +102,6 @@ private:
 
   std::unordered_map<uint64_t, ReceiverRpcData> m_receiver_list;
   SignerService m_service_signer;
-
 };
 
 class MergerRpcClient {

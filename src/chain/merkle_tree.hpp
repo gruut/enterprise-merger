@@ -12,6 +12,7 @@ namespace gruut {
 class MerkleTree {
 public:
   void generate(vector<sha256> &ids);
+
 private:
   void makeParentNode(const sha256 &l, const sha256 &r);
 };
