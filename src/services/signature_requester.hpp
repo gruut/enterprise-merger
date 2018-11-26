@@ -2,8 +2,8 @@
 #define GRUUT_ENTERPRISE_MERGER_SIGNATURE_REQUESTER_HPP
 
 #include <boost/asio.hpp>
-#include <thread>
 #include <memory>
+#include <thread>
 #include <vector>
 
 #include "../application.hpp"

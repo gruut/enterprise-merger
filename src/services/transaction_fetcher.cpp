@@ -45,10 +45,10 @@ Transaction TransactionFetcher::fetch(Signer &signer) {
     new_transaction.transaction_type = TransactionType::CERTIFICATE;
 
     // TODO: requestor_id <- Merger Id, 임시로 sent_time
-//    new_transaction.requestor_id = sent_time;
+    //    new_transaction.requestor_id = sent_time;
 
     // TODO: Merger의 signature, 임시로 sent_time
-//    new_transaction.signature = Sha256::hash(sent_time);
+    //    new_transaction.signature = Sha256::hash(sent_time);
 
     new_transaction.sent_time = sent_time;
 
