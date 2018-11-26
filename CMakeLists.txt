@@ -9,7 +9,7 @@ add_definitions(-DBOOST_ASIO_ENABLE_HANDLER_TRACKING)
 include(cmake/clang-cxx-dev-tools.cmake)
 find_package(Boost REQUIRED COMPONENTS system thread random)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_executable(gruut_enterprise_merger main.cpp)
+add_executable(gruut_enterprise_merger main.cpp src/chain/signer_pool.hpp src/utils/TemplateSingleton.hpp)
 
 file(GLOB SOURCE_FILES
         "src/modules/*/*.cpp"
