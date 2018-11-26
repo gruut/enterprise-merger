@@ -13,8 +13,11 @@ Storage::Storage() {
 Storage::~Storage() {
   delete m_db;
   m_db = nullptr;
-  leveldb::Status result = leveldb::DestroyDB(m_path, m_options);
-  handleCriticalError(result);
+  try {
+    leveldb::Status result = leveldb::DestroyDB(m_path, m_options);
+    handleCriticalError(result);
+  } catch (...) {
+  }
 }
 
 void Storage::openDB(const string &path) {

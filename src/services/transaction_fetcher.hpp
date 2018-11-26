@@ -4,6 +4,7 @@
 #include "../chain/signer.hpp"
 #include "../chain/transaction.hpp"
 #include "../chain/types.hpp"
+#include "../services/signer_pool.hpp"
 #include <vector>
 
 namespace gruut {
@@ -15,7 +16,7 @@ constexpr int MAX_COLLECT_TRANSACTION_SIZE = 4096;
 class TransactionFetcher {
 public:
   TransactionFetcher(Signers &&signers);
-  TransactionFetcher(Signer &signers) = delete;
+  TransactionFetcher(Signers &signers) = delete;
   Transactions fetchAll();
 
 private:

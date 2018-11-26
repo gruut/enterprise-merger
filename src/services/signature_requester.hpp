@@ -32,7 +32,7 @@ private:
 
   PartialBlock makePartialBlock(Transactions &transactions);
 
-  Message makeMessage(PartialBlock &block);
+  OutputMessage makeMessage(PartialBlock &block);
 
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   std::thread *m_signature_check_thread;

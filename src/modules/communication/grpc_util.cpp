@@ -8,7 +8,6 @@ namespace gruut {
 std::string
 HeaderController::attachHeader(std::string &compressed_json,
                                MessageType msg_type,
-                               MACAlgorithmType mac_algo_type,
                                CompressionAlgorithmType compression_algo_type) {
   std::string header;
   uint32_t total_length =
@@ -18,7 +17,12 @@ HeaderController::attachHeader(std::string &compressed_json,
   header[0] = G;
   header[1] = VERSION;
   header[2] = static_cast<uint8_t>(msg_type);
-  header[3] = static_cast<uint8_t>(mac_algo_type);
+  if (msg_type == MessageType::MSG_ACCEPT ||
+      msg_type == MessageType::MSG_REQ_SSIG) {
+    header[3] = static_cast<uint8_t>(MACAlgorithmType::HMAC);
+  } else {
+    header[3] = static_cast<uint8_t>(MACAlgorithmType::NONE);
+  }
   header[4] = static_cast<uint8_t>(compression_algo_type);
   header[5] = NOT_USED;
   for (int i = 9; i > 6; i--) {
@@ -99,9 +103,10 @@ MessageHeader HeaderController::parseHeader(std::string &raw_data) {
   return msg_header;
 }
 
-std::string HeaderController::makeHeaderAddedData(Message &msg) {
-  std::string json_dump = msg.data.dump();
-  switch (msg.compression_algo_type) {
+std::string HeaderController::makeHeaderAddedData(MessageHeader &msg_hdr,
+                                                  nlohmann::json &json_obj) {
+  std::string json_dump = json_obj.dump();
+  switch (msg_hdr.compression_algo_type) {
   case CompressionAlgorithmType::LZ4: {
     std::string compressed_json;
     Compressor::compressData(json_dump, compressed_json);
@@ -111,9 +116,8 @@ std::string HeaderController::makeHeaderAddedData(Message &msg) {
   default:
     break;
   }
-  std::string header_added_data =
-      attachHeader(json_dump, msg.message_type, msg.mac_algo_type,
-                   msg.compression_algo_type);
+  std::string header_added_data = attachHeader(json_dump, msg_hdr.message_type,
+                                               msg_hdr.compression_algo_type);
 
   return header_added_data;
 }
@@ -128,19 +132,17 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
   }
   std::string no_header_data = HeaderController::detachHeader(raw_data);
 
-  Message msg(msg_header);
   nlohmann::json json_data = HeaderController::getJsonMessage(
       msg_header.compression_algo_type, no_header_data);
 
-  if (!JsonValidator::validateSchema(json_data, msg.message_type)) {
+  if (!JsonValidator::validateSchema(json_data, msg_header.message_type)) {
     return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
                         "json schema check fail");
   }
   uint64_t id;
-  memcpy(&id, &msg.sender_id[0], sizeof(uint64_t));
+  memcpy(&id, &msg_header.sender_id[0], sizeof(uint64_t));
   receiver_id = id;
-  msg.data = json_data;
-  input_queue->push(msg);
+  input_queue->push(make_tuple(msg_header.message_type, json_data));
   return grpc::Status::OK;
 }
 

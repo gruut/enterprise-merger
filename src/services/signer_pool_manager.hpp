@@ -6,20 +6,20 @@
 #include <vector>
 
 #include "../chain/signer.hpp"
+#include "signer_pool.hpp"
 
 namespace gruut {
-using SignerPool = std::vector<Signer>;
 using RandomSignerIndices = std::set<int>;
 
 class SignerPoolManager {
 public:
-  SignerPool getSigners();
-  SignerPool getSelectedSigners();
+  SignerPoolManager() { m_signer_pool = make_shared<SignerPool>(); }
+  SignerPool getSelectedSignerPool();
   void putSigner(Signer &&s);
 
 private:
   RandomSignerIndices generateRandomNumbers(unsigned int size);
-  SignerPool m_signer_pool;
+  std::shared_ptr<SignerPool> m_signer_pool;
   std::shared_ptr<SignerPool> m_selected_signers_pool;
 };
 } // namespace gruut
