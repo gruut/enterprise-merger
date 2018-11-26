@@ -60,9 +60,3 @@ lib/leveldb/libleveldb\.a
 CTestTestfile\.cmake
 
 lib/leveldb/leveldbConfigVersion\.cmake
-
-tests/modules/blk/*
-tests/modules/blkhash/*
-tests/modules/block_meta/*
-tests/modules/cert/*
-tests/modules/secure/*

@@ -211,10 +211,29 @@ BOOST_AUTO_TEST_SUITE(Test_Storage)
         BOOST_TEST(result);
     }
 
-    /*BOOST_AUTO_TEST_CASE(find_txid_pos) {
+    BOOST_AUTO_TEST_CASE(find_txid_pos) {
+      string tx_list;
+      for (unsigned int idx = 0; idx < block["tx"].size() - 1; ++idx) {
+        tx_list += block["tx"][idx]["txID"];
+        tx_list += '_';
+      }
+      block["block"]["txList"] = tx_list;
 
-    }*/
-    /*BOOST_AUTO_TEST_CASE(find_sibling){
+      Storage storage;
+      storage.openDB("./block");
+
+      json block_json = block["block"];
+      string block_id = block["block"]["bID"];
+
+      storage.write(block_json, "block", block_id);
+      auto data = storage.findTxIdPos("3fffffffffffffffffff", "bbbbbbbbb").get<string>();
+
+      bool result = data == "2";
+
+      BOOST_TEST(result);
+    }
+
+    /*  BOOST_AUTO_TEST_CASE(find_sibling){
 
     }*/
 
