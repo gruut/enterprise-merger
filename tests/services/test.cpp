@@ -61,11 +61,11 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_SignerPoolManager)
 
-    BOOST_AUTO_TEST_CASE(getSigners) {
+    BOOST_AUTO_TEST_CASE(getSelectedSignerPool) {
         SignerPoolManager manager;
 
-        auto signers = manager.getSigners();
-        BOOST_TEST(signers.size() == 0);
+        auto signer_pool = manager.getSelectedSignerPool();
+        BOOST_TEST(signer_pool.size() == 0);
 
         Signer signer;
         signer.cert = "1234";
@@ -73,27 +73,8 @@ BOOST_AUTO_TEST_SUITE(Test_SignerPoolManager)
 
         manager.putSigner(std::move(signer));
 
-        signers = manager.getSigners();
-        BOOST_TEST(signers.size() == 1);
-    }
-
-    BOOST_AUTO_TEST_CASE(getSelectedSigners) {
-            SignerPoolManager manager;
-
-            auto signers = manager.getSigners();
-            BOOST_TEST(signers.size() == 0);
-
-            Signer signer;
-            signer.cert = "1234";
-            signer.address = "1234";
-
-            manager.putSigner(std::move(signer));
-
-            BOOST_TEST(manager.getSelectedSigners().size() == 0);
-
-            manager.getSigners();
-
-            BOOST_TEST(manager.getSelectedSigners().size() == 1);
+        signer_pool = manager.getSelectedSignerPool();
+        BOOST_TEST(signer_pool.size() == 1);
     }
 
 BOOST_AUTO_TEST_SUITE_END()

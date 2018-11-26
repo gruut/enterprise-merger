@@ -7,6 +7,7 @@
 #include "block_generator.hpp"
 #include "message_factory.hpp"
 #include "signature_requester.hpp"
+#include "signer_pool.hpp"
 #include "transaction_fetcher.hpp"
 
 namespace gruut {
@@ -67,9 +68,10 @@ void SignatureRequester::startSignatureCollectTimer(
 }
 
 Transactions SignatureRequester::fetchTransactions() {
-  vector<Signer> &&signers =
-      Application::app().getSignerPoolManager().getSigners();
-  TransactionFetcher transaction_fetcher{move(signers)};
+  auto &&selected_signer_pool =
+      Application::app().getSignerPoolManager().getSelectedSignerPool();
+
+  TransactionFetcher transaction_fetcher{selected_signer_pool.fetchAll()};
 
   return transaction_fetcher.fetchAll();
 }
