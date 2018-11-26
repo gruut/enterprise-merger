@@ -13,6 +13,8 @@ Storage::Storage() {
 Storage::~Storage() {
   delete m_db;
   m_db = nullptr;
+  leveldb::Status result = leveldb::DestroyDB(m_path, m_options);
+  handleCriticalError(result);
 }
 
 void Storage::openDB(const string &path) {
@@ -124,4 +126,24 @@ void Storage::handleTrivialError(const leveldb::Status &status) {
     return;
   }
 }
+json Storage::findTxIdPos(const string &blk_id, const string &tx_id) {
+  string str;
+  auto status = m_db->Get(leveldb::ReadOptions(), "block_" + blk_id + '_' + "txList", &str);
+  if (!status.ok()) {
+    return json({});
+  }
+  int res = 0;
+  int pos = 0;
+  std::string token;
+  while ((pos = str.find('_')) != string::npos) {
+    token = str.substr(0, pos);
+    if (token == tx_id) {
+      break;
+    }
+    str.erase(0, pos + 1);
+    res++;
+  }
+  return json(to_string(res + 1));
+}
+
 } // namespace gruut

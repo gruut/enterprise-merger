@@ -24,6 +24,8 @@ public:
 
   json findBy(const string &what, const string &id, const string &field);
 
+  json findTxIdPos(const string &blk_id, const string &tx_id);
+
 private:
   void handleCriticalError(const leveldb::Status &status);
 
