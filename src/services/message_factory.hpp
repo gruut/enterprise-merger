@@ -37,7 +37,8 @@ public:
     nlohmann::json j_block_map(block_map);
 
     // TODO: sender_list를 가져와야 함 (vector<uint8_t>)
-    vector<uint64_t> receivers_list;
+    //       임시로 111
+    vector<uint64_t> receivers_list{111};
     auto output_message =
         std::make_tuple(MessageType::MSG_REQ_SSIG, receivers_list, j_block_map);
 

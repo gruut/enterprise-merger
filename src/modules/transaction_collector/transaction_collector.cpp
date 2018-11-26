@@ -2,7 +2,7 @@
 
 #include "../../application.hpp"
 #include "../../chain/transaction.hpp"
-#include "../../services/message_fetcher.hpp"
+#include "../message_fetcher/message_fetcher.hpp"
 #include "transaction_collector.hpp"
 
 using namespace std;

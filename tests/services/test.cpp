@@ -5,7 +5,6 @@
 
 #include "../../src/application.hpp"
 
-#include "../../src/services/message_fetcher.hpp"
 #include "../../src/services/transaction_fetcher.hpp"
 #include "../../src/services/signer_pool_manager.hpp"
 #include "../../src/services/signature_requester.hpp"
@@ -23,23 +22,6 @@
 using namespace gruut;
 using namespace nlohmann;
 using namespace std;
-
-BOOST_AUTO_TEST_SUITE(Test_MessageFetcher)
-
-    BOOST_AUTO_TEST_CASE(fetch) {
-        auto &input_queue = Application::app().getInputQueue();
-        json j({});
-        input_queue->emplace(std::make_tuple(MessageType::MSG_UP, j));
-        int input_queue_size = input_queue->size();
-        BOOST_TEST(input_queue_size == 1);
-
-        MessageFetcher::fetch();
-
-        input_queue_size = input_queue->size();
-        BOOST_TEST(input_queue_size == 0);
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_TransactionFetcher)
 
