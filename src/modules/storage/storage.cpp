@@ -55,16 +55,15 @@ void Storage::write(json &data, const string &what, string &blk_id) {
       for (auto it = data[transaction_iterator_index].cbegin();
            it != data[transaction_iterator_index].cend(); ++it) {
 
-                    auto new_key = "transactions_" + transaction_id + '_' + it.key();
-                    string new_value;
+        auto new_key = "transactions_" + transaction_id + '_' + it.key();
+        string new_value;
 
-                    if (it.value().is_object()) {
-                      new_value = it.value().dump();
-                    } else {
-                      new_value = it.value().get<string>();
-                    }
-                    auto status =
-                            m_db->Put(m_write_options, new_key, new_value);
+        if (it.value().is_object()) {
+          new_value = it.value().dump();
+        } else {
+          new_value = it.value().get<string>();
+        }
+        auto status = m_db->Put(m_write_options, new_key, new_value);
 
         handleTrivialError(status);
       }
