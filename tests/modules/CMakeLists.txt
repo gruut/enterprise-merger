@@ -19,6 +19,7 @@ file(GLOB HEADER_FILES
         )
 
 file(GLOB SOURCE_FILES
+        "../../src/*.cpp"
         "../../src/modules/storage/storage.cpp"
         "../../src/modules/*.cpp"
         "../../src/modules/communication/grpc_util.cpp"
@@ -26,6 +27,11 @@ file(GLOB SOURCE_FILES
 
 set(LIB_PREFIX "/usr/local/lib")
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
+if(APPLE)
+    set(GRPC_LIBS "${LIB_PREFIX}/libgrpc++.dylib")
+else()
+    set(GRPC_LIBS "${LIB_PREFIX}/libgrpc++.so")
+endif()
 
 add_definitions(-DBOOST_TEST_DYN_LINK)
 add_executable(modules_test ${UNIT_TEST_SOURCE_FILES})
@@ -45,6 +51,7 @@ target_link_libraries(modules_test
         ${LZ4_LIBS}
         leveldb
         /usr/local/lib/libbotan-2.a
+        ${GRPC_LIBS}
         )
 
 add_test(
