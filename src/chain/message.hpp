@@ -16,7 +16,6 @@ struct MessageHeader {
   local_chain_id_type local_chain_id[8];
   uint8_t sender_id[8];
   uint8_t reserved_space[6];
-  signature_type hmac;
 };
 
 struct Message : public MessageHeader {

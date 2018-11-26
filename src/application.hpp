@@ -4,6 +4,7 @@
 #include <boost/asio.hpp>
 #include <queue>
 #include <vector>
+#include <tuple>
 
 #include "modules/module.hpp"
 #include "services/signer_pool_manager.hpp"
@@ -15,8 +16,10 @@
 using namespace std;
 
 namespace gruut {
-using InputQueue = shared_ptr<queue<Message>>;
-using OutputQueue = shared_ptr<queue<Message>>;
+using InputStruct = tuple<MessageType ,nlohmann::json>;
+using OutputStruct = tuple<MessageType ,vector<uint64_t> ,nlohmann::json>;
+using InputQueue = shared_ptr<queue<InputStruct>>;
+using OutputQueue = shared_ptr<queue<OutputStruct>>;
 using TransactionPool = vector<Transaction>;
 using SignaturePool = vector<Signature>;
 
