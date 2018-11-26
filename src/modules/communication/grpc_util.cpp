@@ -34,22 +34,21 @@ HeaderController::attachHeader(std::string &compressed_json,
   return header + compressed_json;
 }
 
-    std::string HeaderController::detachHeader(std::string &raw_data, int json_size) {
-        std::string json_dump(&raw_data[HEADER_LENGTH],
-                              &raw_data[HEADER_LENGTH] + json_size);
+std::string HeaderController::detachHeader(std::string &raw_data) {
+  std::string json_dump(raw_data.begin() + HEADER_LENGTH, raw_data.end());
 
   return json_dump;
 }
 
-    bool HeaderController::validateMessage(MessageHeader &msg_header) {
-// TODO: 메세지 검증할때 사용하는 값들은 변경될 수 있습니다.
-        bool check = (msg_header.identifier == G && msg_header.version == VERSION);
-        if(msg_header.mac_algo_type == MACAlgorithmType::HMAC){
-           check &= (msg_header.message_type == MessageType::MSG_SUCCESS ||
-                    msg_header.message_type == MessageType::MSG_SSIG);
-        }
-        return check;
-    }
+bool HeaderController::validateMessage(MessageHeader &msg_header) {
+  // TODO: 메세지 검증할때 사용하는 값들은 변경될 수 있습니다.
+  bool check = (msg_header.identifier == G && msg_header.version == VERSION);
+  if (msg_header.mac_algo_type == MACAlgorithmType::HMAC) {
+    check &= (msg_header.message_type == MessageType::MSG_SUCCESS ||
+              msg_header.message_type == MessageType::MSG_SSIG);
+  }
+  return check;
+}
 
 int HeaderController::getJsonSize(MessageHeader &msg_header) {
   int json_size = 0;
@@ -65,12 +64,13 @@ int HeaderController::getJsonSize(MessageHeader &msg_header) {
 // TODO: compression algorithm 추가에따라 변경될 수있습니다.
 nlohmann::json
 HeaderController::getJsonMessage(CompressionAlgorithmType compression_type,
-                                 std::string &no_header_data, int json_size) {
+                                 std::string &no_header_data) {
   nlohmann::json json_data;
   switch (compression_type) {
   case CompressionAlgorithmType::LZ4: {
     std::string origin_data;
-    Compressor::decompressData(no_header_data, origin_data, json_size);
+    Compressor::decompressData(no_header_data, origin_data,
+                               no_header_data.size());
     json_data = nlohmann::json::parse(origin_data);
   } break;
   case CompressionAlgorithmType::NONE: {
@@ -99,52 +99,54 @@ MessageHeader HeaderController::parseHeader(std::string &raw_data) {
   return msg_header;
 }
 
-    std::string HeaderController::makeHeaderAddedData(Message &msg){
-        std::string json_dump = msg.data.dump();
-        switch(msg.compression_algo_type){
-        case CompressionAlgorithmType::LZ4:{
-            std::string compressed_json;
-            Compressor::compressData(json_dump, compressed_json);
-            json_dump = compressed_json;
-        }
-            break;
-        case CompressionAlgorithmType::NONE:
-        default:
-            break;
-        }
-        std::string header_added_data = attachHeader(json_dump, msg.message_type, msg.mac_algo_type, msg.compression_algo_type);
+std::string HeaderController::makeHeaderAddedData(Message &msg) {
+  std::string json_dump = msg.data.dump();
+  switch (msg.compression_algo_type) {
+  case CompressionAlgorithmType::LZ4: {
+    std::string compressed_json;
+    Compressor::compressData(json_dump, compressed_json);
+    json_dump = compressed_json;
+  } break;
+  case CompressionAlgorithmType::NONE:
+  default:
+    break;
+  }
+  std::string header_added_data =
+      attachHeader(json_dump, msg.message_type, msg.mac_algo_type,
+                   msg.compression_algo_type);
 
-        return header_added_data;
-    }
+  return header_added_data;
+}
 
-    grpc::Status HeaderController::analyzeData(std::string &raw_data, uint64_t &receiver_id){
-        auto &input_queue = Application::app().getInputQueue();
+grpc::Status HeaderController::analyzeData(std::string &raw_data,
+                                           uint64_t &receiver_id) {
+  auto &input_queue = Application::app().getInputQueue();
 
-        MessageHeader msg_header = HeaderController::parseHeader(raw_data);
-        if(!HeaderController::validateMessage(msg_header)) {
-            return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Wrong Message");
-        }
-        int json_size = HeaderController::getJsonSize(msg_header);
-        std::string no_header_data = HeaderController::detachHeader(raw_data, json_size);
+  MessageHeader msg_header = HeaderController::parseHeader(raw_data);
+  if (!HeaderController::validateMessage(msg_header)) {
+    return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Wrong Message");
+  }
+  std::string no_header_data = HeaderController::detachHeader(raw_data);
 
-        Message msg(msg_header);
-        nlohmann::json json_data = HeaderController::getJsonMessage(msg_header.compression_algo_type, no_header_data,
-                                                                    json_size);
+  Message msg(msg_header);
+  nlohmann::json json_data = HeaderController::getJsonMessage(
+      msg_header.compression_algo_type, no_header_data);
 
-        if(!JsonValidator::validateSchema(json_data, msg.message_type)) {
-            return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "json schema check fail");
-        }
-        uint64_t id;
-        memcpy(&id, &msg.sender_id[0], sizeof(uint64_t));
-        receiver_id = id;
-        msg.data = json_data;
-        input_queue->push(msg);
-        return grpc::Status::OK;
-    }
+  if (!JsonValidator::validateSchema(json_data, msg.message_type)) {
+    return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
+                        "json schema check fail");
+  }
+  uint64_t id;
+  memcpy(&id, &msg.sender_id[0], sizeof(uint64_t));
+  receiver_id = id;
+  msg.data = json_data;
+  input_queue->push(msg);
+  return grpc::Status::OK;
+}
 
-    bool JsonValidator::validateSchema(json json_object, MessageType msg_type){
-        using nlohmann::json;
-        using nlohmann::json_schema_draft4::json_validator;
+bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {
+  using nlohmann::json;
+  using nlohmann::json_schema_draft4::json_validator;
 
   json_validator schema_validator;
   schema_validator.set_root_schema(MessageSchema::getSchema(msg_type));

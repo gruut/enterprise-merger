@@ -93,7 +93,8 @@ private:
   };
   void handleMergerRpcs();
   bool checkSignerMsgType(MessageType msg_type);
-  void sendDataToSigner(std::string &header_added_data, uint64_t receiver_id, MessageType msg_type);
+  void sendDataToSigner(std::string &header_added_data, uint64_t receiver_id,
+                        MessageType msg_type);
 
   std::unique_ptr<ServerCompletionQueue> m_cq_merger;
   MergerCommunication::AsyncService m_service_merger;
