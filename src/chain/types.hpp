@@ -11,12 +11,17 @@ enum class TransactionType { CHECKSUM, CERTIFICATE };
 enum class BlockType { PARTIAL, NORMAL };
 
 enum class MessageType : uint8_t {
+  MSG_UP = 0x30,
+  MSG_PING = 0x31,
+  MSG_REQ_BLOCK = 0x32,
   MSG_JOIN = 0x54,
   MSG_CHALLENGE = 0x55,
-  MSG_RESPONSE = 0x56,
-  MSG_ACCEPT = 0x57,
-  MSG_ECHO = 0x58,
-  MSG_LEAVE = 0x59,
+  MSG_RESPONSE_FIRST = 0x56,
+  MSG_RESPONSE_SECOND = 0x57,
+  MSG_SUCCESS = 0x58,
+  MSG_ACCEPT = 0x59,
+  MSG_ECHO = 0x5A,
+  MSG_LEAVE = 0x5B,
   MSG_REQ_SSIG = 0xB2,
   MSG_SSIG = 0xB3,
   MSG_BLOCK = 0xB4,

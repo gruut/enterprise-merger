@@ -82,10 +82,11 @@ private:
     Status keyExFinished(ServerContext* context, const GrpcMsgSuccess* msg_success, GrpcMsgAccept* msg_accept);
     Status sigSend(ServerContext* context, const GrpcMsgSsig* msg_ssig, NoReply* no_reply);
   private:
-    Status analyzeData(std::string &raw_data, uint64_t &receiver_id);
     MergerRpcServer &m_server;
   };
   void handleMergerRpcs();
+  bool checkSignerMsgType(MessageType msg_type);
+  void sendDataToSigner(std::string &header_added_data, uint64_t receiver_id, MessageType msg_type);
 
   std::unique_ptr<ServerCompletionQueue> m_cq_merger;
   MergerCommunication::AsyncService m_service_merger;
@@ -104,7 +105,7 @@ public:
 private:
   bool pushData(std::string &compressed_data,
                 std::unique_ptr<MergerCommunication::Stub> stub);
-  bool checkMsgType(MessageType msg_type);
-  void sendData(std::string &header_added_data);
+  bool checkMergerMsgType(MessageType msg_type);
+  void sendDataToMerger(std::string &header_added_data);
 };
 } // namespace gruut

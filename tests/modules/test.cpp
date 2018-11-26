@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
 
         string data("ggg");
         string header_added_data("G1123112341234567812345678123456ggg");
-        header_added_data[2] = 0x58;
+        header_added_data[2] = 0x5A;
         header_added_data[3] = 0x00;
         header_added_data[4] = 0x04;
         header_added_data[6] = 0x00;
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
     BOOST_AUTO_TEST_CASE(detachHeader) {
         string header_added_data = "11111111111111111111111111111111data";
         string data = "data";
-        string header_detached_data = HeaderController::detachHeader(header_added_data);
+        string header_detached_data = HeaderController::detachHeader(header_added_data, data.length());
 
         BOOST_TEST(header_detached_data == data);
     }
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
 
     BOOST_AUTO_TEST_CASE(parseHeader) {
         string header_added_data("G1123112341234567812345678123456ggg");
-        header_added_data[2] = 0x58;
+        header_added_data[2] = 0x5A;
         header_added_data[3] = 0x00;
         header_added_data[4] = 0x04;
         header_added_data[6] = 0x00;
