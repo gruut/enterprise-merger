@@ -1,9 +1,13 @@
 #include <algorithm>
 #include <nlohmann/json.hpp>
 #include <random>
+#include <ctime>
 
 #include "message_proxy.hpp"
 #include "signer_pool_manager.hpp"
+#include "../chain/types.hpp"
+#include "../utils/sha256.hpp"
+#include "../utils/random_number_generator.hpp"
 
 using namespace nlohmann;
 
@@ -41,8 +45,17 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
           make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
       proxy.deliverOutputMessage(output_message);
     } else {
+      json message_body;
+      // TODO: Merger id 가 아직 결정 안되어서 임시값 할당
+      sender_id_type sender_id = Sha256::hash("1");
+      time_t now = time(nullptr);
+
+      message_body["sender"] = Sha256::toString(sender_id);
+      message_body["time"] = ctime(&now);
+      message_body["mN"] = RandomNumGenerator::toString(RandomNumGenerator::randomize(64));
+
       OutputMessage output_message =
-          make_tuple(MessageType::MSG_CHALLENGE, receiver_list, json({}));
+          make_tuple(MessageType::MSG_CHALLENGE, receiver_list, message_body);
       proxy.deliverOutputMessage(output_message);
     }
   } break;
