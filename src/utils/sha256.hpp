@@ -31,11 +31,11 @@ public:
   }
 
   static sha256 hash(std::vector<uint8_t> &data) {
-    std::unique_ptr<Botan::HashFunction> hash_function(Botan::HashFunction::create("SHA-256"));
+    std::unique_ptr<Botan::HashFunction> hash_function(
+        Botan::HashFunction::create("SHA-256"));
     hash_function->update(data);
     return hash_function->final_stdvec();
   }
-
 };
 
 #endif

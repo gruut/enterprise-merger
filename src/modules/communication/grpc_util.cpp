@@ -2,9 +2,9 @@
 #include "../../../include/json_schema.hpp"
 #include "../../utils/compressor.hpp"
 #include "msg_schema.hpp"
-#include <cstring>
-#include <botan/mac.h>
 #include <botan/hex.h>
+#include <botan/mac.h>
+#include <cstring>
 
 namespace gruut {
 std::string
@@ -152,8 +152,9 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
   return grpc::Status::OK;
 }
 
-int HeaderController::convertU8ToU32BE(uint8_t *len_bytes){
-  return static_cast<int>(len_bytes[0] << 24 | len_bytes[1] << 16 | len_bytes[2] << 8 | len_bytes[3]);
+int HeaderController::convertU8ToU32BE(uint8_t *len_bytes) {
+  return static_cast<int>(len_bytes[0] << 24 | len_bytes[1] << 16 |
+                          len_bytes[2] << 8 | len_bytes[3]);
 }
 
 bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {

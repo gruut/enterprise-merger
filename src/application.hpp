@@ -1,13 +1,13 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 #define GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 
-#include <boost/asio.hpp>
-#include <queue>
-#include <tuple>
-#include <vector>
-#include <thread>
 #include "modules/module.hpp"
 #include "services/signer_pool_manager.hpp"
+#include <boost/asio.hpp>
+#include <queue>
+#include <thread>
+#include <tuple>
+#include <vector>
 
 #include "chain/message.hpp"
 #include "chain/signature.cpp"
