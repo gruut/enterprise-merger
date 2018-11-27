@@ -91,7 +91,7 @@ void MergerRpcServer::handleMergerRpcs() {
 }
 bool MergerRpcServer::checkSignerMsgType(MessageType msg_type) {
   return (msg_type == MessageType::MSG_CHALLENGE ||
-          msg_type == MessageType::MSG_RESPONSE_SECOND ||
+          msg_type == MessageType::MSG_RESPONSE_2 ||
           msg_type == MessageType::MSG_ACCEPT ||
           msg_type == MessageType::MSG_ECHO ||
           msg_type == MessageType::MSG_REQ_SSIG ||
@@ -109,7 +109,7 @@ void MergerRpcServer::sendDataToSigner(std::string &header_added_data,
     m_receiver_list[receiver_id].msg_accept->set_message(header_added_data);
     m_receiver_list[receiver_id].msg_accept = nullptr;
   } break;
-  case MessageType::MSG_RESPONSE_SECOND: {
+  case MessageType::MSG_RESPONSE_2: {
     m_receiver_list[receiver_id].msg_response2->set_message(header_added_data);
     m_receiver_list[receiver_id].msg_response2 = nullptr;
   } break;

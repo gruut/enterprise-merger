@@ -1,13 +1,18 @@
 #include <algorithm>
+#include <botan/base64.h>
+#include <botan/pubkey.h>
+#include <botan/rsa.h>
+#include <botan/x509cert.h>
+#include <ctime>
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <random>
-#include <ctime>
 
+#include "../chain/types.hpp"
+#include "../utils/random_number_generator.hpp"
+#include "../utils/sha256.hpp"
 #include "message_proxy.hpp"
 #include "signer_pool_manager.hpp"
-#include "../chain/types.hpp"
-#include "../utils/sha256.hpp"
-#include "../utils/random_number_generator.hpp"
 
 using namespace nlohmann;
 
@@ -35,11 +40,11 @@ void SignerPoolManager::putSigner(Signer &&s) {
 void SignerPoolManager::handleMessage(MessageType &message_type,
                                       uint64_t receiver_id,
                                       json message_body_json) {
+  MessageProxy proxy;
+  vector<uint64_t> receiver_list{receiver_id};
+
   switch (message_type) {
   case MessageType::MSG_JOIN: {
-    MessageProxy proxy;
-    vector<uint64_t> receiver_list{receiver_id};
-
     if (m_signer_pool->isFull()) {
       OutputMessage output_message =
           make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
@@ -52,12 +57,28 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
       message_body["sender"] = Sha256::toString(sender_id);
       message_body["time"] = ctime(&now);
-      message_body["mN"] = RandomNumGenerator::toString(RandomNumGenerator::randomize(64));
+
+      m_merger_nonce =
+          RandomNumGenerator::toString(RandomNumGenerator::randomize(64));
+      message_body["mN"] = m_merger_nonce;
 
       OutputMessage output_message =
           make_tuple(MessageType::MSG_CHALLENGE, receiver_list, message_body);
       proxy.deliverOutputMessage(output_message);
     }
+  } break;
+  case MessageType::MSG_RESPONSE_1: {
+    OutputMessage output_message;
+    if (validateSignature(message_body_json)) {
+      std::cout << "Validation success!" << std::endl;
+      output_message =
+          make_tuple(MessageType::MSG_RESPONSE_2, receiver_list, json({}));
+    } else {
+      output_message =
+          make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
+    }
+    //    message_body[]
+    proxy.deliverOutputMessage(output_message);
   } break;
   case MessageType::MSG_ECHO:
     break;
@@ -82,5 +103,29 @@ SignerPoolManager::generateRandomNumbers(unsigned int size) {
   }
 
   return number_set;
+}
+
+bool SignerPoolManager::validateSignature(json message_body_json) {
+  auto signer_signature =
+      Botan::base64_decode(message_body_json["sig"].get<string>());
+
+  auto cert_vector =
+      Botan::base64_decode(message_body_json["cert"].get<string>());
+  vector<uint8_t> cert_in(cert_vector.begin(), cert_vector.end());
+
+  Botan::X509_Certificate certificate(cert_in);
+  Botan::RSA_PublicKey public_key(certificate.subject_public_key_algo(),
+                                  certificate.subject_public_key_bitstring());
+  auto tmp = certificate.subject_public_key_bitstring();
+
+  Botan::PK_Verifier verifier(public_key, "EMSA3(SHA-256)");
+  string target_signature = m_merger_nonce +
+                            message_body_json["sN"].get<string>() +
+                            message_body_json["dhx"].get<string>() +
+                            message_body_json["dhy"].get<string>() +
+                            message_body_json["time"].get<string>();
+  verifier.update(target_signature);
+
+  return verifier.check_signature(signer_signature);
 }
 } // namespace gruut

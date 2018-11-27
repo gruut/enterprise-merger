@@ -13,7 +13,8 @@ void MessageProxy::deliverInputMessage(InputMessage &input_message) {
   auto message_body_json = std::get<2>(input_message);
 
   switch (message_type) {
-  case MessageType::MSG_JOIN: {
+  case MessageType::MSG_JOIN:
+  case MessageType::MSG_RESPONSE_1: {
     Application::app().getSignerPoolManager().handleMessage(
         message_type, receiver_id, message_body_json);
   } break;

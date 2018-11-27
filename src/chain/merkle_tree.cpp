@@ -1,5 +1,5 @@
 #include "merkle_tree.hpp"
-#include "../utils/sha256.hpp"
+//#include "../utils/sha256.hpp"
 
 namespace gruut {
 void MerkleTree::generate(std::vector<sha256> &transaction_ids) {
