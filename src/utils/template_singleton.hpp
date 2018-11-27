@@ -6,7 +6,7 @@
 #define GRUUT_ENTERPRISE_MERGER_TEMPLATESINGLETON_HPP
 
 template < typename T >
-class TemplateSingleton
+class TemplateSingleton/
 {
 protected:
   TemplateSingleton()
@@ -19,19 +19,19 @@ protected:
   }
 
 public:
-  static T * GetInstance()
+  static T * getInstance()
   {
-    if (m_pInstance == nullptr)
-      m_pInstance = new T;
-    return m_pInstance;
+    if (m_instance == nullptr)
+      m_instance = new T;
+    return m_instance;
   };
 
-  static void DestroyInstance()
+  static void destroyInstance()
   {
-    if (m_pInstance)
+    if (m_instance)
     {
-      delete m_pInstance;
-      m_pInstance = nullptr;
+      delete m_instance;
+      m_instance = nullptr;
     }
   };
 

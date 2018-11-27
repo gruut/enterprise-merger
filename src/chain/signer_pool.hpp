@@ -11,7 +11,7 @@
 #include <array>
 #include <ctime>
 
-#include "../utils/TemplateSingleton.hpp"
+#include "../utils/template_singleton.hpp"
 
 enum SSTATUS {
   UNKNOWN,
