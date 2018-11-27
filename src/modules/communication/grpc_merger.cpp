@@ -6,7 +6,7 @@
 
 namespace gruut {
 
-void MergerRpcServer::runMergerServ(char *port_for_merger) {
+void MergerRpcServer::runMergerServ(char const *port_for_merger) {
   std::string port_num(port_for_merger);
   std::string server_address("0.0.0.0:");
   server_address += port_num;
@@ -40,14 +40,23 @@ void MergerRpcServer::runSignerServ(char const *port_for_signer) {
       MessageType msg_type = get<0>(msg);
       if (checkSignerMsgType(msg_type)) {
         output_queue->pop();
-        uint64_t receiver_id = get<1>(msg)[0];
         nlohmann::json json_data = get<2>(msg);
         MessageHeader msg_header;
         msg_header.message_type = msg_type;
+        //TODO: 압축 알고리즘 종류에따라 수정 될 수 있음.
         msg_header.compression_algo_type = CompressionAlgorithmType::NONE;
         std::string header_added_data =
             HeaderController::makeHeaderAddedData(msg_header, json_data);
-        sendDataToSigner(header_added_data, receiver_id, msg_type);
+        //TODO: hmac을 붙히는 부분. key를 가져오게되면 주석 해제
+        /*if(msg_type == MessageType::MSG_ACCEPT || msg_type == MessageType::MSG_REQ_SSIG){
+          std::vector<uint8_t> key;
+          std::vector<uint8_t> hmac = Hmac::generateHMAC(header_added_data, key);
+          std::string str_hmac(hmac.begin(), hmac.end());
+          header_added_data += str_hmac;
+        }*/
+        for(uint64_t receiver_id : get<1>(msg)) {
+          sendDataToSigner(header_added_data, receiver_id, msg_type);
+        }
       }
     }
   }
@@ -213,7 +222,6 @@ Status MergerRpcServer::SignerService::sigSend(ServerContext *context,
 
 void MergerRpcClient::run() {
   auto &output_queue = Application::app().getOutputQueue();
-  // TODO: 아래 if문을 포함하는 무한루프 필요
   while (true) {
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
     if (!output_queue->empty()) {

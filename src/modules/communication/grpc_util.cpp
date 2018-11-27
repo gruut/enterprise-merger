@@ -40,8 +40,8 @@ HeaderController::attachHeader(std::string &compressed_json,
   return header + compressed_json;
 }
 
-std::string HeaderController::detachHeader(std::string &raw_data) {
-  std::string json_dump(raw_data.begin() + HEADER_LENGTH, raw_data.end());
+std::string HeaderController::getMsgBody(std::string &raw_data, int body_size) {
+  std::string json_dump = raw_data.substr(HEADER_LENGTH, body_size);
 
   return json_dump;
 }
@@ -85,8 +85,8 @@ HeaderController::getJsonMessage(CompressionAlgorithmType compression_type,
 
 MessageHeader HeaderController::parseHeader(std::string &raw_data) {
   MessageHeader msg_header;
-  msg_header.identifier = G;
-  msg_header.version = VERSION;
+  msg_header.identifier = static_cast<uint8_t>(raw_data[0]);
+  msg_header.version = static_cast<uint8_t>(raw_data[1]);
   msg_header.message_type = static_cast<MessageType>(raw_data[2]);
   msg_header.mac_algo_type = static_cast<MACAlgorithmType>(raw_data[3]);
   msg_header.compression_algo_type =
@@ -127,10 +127,18 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
   if (!HeaderController::validateMessage(msg_header)) {
     return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Wrong Message");
   }
-  std::string no_header_data = HeaderController::detachHeader(raw_data);
-  //TODO: 메시지 타입에 따라 HMAC validate 필요 할 수 있음. 작성 예정
+  int body_size = getMsgBodySize(msg_header);
+  //TODO:  HMAC 검증을 위해 key를 가져올 수 있게 되면. 가져오면 주석 해제
+/*if(msg_header.mac_algo_type ==  MACAlgorithmType::HMAC){
+    std::string header_added_data = raw_data.substr(0, HEADER_LENGTH + body_size);
+    std::vector<uint8_t> hmac(raw_data.begin() + HEADER_LENGTH + json_size , raw_data.end());
+    std::vector<uint8_t> key;
+    if(!Hmac::verifyHMAC(header_added_data, hmac, key))
+      return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "Wrong HMAC");
+  }*/
+  std::string msg_body = HeaderController::getMsgBody(raw_data, body_size);
   nlohmann::json json_data = HeaderController::getJsonMessage(
-      msg_header.compression_algo_type, no_header_data);
+      msg_header.compression_algo_type, msg_body);
 
   if (!JsonValidator::validateSchema(json_data, msg_header.message_type)) {
     return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
