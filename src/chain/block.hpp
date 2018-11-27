@@ -9,6 +9,9 @@
 #include "types.hpp"
 
 namespace gruut {
+/**
+ * @brief 임시블록의 구조체
+ */
 struct PartialBlock {
   timestamp sent_time;
   sender_id_type sender_id;
