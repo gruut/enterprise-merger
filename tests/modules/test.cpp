@@ -9,6 +9,7 @@
 #include "../../src/chain/transaction.hpp"
 #include "../../src/modules/storage/storage.hpp"
 #include "../../src/modules/storage/block_json.hpp"
+#include "../../src/modules/message_fetcher/message_fetcher.hpp"
 
 using namespace std;
 using namespace gruut;

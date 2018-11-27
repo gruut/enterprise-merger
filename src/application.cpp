@@ -32,7 +32,7 @@ void Application::start(const vector<shared_ptr<Module>> &modules) {
 }
 
 void Application::exec() {
-  for (auto i = 0; i < 3; i++) {
+  for (auto i = 0; i < 4; i++) {
     m_thread_group->emplace_back([this]() { m_io_serv->run(); });
   }
 

@@ -12,8 +12,12 @@ file(GLOB HEADER_FILES
         "../../src/modules/message_fetcher/*.hpp"
         "../../src/modules/signer_pool_manager/*.hpp"
         "../../src/modules/storage/storage.hpp"
+        "../../src/modules/message_fetcher/message_fetcher.hpp"
         "../../include/*.hpp"
         "../../utils/*.hpp"
+        "../../src/services/message_proxy.hpp"
+        "../../src/services/signer_pool_manager.hpp"
+        "../../src/services/signer_pool.hpp"
         "../../src/modules/communication/msg_schema.hpp"
         "../../src/modules/communication/grpc_util.hpp"
         )
@@ -21,7 +25,11 @@ file(GLOB HEADER_FILES
 file(GLOB SOURCE_FILES
         "../../src/*.cpp"
         "../../src/modules/storage/storage.cpp"
+        "../../src/modules/message_fetcher/message_fetcher.cpp"
         "../../src/modules/*.cpp"
+        "../../src/services/message_proxy.cpp"
+        "../../src/services/signer_pool_manager.cpp"
+        "../../src/services/signer_pool.cpp"
         "../../src/modules/communication/grpc_util.cpp"
         )
 

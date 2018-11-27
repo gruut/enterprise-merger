@@ -5,7 +5,6 @@
 
 #include "../../src/application.hpp"
 
-#include "../../src/services/message_fetcher.hpp"
 #include "../../src/services/transaction_fetcher.hpp"
 #include "../../src/services/signer_pool_manager.hpp"
 #include "../../src/services/signature_requester.hpp"
@@ -23,17 +22,6 @@
 using namespace gruut;
 using namespace nlohmann;
 using namespace std;
-
-BOOST_AUTO_TEST_SUITE(Test_MessageFetcher)
-
-    BOOST_AUTO_TEST_CASE(fetch) {
-        auto transaction = MessageFetcher::fetch<Transaction>();
-        string type_name = typeid(transaction).name();
-        bool result = type_name.find("Transaction") != string::npos;
-        BOOST_TEST(result);
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_TransactionFetcher)
 

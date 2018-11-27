@@ -1,7 +1,11 @@
 #include <algorithm>
+#include <nlohmann/json.hpp>
 #include <random>
 
+#include "message_proxy.hpp"
 #include "signer_pool_manager.hpp"
+
+using namespace nlohmann;
 
 namespace gruut {
 const unsigned int REQUEST_NUM_OF_SIGNER = 5;
@@ -22,6 +26,33 @@ SignerPool SignerPoolManager::getSelectedSignerPool() {
 
 void SignerPoolManager::putSigner(Signer &&s) {
   m_signer_pool->insert(std::move(s));
+}
+
+void SignerPoolManager::handleMessage(MessageType &message_type,
+                                      uint64_t receiver_id,
+                                      json message_body_json) {
+  switch (message_type) {
+  case MessageType::MSG_JOIN: {
+    MessageProxy proxy;
+    vector<uint64_t> receiver_list{receiver_id};
+
+    if (m_signer_pool->isFull()) {
+      OutputMessage output_message =
+          make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
+      proxy.deliverOutputMessage(output_message);
+    } else {
+      OutputMessage output_message =
+          make_tuple(MessageType::MSG_CHALLENGE, receiver_list, json({}));
+      proxy.deliverOutputMessage(output_message);
+    }
+  } break;
+  case MessageType::MSG_ECHO:
+    break;
+  case MessageType::MSG_LEAVE:
+    break;
+  default:
+    break;
+  }
 }
 
 RandomSignerIndices
