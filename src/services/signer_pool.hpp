@@ -13,7 +13,7 @@ using Signers = vector<Signer>;
 class SignerPool {
 public:
   size_t size();
-
+  bool isFull();
   Signer get(unsigned int index);
   Signers fetchAll();
   void insert(Signer &&signer);

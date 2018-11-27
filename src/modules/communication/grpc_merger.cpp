@@ -94,6 +94,7 @@ bool MergerRpcServer::checkSignerMsgType(MessageType msg_type) {
           msg_type == MessageType::MSG_RESPONSE_SECOND ||
           msg_type == MessageType::MSG_ACCEPT ||
           msg_type == MessageType::MSG_ECHO ||
+          msg_type == MessageType::MSG_REQ_SSIG ||
           msg_type == MessageType::MSG_ERROR);
 }
 void MergerRpcServer::sendDataToSigner(std::string &header_added_data,
@@ -113,10 +114,11 @@ void MergerRpcServer::sendDataToSigner(std::string &header_added_data,
     m_receiver_list[receiver_id].msg_response2 = nullptr;
   } break;
   case MessageType::MSG_REQ_SSIG: {
-    GrpcMsgReqSsig msg;
-    msg.set_message(header_added_data);
-    m_receiver_list[receiver_id].stream->Write(msg);
-  } break;
+    //    GrpcMsgReqSsig msg;
+    //    msg.set_message(header_added_data);
+    //    m_receiver_list[receiver_id].stream->Write(msg);
+    break;
+  }
   default:
     break;
   }

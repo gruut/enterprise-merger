@@ -142,7 +142,8 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
   uint64_t id;
   memcpy(&id, &msg_header.sender_id[0], sizeof(uint64_t));
   receiver_id = id;
-  input_queue->push(make_tuple(msg_header.message_type, json_data));
+  input_queue->emplace(
+      make_tuple(msg_header.message_type, receiver_id, json_data));
   return grpc::Status::OK;
 }
 

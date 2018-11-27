@@ -2,7 +2,7 @@
 
 #include "../../application.hpp"
 #include "../../chain/transaction.hpp"
-#include "../../services/message_fetcher.hpp"
+#include "../message_fetcher/message_fetcher.hpp"
 #include "transaction_collector.hpp"
 
 using namespace std;
@@ -46,9 +46,7 @@ void TransactionCollector::startTimer() {
   m_runnable = true;
   m_worker_thread = new thread([this]() {
     while (this->m_runnable) {
-      auto transaction = MessageFetcher::fetch<Transaction>();
       auto &transaction_pool = Application::app().getTransactionPool();
-      transaction_pool.push_back(transaction);
     }
   });
 }
