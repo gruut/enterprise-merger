@@ -1,6 +1,5 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SHA_256_HPP
 #define GRUUT_ENTERPRISE_MERGER_SHA_256_HPP
-
 #include <botan/base64.h>
 #include <botan/hash.h>
 #include <sstream>

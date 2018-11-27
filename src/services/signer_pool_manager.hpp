@@ -23,6 +23,9 @@ public:
 
 private:
   RandomSignerIndices generateRandomNumbers(unsigned int size);
+  bool validateSignature(nlohmann::json message_body_json);
+
+  std::string m_merger_nonce;
   std::shared_ptr<SignerPool> m_signer_pool;
   std::shared_ptr<SignerPool> m_selected_signers_pool;
 };

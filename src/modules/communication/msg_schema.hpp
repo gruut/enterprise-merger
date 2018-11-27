@@ -323,7 +323,7 @@ std::map<MessageType, json> MessageSchema::schema_list = {
     {MessageType::MSG_ECHO, SCHEMA_ECHO},
     {MessageType::MSG_BLOCK, SCHEMA_BLOCK},
     {MessageType::MSG_JOIN, SCHEMA_JOIN},
-    {MessageType::MSG_RESPONSE_FIRST, SCHEMA_RESPONSE_FIRST},
+    {MessageType::MSG_RESPONSE_1, SCHEMA_RESPONSE_FIRST},
     {MessageType::MSG_SUCCESS, SCHEMA_SUCCESS},
     {MessageType::MSG_LEAVE, SCHEMA_LEAVE},
     {MessageType::MSG_SSIG, SCHEMA_SSIG},
