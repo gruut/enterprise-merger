@@ -2,8 +2,9 @@
 #define GRUUT_ENTERPRISE_MERGER_RANDOM_NUM_GENERATOR_HPP
 
 #include <botan/rng.h>
+#include <botan/base64.h>
 #include <vector>
-#include <botan/botan.h>
+#include <botan/auto_rng.h>
 
 using namespace std;
 
@@ -19,6 +20,10 @@ public:
       vector<uint8_t> random_number(&buffer[0], &buffer[random_number_bytes]);
 
       return random_number;
+    }
+
+    static string toString(vector<uint8_t> random_number_list) {
+      return Botan::base64_encode(random_number_list);
     }
 };
 
