@@ -141,6 +141,13 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(Test_Storage)
 
     BOOST_AUTO_TEST_CASE(write_block) {
+        string tx_list;
+        for (unsigned int idx = 0; idx < block["tx"].size() - 1; ++idx) {
+          tx_list += block["tx"][idx]["txID"];
+          tx_list += '_';
+        }
+        block["block"]["txList"] = tx_list;
+
         Storage storage;
         storage.openDB("./block");
 
@@ -148,9 +155,12 @@ BOOST_AUTO_TEST_SUITE(Test_Storage)
         string block_id = block["block"]["bID"];
 
         storage.write(block_json, "block", block_id);
-        auto data = storage.findBy("block", block_id, "ver").get<string>();
 
-        bool result = data == "4";
+        auto data1 = storage.findBy("block", block_id, "ver").get<string>();
+        auto data2 = storage.findTxIdPos("3fffffffffffffffffff", "bbbbbbbbb").get<string>();
+
+        bool result = (data1 == "4") && (data2 == "2");
+
         BOOST_TEST(result);
     }
 
@@ -210,13 +220,4 @@ BOOST_AUTO_TEST_SUITE(Test_Storage)
         bool result = data == "oosdmkbjectTobinary";
         BOOST_TEST(result);
     }
-
-    /*BOOST_AUTO_TEST_CASE(find_txid_pos){
-
-    }*/
-
-    /*BOOST_AUTO_TEST_CASE(find_sibling){
-
-    }*/
-
 BOOST_AUTO_TEST_SUITE_END()
