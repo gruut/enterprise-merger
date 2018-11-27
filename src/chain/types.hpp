@@ -40,7 +40,7 @@ enum class MACAlgorithmType : uint8_t {
 
 enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
 
-using sha256 = Botan::secure_vector<uint8_t>;
+using sha256 = std::vector<uint8_t>;
 using timestamp = std::string;
 using block_height_type = std::string;
 
