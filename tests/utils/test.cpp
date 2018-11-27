@@ -7,6 +7,7 @@
 #include "../../src/utils/compressor.hpp"
 #include "../../src/utils/sig_manager.hpp"
 #include "../../src/utils/random_number_generator.hpp"
+#include "../../src/utils/hmac.hpp"
 
 using namespace std;
 
@@ -114,5 +115,21 @@ BOOST_AUTO_TEST_SUITE(Test_RandomNumberGenerator)
 
       BOOST_TEST(buffer.size() == 64);
     }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_Hmac)
+
+BOOST_AUTO_TEST_CASE(verifyHMAC) {
+  std::vector<uint8_t> key;
+  key.resize(32);
+  for(int i=0; i<32; i++)
+    key[i] = 0xFF;
+
+  std::string msg = "gruut";
+  std::vector<uint8_t> hmac = Hmac::generateHMAC(msg, key);
+
+  BOOST_TEST(Hmac::verifyHMAC(msg, hmac, key));
+}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -26,7 +26,7 @@ public:
                CompressionAlgorithmType compression_algo_type);
   static std::string detachHeader(std::string &raw_data);
   static bool validateMessage(MessageHeader &msg_header);
-  static int getJsonSize(MessageHeader &msg_header);
+  static int getMsgBodySize(MessageHeader &msg_header);
   static nlohmann::json
   getJsonMessage(CompressionAlgorithmType compression_type,
                  std::string &no_header_data);
@@ -34,6 +34,7 @@ public:
   static std::string makeHeaderAddedData(MessageHeader &msg_hdr,
                                          nlohmann::json &json_obj);
   static grpc::Status analyzeData(std::string &raw_data, uint64_t &receiver_id);
+  static int convertU8ToU32BE(uint8_t *len_bytes);
 };
 class JsonValidator {
 public:

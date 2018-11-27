@@ -3,6 +3,8 @@
 #include "../../utils/compressor.hpp"
 #include "msg_schema.hpp"
 #include <cstring>
+#include <botan/mac.h>
+#include <botan/hex.h>
 
 namespace gruut {
 std::string
@@ -54,15 +56,10 @@ bool HeaderController::validateMessage(MessageHeader &msg_header) {
   return check;
 }
 
-int HeaderController::getJsonSize(MessageHeader &msg_header) {
-  int json_size = 0;
-  for (int i = 3; i > 0; i--) {
-    json_size |= msg_header.total_length[i];
-    json_size = (json_size << 8);
-  }
-  json_size |= msg_header.total_length[0];
-  json_size -= HEADER_LENGTH;
-  return json_size;
+int HeaderController::getMsgBodySize(MessageHeader &msg_header) {
+  int total_size = HeaderController::convertU8ToU32BE(msg_header.total_length);
+  int body_size = total_size - static_cast<int>(HEADER_LENGTH);
+  return body_size;
 }
 
 // TODO: compression algorithm 추가에따라 변경될 수있습니다.
@@ -131,7 +128,7 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
     return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Wrong Message");
   }
   std::string no_header_data = HeaderController::detachHeader(raw_data);
-
+  //TODO: 메시지 타입에 따라 HMAC validate 필요 할 수 있음. 작성 예정
   nlohmann::json json_data = HeaderController::getJsonMessage(
       msg_header.compression_algo_type, no_header_data);
 
@@ -145,6 +142,10 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
   input_queue->emplace(
       make_tuple(msg_header.message_type, receiver_id, json_data));
   return grpc::Status::OK;
+}
+
+int HeaderController::convertU8ToU32BE(uint8_t *len_bytes){
+  return static_cast<int>(len_bytes[0] << 24 | len_bytes[1] << 16 | len_bytes[2] << 8 | len_bytes[3]);
 }
 
 bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {

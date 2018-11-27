@@ -60,14 +60,14 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
         BOOST_TEST(HeaderController::validateMessage(msg_hdr));
     }
 
-    BOOST_AUTO_TEST_CASE(getJsonSize) {
+    BOOST_AUTO_TEST_CASE(getMsgBodySize) {
         MessageHeader msg_hdr;
-        msg_hdr.total_length[3] = 0x00;
+        msg_hdr.total_length[3] = 0x41;
         msg_hdr.total_length[2] = 0x00;
         msg_hdr.total_length[1] = 0x00;
-        msg_hdr.total_length[0] = 0x41;
+        msg_hdr.total_length[0] = 0x00;
 
-        BOOST_TEST(HeaderController::getJsonSize(msg_hdr) == (65 - HEADER_LENGTH));
+        BOOST_TEST(HeaderController::getMsgBodySize(msg_hdr) == (65 - HEADER_LENGTH));
     }
 
     BOOST_AUTO_TEST_CASE(parseHeader) {
