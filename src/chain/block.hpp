@@ -1,3 +1,8 @@
+/**
+ * @file block.hpp
+ * @brief 블록과 임시블록의 구조를 정의
+ */
+
 #ifndef GRUUT_ENTERPRISE_MERGER_TEMPORARY_BLOCK_HPP
 #define GRUUT_ENTERPRISE_MERGER_TEMPORARY_BLOCK_HPP
 
