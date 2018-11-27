@@ -2,9 +2,9 @@
 #include "../../../include/json_schema.hpp"
 #include "../../utils/compressor.hpp"
 #include "msg_schema.hpp"
-#include <cstring>
-#include <botan/mac.h>
 #include <botan/hex.h>
+#include <botan/mac.h>
+#include <cstring>
 
 namespace gruut {
 std::string
@@ -128,7 +128,7 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
     return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Wrong Message");
   }
   std::string no_header_data = HeaderController::detachHeader(raw_data);
-  //TODO: 메시지 타입에 따라 HMAC validate 필요 할 수 있음. 작성 예정
+  // TODO: 메시지 타입에 따라 HMAC validate 필요 할 수 있음. 작성 예정
   nlohmann::json json_data = HeaderController::getJsonMessage(
       msg_header.compression_algo_type, no_header_data);
 
@@ -144,8 +144,9 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
   return grpc::Status::OK;
 }
 
-int HeaderController::convertU8ToU32BE(uint8_t *len_bytes){
-  return static_cast<int>(len_bytes[0] << 24 | len_bytes[1] << 16 | len_bytes[2] << 8 | len_bytes[3]);
+int HeaderController::convertU8ToU32BE(uint8_t *len_bytes) {
+  return static_cast<int>(len_bytes[0] << 24 | len_bytes[1] << 16 |
+                          len_bytes[2] << 8 | len_bytes[3]);
 }
 
 bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {

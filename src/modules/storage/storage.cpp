@@ -131,7 +131,8 @@ void Storage::handleTrivialError(const leveldb::Status &status) {
 }
 json Storage::findTxIdPos(const string &blk_id, const string &tx_id) {
   string str;
-  auto status = m_db->Get(leveldb::ReadOptions(), "block_" + blk_id + '_' + "txList", &str);
+  auto status = m_db->Get(leveldb::ReadOptions(),
+                          "block_" + blk_id + '_' + "txList", &str);
   if (!status.ok()) {
     return json({});
   }
