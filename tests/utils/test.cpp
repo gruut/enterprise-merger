@@ -5,6 +5,7 @@
 
 #include "../../src/utils/sha256.hpp"
 #include "../../src/utils/compressor.hpp"
+#include "../../src/utils/random_number_generator.hpp"
 
 using namespace std;
 
@@ -39,6 +40,16 @@ BOOST_AUTO_TEST_SUITE(Test_Compressor)
         Compressor::decompressData(compressed_data, decompressed_data, origin_size);
 
         BOOST_TEST(decompressed_data == original);
+    }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_RandomNumberGenerator)
+
+    BOOST_AUTO_TEST_CASE(randomize) {
+      auto buffer = RandomNumGenerator::randomize(64);
+
+      BOOST_TEST(buffer.size() == 64);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
