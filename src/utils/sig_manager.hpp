@@ -3,6 +3,7 @@
 //
 
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGMANAGER_HPP
+#define GRUUT_ENTERPRISE_MERGER_SIGMANAGER_HPP
 
 #include <botan/auto_rng.h>
 #include <botan/pkcs8.h>
@@ -15,9 +16,6 @@
 #include <string.h>
 
 
-namespace gruut {
-
-
 class RSA {
 public:
 
@@ -25,7 +23,7 @@ public:
   doSign(std::string &rsa_sk_pem, std::string &msg, bool pkcs1v15 = false) {
 
     std::vector<uint8_t> sig;
-    std::vector<uint8_t> data(msg.data(), msg.data() + msg.length());
+    std::vector<uint8_t> data(msg.begin(), msg.end());
 
     try {
       Botan::DataSource_Memory signkey_datasource(rsa_sk_pem);
@@ -62,7 +60,7 @@ public:
 
   static bool
   doVerify(std::string &rsa_pk_pem, std::string &msg, std::vector<uint8_t> &sig, bool pkcs1v15 = false) {
-    std::vector<uint8_t> data(msg.data(), msg.data() + msg.length());
+    std::vector<uint8_t> data(msg.begin(), msg.end());
 
     Botan::Public_Key *verifykey;
 
@@ -107,8 +105,6 @@ public:
   }
 
 };
-}
 
-#define GRUUT_ENTERPRISE_MERGER_SIGMANAGER_HPP
 
 #endif //GRUUT_ENTERPRISE_MERGER_SIGMANAGER_HPP

@@ -5,7 +5,7 @@
 
 #include "../../src/utils/sha256.hpp"
 #include "../../src/utils/compressor.hpp"
-#include "../../src/utils/SigManager.hpp"
+#include "../../src/utils/sig_manager.hpp"
 
 using namespace std;
 
@@ -97,8 +97,8 @@ Wcql+Gep9ebzfGArFp7anHE9
 
     std::string msg = "Hello, World!";
 
-    std::vector<uint8_t> sig = gruut::RSA::doSign(user_sk_pkcs8,msg,true);
-    bool result = gruut::RSA::doVerify(user_pk_cert,msg,sig,true);
+    std::vector<uint8_t> sig = RSA::doSign(user_sk_pkcs8,msg,true);
+    bool result = RSA::doVerify(user_pk_cert,msg,sig,true);
 
     BOOST_TEST(result);
 
