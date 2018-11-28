@@ -144,15 +144,15 @@ BOOST_AUTO_TEST_SUITE(Test_ECDH)
     bob_ecdh.genRandomSecretKey();
     std::pair<std::string,std::string> bob_xy = bob_ecdh.getPublicKey();
 
-    std::string bob_x_str = "0x" + bob_xy.first;
-    std::string bob_y_str = "0x" + bob_xy.second;
+    std::string bob_x_str = bob_xy.first;
+    std::string bob_y_str = bob_xy.second;
 
     HmacKeyMaker alice_ecdh;
     alice_ecdh.setSecretKey(alice_sk_str);
     std::pair<std::string,std::string> alice_xy = alice_ecdh.getPublicKey();
 
-    std::string alice_x_str = "0x" + alice_xy.first;
-    std::string alice_y_str = "0x" + alice_xy.second;
+    std::string alice_x_str = alice_xy.first;
+    std::string alice_y_str = alice_xy.second;
 
     Botan::secure_vector<uint8_t> alice_ssk = alice_ecdh.getSharedSecretKey(bob_x_str, bob_y_str);
     Botan::secure_vector<uint8_t> bob_ssk = bob_ecdh.getSharedSecretKey(alice_x_str, alice_y_str);

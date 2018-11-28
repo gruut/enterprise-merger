@@ -93,6 +93,14 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       message_body["dhx"] = dhx;
       message_body["dhy"] = dhy;
 
+      auto signer_dhx = message_body_json["dhx"].get<string>();
+      auto signer_dhy = message_body_json["dhy"].get<string>();
+
+      auto shared_secret_key_vector =
+          key_maker.getSharedSecretKey(signer_dhx, signer_dhy, 32);
+      m_shared_secret_key = vector<uint8_t>(shared_secret_key_vector.begin(),
+                                            shared_secret_key_vector.end());
+
       string message = m_merger_nonce + message_body_json["sN"].get<string>() +
                        dhx + dhy + timestamp;
       message_body["sig"] = signMessage(message);
