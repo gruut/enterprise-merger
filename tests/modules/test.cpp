@@ -139,85 +139,50 @@ BOOST_AUTO_TEST_SUITE(Test_JsonValidator)
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_Storage)
+BOOST_AUTO_TEST_CASE(save_block) {
+  Storage *storage = Storage::getInstance();
+  string block_binary = "bbbbbbbbbbbbbinary";
+  storage->saveBlock(block_binary, block_header, transaction);
+  Storage::destroyInstance();
 
-    BOOST_AUTO_TEST_CASE(write_block) {
-        string tx_list;
-        for (unsigned int idx = 0; idx < block["tx"].size() - 1; ++idx) {
-          tx_list += block["tx"][idx]["txID"];
-          tx_list += '_';
-        }
-        block["block"]["txList"] = tx_list;
+  BOOST_TEST(true);
+}
 
-        Storage storage;
-        storage.openDB("./block");
+BOOST_AUTO_TEST_CASE(find_latest_hash_and_height) {
+  Storage *storage = Storage::getInstance();
+  pair<string, string> hash_and_height = storage->findLatestHashAndHeight();
+  Storage::destroyInstance();
 
-        json block_json = block["block"];
-        string block_id = block["block"]["bID"];
+  BOOST_TEST(hash_and_height.first == "bbbbbbbbbbbbbinary");
+  BOOST_TEST(hash_and_height.second == "1");
+}
 
-        storage.write(block_json, "block", block_id);
+BOOST_AUTO_TEST_CASE(find_latest_txid_list) {
+  Storage *storage = Storage::getInstance();
+  vector<string> tx_ids_list = storage->findLatestTxIdList();
+  Storage::destroyInstance();
 
-        auto data1 = storage.findBy("block", block_id, "ver").get<string>();
-        auto data2 = storage.findTxIdPos("3fffffffffffffffffff", "bbbbbbbbb").get<string>();
+  BOOST_TEST(tx_ids_list[0] == "aaaaaaaaa");
+  BOOST_TEST(tx_ids_list[1] == "bbbbbbbbb");
+  BOOST_TEST(tx_ids_list[2] == "ccccccccc");
+  BOOST_TEST(tx_ids_list[3] == "ddddddddd");
+}
 
-        bool result = (data1 == "4") && (data2 == "2");
+BOOST_AUTO_TEST_CASE(find_cert) {
+  Storage *storage = Storage::getInstance();
+  auto certificate = storage->findCertificate("aax");
+  Storage::destroyInstance();
+  BOOST_TEST(certificate == "aaaaaaaaaaaaaaaaaaaaaaa");
+}
 
-        BOOST_TEST(result);
-    }
+BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
+  Storage *storage = Storage::getInstance();
+  storage->deleteAllDirectory("./block_header");
+  storage->deleteAllDirectory("./block_binary");
+  storage->deleteAllDirectory("./certificate");
+  storage->deleteAllDirectory("./latest_block_header");
+  storage->deleteAllDirectory("./transaction");
 
-    BOOST_AUTO_TEST_CASE(write_transaction) {
-        Storage storage;
-        storage.openDB("./transaction");
-
-        json block_body_json = block["tx"];
-        string block_id = block["block"]["bID"];
-
-        storage.write(block_body_json, "transactions", block_id);
-        auto data = storage.findBy("transactions", "aaaaaaaaa", "type").get<string>();
-
-        bool result = data == "notary";
-        BOOST_TEST(result);
-    }
-
-    BOOST_AUTO_TEST_CASE(write_latest_block) {
-        Storage storage;
-        storage.openDB("./latest_block");
-
-        json block_json = block;
-        string block_id = block["block"]["bID"];
-
-        storage.write(block_json, "latest_block", block_id);
-        auto data = storage.findBy("latest_block", "", "");
-        auto result1 = json::parse(data.get<string>());
-
-        auto b_id = result1["block"]["bID"].get<string>();
-        BOOST_TEST(b_id == "3fffffffffffffffffff");
-    }
-
-    BOOST_AUTO_TEST_CASE(write_cert) {
-        Storage storage;
-        storage.openDB("./cert");
-
-        json cert_json = cert;
-        string n_id = cert["nid"];
-
-        storage.write(cert, "cert", n_id);
-        auto data = storage.findBy("cert", "aw98wueiwejnkwe", "").get<string>();
-
-        bool result = data == "sdfnajksdfauweiuaweuiahweiu";
-        BOOST_TEST(result);
-    }
-
-    BOOST_AUTO_TEST_CASE(write_block_header_hash) {
-        Storage storage;
-        storage.openDB("./block_header_hash");
-
-        json block_header_hash_json = blkhash;
-        string block_id = blkhash["block_id"];
-
-        storage.write(blkhash, "block_header_hash", block_id);
-        auto data = storage.findBy("block_header_hash", "123", "").get<string>();
-
-        bool result = data == "oosdmkbjectTobinary";
-        BOOST_TEST(result);
-    }
+  BOOST_TEST(true);
+}
 BOOST_AUTO_TEST_SUITE_END()
