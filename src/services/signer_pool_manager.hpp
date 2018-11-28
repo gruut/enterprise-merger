@@ -25,7 +25,8 @@ private:
   RandomSignerIndices generateRandomNumbers(unsigned int size);
   bool verifySignature(nlohmann::json message_body_json);
   string getCertificate();
-  string signMessage(string message);
+  string signMessage(vector<uint8_t>, vector<uint8_t>, vector<uint8_t>,
+                     vector<uint8_t>, vector<uint8_t>);
 
   std::string m_merger_nonce;
   vector<uint8_t> m_shared_secret_key;
