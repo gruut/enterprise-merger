@@ -73,13 +73,10 @@ public:
     // my_secret_key
     Botan::ECDH_PrivateKey my_secret_key(m_rng, m_group_domain, m_secret_key);
 
-    auto decoded_public_key_x = Botan::hex_decode(your_public_key_x);
-    auto decoded_public_key_y = Botan::hex_decode(your_public_key_y);
-
     // your_pk
     Botan::PointGFp your_public_key_point(m_curve,
-                                          Botan::BigInt(decoded_public_key_x),
-                                          Botan::BigInt(decoded_public_key_y));
+                                          Botan::BigInt(your_public_key_x),
+                                          Botan::BigInt(your_public_key_y));
     Botan::ECDH_PublicKey your_public_key(m_group_domain,
                                           your_public_key_point);
 
