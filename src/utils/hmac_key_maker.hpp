@@ -1,27 +1,27 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_HMAC_KEY_MAKER_HPP
 #define GRUUT_ENTERPRISE_MERGER_HMAC_KEY_MAKER_HPP
 
-#include <string>
 #include <botan/auto_rng.h>
 #include <botan/bigint.h>
-#include <botan/ec_group.h>
 #include <botan/curve_gfp.h>
+#include <botan/ec_group.h>
 #include <botan/ecdh.h>
-#include <botan/pubkey.h>
 #include <botan/hex.h>
+#include <botan/pubkey.h>
 
 class HmacKeyMaker {
 private:
   Botan::AutoSeeded_RNG m_rng;
   Botan::EC_Group m_group_domain;
-  Botan::CurveGFp  m_curve;
+  Botan::CurveGFp m_curve;
   std::string m_kdf;
 
   Botan::BigInt m_secret_key;
 
 public:
   HmacKeyMaker() : m_group_domain("secp256r1"), m_kdf("Raw") {
-    m_curve = Botan::CurveGFp(m_group_domain.get_p(), m_group_domain.get_a(), m_group_domain.get_b());
+    m_curve = Botan::CurveGFp(m_group_domain.get_p(), m_group_domain.get_a(),
+                              m_group_domain.get_b());
   }
 
   ~HmacKeyMaker() = default;
@@ -46,11 +46,15 @@ public:
     Botan::ECDH_PrivateKey my_secret_key(m_rng, m_group_domain, m_secret_key);
 
     std::string uncomp_point = Botan::hex_encode(my_secret_key.public_value());
-    size_t point_size = uncomp_point.size() - 2; // because of first 04 = means uncompressed point coordinator
+    size_t point_size =
+        uncomp_point.size() -
+        2; // because of first 04 = means uncompressed point coordinator
     size_t point_len = point_size / 2;
 
-    std::string my_public_key_x(uncomp_point.begin()+2,uncomp_point.begin()+point_len+2);
-    std::string my_public_key_y(uncomp_point.begin()+point_len+2, uncomp_point.end());
+    std::string my_public_key_x(uncomp_point.begin() + 2,
+                                uncomp_point.begin() + point_len + 2);
+    std::string my_public_key_y(uncomp_point.begin() + point_len + 2,
+                                uncomp_point.end());
 
     return std::make_pair(my_public_key_x, my_public_key_y);
   }
@@ -69,10 +73,13 @@ public:
     // my_secret_key
     Botan::ECDH_PrivateKey my_secret_key(m_rng, m_group_domain, m_secret_key);
 
+    auto decoded_public_key_x = Botan::hex_decode(your_public_key_x);
+    auto decoded_public_key_y = Botan::hex_decode(your_public_key_y);
+
     // your_pk
     Botan::PointGFp your_public_key_point(m_curve,
-                                          Botan::BigInt(your_public_key_x),
-                                          Botan::BigInt(your_public_key_y));
+                                          Botan::BigInt(decoded_public_key_x),
+                                          Botan::BigInt(decoded_public_key_y));
     Botan::ECDH_PublicKey your_public_key(m_group_domain,
                                           your_public_key_point);
 

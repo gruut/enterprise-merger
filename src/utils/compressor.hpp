@@ -15,10 +15,12 @@ public:
   }
 
   static int decompressData(string &src, string &dest, int compressed_size) {
-    //TODO: decompressed data의 최대 capacity는 현재 compressed data의 3배로 설정해 놓았습니다. 수정 될수 있습니다.
+    // TODO: decompressed data의 최대 capacity는 현재 compressed data의 3배로
+    // 설정해 놓았습니다. 수정 될수 있습니다.
     int dest_capacity = compressed_size * 3;
     dest.resize(dest_capacity);
-    int dest_length = LZ4_decompress_safe(src.data(), &dest[0], compressed_size, dest_capacity);
+    int dest_length = LZ4_decompress_safe(src.data(), &dest[0], compressed_size,
+                                          dest_capacity);
     dest = dest.substr(0, dest_length);
     return dest_length;
   }
