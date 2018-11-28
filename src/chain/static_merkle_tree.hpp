@@ -1,6 +1,6 @@
 /**
  * @file static_merkle_tree.hpp
- * @brief 트랜잭션의 머클트리 클래스
+ * @brief 정적 트랜잭션 머클트리 클래스를 정의
  */
 
 #pragma once
@@ -13,7 +13,7 @@
 namespace gruut{
 
 /**
- * @brief 트랜잭션 머클트리의 리프노드 제한
+ * @brief 트랜잭션 머클트리의 최대 리프노드 수
  */
 constexpr size_t MAX_MERKLE_LEAVES = 4096;
 
