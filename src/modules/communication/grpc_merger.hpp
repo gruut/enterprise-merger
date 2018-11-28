@@ -35,7 +35,7 @@ public:
 
     m_server_signer->Shutdown();
   }
-  void runMergerServ(char *port_for_merger);
+  void runMergerServ(char const *port_for_merger);
   void runSignerServ(char const *port_for_signer);
 
 private:

@@ -40,12 +40,12 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
         BOOST_TEST(header_added_data == header_added_data_test);
     }
 
-    BOOST_AUTO_TEST_CASE(detachHeader) {
+    BOOST_AUTO_TEST_CASE(getMsgBody) {
         string header_added_data = "11111111111111111111111111111111data";
         string data = "data";
-        string header_detached_data = HeaderController::detachHeader(header_added_data);
+        string msg_body = HeaderController::getMsgBody(header_added_data, data.length());
 
-        BOOST_TEST(header_detached_data == data);
+        BOOST_TEST(msg_body == data);
     }
 
     BOOST_AUTO_TEST_CASE(validateMessage) {

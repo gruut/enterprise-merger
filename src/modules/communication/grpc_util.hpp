@@ -3,6 +3,7 @@
 #include "../../application.hpp"
 #include <cstring>
 #include <grpcpp/impl/codegen/status.h>
+#include "../../utils/hmac.hpp"
 #include <iostream>
 #include <lz4.h>
 #include <string>
@@ -17,6 +18,7 @@ constexpr uint8_t LOCAL_CHAIN_ID[8] = {'1', '2', '3', '4', '5', '6', '7', '8'};
 constexpr uint8_t SENDER_ID[8] = {'1', '2', '3', '4', '5', '6', '7', '8'};
 constexpr uint8_t RESERVED[6] = {'1', '2', '3', '4', '5', '6'};
 
+constexpr size_t HMAC_LENGTH = 32;
 constexpr size_t HEADER_LENGTH = 32;
 
 class HeaderController {
@@ -24,7 +26,7 @@ public:
   static std::string
   attachHeader(std::string &compressed_json, MessageType msg_type,
                CompressionAlgorithmType compression_algo_type);
-  static std::string detachHeader(std::string &raw_data);
+  static std::string getMsgBody(std::string &raw_data, int body_size);
   static bool validateMessage(MessageHeader &msg_header);
   static int getMsgBodySize(MessageHeader &msg_header);
   static nlohmann::json
