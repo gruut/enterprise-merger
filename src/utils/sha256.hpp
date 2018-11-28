@@ -4,28 +4,24 @@
 #include <botan/hash.h>
 #include <sstream>
 #include <string>
+#include <vector>
 
 using namespace std;
 using namespace Botan;
 
 class Sha256 {
-  using sha256 = secure_vector<uint8_t>;
+  using sha256 = std::vector<uint8_t>;
 
 public:
   static sha256 hash(const string &message) {
-    std::unique_ptr<Botan::HashFunction> hash_function(
-        Botan::HashFunction::create("SHA-256"));
-
     sha256 v(message.begin(), message.end());
-    hash_function->update(v);
-
-    return hash_function->final();
+    return hash(v);
   }
 
   static bool isMatch(const string &target_message,
-                      const sha256 &encrypted_message) {
-    auto encrypted_target_message = Sha256::hash(target_message);
-    bool result = encrypted_target_message == encrypted_message;
+                      const sha256 &hashed_message) {
+    auto hashed_target_message = Sha256::hash(target_message);
+    bool result = hashed_target_message == hashed_message;
 
     return result;
   }
@@ -33,6 +29,13 @@ public:
   static string toString(sha256 hashed_list) {
     return base64_encode(hashed_list);
   }
+
+  static sha256 hash(std::vector<uint8_t> &data) {
+    std::unique_ptr<Botan::HashFunction> hash_function(Botan::HashFunction::create("SHA-256"));
+    hash_function->update(data);
+    return hash_function->final_stdvec();
+  }
+
 };
 
 #endif
