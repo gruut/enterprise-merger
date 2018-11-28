@@ -1,15 +1,15 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 #define GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 
-#include <map>
-#include <sstream>
-#include <iostream>
+#include "../../utils/template_singleton.hpp"
 #include "leveldb/db.h"
 #include "leveldb/options.h"
 #include "leveldb/write_batch.h"
 #include "nlohmann/json.hpp"
-#include "../../utils/template_singleton.hpp"
 #include <boost/filesystem/operations.hpp>
+#include <iostream>
+#include <map>
+#include <sstream>
 
 namespace gruut {
 using namespace std;
@@ -20,11 +20,12 @@ public:
   Storage();
   ~Storage();
 
-  void saveBlock(const string &block_binary, json &block_header, json &transaction);
+  void saveBlock(const string &block_binary, json &block_header,
+                 json &transaction);
   pair<string, string> findLatestHashAndHeight();
   vector<string> findLatestTxIdList();
   string findCertificate(const string &user_id);
-  void deleteAllDirectory(const string& dir_path);
+  void deleteAllDirectory(const string &dir_path);
 
 private:
   void handleCriticalError(const leveldb::Status &status);
@@ -44,5 +45,5 @@ private:
   leveldb::DB *m_db_transaction;
   leveldb::DB *m_db_certificate;
 };
-}
+} // namespace gruut
 #endif

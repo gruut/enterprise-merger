@@ -5,25 +5,20 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 
-#include <iostream>
-#include <string>
-#include <deque>
 #include <array>
 #include <ctime>
+#include <deque>
+#include <iostream>
+#include <string>
 
-#include <thread>
 #include <mutex>
+#include <thread>
 
 #include <botan/secmem.h>
 
 #include "../utils/template_singleton.hpp"
 
-
-enum SSTATUS {
-  UNKNOWN,
-  GOOD,
-  LINK_ERROR
-};
+enum SSTATUS { UNKNOWN, GOOD, LINK_ERROR };
 
 typedef struct _SignerEntry {
   uint64_t user_id{0};
@@ -35,15 +30,17 @@ typedef struct _SignerEntry {
 
 namespace gruut {
 
-class SignerPool : public TemplateSingleton<SignerPool>{
+class SignerPool : public TemplateSingleton<SignerPool> {
 
 private:
   std::deque<SignerEntry> m_signer_pool;
   std::mutex m_push_mutex;
   std::mutex m_update_mutex;
-public:
 
-  void pushSigner(uint64_t user_id, std::string &pk_cert, Botan::secure_vector<uint8_t> &hmac_key, int stat = SSTATUS::UNKNOWN) {
+public:
+  void pushSigner(uint64_t user_id, std::string &pk_cert,
+                  Botan::secure_vector<uint8_t> &hmac_key,
+                  int stat = SSTATUS::UNKNOWN) {
 
     SignerEntry tmp_entry;
     tmp_entry.user_id = user_id;
@@ -53,8 +50,8 @@ public:
     tmp_entry.last_update = std::time(nullptr);
 
     bool is_in = false;
-    for(SignerEntry &entry : m_signer_pool) {
-      if(entry.user_id == user_id) {
+    for (SignerEntry &entry : m_signer_pool) {
+      if (entry.user_id == user_id) {
         is_in = true;
 
         std::lock_guard<std::mutex> guard(m_push_mutex);
@@ -65,18 +62,17 @@ public:
       }
     }
 
-    if(!is_in) {
+    if (!is_in) {
       std::lock_guard<std::mutex> guard(m_push_mutex);
       m_signer_pool.emplace_back(tmp_entry);
       m_push_mutex.unlock();
     }
-
   }
 
-  bool updatePkCert(uint64_t user_id, std::string &pk_cert){
+  bool updatePkCert(uint64_t user_id, std::string &pk_cert) {
     bool is_in = false;
-    for(SignerEntry &entry : m_signer_pool) {
-      if(entry.user_id == user_id) {
+    for (SignerEntry &entry : m_signer_pool) {
+      if (entry.user_id == user_id) {
         is_in = true;
 
         std::lock_guard<std::mutex> guard(m_update_mutex);
@@ -91,10 +87,11 @@ public:
     return is_in;
   }
 
-  bool updateHmacKey(uint64_t user_id, Botan::secure_vector<uint8_t> &hmac_key){
+  bool updateHmacKey(uint64_t user_id,
+                     Botan::secure_vector<uint8_t> &hmac_key) {
     bool is_in = false;
-    for(SignerEntry &entry : m_signer_pool) {
-      if(entry.user_id == user_id) {
+    for (SignerEntry &entry : m_signer_pool) {
+      if (entry.user_id == user_id) {
         is_in = true;
 
         std::lock_guard<std::mutex> guard(m_update_mutex);
@@ -111,8 +108,8 @@ public:
 
   bool updateStatus(uint64_t user_id, int stat = SSTATUS::GOOD) {
     bool is_in = false;
-    for(SignerEntry &entry : m_signer_pool) {
-      if(entry.user_id == user_id) {
+    for (SignerEntry &entry : m_signer_pool) {
+      if (entry.user_id == user_id) {
         is_in = true;
 
         std::lock_guard<std::mutex> guard(m_update_mutex);
@@ -129,8 +126,8 @@ public:
 
   bool removeSigner(uint64_t user_id) {
     bool is_in = false;
-    for(size_t i = 0; i < m_signer_pool.size(); ++i) {
-      if(m_signer_pool[i].user_id == user_id) {
+    for (size_t i = 0; i < m_signer_pool.size(); ++i) {
+      if (m_signer_pool[i].user_id == user_id) {
         is_in = true;
 
         std::lock_guard<std::mutex> guard(m_push_mutex);
@@ -146,8 +143,8 @@ public:
 
   Botan::secure_vector<uint8_t> getHmacKey(uint64_t user_id) {
     Botan::secure_vector<uint8_t> ret_hmac_key;
-    for(SignerEntry &entry : m_signer_pool) {
-      if(entry.user_id == user_id) {
+    for (SignerEntry &entry : m_signer_pool) {
+      if (entry.user_id == user_id) {
         ret_hmac_key = entry.hmac_key;
         break;
       }
@@ -159,8 +156,8 @@ public:
   std::string getPkCert(uint64_t user_id) {
     std::string ret_pk_cert;
 
-    for(SignerEntry &entry : m_signer_pool) {
-      if(entry.user_id == user_id) {
+    for (SignerEntry &entry : m_signer_pool) {
+      if (entry.user_id == user_id) {
         ret_pk_cert = entry.pk_cert;
         break;
       }
@@ -169,15 +166,15 @@ public:
     return ret_pk_cert;
   }
 
-  size_t getNumSigner(int stat = SSTATUS::GOOD){
+  size_t getNumSigner(int stat = SSTATUS::GOOD) {
 
-    if(stat < 0) {
+    if (stat < 0) {
       return m_signer_pool.size();
     }
 
     size_t num_good_signer = 0;
-    for(SignerEntry &entry : m_signer_pool) {
-      if(entry.stat == stat) {
+    for (SignerEntry &entry : m_signer_pool) {
+      if (entry.stat == stat) {
         ++num_good_signer;
       }
     }
@@ -185,10 +182,10 @@ public:
     return num_good_signer;
   }
 
-  std::vector<uint64_t> getGoodSignerList(){
+  std::vector<uint64_t> getGoodSignerList() {
     std::vector<uint64_t> ret_list;
-    for(SignerEntry &entry : m_signer_pool) {
-      if(entry.stat == SSTATUS::GOOD) {
+    for (SignerEntry &entry : m_signer_pool) {
+      if (entry.stat == SSTATUS::GOOD) {
         ret_list.push_back(entry.user_id);
       }
     }
@@ -196,16 +193,16 @@ public:
     return ret_list;
   }
 
-  void emptyPool(){
+  void emptyPool() {
     std::lock_guard<std::mutex> guard(m_push_mutex);
     m_signer_pool.clear();
     m_push_mutex.unlock();
   }
 
-  // TODO: May be we should do more operation, but we cannot recognize what operations are required.
-
+  // TODO: May be we should do more operation, but we cannot recognize what
+  // operations are required.
 };
 
-}
+} // namespace gruut
 
-#endif //GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
+#endif // GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
