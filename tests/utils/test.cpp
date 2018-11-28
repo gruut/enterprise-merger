@@ -99,8 +99,8 @@ Wcql+Gep9ebzfGArFp7anHE9
 
     std::string msg = "Hello, World!";
 
-    std::vector<uint8_t> sig = RSA::doSign(user_sk_pkcs8,msg,true);
-    bool result = RSA::doVerify(user_pk_cert,msg,sig,true);
+    std::vector<uint8_t> sig = Rsa::doSign(user_sk_pkcs8,msg,true);
+    bool result = Rsa::doVerify(user_pk_cert,msg,sig,true);
 
     BOOST_TEST(result);
 
