@@ -5,7 +5,7 @@
 #include <queue>
 #include <tuple>
 #include <vector>
-
+#include <thread>
 #include "modules/module.hpp"
 #include "services/signer_pool_manager.hpp"
 
