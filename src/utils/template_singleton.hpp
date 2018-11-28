@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 
+
 template < typename T >
 class TemplateSingleton
 {
@@ -20,7 +21,6 @@ public:
     {
         if (m_instance == nullptr)
             m_instance = new T;
-        //atexit(DestroyInstance);
         return m_instance;
     };
 
