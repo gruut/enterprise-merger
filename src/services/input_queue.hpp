@@ -46,7 +46,7 @@ namespace gruut {
             return ret_msg;
         }
 
-        void clearOuputQueue() {
+        void clearInputQueue() {
             m_input_msg_pool.clear();
         }
     };

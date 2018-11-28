@@ -53,7 +53,7 @@ namespace gruut {
             return ret_msg;
         }
 
-        void clearOuputQueue() {
+        void clearOutputQueue() {
             m_output_msg_pool.clear();
         }
     };
