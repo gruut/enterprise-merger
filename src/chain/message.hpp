@@ -1,3 +1,8 @@
+/**
+ * @file message.hpp
+ * @brief 메시지와 메시지 헤더의 구조체
+ */
+
 #ifndef GRUUT_ENTERPRISE_MERGER_MESSAGE_HPP
 #define GRUUT_ENTERPRISE_MERGER_MESSAGE_HPP
 

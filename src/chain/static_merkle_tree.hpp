@@ -1,3 +1,8 @@
+/**
+ * @file static_merkle_tree.hpp
+ * @brief 트랜잭션의 머클트리 클래스
+ */
+
 #pragma once
 
 #include <vector>

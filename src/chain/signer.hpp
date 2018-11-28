@@ -1,3 +1,8 @@
+/**
+ * @file signer.hpp
+ * @brief Signer 구조체
+ */
+
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGNER_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGNER_HPP
 

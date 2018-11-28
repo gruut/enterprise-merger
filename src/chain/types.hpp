@@ -1,3 +1,8 @@
+/**
+ * @file types.hpp
+ * @brief 타입의 열거 클래스
+ */
+
 #ifndef GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 #define GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 

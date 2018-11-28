@@ -1,3 +1,8 @@
+/**
+ * @file transaction.hpp
+ * @brief 트랜잭션 구조체
+ */
+
 #ifndef GRUUT_ENTERPRISE_MERGER_TRANSACTION_HPP
 #define GRUUT_ENTERPRISE_MERGER_TRANSACTION_HPP
 

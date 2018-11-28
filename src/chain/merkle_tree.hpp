@@ -1,3 +1,8 @@
+/**
+ * @file merkle_tree.hpp
+ * @brief 트랜잭션의 머클트리를 만드는 클래스
+ */
+
 #ifndef GRUUT_ENTERPRISE_MERGER_MERKLE_TREE_HPP
 #define GRUUT_ENTERPRISE_MERGER_MERKLE_TREE_HPP
 

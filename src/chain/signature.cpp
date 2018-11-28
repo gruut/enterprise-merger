@@ -1,3 +1,8 @@
+/**
+ * @file signature.cpp
+ * @brief Signer의 서명 구조체
+ */
+
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGNATURE_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGNATURE_HPP
 

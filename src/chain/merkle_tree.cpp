@@ -1,3 +1,8 @@
+/**
+ * @file merkle_tree.cpp
+ * @brief 트랜잭션의 머클트리를 만드는 함수
+ */
+
 #include "merkle_tree.hpp"
 #include "../utils/sha256.hpp"
 

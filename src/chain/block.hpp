@@ -13,11 +13,11 @@ namespace gruut {
  * @brief 임시블록의 구조체
  */
 struct PartialBlock {
-  timestamp sent_time;
-  sender_id_type sender_id;
-  chain_id_type chain_id;
-  block_height_type height;
-  transaction_root_type transaction_root;
+  timestamp sent_time;                    ///송신 시간
+  sender_id_type sender_id;               ///메시지 송신자
+  chain_id_type chain_id;                 ///체인 ID
+  block_height_type height;               ///블록 높이
+  transaction_root_type transaction_root; ///트랜잭션의 머클루트
 };
 
 struct Block {};
