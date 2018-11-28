@@ -10,6 +10,8 @@ namespace gruut {
 
 /**
  * @brief 머클트리의 리프노드를 만드는 함수
+ * @param 트랜잭션 아이디
+ * @return 리프노드
  */
 void MerkleTree::generate(std::vector<sha256> &transaction_ids) {
   //  if (transaction_ids.empty())
@@ -36,6 +38,8 @@ void MerkleTree::generate(std::vector<sha256> &transaction_ids) {
 
 /**
  * @brief 머클트리의 부모노드를 만드는 함수
+ * @param 자식노드1, r
+ * @return 부모노드
  */
 void MerkleTree::makeParentNode(const sha256 &l, const sha256 &r) {
   //  const sha256 parent_node = l + r;
