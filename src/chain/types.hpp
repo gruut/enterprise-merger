@@ -11,10 +11,20 @@
 #include <vector>
 
 namespace gruut {
+
+/**
+ * @brief 트랜잭션 타입 열거 클래스
+ */
 enum class TransactionType { CHECKSUM, CERTIFICATE };
 
+/**
+ * @brief 블록 타입 열거 클래스
+ */
 enum class BlockType { PARTIAL, NORMAL };
 
+/**
+ * @brief 메시지 타입 열거 클래스
+ */
 enum class MessageType : uint8_t {
   MSG_UP = 0x30,
   MSG_PING = 0x31,
@@ -33,6 +43,9 @@ enum class MessageType : uint8_t {
   MSG_ERROR = 0xFF
 };
 
+/**
+ * @brief MAC 타입 열거 클래스
+ */
 enum class MACAlgorithmType : uint8_t {
   RSA = 0x00,
   ECDSA = 0x01,
@@ -43,6 +56,9 @@ enum class MACAlgorithmType : uint8_t {
   NONE = 0xFF
 };
 
+/**
+ * @brief 압축 타입 열거 클래스
+ */
 enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
 
 using sha256 = Botan::secure_vector<uint8_t>;
