@@ -8,11 +8,16 @@ Storage::Storage() {
   m_options.create_if_missing = true;
   m_write_options.sync = true;
 
-  handleCriticalError(leveldb::DB::Open(m_options, "./block_header", &m_db_block_header));
-  handleCriticalError(leveldb::DB::Open(m_options, "./block_binary", &m_db_block_binary));
-  handleCriticalError(leveldb::DB::Open(m_options, "./latest_block_header", &m_db_latest_block_header));
-  handleCriticalError(leveldb::DB::Open(m_options, "./transaction", &m_db_transaction));
-  handleCriticalError(leveldb::DB::Open(m_options, "./certificate", &m_db_certificate));
+  handleCriticalError(
+      leveldb::DB::Open(m_options, "./block_header", &m_db_block_header));
+  handleCriticalError(
+      leveldb::DB::Open(m_options, "./block_binary", &m_db_block_binary));
+  handleCriticalError(leveldb::DB::Open(m_options, "./latest_block_header",
+                                        &m_db_latest_block_header));
+  handleCriticalError(
+      leveldb::DB::Open(m_options, "./transaction", &m_db_transaction));
+  handleCriticalError(
+      leveldb::DB::Open(m_options, "./certificate", &m_db_certificate));
 }
 
 Storage::~Storage() {
@@ -29,13 +34,15 @@ Storage::~Storage() {
   m_db_certificate = nullptr;
 }
 
-void Storage::write(const string &what, json &data, const string &block_id = "") {
+void Storage::write(const string &what, json &data,
+                    const string &block_id = "") {
   if (what == "block_header" || what == "latest_block_header") {
     for (auto it = data.cbegin(); it != data.cend(); ++it) {
       if (it.key() == "bID" && what == "block_header")
         continue;
 
-      string prefix = (what == "block_header") ? "block_header_" : "latest_block_header";
+      string prefix =
+          (what == "block_header") ? "block_header_" : "latest_block_header";
       auto new_key = prefix + block_id + "_" + it.key();
 
       string new_value;
@@ -45,10 +52,12 @@ void Storage::write(const string &what, json &data, const string &block_id = "")
         new_value = it.value().get<string>();
 
       if (what == "block_header") {
-        auto status = m_db_block_header->Put(m_write_options, new_key, new_value);
+        auto status =
+            m_db_block_header->Put(m_write_options, new_key, new_value);
         handleTrivialError(status);
       } else {
-        auto status = m_db_latest_block_header->Put(m_write_options, new_key, new_value);
+        auto status =
+            m_db_latest_block_header->Put(m_write_options, new_key, new_value);
         handleTrivialError(status);
       }
     }
@@ -60,15 +69,23 @@ void Storage::write(const string &what, json &data, const string &block_id = "")
     handleTrivialError(status);
   } else if (what == "transaction") {
     unsigned int transaction_iterator_index;
-    for (transaction_iterator_index = 0; transaction_iterator_index < data.size() - 1; ++transaction_iterator_index) {
+    for (transaction_iterator_index = 0;
+         transaction_iterator_index < data.size() - 1;
+         ++transaction_iterator_index) {
       data[transaction_iterator_index]["bID"] = block_id;
 
       string transaction_id = data[transaction_iterator_index]["txID"];
-      for (auto it = data[transaction_iterator_index].cbegin(); it != data[transaction_iterator_index].cend(); ++it) {
-        if (it.key() == "type" && it.value() == "certificate") { // Certification 저장
-          auto new_key = "certificate_" + data[transaction_iterator_index]["content"]["nID"].get<string>();
-          auto new_value = data[transaction_iterator_index]["content"]["x509"].get<string>();
-          auto status = m_db_certificate->Put(m_write_options, new_key, new_value);
+      for (auto it = data[transaction_iterator_index].cbegin();
+           it != data[transaction_iterator_index].cend(); ++it) {
+        if (it.key() == "type" &&
+            it.value() == "certificate") { // Certification 저장
+          auto new_key =
+              "certificate_" +
+              data[transaction_iterator_index]["content"]["nID"].get<string>();
+          auto new_value =
+              data[transaction_iterator_index]["content"]["x509"].get<string>();
+          auto status =
+              m_db_certificate->Put(m_write_options, new_key, new_value);
           handleTrivialError(status);
         }
 
@@ -80,7 +97,8 @@ void Storage::write(const string &what, json &data, const string &block_id = "")
         else
           new_value = it.value().get<string>();
 
-        auto status = m_db_transaction->Put(m_write_options, new_key, new_value);
+        auto status =
+            m_db_transaction->Put(m_write_options, new_key, new_value);
         handleTrivialError(status);
       }
     }
@@ -132,7 +150,8 @@ void Storage::handleTrivialError(const leveldb::Status &status) {
   }
 }
 
-void Storage::saveBlock(const string &block_binary, json &block_header, json &transaction) {
+void Storage::saveBlock(const string &block_binary, json &block_header,
+                        json &transaction) {
   string block_id = block_header["bID"];
 
   write("latest_block_header", block_header, "");
@@ -180,7 +199,9 @@ void Storage::deleteAllDirectory(const string &dir_path) {
 
 int Storage::findTxIdPos(const string &blk_id, const string &tx_id) {
   string tx_list_str;
-  auto status = m_db_block_header->Get(leveldb::ReadOptions(), "block_header_" + blk_id + '_' + "txids", &tx_list_str);
+  auto status = m_db_block_header->Get(leveldb::ReadOptions(),
+                                       "block_header_" + blk_id + '_' + "txids",
+                                       &tx_list_str);
   if (!status.ok()) {
     return -1;
   }
@@ -194,4 +215,4 @@ int Storage::findTxIdPos(const string &blk_id, const string &tx_id) {
   }
   return -1;
 }
-}
+} // namespace gruut

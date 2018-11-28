@@ -128,14 +128,14 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
     return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Wrong Message");
   }
   int body_size = getMsgBodySize(msg_header);
-  //TODO:  HMAC 검증을 위해 key를 가져올 수 있게 되면. 가져오면 주석 해제
-/*if(msg_header.mac_algo_type ==  MACAlgorithmType::HMAC){
-    std::string header_added_data = raw_data.substr(0, HEADER_LENGTH + body_size);
-    std::vector<uint8_t> hmac(raw_data.begin() + HEADER_LENGTH + json_size , raw_data.end());
-    std::vector<uint8_t> key;
-    if(!Hmac::verifyHMAC(header_added_data, hmac, key))
-      return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "Wrong HMAC");
-  }*/
+  // TODO:  HMAC 검증을 위해 key를 가져올 수 있게 되면. 가져오면 주석 해제
+  /*if(msg_header.mac_algo_type ==  MACAlgorithmType::HMAC){
+      std::string header_added_data = raw_data.substr(0, HEADER_LENGTH +
+    body_size); std::vector<uint8_t> hmac(raw_data.begin() + HEADER_LENGTH +
+    json_size , raw_data.end()); std::vector<uint8_t> key;
+      if(!Hmac::verifyHMAC(header_added_data, hmac, key))
+        return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "Wrong HMAC");
+    }*/
   std::string msg_body = HeaderController::getMsgBody(raw_data, body_size);
   nlohmann::json json_data = HeaderController::getJsonMessage(
       msg_header.compression_algo_type, msg_body);
