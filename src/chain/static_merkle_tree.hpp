@@ -12,8 +12,14 @@
 
 namespace gruut{
 
+/**
+ * @brief 트랜잭션 머클트리의 리프노드 제한
+ */
 constexpr size_t MAX_MERKLE_LEAVES = 4096;
 
+/**
+ * @brief 정적 트랜잭션 머클트리 클래스
+ */
 class StaticMerkleTree {
 
 public:
