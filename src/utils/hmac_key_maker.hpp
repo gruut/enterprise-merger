@@ -8,6 +8,7 @@
 #include <botan/curve_gfp.h>
 #include <botan/ecdh.h>
 #include <botan/pubkey.h>
+#include <botan/hex.h>
 
 class HmacKeyMaker {
 private:
