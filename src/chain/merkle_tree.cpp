@@ -1,12 +1,16 @@
 /**
  * @file merkle_tree.cpp
- * @brief 트랜잭션의 머클트리를 만드는 함수
+ * @brief 트랜잭션의 머클트리를 만드는 함수를 정의
  */
 
 #include "merkle_tree.hpp"
 #include "../utils/sha256.hpp"
 
 namespace gruut {
+
+/**
+ * @brief 머클트리의 리프노드를 만드는 함수
+ */
 void MerkleTree::generate(std::vector<sha256> &transaction_ids) {
   //  if (transaction_ids.empty())
   //    return sha256();
@@ -30,6 +34,9 @@ void MerkleTree::generate(std::vector<sha256> &transaction_ids) {
   //  return transaction_ids.front();
 }
 
+/**
+ * @brief 머클트리의 부모노드를 만드는 함수
+ */
 void MerkleTree::makeParentNode(const sha256 &l, const sha256 &r) {
   //  const sha256 parent_node = l + r;
   //  return Sha256::hash(parent_node);

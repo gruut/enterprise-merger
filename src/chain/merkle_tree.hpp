@@ -1,6 +1,6 @@
 /**
  * @file merkle_tree.hpp
- * @brief 트랜잭션의 머클트리를 만드는 클래스
+ * @brief 트랜잭션의 머클트리를 만드는 클래스를 정의
  */
 
 #ifndef GRUUT_ENTERPRISE_MERGER_MERKLE_TREE_HPP
@@ -14,6 +14,9 @@
 using namespace std;
 
 namespace gruut {
+/**
+ * @brief 머클트리 클래스
+ */
 class MerkleTree {
 public:
   void generate(vector<sha256> &ids);
