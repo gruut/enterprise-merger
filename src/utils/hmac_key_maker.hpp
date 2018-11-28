@@ -8,6 +8,7 @@
 #include <botan/curve_gfp.h>
 #include <botan/ecdh.h>
 #include <botan/pubkey.h>
+#include <botan/hex.h>
 
 class HmacKeyMaker {
 private:
@@ -43,9 +44,15 @@ public:
 
   std::pair<std::string, std::string> getPublicKey() {
     Botan::ECDH_PrivateKey my_secret_key(m_rng, m_group_domain, m_secret_key);
-    Botan::PointGFp my_private_key_point = my_secret_key.public_point();
-    return std::make_pair(my_private_key_point.get_x().to_hex_string(),
-                          my_private_key_point.get_y().to_hex_string());
+
+    std::string uncomp_point = Botan::hex_encode(my_secret_key.public_value());
+    size_t point_size = uncomp_point.size() - 2; // because of first 04 = means uncompressed point coordinator
+    size_t point_len = point_size / 2;
+
+    std::string my_public_key_x(uncomp_point.begin()+2,uncomp_point.begin()+point_len+2);
+    std::string my_public_key_y(uncomp_point.begin()+point_len+2, uncomp_point.end());
+
+    return std::make_pair(my_public_key_x, my_public_key_y);
   }
 
   Botan::secure_vector<uint8_t>
