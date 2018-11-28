@@ -20,6 +20,9 @@ struct PartialBlock {
   transaction_root_type transaction_root; ///트랜잭션의 머클루트
 };
 
+/**
+ * @brief 블록의 구조체
+ */
 struct Block {};
 } // namespace gruut
 #endif
