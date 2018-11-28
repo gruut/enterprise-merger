@@ -1,21 +1,26 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_HMAC_KEY_MAKER_HPP
 #define GRUUT_ENTERPRISE_MERGER_HMAC_KEY_MAKER_HPP
 
-#include <botan/botan_all.h>
 #include <string>
+#include <botan/auto_rng.h>
+#include <botan/bigint.h>
+#include <botan/ec_group.h>
+#include <botan/curve_gfp.h>
+#include <botan/ecdh.h>
+#include <botan/pubkey.h>
 
 class HmacKeyMaker {
 private:
   Botan::AutoSeeded_RNG m_rng;
   Botan::EC_Group m_group_domain;
-  Botan::CurveGFp m_curve;
+  Botan::CurveGFp  m_curve;
   std::string m_kdf;
 
   Botan::BigInt m_secret_key;
 
 public:
   HmacKeyMaker() : m_group_domain("secp256r1"), m_kdf("Raw") {
-    m_curve = m_group_domain.get_curve();
+    m_curve = Botan::CurveGFp(m_group_domain.get_p(), m_group_domain.get_a(), m_group_domain.get_b());
   }
 
   ~HmacKeyMaker() = default;
