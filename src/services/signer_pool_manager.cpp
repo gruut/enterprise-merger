@@ -67,7 +67,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       message_body["time"] = timestamp;
 
       m_merger_nonce =
-          RandomNumGenerator::toString(RandomNumGenerator::randomize(64));
+          RandomNumGenerator::toString(RandomNumGenerator::randomize(32));
       message_body["mN"] = m_merger_nonce;
 
       OutputMessage output_message =
