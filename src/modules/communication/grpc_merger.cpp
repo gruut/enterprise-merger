@@ -29,7 +29,8 @@ void MergerRpcServer::runSignerServ(char const *port_for_signer) {
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&m_service_signer);
-  //TODO: 현재 signer와 통신하는 서버에 SE Service를 등록 해 놓음. 테스트 후 수정 될 수 있음.
+  // TODO: 현재 signer와 통신하는 서버에 SE Service를 등록 해 놓음. 테스트 후
+  // 수정 될 수 있음.
   builder.RegisterService(&m_service_se);
   m_server_signer = builder.BuildAndStart();
   std::cout << "Server listening on " << server_address << " for Signer"
