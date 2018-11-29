@@ -170,9 +170,12 @@ BOOST_AUTO_TEST_CASE(find_latest_txid_list) {
 
 BOOST_AUTO_TEST_CASE(find_cert) {
   Storage *storage = Storage::getInstance();
-  auto certificate = storage->findCertificate("aax");
+  auto certificate1 = storage->findCertificate("BBBBBBBBB3");
+  auto certificate2 = storage->findCertificate("CCCCCCCCC1");
   Storage::destroyInstance();
-  BOOST_TEST(certificate == "aaaaaaaaaaaaaaaaaaaaaaa");
+
+  BOOST_TEST(certificate1 == "certB3");
+  BOOST_TEST(certificate2 == "certC1");
 }
 
 BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
@@ -182,6 +185,7 @@ BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
   storage->deleteAllDirectory("./certificate");
   storage->deleteAllDirectory("./latest_block_header");
   storage->deleteAllDirectory("./transaction");
+  Storage::destroyInstance();
 
   BOOST_TEST(true);
 }

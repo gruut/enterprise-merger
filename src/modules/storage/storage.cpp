@@ -75,24 +75,26 @@ void Storage::write(const string &what, json &data,
       data[transaction_iterator_index]["bID"] = block_id;
 
       string transaction_id = data[transaction_iterator_index]["txID"];
+
       for (auto it = data[transaction_iterator_index].cbegin();
            it != data[transaction_iterator_index].cend(); ++it) {
         if (it.key() == "type" &&
-            it.value() == "certificate") { // Certification 저장
-          auto new_key =
-              "certificate_" +
-              data[transaction_iterator_index]["content"]["nID"].get<string>();
-          auto new_value =
-              data[transaction_iterator_index]["content"]["x509"].get<string>();
-          auto status =
-              m_db_certificate->Put(m_write_options, new_key, new_value);
-          handleTrivialError(status);
+            it.value() == "certificates") { // Certificate 저장
+          auto content = data[transaction_iterator_index]["content"];
+          for (auto it = content.cbegin(); it != content.cend(); ++it) {
+            auto new_key = "certificate_" + it.key();
+            auto new_value = it.value().get<string>();
+            auto status =
+                m_db_certificate->Put(m_write_options, new_key, new_value);
+            handleTrivialError(status);
+          }
         }
 
         auto new_key = "transaction_" + transaction_id + '_' + it.key();
 
         string new_value;
-        if (it.value().is_object()) // Content 저장
+        if (it.value().is_object() ||
+            it.value().is_array()) // Certificate(Object) || Digest(Array)
           new_value = it.value().dump();
         else
           new_value = it.value().get<string>();
@@ -127,7 +129,7 @@ string Storage::findBy(const string &what, const string &id = "",
   else if (what == "transaction")
     status = m_db_transaction->Get(m_read_options, key, &value);
   if (!status.ok())
-    return "";
+    value.assign("");
 
   return value;
 }
