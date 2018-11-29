@@ -11,6 +11,7 @@
 
 #include "../utils/rsa.hpp"
 
+#include "../application.hpp"
 #include "../chain/types.hpp"
 #include "../utils/hmac_key_maker.hpp"
 #include "../utils/random_number_generator.hpp"
@@ -79,7 +80,10 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     if (verifySignature(message_body_json)) {
       std::cout << "Validation success!" << std::endl;
 
+      // TODO: 임시로 Merger ID 1로 함
       sender_id_type sender_id = Sha256::hash("1");
+
+      m_signer_cert = message_body_json["cert"].get<string>();
 
       json message_body;
       message_body["sender"] = Sha256::toString(sender_id);
@@ -120,6 +124,33 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
           make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
     }
     //    message_body[]
+    proxy.deliverOutputMessage(output_message);
+  } break;
+  case MessageType::MSG_SUCCESS: {
+    auto &signer_pool = Application::app().getSignerPool();
+
+    // TODO: 임시로 Merger ID 1로 함
+    sender_id_type merger_id = Sha256::hash("1");
+    signer_id_type signer_id;
+
+    // Conversion string to uint64_t
+    auto sender_id_str = message_body_json["sender"].get<string>();
+    std::istringstream iss(sender_id_str);
+    iss >> signer_id;
+
+    auto secret_key_vector = TypeConverter::toSecureVector(m_shared_secret_key);
+    signer_pool.pushSigner(signer_id, m_signer_cert, secret_key_vector,
+                           SignerStatus::GOOD);
+
+    json message_body;
+    message_body["sender"] = Sha256::toString(merger_id);
+    message_body["time"] = timestamp;
+    message_body["val"] = true;
+
+    OutputMessage output_message;
+    output_message =
+        make_tuple(MessageType::MSG_ACCEPT, receiver_list, message_body);
+
     proxy.deliverOutputMessage(output_message);
   } break;
   case MessageType::MSG_ECHO:
