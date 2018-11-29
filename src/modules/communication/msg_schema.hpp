@@ -331,7 +331,7 @@ const json SCHEMA_TX = R"({
     },
     "content": {
       "description": "트랜잭션 내용. 체크섬 혹은 Signer의 인증서",
-      "type": "string"
+      "type": "array"
     },
     "rSig": {
       "description": "requestor's signature",
