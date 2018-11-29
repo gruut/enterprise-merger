@@ -48,7 +48,8 @@ std::string HeaderController::getMsgBody(std::string &raw_data, int body_size) {
 
 bool HeaderController::validateMessage(MessageHeader &msg_header) {
   // TODO: 메세지 검증할때 사용하는 값들은 변경될 수 있습니다.
-  bool check = (msg_header.identifier == G && msg_header.version == VERSION);
+  bool check =
+      (msg_header.identifier == G /*&& msg_header.version == VERSION*/);
   if (msg_header.mac_algo_type == MACAlgorithmType::HMAC) {
     check &= (msg_header.message_type == MessageType::MSG_SUCCESS ||
               msg_header.message_type == MessageType::MSG_SSIG);

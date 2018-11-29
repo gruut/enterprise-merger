@@ -17,12 +17,13 @@ SignatureRequester::SignatureRequester() {
 }
 
 bool SignatureRequester::requestSignatures() {
-  auto transactions = std::move(fetchTransactions());
-  auto partial_block = makePartialBlock(transactions);
-  auto message = makeMessage(partial_block);
-
-  Application::app().getOutputQueue()->push(message);
-  startSignatureCollectTimer(transactions);
+  // TODO: SignerPool 구조가 변경됨에 따라 블럭 생성 구현할때 주석 해제
+  //  auto transactions = std::move(fetchTransactions());
+  //  auto partial_block = makePartialBlock(transactions);
+  //  auto message = makeMessage(partial_block);
+  //
+  //  Application::app().getOutputQueue()->push(message);
+  //  startSignatureCollectTimer(transactions);
   return true;
 }
 
@@ -67,14 +68,15 @@ void SignatureRequester::startSignatureCollectTimer(
   });
 }
 
-Transactions SignatureRequester::fetchTransactions() {
-  auto &&selected_signer_pool =
-      Application::app().getSignerPoolManager().getSelectedSignerPool();
-
-  TransactionFetcher transaction_fetcher{selected_signer_pool.fetchAll()};
-
-  return transaction_fetcher.fetchAll();
-}
+// Transactions SignatureRequester::fetchTransactions() {
+//  // TODO: SignerPool 구조가 변경됨에 따라 블럭 생성 구현할때 주석 해제
+//  auto &&selected_signer_pool =
+//      Application::app().getSignerPoolManager().getSelectedSignerPool();
+//
+//  TransactionFetcher transaction_fetcher{selected_signer_pool.fetchAll()};
+//
+//  return transaction_fetcher.fetchAll();
+//}
 
 PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
   BlockGenerator block_generator;

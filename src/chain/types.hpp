@@ -40,6 +40,8 @@ enum class MACAlgorithmType : uint8_t {
 
 enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
 
+enum class SignerStatus { UNKNOWN, ERROR, GOOD };
+
 using sha256 = std::vector<uint8_t>;
 using timestamp = std::string;
 using block_height_type = std::string;
@@ -47,12 +49,14 @@ using block_height_type = std::string;
 using transaction_id_type = sha256;
 using requestor_id_type = sha256;
 using sender_id_type = sha256;
-using signer_id_type = sender_id_type;
+using signer_id_type = uint64_t;
 using transaction_root_type = sha256;
 using chain_id_type = sha256;
 using signature_type = sha256;
 
 using content_type = std::string;
+
+using hmac_key_type = Botan::secure_vector<uint8_t>;
 
 // Message
 using local_chain_id_type = uint8_t;
