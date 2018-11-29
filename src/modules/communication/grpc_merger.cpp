@@ -29,6 +29,8 @@ void MergerRpcServer::runSignerServ(char const *port_for_signer) {
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&m_service_signer);
+  //TODO: 현재 signer와 통신하는 서버에 SE Service를 등록 해 놓음. 테스트 후 수정 될 수 있음.
+  builder.RegisterService(&m_service_se);
   m_server_signer = builder.BuildAndStart();
   std::cout << "Server listening on " << server_address << " for Signer"
             << std::endl;
@@ -209,14 +211,15 @@ Status MergerRpcServer::SignerService::sigSend(ServerContext *context,
   std::string raw_data(msg_ssig->message());
   uint64_t receiver_id;
   Status st = HeaderController::analyzeData(raw_data, receiver_id);
-  if (st.ok()) {
-    m_server.m_receiver_list[receiver_id].no_reply = no_reply;
-    while (m_server.m_receiver_list[receiver_id].no_reply != nullptr) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(150));
-    }
+  return st;
+}
 
-    return st;
-  }
+Status MergerRpcServer::SeService::transaction(ServerContext *context,
+                                               const GrpcMsgTX *msg_tx,
+                                               Nothing *nothing) {
+  std::string raw_data(msg_tx->message());
+  uint64_t receiver_id;
+  Status st = HeaderController::analyzeData(raw_data, receiver_id);
   return st;
 }
 
