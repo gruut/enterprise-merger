@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+//TODO: SE와 통신하기 위한 임시 protobuf 입니다.수정 될 것.
+package grpc_se;
+
+service  GruutSeService {
+    rpc transaction(GrpcMsgTX) returns (Nothing) {}
+}
+message GrpcMsgTX {
+    bytes message = 1;
+}
+message Nothing {}

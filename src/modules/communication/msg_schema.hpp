@@ -308,6 +308,45 @@ const json SCHEMA_ERROR = R"({
 "type"
 ]
 })"_json;
+const json SCHEMA_TX = R"({
+  "title": "Transaction",
+  "description": "트랜잭션",
+  "type": "object",
+  "properties": {
+    "txid": {
+      "description": "transaction ID",
+      "type": "string"
+    },
+    "time": {
+      "description": "송신 시간",
+      "type": "string"
+    },
+    "rID": {
+      "description": "requestor's ID",
+      "type": "string"
+    },
+    "type": {
+      "description": "트랜잭션 타입",
+      "type": "string"
+    },
+    "content": {
+      "description": "트랜잭션 내용. 체크섬 혹은 Signer의 인증서",
+      "type": "string"
+    },
+    "rSig": {
+      "description": "requestor's signature",
+      "type": "string"
+    }
+  },
+  "required": [
+    "txid",
+    "time",
+    "rID",
+    "type",
+    "content",
+    "rSig"
+  ]
+})"_json;
 
 class MessageSchema {
 public:
@@ -327,5 +366,6 @@ std::map<MessageType, json> MessageSchema::schema_list = {
     {MessageType::MSG_SUCCESS, SCHEMA_SUCCESS},
     {MessageType::MSG_LEAVE, SCHEMA_LEAVE},
     {MessageType::MSG_SSIG, SCHEMA_SSIG},
-    {MessageType::MSG_ERROR, SCHEMA_ERROR}};
+    {MessageType::MSG_ERROR, SCHEMA_ERROR},
+	{MessageType::MSG_TX, SCHEMA_TX}};
 }; // namespace gruut

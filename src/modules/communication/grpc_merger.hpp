@@ -2,6 +2,7 @@
 
 #include "../../application.hpp"
 #include "protos/protobuf_merger.grpc.pb.h"
+#include "protos/protobuf_se.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
 #include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
@@ -12,6 +13,7 @@
 
 using namespace grpc;
 using namespace grpc_merger;
+using namespace grpc_se;
 using namespace grpc_signer;
 
 namespace gruut {
@@ -91,6 +93,13 @@ private:
   private:
     MergerRpcServer &m_server;
   };
+
+  class SeService final : public GruutSeService::Service {
+  public:
+    Status transaction(ServerContext *context,
+                        const GrpcMsgTX *msg_tx, Nothing *nothing);
+  };
+
   void handleMergerRpcs();
   bool checkSignerMsgType(MessageType msg_type);
   void sendDataToSigner(std::string &header_added_data, uint64_t receiver_id,
@@ -103,6 +112,7 @@ private:
 
   std::unordered_map<uint64_t, ReceiverRpcData> m_receiver_list;
   SignerService m_service_signer;
+  SeService m_service_se;
 };
 
 class MergerRpcClient {
