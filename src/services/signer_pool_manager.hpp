@@ -17,7 +17,7 @@ using RandomSignerIndices = std::set<int>;
 
 class SignerPoolManager {
 public:
-  SignerPoolManager() { m_signer_pool = make_shared<SignerPool>(); }
+  SignerPoolManager() = default;
   // TODO: SignerPool 구조가 변경됨에 따라 나중에 수정
   //  SignerPool getSelectedSignerPool();
   void handleMessage(MessageType &message_type, uint64_t receiver_id,
@@ -29,15 +29,11 @@ private:
   string getCertificate();
   string signMessage(vector<uint8_t>, vector<uint8_t>, vector<uint8_t>,
                      vector<uint8_t>, vector<uint8_t>);
-
   bool isJoinable();
+
   std::string m_merger_nonce;
   std::string m_signer_cert;
   vector<uint8_t> m_shared_secret_key;
-
-  std::shared_ptr<SignerPool> m_signer_pool;
-  // TODO: SignerPool 구조가 변경됨에 따라 나중에 수정
-  //  std::shared_ptr<SignerPool> m_selected_signers_pool;
 };
 } // namespace gruut
 #endif
