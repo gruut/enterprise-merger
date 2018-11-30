@@ -59,6 +59,8 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
           make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
       proxy.deliverOutputMessage(output_message);
     } else {
+      join_temporary_table[receiver_id].reset(new JoinTemporaryData());
+
       json message_body;
       // TODO: Merger id 가 아직 결정 안되어서 임시값 할당
       sender_id_type sender_id = Sha256::hash("1");
@@ -66,9 +68,9 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       message_body["sender"] = Sha256::toString(sender_id);
       message_body["time"] = timestamp;
 
-      m_merger_nonce =
+      join_temporary_table[receiver_id]->merger_nonce =
           RandomNumGenerator::toString(RandomNumGenerator::randomize(32));
-      message_body["mN"] = m_merger_nonce;
+      message_body["mN"] = join_temporary_table[receiver_id]->merger_nonce;
 
       OutputMessage output_message =
           make_tuple(MessageType::MSG_CHALLENGE, receiver_list, message_body);
@@ -77,13 +79,14 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   } break;
   case MessageType::MSG_RESPONSE_1: {
     OutputMessage output_message;
-    if (verifySignature(message_body_json)) {
+    if (verifySignature(receiver_id, message_body_json)) {
       std::cout << "Validation success!" << std::endl;
 
       // TODO: 임시로 Merger ID 1로 함
       sender_id_type sender_id = Sha256::hash("1");
 
-      m_signer_cert = message_body_json["cert"].get<string>();
+      join_temporary_table[receiver_id]->signer_cert =
+          message_body_json["cert"].get<string>();
 
       json message_body;
       message_body["sender"] = Sha256::toString(sender_id);
@@ -104,10 +107,11 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
       auto shared_secret_key_vector =
           key_maker.getSharedSecretKey(signer_dhx, signer_dhy, 32);
-      m_shared_secret_key = vector<uint8_t>(shared_secret_key_vector.begin(),
-                                            shared_secret_key_vector.end());
+      join_temporary_table[receiver_id]->shared_secret_key = vector<uint8_t>(
+          shared_secret_key_vector.begin(), shared_secret_key_vector.end());
 
-      auto merger_nonce_bytes = TypeConverter::toBytes(m_merger_nonce);
+      auto merger_nonce_bytes = TypeConverter::toBytes(
+          join_temporary_table[receiver_id]->merger_nonce);
       auto signer_nonce_bytes =
           TypeConverter::toBytes(message_body_json["sN"].get<string>());
       auto dhx_bytes = TypeConverter::toBytes(dhx);
@@ -138,9 +142,11 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     std::istringstream iss(sender_id_str);
     iss >> signer_id;
 
-    auto secret_key_vector = TypeConverter::toSecureVector(m_shared_secret_key);
-    signer_pool.pushSigner(signer_id, m_signer_cert, secret_key_vector,
-                           SignerStatus::GOOD);
+    auto secret_key_vector = TypeConverter::toSecureVector(
+        join_temporary_table[receiver_id]->shared_secret_key);
+    signer_pool.pushSigner(signer_id,
+                           join_temporary_table[receiver_id]->signer_cert,
+                           secret_key_vector, SignerStatus::GOOD);
 
     json message_body;
     message_body["sender"] = Sha256::toString(merger_id);
@@ -178,7 +184,8 @@ SignerPoolManager::generateRandomNumbers(unsigned int size) {
   return number_set;
 }
 
-bool SignerPoolManager::verifySignature(json message_body_json) {
+bool SignerPoolManager::verifySignature(signer_id_type signer_id,
+                                        json message_body_json) {
   const auto decoded_signer_signature =
       Botan::base64_decode(message_body_json["sig"].get<string>());
   const auto cert_vector =
@@ -188,7 +195,7 @@ bool SignerPoolManager::verifySignature(json message_body_json) {
   const vector<uint8_t> signer_signature(decoded_signer_signature.begin(),
                                          decoded_signer_signature.end());
 
-  const string message = m_merger_nonce +
+  const string message = join_temporary_table[signer_id]->merger_nonce +
                          message_body_json["sN"].get<string>() +
                          message_body_json["dhx"].get<string>() +
                          message_body_json["dhy"].get<string>() +
