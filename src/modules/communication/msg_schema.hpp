@@ -367,5 +367,5 @@ std::map<MessageType, json> MessageSchema::schema_list = {
     {MessageType::MSG_LEAVE, SCHEMA_LEAVE},
     {MessageType::MSG_SSIG, SCHEMA_SSIG},
     {MessageType::MSG_ERROR, SCHEMA_ERROR},
-	{MessageType::MSG_TX, SCHEMA_TX}};
+    {MessageType::MSG_TX, SCHEMA_TX}};
 }; // namespace gruut

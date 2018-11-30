@@ -96,8 +96,8 @@ private:
 
   class SeService final : public GruutSeService::Service {
   public:
-    Status transaction(ServerContext *context,
-                        const GrpcMsgTX *msg_tx, Nothing *nothing);
+    Status transaction(ServerContext *context, const GrpcMsgTX *msg_tx,
+                       Nothing *nothing);
   };
 
   void handleMergerRpcs();
