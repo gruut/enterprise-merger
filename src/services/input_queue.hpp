@@ -40,8 +40,8 @@ public:
   }
 
   InputMsgEntry fetch() {
-    InputMsgEntry ret_msg = m_input_msg_pool.front();
     std::lock_guard<std::mutex> lock(m_queue_mutex);
+    InputMsgEntry ret_msg = m_input_msg_pool.front();
     m_input_msg_pool.pop_front();
     m_queue_mutex.unlock();
     return ret_msg;
