@@ -7,7 +7,6 @@
 
 #include "../../src/services/transaction_fetcher.hpp"
 #include "../../src/services/signer_pool_manager.hpp"
-#include "../../src/services/signature_requester.hpp"
 #include "../../src/services/block_generator.hpp"
 #include "../../src/services/message_factory.hpp"
 
@@ -22,64 +21,6 @@
 using namespace gruut;
 using namespace nlohmann;
 using namespace std;
-
-BOOST_AUTO_TEST_SUITE(Test_TransactionFetcher)
-
-    BOOST_AUTO_TEST_CASE(fetchAll) {
-        vector<Signer> signers;
-        Signer signer;
-        signer.address = "123";
-        signer.cert = "123";
-
-        signers.push_back(signer);
-        TransactionFetcher tf(std::move(signers));
-        auto transactions = tf.fetchAll();
-
-        auto result = transactions.front().transaction_type == TransactionType::CERTIFICATE;
-        BOOST_TEST(result);
-
-        //  check transaction_id_size
-        auto transaction = transactions.front();
-        // TODO: transaction_id 가 입력되어야 한다.
-//        result = transaction.transaction_id.size() == 32;
-        BOOST_TEST(true);
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_SUITE(Test_SignerPoolManager)
-
-    BOOST_AUTO_TEST_CASE(getSelectedSignerPool) {
-        SignerPoolManager manager;
-
-        auto signer_pool = manager.getSelectedSignerPool();
-        BOOST_TEST(signer_pool.size() == 0);
-
-        Signer signer;
-        signer.cert = "1234";
-        signer.address = "1234";
-
-        manager.putSigner(std::move(signer));
-
-        signer_pool = manager.getSelectedSignerPool();
-        BOOST_TEST(signer_pool.size() == 1);
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_SUITE(Test_SignatureRequester)
-
-    BOOST_AUTO_TEST_CASE(requestSignatures) {
-        SignatureRequester requester;
-
-        auto result = requester.requestSignatures();
-        BOOST_TEST(result);
-
-        result = Application::app().getOutputQueue()->size() > 0;
-        BOOST_TEST(result);
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_BlockGenerator)
 

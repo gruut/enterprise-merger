@@ -1,26 +1,53 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 
-#include "../chain/signer.hpp"
-#include <cstddef>
-#include <vector>
+#include <array>
+#include <ctime>
+#include <deque>
+#include <mutex>
+#include <string>
 
-using namespace std;
+#include "../chain/signer.hpp"
+#include "../chain/types.hpp"
 
 namespace gruut {
-using Signers = vector<Signer>;
-
 class SignerPool {
 public:
-  size_t size();
+  void pushSigner(signer_id_type user_id, std::string &pk_cert,
+                  Botan::secure_vector<uint8_t> &hmac_key,
+                  SignerStatus stat = SignerStatus::UNKNOWN);
+
+  bool updatePkCert(signer_id_type user_id, std::string &pk_cert);
+
+  bool updateHmacKey(signer_id_type user_id, hmac_key_type &hmac_key);
+
+  bool updateStatus(signer_id_type user_id,
+                    SignerStatus status = SignerStatus::GOOD);
+
+  bool removeSigner(signer_id_type user_id);
+
+  hmac_key_type getHmacKey(signer_id_type user_id);
+
+  std::string getPkCert(signer_id_type user_id);
+
+  size_t getNumSignerBy(SignerStatus status = SignerStatus::GOOD);
+
+  void clearPool();
+
+  const size_t size();
+
   bool isFull();
-  Signer get(unsigned int index);
-  Signers fetchAll();
-  void insert(Signer &&signer);
+  // TODO: May be we should do more operation, but we cannot recognize what
+  // operations are required.
 
 private:
-  Signers m_signers;
+  size_t find(signer_id_type user_id);
+
+  std::deque<Signer> m_signer_pool;
+  std::mutex m_push_mutex;
+  std::mutex m_update_mutex;
 };
+
 } // namespace gruut
 
 #endif

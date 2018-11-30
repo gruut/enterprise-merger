@@ -24,23 +24,22 @@ using namespace nlohmann;
 namespace gruut {
 const unsigned int REQUEST_NUM_OF_SIGNER = 5;
 
-SignerPool SignerPoolManager::getSelectedSignerPool() {
-  m_selected_signers_pool.reset();
-  m_selected_signers_pool = std::make_shared<SignerPool>();
-
-  const auto requested_signers_size = min(
-      static_cast<unsigned int>(m_signer_pool->size()), REQUEST_NUM_OF_SIGNER);
-  auto chosen_signers_index_set = generateRandomNumbers(requested_signers_size);
-
-  for (auto index : chosen_signers_index_set)
-    m_selected_signers_pool->insert(m_signer_pool->get(index));
-
-  return *m_selected_signers_pool;
-}
-
-void SignerPoolManager::putSigner(Signer &&s) {
-  m_signer_pool->insert(std::move(s));
-}
+// TODO: SignerPool 구조가 변경됨에 따라 나중에 수정
+// SignerPool SignerPoolManager::getSelectedSignerPool() {
+//  m_selected_signers_pool.reset();
+//  m_selected_signers_pool = std::make_shared<SignerPool>();
+//
+//  const auto requested_signers_size = min(
+//      static_cast<unsigned int>(m_signer_pool->size()),
+//      REQUEST_NUM_OF_SIGNER);
+//  auto chosen_signers_index_set =
+//  generateRandomNumbers(requested_signers_size);
+//
+//  for (auto index : chosen_signers_index_set)
+//    m_selected_signers_pool->insert(m_signer_pool->get(index));
+//
+//  return *m_selected_signers_pool;
+//}
 
 void SignerPoolManager::handleMessage(MessageType &message_type,
                                       uint64_t receiver_id,
@@ -54,7 +53,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   string timestamp = to_string(now);
   switch (message_type) {
   case MessageType::MSG_JOIN: {
-    if (m_signer_pool->isFull()) {
+    if (!isJoinable()) {
       OutputMessage output_message =
           make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
       proxy.deliverOutputMessage(output_message);
@@ -211,5 +210,10 @@ string SignerPoolManager::signMessage(vector<uint8_t> merger_nonce,
   auto signature = RSA::doSign(rsa_sk_pem, message_bytes, true);
 
   return Botan::base64_encode(signature);
+}
+
+bool SignerPoolManager::isJoinable() {
+  // TODO: 현재 100명 정도 가입할 수 있다. Config 관련 코드 구현하면 제거할 것
+  return true;
 }
 } // namespace gruut
