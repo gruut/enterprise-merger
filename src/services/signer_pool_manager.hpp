@@ -4,8 +4,10 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
+#include "../chain/join_temporary_data.hpp"
 #include "../chain/signer.hpp"
 #include "../chain/types.hpp"
 #include "signer_pool.hpp"
@@ -20,20 +22,21 @@ public:
   SignerPoolManager() = default;
   // TODO: SignerPool 구조가 변경됨에 따라 나중에 수정
   //  SignerPool getSelectedSignerPool();
-  void handleMessage(MessageType &message_type, uint64_t receiver_id,
+  void handleMessage(MessageType &message_type, signer_id_type receiver_id,
                      nlohmann::json message_body_json);
 
 private:
   RandomSignerIndices generateRandomNumbers(unsigned int size);
-  bool verifySignature(nlohmann::json message_body_json);
+  bool verifySignature(signer_id_type signer_id,
+                       nlohmann::json message_body_json);
   string getCertificate();
   string signMessage(vector<uint8_t>, vector<uint8_t>, vector<uint8_t>,
                      vector<uint8_t>, vector<uint8_t>);
   bool isJoinable();
 
-  std::string m_merger_nonce;
-  std::string m_signer_cert;
-  vector<uint8_t> m_shared_secret_key;
+  // A temporary table for connection establishment.
+  unordered_map<signer_id_type, unique_ptr<JoinTemporaryData>>
+      join_temporary_table;
 };
 } // namespace gruut
 #endif
