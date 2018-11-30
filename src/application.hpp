@@ -3,6 +3,7 @@
 
 #include "modules/module.hpp"
 #include "services/signer_pool_manager.hpp"
+#include "services/transaction_collector.hpp"
 #include <boost/asio.hpp>
 #include <queue>
 #include <thread>
@@ -44,6 +45,8 @@ public:
 
   TransactionPool &getTransactionPool();
 
+  TransactionCollector &getTransactionCollector();
+
   SignaturePool &getSignaturePool();
 
   void start(const vector<shared_ptr<Module>> &modules);
@@ -59,6 +62,7 @@ private:
   shared_ptr<SignerPool> m_signer_pool;
   shared_ptr<SignerPoolManager> m_signer_pool_manager;
   shared_ptr<TransactionPool> m_transaction_pool;
+  shared_ptr<TransactionCollector> m_transaction_collector;
   shared_ptr<SignaturePool> m_signature_pool;
 
   shared_ptr<std::vector<std::thread>> m_thread_group;

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(Boost REQUIRED COMPONENTS system thread unit_test_framework filesystem)
+find_package(Boost REQUIRED COMPONENTS system thread unit_test_framework filesystem random)
 
 file(GLOB UNIT_TEST_SOURCE_FILES
         "test.cpp"
@@ -15,9 +15,7 @@ file(GLOB HEADER_FILES
         "../../src/modules/message_fetcher/message_fetcher.hpp"
         "../../include/*.hpp"
         "../../utils/*.hpp"
-        "../../src/services/message_proxy.hpp"
-        "../../src/services/signer_pool_manager.hpp"
-        "../../src/services/signer_pool.hpp"
+        "../../src/services/*.hpp"
         "../../src/modules/communication/msg_schema.hpp"
         "../../src/modules/communication/grpc_util.hpp"
         )
@@ -27,9 +25,7 @@ file(GLOB SOURCE_FILES
         "../../src/modules/storage/storage.cpp"
         "../../src/modules/message_fetcher/message_fetcher.cpp"
         "../../src/modules/*.cpp"
-        "../../src/services/message_proxy.cpp"
-        "../../src/services/signer_pool_manager.cpp"
-        "../../src/services/signer_pool.cpp"
+        "../../src/services/*.cpp"
         "../../src/modules/communication/grpc_util.cpp"
         )
 

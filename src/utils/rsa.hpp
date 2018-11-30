@@ -74,12 +74,11 @@ public:
     }
   }
 
-  static bool doVerify(Botan::RSA_PublicKey &rsa_pk,
+  static bool doVerify(Botan::Public_Key &rsa_pk,
                        const std::vector<uint8_t> &data,
                        const std::vector<uint8_t> &sig, bool pkcs1v15 = false) {
     Botan::PK_Verifier verifier(rsa_pk, getEmsa(pkcs1v15));
     return verifier.verify_message(data, sig);
-    ;
   }
 
 private:

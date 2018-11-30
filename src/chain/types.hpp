@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace gruut {
-enum class TransactionType { CHECKSUM, CERTIFICATE };
+enum class TransactionType { DIGESTS, CERTIFICATE };
 
 enum class BlockType { PARTIAL, NORMAL };
 
@@ -44,16 +44,17 @@ enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
 enum class SignerStatus { UNKNOWN, ERROR, GOOD };
 
 using sha256 = std::vector<uint8_t>;
+using bytes = std::vector<uint8_t>;
 using timestamp = std::string;
 using block_height_type = std::string;
 
-using transaction_id_type = sha256;
+using transaction_id_type = bytes;
 using requestor_id_type = sha256;
 using sender_id_type = sha256;
 using signer_id_type = uint64_t;
 using transaction_root_type = sha256;
 using chain_id_type = sha256;
-using signature_type = sha256;
+using signature_type = bytes;
 
 using content_type = std::string;
 

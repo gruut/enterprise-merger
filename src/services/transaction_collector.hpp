@@ -5,7 +5,6 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <queue>
-#include <thread>
 
 #include "../chain/types.hpp"
 #include "../modules/module.hpp"
@@ -17,8 +16,7 @@ const int TRANSACTION_COLLECTION_INTERVAL = 5000;
 class TransactionCollector {
 public:
   TransactionCollector();
-  void handleMessage(MessageType &message_type, signer_id_type receiver_id,
-                     nlohmann::json message_body_json);
+  void handleMessage(nlohmann::json message_body_json);
 
 private:
   bool isRunnable();
@@ -30,8 +28,7 @@ private:
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   std::shared_ptr<SignatureRequester> m_signature_requester;
 
-  bool m_runnable = false;
-  std::thread *m_worker_thread;
+  bool m_timer_running = false;
 };
 } // namespace gruut
 #endif
