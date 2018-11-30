@@ -12,7 +12,7 @@
 namespace gruut {
 const int TRANSACTION_COLLECTION_INTERVAL = 5000;
 
-class TransactionCollector : public Module {
+class TransactionCollector {
 public:
   TransactionCollector();
   void start();
