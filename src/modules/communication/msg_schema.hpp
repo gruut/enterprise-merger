@@ -331,7 +331,7 @@ const json SCHEMA_TX = R"({
     },
     "content": {
       "description": "트랜잭션 내용. 체크섬 혹은 Signer의 인증서",
-      "type": "string"
+      "type": "array"
     },
     "rSig": {
       "description": "requestor's signature",
@@ -367,5 +367,5 @@ std::map<MessageType, json> MessageSchema::schema_list = {
     {MessageType::MSG_LEAVE, SCHEMA_LEAVE},
     {MessageType::MSG_SSIG, SCHEMA_SSIG},
     {MessageType::MSG_ERROR, SCHEMA_ERROR},
-	{MessageType::MSG_TX, SCHEMA_TX}};
+    {MessageType::MSG_TX, SCHEMA_TX}};
 }; // namespace gruut
