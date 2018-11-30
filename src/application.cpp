@@ -1,7 +1,6 @@
 #include "application.hpp"
 #include "chain/transaction.hpp"
 #include "modules/module.hpp"
-#include "services/signer_pool_manager.hpp"
 
 namespace gruut {
 boost::asio::io_service &Application::getIoService() { return *m_io_serv; }
@@ -18,6 +17,10 @@ SignerPoolManager &Application::getSignerPoolManager() {
 
 TransactionPool &Application::getTransactionPool() {
   return *m_transaction_pool;
+}
+
+TransactionCollector &Application::getTransactionCollector() {
+  return *m_transaction_collector;
 }
 
 SignaturePool &Application::getSignaturePool() { return *m_signature_pool; }
@@ -53,6 +56,7 @@ Application::Application() {
   m_signer_pool = make_shared<SignerPool>();
   m_signer_pool_manager = make_shared<SignerPoolManager>();
   m_transaction_pool = make_shared<TransactionPool>();
+  m_transaction_collector = make_shared<TransactionCollector>();
   m_signature_pool = make_shared<SignaturePool>();
 
   m_thread_group = make_shared<std::vector<std::thread>>();

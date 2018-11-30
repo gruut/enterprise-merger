@@ -19,6 +19,10 @@ void MessageProxy::deliverInputMessage(InputMessage &input_message) {
     Application::app().getSignerPoolManager().handleMessage(
         message_type, receiver_id, message_body_json);
   } break;
+  case MessageType::MSG_TX: {
+    Application::app().getTransactionCollector().handleMessage(
+        message_body_json);
+  } break;
   default:
     break;
   }

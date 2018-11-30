@@ -11,11 +11,6 @@
 #include "transaction_fetcher.hpp"
 
 namespace gruut {
-SignatureRequester::SignatureRequester() {
-  m_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
-}
-
 bool SignatureRequester::requestSignatures() {
   // TODO: SignerPool 구조가 변경됨에 따라 블럭 생성 구현할때 주석 해제
   //  auto transactions = std::move(fetchTransactions());
@@ -29,6 +24,8 @@ bool SignatureRequester::requestSignatures() {
 
 void SignatureRequester::startSignatureCollectTimer(
     Transactions &transactions) {
+  m_timer.reset(
+      new boost::asio::deadline_timer(Application::app().getIoService()));
   m_timer->expires_from_now(
       boost::posix_time::milliseconds(SIGNATURE_COLLECTION_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
