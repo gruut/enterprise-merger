@@ -141,8 +141,10 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(Test_Storage)
 BOOST_AUTO_TEST_CASE(save_block) {
   Storage *storage = Storage::getInstance();
-  string block_binary = "bbbbbbbbbbbbbinary";
-  storage->saveBlock(block_binary, block_header, transaction);
+  string block_binary1 = "bbbbbbbbbbbbbinary1";
+  storage->saveBlock(block_binary1, block_header1, transaction1);
+  string block_binary2 = "bbbbbbbbbbbbbinary2";
+  storage->saveBlock(block_binary2, block_header2, transaction2);
   Storage::destroyInstance();
 
   BOOST_TEST(true);
@@ -153,19 +155,19 @@ BOOST_AUTO_TEST_CASE(find_latest_hash_and_height) {
   pair<string, string> hash_and_height = storage->findLatestHashAndHeight();
   Storage::destroyInstance();
 
-  BOOST_TEST(hash_and_height.first == "bbbbbbbbbbbbbinary");
-  BOOST_TEST(hash_and_height.second == "1");
+  BOOST_TEST(hash_and_height.first == "bbbbbbbbbbbbbinary2");
+  BOOST_TEST(hash_and_height.second == "2");
 }
 
-BOOST_AUTO_TEST_CASE(find_latest_txid_list) {
+BOOST_AUTO_TEST_CASE(find_elatest_txid_list) {
   Storage *storage = Storage::getInstance();
   vector<string> tx_ids_list = storage->findLatestTxIdList();
   Storage::destroyInstance();
 
-  BOOST_TEST(tx_ids_list[0] == "aaaaaaaaa");
-  BOOST_TEST(tx_ids_list[1] == "bbbbbbbbb");
-  BOOST_TEST(tx_ids_list[2] == "ccccccccc");
-  BOOST_TEST(tx_ids_list[3] == "ddddddddd");
+  BOOST_TEST(tx_ids_list[0] == "QQQQaaaaaaaaa");
+  BOOST_TEST(tx_ids_list[1] == "QQQQbbbbbbbbb");
+  BOOST_TEST(tx_ids_list[2] == "QQQQccccccccc");
+  BOOST_TEST(tx_ids_list[3] == "QQQQddddddddd");
 }
 
 BOOST_AUTO_TEST_CASE(find_cert) {
@@ -178,6 +180,24 @@ BOOST_AUTO_TEST_CASE(find_cert) {
   BOOST_TEST(certificate2 == "certC1");
 }
 
+BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
+  Storage *storage = Storage::getInstance();
+
+  auto height_metaheader_tx = storage->readBlock(1);
+  auto latest_height_metaheader_tx = storage->readBlock(-1);
+  Storage::destroyInstance();
+
+  BOOST_TEST(1 == get<0>(height_metaheader_tx));
+  BOOST_TEST("bbbbbbbbbbbbbinary1" == get<1>(height_metaheader_tx));
+  // TODO : mtree 적용
+  // BOOST_TEST(transaction1 == get<2>(height_metaheader_tx));
+
+  BOOST_TEST(2 == get<0>(latest_height_metaheader_tx));
+  BOOST_TEST("bbbbbbbbbbbbbinary2" == get<1>(latest_height_metaheader_tx));
+  // TODO : mtree 적용
+  // BOOST_TEST(transaction2 == get<2>(latest_height_metaheader_tx));
+}
+
 BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
   Storage *storage = Storage::getInstance();
   storage->deleteAllDirectory("./block_header");
@@ -185,6 +205,7 @@ BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
   storage->deleteAllDirectory("./certificate");
   storage->deleteAllDirectory("./latest_block_header");
   storage->deleteAllDirectory("./transaction");
+  storage->deleteAllDirectory("./blockid_height");
   Storage::destroyInstance();
 
   BOOST_TEST(true);

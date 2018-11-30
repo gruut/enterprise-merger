@@ -18,6 +18,8 @@ Storage::Storage() {
       leveldb::DB::Open(m_options, "./transaction", &m_db_transaction));
   handleCriticalError(
       leveldb::DB::Open(m_options, "./certificate", &m_db_certificate));
+  handleCriticalError(
+      leveldb::DB::Open(m_options, "./blockid_height", &m_db_blockid_height));
 }
 
 Storage::~Storage() {
@@ -26,12 +28,14 @@ Storage::~Storage() {
   delete m_db_latest_block_header;
   delete m_db_transaction;
   delete m_db_certificate;
+  delete m_db_blockid_height;
 
   m_db_block_header = nullptr;
   m_db_block_binary = nullptr;
   m_db_latest_block_header = nullptr;
   m_db_transaction = nullptr;
   m_db_certificate = nullptr;
+  m_db_blockid_height = nullptr;
 }
 
 void Storage::write(const string &what, json &data,
@@ -104,7 +108,13 @@ void Storage::write(const string &what, json &data,
         handleTrivialError(status);
       }
     }
-    // TODO : mtree
+    // TODO : mtree 적용
+  } else if (what == "blockid_height") {
+    auto new_key = data["hgt"].get<string>();
+    auto new_value = block_id;
+
+    auto status = m_db_blockid_height->Put(m_write_options, new_key, new_value);
+    handleTrivialError(status);
   }
 }
 
@@ -112,9 +122,12 @@ string Storage::findBy(const string &what, const string &id = "",
                        const string &field = "") {
   string key, value;
 
-  if (id == "")
-    key = "latest_block_header_" + field;
-  else
+  if (id == "") {
+    if (what == "latest_block_header")
+      key = "latest_block_header_" + field;
+    else
+      key = field;
+  } else
     key = field == "" ? what + '_' + id : what + '_' + id + '_' + field;
 
   leveldb::Status status;
@@ -128,6 +141,8 @@ string Storage::findBy(const string &what, const string &id = "",
     status = m_db_certificate->Get(m_read_options, key, &value);
   else if (what == "transaction")
     status = m_db_transaction->Get(m_read_options, key, &value);
+  else if (what == "blockid_height")
+    status = m_db_blockid_height->Get(m_read_options, key, &value);
   if (!status.ok())
     value.assign("");
 
@@ -171,6 +186,8 @@ void Storage::saveBlock(const string &block_binary, json &block_header,
   write("block_binary", block_binary_json, block_id);
 
   write("transaction", transaction, block_id);
+
+  write("blockid_height", block_header, block_id);
 }
 
 pair<string, string> Storage::findLatestHashAndHeight() {
@@ -209,7 +226,7 @@ int Storage::findTxIdPos(const string &blk_id, const string &tx_id) {
   }
 
   istringstream iss(tx_list_str);
-  int ret_pos = 1;
+  int ret_pos = 0;
   for (std::string token; std::getline(iss, token, '_');) {
     if (token == tx_id)
       return ret_pos;
@@ -217,4 +234,44 @@ int Storage::findTxIdPos(const string &blk_id, const string &tx_id) {
   }
   return -1;
 }
+
+tuple<int, string, json> Storage::readBlock(int height) {
+  string block_id = (height == -1)
+                        ? findBy("latest_block_header", "", "bID")
+                        : findBy("blockid_height", "", to_string(height));
+  if (height == -1)
+    height = stoi(findBy("latest_block_header", "", "hgt"));
+  string block_binary = findBy("block_binary", block_id, "");
+
+  json transaction_json;
+  string tx_ids = findBy("block_header", block_id, "txids");
+  vector<string> tx_ids_list;
+  std::istringstream iss(tx_ids);
+  int tx_pos = 0;
+  for (std::string tx_id; std::getline(iss, tx_id, '_');) {
+    transaction_json[tx_pos]["txID"] = tx_id;
+    transaction_json[tx_pos]["time"] = findBy("transaction", tx_id, "time");
+    transaction_json[tx_pos]["rID"] = findBy("transaction", tx_id, "rID");
+    transaction_json[tx_pos]["rSig"] = findBy("transaction", tx_id, "rSig");
+    transaction_json[tx_pos]["type"] = findBy("transaction", tx_id, "type");
+    // TODO : mtree 적용
+    json content = json::parse(findBy("transaction", tx_id, "content"));
+    if (content.is_object()) { // If certificate
+      for (auto it = content.cbegin(); it != content.cend(); ++it) {
+        transaction_json[tx_pos]["content"][it.key()] =
+            it.value().get<string>();
+      }
+    } else { // If digest
+      for (size_t i = 0; i < content.size(); ++i) {
+        for (size_t j = 0; j < content[i].size(); ++j) {
+          transaction_json[tx_pos]["content"][i][j] =
+              content[i][j].get<string>();
+        }
+      }
+    }
+    ++tx_pos;
+  }
+  return make_tuple(height, block_binary, transaction_json);
+}
+
 } // namespace gruut

@@ -26,6 +26,7 @@ public:
   vector<string> findLatestTxIdList();
   string findCertificate(const string &user_id);
   void deleteAllDirectory(const string &dir_path);
+  tuple<int, string, json> readBlock(int height);
 
 private:
   void handleCriticalError(const leveldb::Status &status);
@@ -44,6 +45,7 @@ private:
   leveldb::DB *m_db_latest_block_header;
   leveldb::DB *m_db_transaction;
   leveldb::DB *m_db_certificate;
+  leveldb::DB *m_db_blockid_height;
 };
 } // namespace gruut
 #endif
