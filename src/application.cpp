@@ -10,6 +10,8 @@ InputQueue &Application::getInputQueue() { return m_input_queue; }
 
 OutputQueue &Application::getOutputQueue() { return m_output_queue; }
 
+SignerPool &Application::getSignerPool() { return *m_signer_pool; }
+
 SignerPoolManager &Application::getSignerPoolManager() {
   return *m_signer_pool_manager;
 }
@@ -48,6 +50,7 @@ Application::Application() {
   m_io_serv = make_shared<boost::asio::io_service>();
   m_input_queue = make_shared<queue<InputMessage>>();
   m_output_queue = make_shared<queue<OutputMessage>>();
+  m_signer_pool = make_shared<SignerPool>();
   m_signer_pool_manager = make_shared<SignerPoolManager>();
   m_transaction_pool = make_shared<TransactionPool>();
   m_signature_pool = make_shared<SignaturePool>();

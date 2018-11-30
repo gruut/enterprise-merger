@@ -48,7 +48,8 @@ bool SignerPool::updateHmacKey(signer_id_type user_id,
   } else {
     std::lock_guard<std::mutex> guard(m_update_mutex);
     m_signer_pool[signer_index].hmac_key = hmac_key;
-    m_signer_pool[signer_index].last_update = std::time(nullptr);
+    m_signer_pool[signer_index].last_update =
+        static_cast<uint64_t>(std::time(nullptr));
     m_update_mutex.unlock();
 
     return true;

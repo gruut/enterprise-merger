@@ -32,6 +32,7 @@ private:
 
   bool isJoinable();
   std::string m_merger_nonce;
+  std::string m_signer_cert;
   vector<uint8_t> m_shared_secret_key;
 
   std::shared_ptr<SignerPool> m_signer_pool;

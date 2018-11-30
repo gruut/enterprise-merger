@@ -38,6 +38,8 @@ public:
 
   OutputQueue &getOutputQueue();
 
+  SignerPool &getSignerPool();
+
   SignerPoolManager &getSignerPoolManager();
 
   TransactionPool &getTransactionPool();
@@ -54,7 +56,8 @@ private:
   shared_ptr<boost::asio::io_service> m_io_serv;
   InputQueue m_input_queue;
   OutputQueue m_output_queue;
-  shared_ptr<gruut::SignerPoolManager> m_signer_pool_manager;
+  shared_ptr<SignerPool> m_signer_pool;
+  shared_ptr<SignerPoolManager> m_signer_pool_manager;
   shared_ptr<TransactionPool> m_transaction_pool;
   shared_ptr<SignaturePool> m_signature_pool;
 
