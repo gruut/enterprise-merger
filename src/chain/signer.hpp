@@ -2,6 +2,7 @@
 #define GRUUT_ENTERPRISE_MERGER_SIGNER_HPP
 
 #include <botan/secmem.h>
+#include <ctime>
 #include <string>
 
 #include "types.hpp"
