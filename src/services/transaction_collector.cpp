@@ -1,11 +1,11 @@
 #include <iostream>
 
-#include "../../application.hpp"
-#include "../../chain/transaction.hpp"
-#include "../message_fetcher/message_fetcher.hpp"
+#include "../application.hpp"
+#include "../chain/transaction.hpp"
 #include "transaction_collector.hpp"
 
 using namespace std;
+using namespace nlohmann;
 
 namespace gruut {
 TransactionCollector::TransactionCollector() {
@@ -14,10 +14,10 @@ TransactionCollector::TransactionCollector() {
   m_signature_requester = make_shared<SignatureRequester>();
 }
 
-void TransactionCollector::start() {
-  m_runnable = isRunnable();
+void TransactionCollector::handleMessage(MessageType &message_type,
+                                         signer_id_type receiver_id,
+                                         json message_body_json) {
   startTimer();
-  startSignatureRequest();
 }
 
 bool TransactionCollector::isRunnable() {

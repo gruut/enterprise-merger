@@ -3,11 +3,13 @@
 
 #include <boost/asio.hpp>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <queue>
 #include <thread>
 
-#include "../../modules/module.hpp"
-#include "../../services/signature_requester.hpp"
+#include "../chain/types.hpp"
+#include "../modules/module.hpp"
+#include "signature_requester.hpp"
 
 namespace gruut {
 const int TRANSACTION_COLLECTION_INTERVAL = 5000;
@@ -15,7 +17,8 @@ const int TRANSACTION_COLLECTION_INTERVAL = 5000;
 class TransactionCollector {
 public:
   TransactionCollector();
-  void start();
+  void handleMessage(MessageType &message_type, signer_id_type receiver_id,
+                     nlohmann::json message_body_json);
 
 private:
   bool isRunnable();
