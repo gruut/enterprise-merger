@@ -1,5 +1,6 @@
 #include "communication.hpp"
 #include "grpc_merger.hpp"
+#include "merger_server.hpp"
 #include <thread>
 
 namespace gruut {
