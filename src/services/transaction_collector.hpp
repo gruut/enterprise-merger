@@ -15,7 +15,7 @@ const int TRANSACTION_COLLECTION_INTERVAL = 5000;
 
 class TransactionCollector {
 public:
-  TransactionCollector();
+  TransactionCollector() = default;
   void handleMessage(nlohmann::json message_body_json);
 
 private:
@@ -26,7 +26,7 @@ private:
   void startSignatureRequest();
 
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
-  std::shared_ptr<SignatureRequester> m_signature_requester;
+  SignatureRequester m_signature_requester;
 
   bool m_timer_running = false;
 };

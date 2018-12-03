@@ -3,12 +3,14 @@
 
 #include <boost/asio.hpp>
 #include <memory>
+#include <set>
 #include <thread>
 #include <vector>
 
 #include "../chain/block.hpp"
 #include "../chain/merkle_tree.hpp"
 #include "../chain/message.hpp"
+#include "../chain/signer.hpp"
 
 namespace gruut {
 class Transaction;
@@ -16,13 +18,15 @@ class Transaction;
 const int SIGNATURE_COLLECTION_INTERVAL = 10000;
 const int SIGNATURE_COLLECT_SIZE = 10;
 
+using RandomSignerIndices = std::set<int>;
 using Transactions = std::vector<Transaction>;
+using Signers = std::vector<Signer>;
 
 class SignatureRequester {
 public:
   SignatureRequester() = default;
 
-  bool requestSignatures();
+  void requestSignatures();
 
 private:
   void startSignatureCollectTimer(Transactions &transactions);
@@ -33,6 +37,9 @@ private:
 
   OutputMessage makeMessage(PartialBlock &block);
 
+  RandomSignerIndices generateRandomNumbers(unsigned int size);
+
+  Signers selectSigners();
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   std::thread *m_signature_check_thread;
   bool m_runnable = false;

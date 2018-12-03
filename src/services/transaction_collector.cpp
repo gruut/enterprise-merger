@@ -13,15 +13,12 @@ using namespace std;
 using namespace nlohmann;
 
 namespace gruut {
-TransactionCollector::TransactionCollector() {
-  m_signature_requester = make_shared<SignatureRequester>();
-}
-
 void TransactionCollector::handleMessage(json message_body_json) {
   if (isRunnable()) {
     if (!m_timer_running) {
       m_timer_running = true;
       startTimer();
+      m_signature_requester.requestSignatures();
     }
 
     Transaction transaction;
@@ -120,11 +117,5 @@ void TransactionCollector::startTimer() {
       throw;
     }
   });
-}
-
-void TransactionCollector::startSignatureRequest() {
-  bool request_result = m_signature_requester->requestSignatures();
-  if (!request_result)
-    throw;
 }
 } // namespace gruut
