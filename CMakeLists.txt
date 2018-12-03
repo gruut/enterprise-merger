@@ -7,7 +7,7 @@ add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_ASIO_ENABLE_HANDLER_TRACKING)
 
 include(cmake/clang-cxx-dev-tools.cmake)
-find_package(Boost REQUIRED COMPONENTS system thread random filesystem)
+find_package(Boost REQUIRED COMPONENTS system thread filesystem)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(gruut_enterprise_merger main.cpp)
 

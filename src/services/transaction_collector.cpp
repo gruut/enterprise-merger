@@ -18,6 +18,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
     if (!m_timer_running) {
       m_timer_running = true;
       startTimer();
+      Application::app().getSignerPool().createTransactions();
       m_signature_requester.requestSignatures();
     }
 
