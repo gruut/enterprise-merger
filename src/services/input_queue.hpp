@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../utils/template_singleton.hpp"
+#include "../chain/types.hpp"
 #include <deque>
 #include <iostream>
 #include <mutex>
@@ -10,25 +11,27 @@
 namespace gruut {
 
 struct InputMsgEntry {
-  uint8_t type;
+  MessageType type;
   nlohmann::json body;
-  InputMsgEntry(uint8_t msg_type_, nlohmann::json &msg_body_)
+  InputMsgEntry()
+      : type(MessageType::MSG_NULL), body(nullptr) {}
+  InputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_)
       : type(msg_type_), body(msg_body_) {}
 };
 
-class InputQueue : public TemplateSingleton<InputQueue> {
+class InputQueueAlt : public TemplateSingleton<InputQueueAlt> {
 private:
   std::deque<InputMsgEntry> m_input_msg_pool;
   std::mutex m_queue_mutex;
 
 public:
-  void push(std::tuple<uint8_t, nlohmann::json> &msg_entry_tuple) {
+  void push(std::tuple<MessageType, nlohmann::json> &msg_entry_tuple) {
     InputMsgEntry tmp_msg_entry(std::get<0>(msg_entry_tuple),
                                 std::get<1>(msg_entry_tuple));
     push(tmp_msg_entry);
   }
 
-  void push(uint8_t msg_type, nlohmann::json &msg_body) {
+  void push(MessageType msg_type, nlohmann::json &msg_body) {
     InputMsgEntry tmp_msg_entry(msg_type, msg_body);
     push(tmp_msg_entry);
   }
@@ -40,13 +43,22 @@ public:
   }
 
   InputMsgEntry fetch() {
+    InputMsgEntry ret_msg;
     std::lock_guard<std::mutex> lock(m_queue_mutex);
-    InputMsgEntry ret_msg = m_input_msg_pool.front();
-    m_input_msg_pool.pop_front();
+    if(!m_input_msg_pool.empty()) {
+      ret_msg = m_input_msg_pool.front();
+      m_input_msg_pool.pop_front();
+    }
     m_queue_mutex.unlock();
     return ret_msg;
   }
 
-  void clearInputQueue() { m_input_msg_pool.clear(); }
+  inline bool empty(){
+    return m_input_msg_pool.empty();
+  }
+
+  inline void clearInputQueue() {
+    m_input_msg_pool.clear();
+  }
 };
 } // namespace gruut
