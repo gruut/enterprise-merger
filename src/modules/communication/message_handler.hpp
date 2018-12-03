@@ -14,7 +14,8 @@ namespace gruut {
 class MessageHandler {
 public:
   void unpackMsg(std::string &packed_msg,
-                 std::promise<grpc::Status> &rpc_status);
+                 std::promise<grpc::Status> &rpc_status,
+                 std::promise<uint64_t> receiver_id);
   void packMsg(OutputMessage &output_msg);
 
 private:
@@ -24,6 +25,7 @@ private:
   nlohmann::json getJson(CompressionAlgorithmType compression_type,
                          std::string &body);
   std::string genPackedMsg(MessageHeader &header, nlohmann::json &body);
+  bool checkSignerMsgType(MessageType msg_tpye);
 };
 
 } // namespace gruut

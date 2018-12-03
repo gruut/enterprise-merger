@@ -1,5 +1,6 @@
 #include "merger_server.hpp"
 #include "message_handler.hpp"
+#include "rpc_receiver_list.hpp"
 #include <chrono>
 #include <cstring>
 #include <future>
@@ -42,225 +43,265 @@ void MergerServer::recvData() {
   }
 }
 
-void MergerServer::RecvFromMerger::proceed() {
+void RecvFromMerger::proceed() {
   switch (m_receive_status) {
-  case CallStatus::CREATE: {
-    m_receive_status = CallStatus::PROCESS;
+  case RpcStatus::CREATE: {
+    m_receive_status = RpcStatus::PROCESS;
     m_service->RequestpushData(&m_context, &m_request, &m_responder,
                                m_completion_queue, m_completion_queue, this);
   } break;
 
-  case CallStatus::PROCESS: {
+  case RpcStatus::PROCESS: {
     new RecvFromMerger(m_service, m_completion_queue);
 
     std::string packed_msg = m_request.data();
     std::promise<Status> rpc_status;
     std::future<Status> future_rpc_status = rpc_status.get_future();
+
+    std::promise<uint64_t> id;
+    std::future<uint64_t> receiver_id = id.get_future();
+
     Status final_rpc_status = future_rpc_status.get();
     MessageHandler message_handler;
     std::thread handler(&MessageHandler::unpackMsg, &message_handler,
-                        std::ref(packed_msg), std::ref(rpc_status));
+                        std::ref(packed_msg), std::ref(rpc_status),
+                        std::move(id));
     handler.join();
     MergerDataReply m_reply;
-    m_receive_status = CallStatus::FINISH;
+    m_receive_status = RpcStatus::FINISH;
     m_responder.Finish(m_reply, final_rpc_status, this);
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == CallStatus::FINISH);
+    GPR_ASSERT(m_receive_status == RpcStatus::FINISH);
     delete this;
   } break;
   }
 }
 
-void MergerServer::RecvFromSE::proceed() {
+void RecvFromSE::proceed() {
   switch (m_receive_status) {
-  case CallStatus::CREATE: {
-    m_receive_status = CallStatus::PROCESS;
+  case RpcStatus::CREATE: {
+    m_receive_status = RpcStatus::PROCESS;
     m_service->Requesttransaction(&m_context, &m_request, &m_responder,
                                   m_completion_queue, m_completion_queue, this);
   } break;
 
-  case CallStatus::PROCESS: {
+  case RpcStatus::PROCESS: {
     new RecvFromSE(m_service, m_completion_queue);
 
     std::string packed_msg = m_request.message();
     std::promise<Status> rpc_status;
     std::future<Status> future_rpc_status = rpc_status.get_future();
     Status final_rpc_status = future_rpc_status.get();
+
+    std::promise<uint64_t> id;
+    std::future<uint64_t> receiver_id = id.get_future();
+
     MessageHandler message_handler;
     std::thread handler(&MessageHandler::unpackMsg, &message_handler,
-                        std::ref(packed_msg), std::ref(rpc_status));
+                        std::ref(packed_msg), std::ref(rpc_status),
+                        std::move(id));
     handler.join();
     Nothing m_reply;
-    m_receive_status = CallStatus::FINISH;
+    m_receive_status = RpcStatus::FINISH;
     m_responder.Finish(m_reply, final_rpc_status, this);
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == CallStatus::FINISH);
+    GPR_ASSERT(m_receive_status == RpcStatus::FINISH);
     delete this;
   } break;
   }
 }
 
-void MergerServer::OpenChannel::proceed() {
+void OpenChannel::proceed() {
   switch (m_receive_status) {
-  case CallStatus::CREATE: {
-    m_receive_status = CallStatus::PROCESS;
-    m_service->RequestopenChannel(&m_context, m_stream.get(),
-                                  m_completion_queue, m_completion_queue, this);
+  case RpcStatus::CREATE: {
+    m_receive_status = RpcStatus::PROCESS;
+    m_service->RequestopenChannel(&m_context, &m_stream, m_completion_queue,
+                                  m_completion_queue, this);
   } break;
 
-  case CallStatus::PROCESS: {
+  case RpcStatus::PROCESS: {
     new OpenChannel(m_service, m_completion_queue);
 
-    m_stream->Read(&m_request, this);
+    m_stream.Read(&m_request, this);
     uint64_t receiver_id;
     std::memcpy(&receiver_id, &m_request.sender()[0], sizeof(uint64_t));
-    // TODO: receiver_id_list 에 map[receiver_id].stream = m_stream 저장
-
-    m_receive_status = CallStatus::FINISH;
+    m_rpc_receiver_list->setReqSsig(receiver_id, &m_stream);
+    m_receive_status = RpcStatus::WAIT;
   } break;
 
+  case RpcStatus ::WAIT: {
+    if (m_context.IsCancelled()) {
+      m_receive_status = RpcStatus::FINISH;
+    }
+  } break;
   default: {
-    GPR_ASSERT(m_receive_status == CallStatus::FINISH);
+    GPR_ASSERT(m_receive_status == RpcStatus::FINISH);
     delete this;
   } break;
   }
 }
 
-void MergerServer::Join::proceed() {
+void Join::proceed() {
   switch (m_receive_status) {
-  case CallStatus::CREATE: {
-    m_receive_status = CallStatus::PROCESS;
-    m_service->Requestjoin(&m_context, &m_request, m_responder.get(),
+  case RpcStatus::CREATE: {
+    m_receive_status = RpcStatus::PROCESS;
+    m_service->Requestjoin(&m_context, &m_request, &m_responder,
                            m_completion_queue, m_completion_queue, this);
   } break;
 
-  case CallStatus::PROCESS: {
+  case RpcStatus::PROCESS: {
     new Join(m_service, m_completion_queue);
 
     std::string packed_msg = m_request.message();
     std::promise<Status> rpc_status;
     std::future<Status> future_rpc_status = rpc_status.get_future();
+
+    std::promise<uint64_t> id;
+    std::future<uint64_t> receiver_id = id.get_future();
+
     Status final_rpc_status = future_rpc_status.get();
 
     MessageHandler message_handler;
     std::thread handler(&MessageHandler::unpackMsg, &message_handler,
-                        std::ref(packed_msg), std::ref(rpc_status));
+                        std::ref(packed_msg), std::ref(rpc_status),
+                        std::move(id));
     handler.join();
     if (!final_rpc_status.ok()) {
       GrpcMsgChallenge m_reply;
-      m_responder->Finish(m_reply, final_rpc_status, this);
+      m_responder.Finish(m_reply, final_rpc_status, this);
+      m_receive_status = RpcStatus::FINISH;
+    } else {
+      m_rpc_receiver_list->setChanllenge(receiver_id.get(), &m_responder);
     }
-    m_receive_status = CallStatus::FINISH;
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == CallStatus::FINISH);
+    GPR_ASSERT(m_receive_status == RpcStatus::FINISH);
     delete this;
   } break;
   }
 }
 
-void MergerServer::DHKeyEx::proceed() {
+void DHKeyEx::proceed() {
   switch (m_receive_status) {
-  case CallStatus::CREATE: {
-    m_receive_status = CallStatus::PROCESS;
-    m_service->RequestdhKeyEx(&m_context, &m_request, m_responder.get(),
+  case RpcStatus::CREATE: {
+    m_receive_status = RpcStatus::PROCESS;
+    m_service->RequestdhKeyEx(&m_context, &m_request, &m_responder,
                               m_completion_queue, m_completion_queue, this);
   } break;
 
-  case CallStatus::PROCESS: {
+  case RpcStatus::PROCESS: {
     new DHKeyEx(m_service, m_completion_queue);
 
     std::string packed_msg = m_request.message();
     std::promise<Status> rpc_status;
     std::future<Status> future_rpc_status = rpc_status.get_future();
+
+    std::promise<uint64_t> id;
+    std::future<uint64_t> receiver_id = id.get_future();
+
     Status final_rpc_status = future_rpc_status.get();
 
     MessageHandler message_handler;
     std::thread handler(&MessageHandler::unpackMsg, &message_handler,
-                        std::ref(packed_msg), std::ref(rpc_status));
+                        std::ref(packed_msg), std::ref(rpc_status),
+                        std::move(id));
     handler.join();
 
     if (!final_rpc_status.ok()) {
       GrpcMsgResponse2 m_reply;
-      m_responder->Finish(m_reply, final_rpc_status, this);
+      m_responder.Finish(m_reply, final_rpc_status, this);
+    } else {
+      m_rpc_receiver_list->setResponse2(receiver_id.get(), &m_responder);
     }
-    m_receive_status = CallStatus::FINISH;
+    m_receive_status = RpcStatus::FINISH;
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == CallStatus::FINISH);
+    GPR_ASSERT(m_receive_status == RpcStatus::FINISH);
     delete this;
   } break;
   }
 }
 
-void MergerServer::KeyExFinished::proceed() {
+void KeyExFinished::proceed() {
   switch (m_receive_status) {
-  case CallStatus::CREATE: {
-    m_receive_status = CallStatus::PROCESS;
-    m_service->RequestkeyExFinished(&m_context, &m_request, m_responder.get(),
+  case RpcStatus::CREATE: {
+    m_receive_status = RpcStatus::PROCESS;
+    m_service->RequestkeyExFinished(&m_context, &m_request, &m_responder,
                                     m_completion_queue, m_completion_queue,
                                     this);
   } break;
 
-  case CallStatus::PROCESS: {
+  case RpcStatus::PROCESS: {
     new KeyExFinished(m_service, m_completion_queue);
 
     std::string packed_msg = m_request.message();
     std::promise<Status> rpc_status;
     std::future<Status> future_rpc_status = rpc_status.get_future();
+
+    std::promise<uint64_t> id;
+    std::future<uint64_t> receiver_id = id.get_future();
+
     Status final_rpc_status = future_rpc_status.get();
 
     MessageHandler message_handler;
     std::thread handler(&MessageHandler::unpackMsg, &message_handler,
-                        std::ref(packed_msg), std::ref(rpc_status));
+                        std::ref(packed_msg), std::ref(rpc_status),
+                        std::move(id));
     handler.join();
     if (!final_rpc_status.ok()) {
       GrpcMsgAccept m_reply;
-      m_responder->Finish(m_reply, final_rpc_status, this);
+      m_responder.Finish(m_reply, final_rpc_status, this);
+    } else {
+      m_rpc_receiver_list->setAccept(receiver_id.get(), &m_responder);
     }
-    m_receive_status = CallStatus::FINISH;
+    m_receive_status = RpcStatus::FINISH;
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == CallStatus::FINISH);
+    GPR_ASSERT(m_receive_status == RpcStatus::FINISH);
     delete this;
   } break;
   }
 }
 
-void MergerServer::SigSend::proceed() {
+void SigSend::proceed() {
   switch (m_receive_status) {
-  case CallStatus::CREATE: {
-    m_receive_status = CallStatus::PROCESS;
+  case RpcStatus::CREATE: {
+    m_receive_status = RpcStatus::PROCESS;
     m_service->RequestsigSend(&m_context, &m_request, &m_responder,
                               m_completion_queue, m_completion_queue, this);
   } break;
 
-  case CallStatus::PROCESS: {
+  case RpcStatus::PROCESS: {
     new SigSend(m_service, m_completion_queue);
 
     std::string packed_msg = m_request.message();
     std::promise<Status> rpc_status;
     std::future<Status> future_rpc_status = rpc_status.get_future();
+
+    std::promise<uint64_t> id;
+    std::future<uint64_t> receiver_id = id.get_future();
+
     Status final_rpc_status = future_rpc_status.get();
 
     MessageHandler message_handler;
     std::thread handler(&MessageHandler::unpackMsg, &message_handler,
-                        std::ref(packed_msg), std::ref(rpc_status));
+                        std::ref(packed_msg), std::ref(rpc_status),
+                        std::move(id));
     handler.join();
     NoReply m_reply;
     m_responder.Finish(m_reply, final_rpc_status, this);
-    m_receive_status = CallStatus::FINISH;
+    m_receive_status = RpcStatus::FINISH;
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == CallStatus::FINISH);
+    GPR_ASSERT(m_receive_status == RpcStatus::FINISH);
     delete this;
   } break;
   }
