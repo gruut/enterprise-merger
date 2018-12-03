@@ -303,7 +303,7 @@ vector<string> Storage::findSibling(const string &tx_id) {
   for (unsigned int i = 0; i < iteration_size; ++i) {
     int mtree_pos =
         (tx_id_pos_int % 2 != 0) ? tx_id_pos_int - 1 : tx_id_pos_int + 1;
-    siblings.push_back(findBy("transaction", block_id, to_string(mtree_pos)));
+    siblings.emplace_back(findBy("transaction", block_id, to_string(mtree_pos)));
     tx_id_pos_int = stoi(tx_cnt) + (tx_id_pos_int / 2);
   }
   return siblings;
