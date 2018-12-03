@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <nlohmann/json.hpp>
-#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -15,18 +14,13 @@
 using namespace std;
 
 namespace gruut {
-using RandomSignerIndices = std::set<int>;
-
 class SignerPoolManager {
 public:
   SignerPoolManager() = default;
-  // TODO: SignerPool 구조가 변경됨에 따라 나중에 수정
-  //  SignerPool getSelectedSignerPool();
   void handleMessage(MessageType &message_type, signer_id_type receiver_id,
                      nlohmann::json message_body_json);
 
 private:
-  RandomSignerIndices generateRandomNumbers(unsigned int size);
   bool verifySignature(signer_id_type signer_id,
                        nlohmann::json message_body_json);
   string getCertificate();

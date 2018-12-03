@@ -32,6 +32,8 @@ public:
 
   size_t getNumSignerBy(SignerStatus status = SignerStatus::GOOD);
 
+  Signer getSigner(int index);
+
   void clearPool();
 
   const size_t size();
