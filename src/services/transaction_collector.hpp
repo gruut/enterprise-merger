@@ -23,8 +23,6 @@ private:
 
   void startTimer();
 
-  void startSignatureRequest();
-
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   SignatureRequester m_signature_requester;
 

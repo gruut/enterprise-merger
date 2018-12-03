@@ -17,6 +17,8 @@ public:
                   Botan::secure_vector<uint8_t> &hmac_key,
                   SignerStatus stat = SignerStatus::UNKNOWN);
 
+  void createTransactions();
+
   bool updatePkCert(signer_id_type user_id, std::string &pk_cert);
 
   bool updateHmacKey(signer_id_type user_id, hmac_key_type &hmac_key);

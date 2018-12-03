@@ -14,10 +14,12 @@ struct Transaction {
   TransactionType transaction_type;
   signature_type signature;
   std::vector<content_type> content_list;
+
+  virtual bool isNull() { return false; }
 };
 
 struct NullTransaction : public Transaction {
-  NullTransaction() { transaction_id = sha256(); }
+  virtual bool isNull() { return true; }
 };
 } // namespace gruut
 #endif

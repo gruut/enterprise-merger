@@ -1,4 +1,5 @@
 #include "signer_pool.hpp"
+#include "transaction_generator.hpp"
 
 namespace gruut {
 constexpr size_t NOT_FOUND = static_cast<const size_t>(-1);
@@ -130,4 +131,14 @@ size_t SignerPool::find(signer_id_type user_id) {
 }
 
 Signer SignerPool::getSigner(int index) { return m_signer_pool[index]; }
+
+void SignerPool::createTransactions() {
+  TransactionGenerator generator;
+
+  for (auto &signer : m_signer_pool) {
+    if (signer.isNew()) {
+      generator.generate(signer);
+    }
+  }
+}
 } // namespace gruut

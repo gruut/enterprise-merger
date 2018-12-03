@@ -4,6 +4,7 @@
 #include <botan/secmem.h>
 #include <string>
 
+#include "../modules/storage/storage.hpp"
 #include "types.hpp"
 
 namespace gruut {
@@ -16,7 +17,10 @@ struct Signer {
 
   // TODO: Storage에서 signer가 신규인지 아닌지 검색할 수 있는 기능 추가되면
   // 제거할 것
-  bool isNew() { return true; }
+  bool isNew() {
+    auto cert = Storage::getInstance()->findCertificate(pk_cert);
+    return cert.empty();
+  }
 };
 } // namespace gruut
 #endif
