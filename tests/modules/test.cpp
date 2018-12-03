@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(find_latest_hash_and_height) {
   BOOST_TEST(hash_and_height.second == "2");
 }
 
-BOOST_AUTO_TEST_CASE(find_elatest_txid_list) {
+BOOST_AUTO_TEST_CASE(find_latest_txid_list) {
   Storage *storage = Storage::getInstance();
   vector<string> tx_ids_list = storage->findLatestTxIdList();
   Storage::destroyInstance();
@@ -189,13 +189,19 @@ BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
 
   BOOST_TEST(1 == get<0>(height_metaheader_tx));
   BOOST_TEST("bbbbbbbbbbbbbinary1" == get<1>(height_metaheader_tx));
-  // TODO : mtree 적용
-  // BOOST_TEST(transaction1 == get<2>(height_metaheader_tx));
+  BOOST_TEST(transaction1 == get<2>(height_metaheader_tx));
 
   BOOST_TEST(2 == get<0>(latest_height_metaheader_tx));
   BOOST_TEST("bbbbbbbbbbbbbinary2" == get<1>(latest_height_metaheader_tx));
-  // TODO : mtree 적용
-  // BOOST_TEST(transaction2 == get<2>(latest_height_metaheader_tx));
+  BOOST_TEST(transaction2 == get<2>(latest_height_metaheader_tx));
+}
+
+BOOST_AUTO_TEST_CASE(find_sibling) {
+  Storage *storage = Storage::getInstance();
+  vector<string> siblings = storage->findSibling("QQQQccccccccc"); // h3
+  BOOST_TEST("h4" == siblings[0]);
+  BOOST_TEST("h12" == siblings[1]);
+  BOOST_TEST("h5678" == siblings[2]);
 }
 
 BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {

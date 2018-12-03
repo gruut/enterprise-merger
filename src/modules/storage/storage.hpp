@@ -7,6 +7,7 @@
 #include "leveldb/write_batch.h"
 #include "nlohmann/json.hpp"
 #include <boost/filesystem/operations.hpp>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -27,6 +28,7 @@ public:
   string findCertificate(const string &user_id);
   void deleteAllDirectory(const string &dir_path);
   tuple<int, string, json> readBlock(int height);
+  vector<string> findSibling(const string &tx_id);
 
 private:
   void handleCriticalError(const leveldb::Status &status);

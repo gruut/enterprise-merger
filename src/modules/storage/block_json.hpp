@@ -92,7 +92,7 @@ json block_header2 = {
      "b6f6991d03df0e2e04dafffcd6bc418aac66049e2cd74b80f14ac86db1e3f0da"},
     {"prevH",
      "00000000000007d0f98d9edca880a6c124e25095712df8952e0439ac7409738a"},
-    {"txcnt", "4"},
+    {"txcnt", "8"},
     {"txrt",
      "935aa0ed2e29a4b81e0c995c39e06995ecce7ddbebb26ed32d550a72e8200bf5"}};
 
@@ -135,6 +135,8 @@ json transaction2 = {
       {{"CCCCCCCCC1", "certC1"},
        {"CCCCCCCCC2", "certC2"},
        {"CCCCCCCCC3", "certC3"}}}},
-    {{"mtree", {"h1", "h2", "h3", "h4", "h12", "h34", "h1234"}}}};
+    {{"mtree",
+      {"h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8", "h12", "h34", "h56",
+       "h78", "h1234", "h5678", "h12345678"}}}};
 } // namespace gruut
 #endif

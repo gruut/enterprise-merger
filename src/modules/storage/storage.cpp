@@ -77,6 +77,8 @@ void Storage::write(const string &what, json &data,
          transaction_iterator_index < data.size() - 1;
          ++transaction_iterator_index) {
       data[transaction_iterator_index]["bID"] = block_id;
+      data[transaction_iterator_index]["mPos"] =
+          to_string(transaction_iterator_index);
 
       string transaction_id = data[transaction_iterator_index]["txID"];
 
@@ -102,13 +104,23 @@ void Storage::write(const string &what, json &data,
           new_value = it.value().dump();
         else
           new_value = it.value().get<string>();
-
         auto status =
             m_db_transaction->Put(m_write_options, new_key, new_value);
         handleTrivialError(status);
       }
     }
-    // TODO : mtree 적용
+    for (unsigned int mtree_iteration_index = 0;
+         mtree_iteration_index <
+         data[transaction_iterator_index]["mtree"].size();
+         ++mtree_iteration_index) {
+      auto new_key =
+          "transaction_" + block_id + '_' + to_string(mtree_iteration_index);
+      auto new_value =
+          data[transaction_iterator_index]["mtree"][mtree_iteration_index]
+              .get<string>();
+      auto status = m_db_transaction->Put(m_write_options, new_key, new_value);
+      handleTrivialError(status);
+    }
   } else if (what == "blockid_height") {
     auto new_key = data["hgt"].get<string>();
     auto new_value = block_id;
@@ -122,12 +134,10 @@ string Storage::findBy(const string &what, const string &id = "",
                        const string &field = "") {
   string key, value;
 
-  if (id == "") {
-    if (what == "latest_block_header")
-      key = "latest_block_header_" + field;
-    else
-      key = field;
-  } else
+  if (id == "")
+    key = (what == "latest_block_header") ? "latest_block_header_" + field
+                                          : field;
+  else
     key = field == "" ? what + '_' + id : what + '_' + id + '_' + field;
 
   leveldb::Status status;
@@ -253,15 +263,18 @@ tuple<int, string, json> Storage::readBlock(int height) {
     transaction_json[tx_pos]["time"] = findBy("transaction", tx_id, "time");
     transaction_json[tx_pos]["rID"] = findBy("transaction", tx_id, "rID");
     transaction_json[tx_pos]["rSig"] = findBy("transaction", tx_id, "rSig");
-    transaction_json[tx_pos]["type"] = findBy("transaction", tx_id, "type");
-    // TODO : mtree 적용
+    transaction_json[tx_pos]["bID"] = findBy("transaction", tx_id, "bID");
+    transaction_json[tx_pos]["mPos"] = findBy("transaction", tx_id, "mPos");
+    string type = findBy("transaction", tx_id, "type");
+    transaction_json[tx_pos]["type"] = type;
+
     json content = json::parse(findBy("transaction", tx_id, "content"));
-    if (content.is_object()) { // If certificate
+    if (type == "certificates") {
       for (auto it = content.cbegin(); it != content.cend(); ++it) {
         transaction_json[tx_pos]["content"][it.key()] =
             it.value().get<string>();
       }
-    } else { // If digest
+    } else if (type == "digests") {
       for (size_t i = 0; i < content.size(); ++i) {
         for (size_t j = 0; j < content[i].size(); ++j) {
           transaction_json[tx_pos]["content"][i][j] =
@@ -271,7 +284,29 @@ tuple<int, string, json> Storage::readBlock(int height) {
     }
     ++tx_pos;
   }
+  int mtree_size = (stoi(findBy("block_header", block_id, "txcnt")) * 2) - 1;
+  for (int mtree_index = 0; mtree_index < mtree_size; ++mtree_index) {
+    string mtree = findBy("transaction", block_id, to_string(mtree_index));
+    transaction_json[tx_pos]["mtree"][mtree_index] = mtree;
+  }
   return make_tuple(height, block_binary, transaction_json);
+}
+
+vector<string> Storage::findSibling(const string &tx_id) {
+  string tx_id_pos = findBy("transaction", tx_id, "mPos");
+  string block_id = findBy("transaction", tx_id, "bID");
+  string tx_cnt = findBy("block_header", block_id, "txcnt");
+  int iteration_size = int(log2(stoi(tx_cnt)));
+
+  vector<string> siblings;
+  int tx_id_pos_int = stoi(tx_id_pos);
+  for (unsigned int i = 0; i < iteration_size; ++i) {
+    int mtree_pos =
+        (tx_id_pos_int % 2 != 0) ? tx_id_pos_int - 1 : tx_id_pos_int + 1;
+    siblings.push_back(findBy("transaction", block_id, to_string(mtree_pos)));
+    tx_id_pos_int = stoi(tx_cnt) + (tx_id_pos_int / 2);
+  }
+  return siblings;
 }
 
 } // namespace gruut
