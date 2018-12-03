@@ -86,10 +86,12 @@ void Storage::write(const string &what, json &data,
            it != data[transaction_iterator_index].cend(); ++it) {
         if (it.key() == "type" &&
             it.value() == "certificates") { // Certificate 저장
-          auto content = data[transaction_iterator_index]["content"];
-          for (auto it = content.cbegin(); it != content.cend(); ++it) {
-            auto new_key = "certificate_" + it.key();
-            auto new_value = it.value().get<string>();
+          json content = data[transaction_iterator_index]["content"];
+          for (auto content_index = 0; content_index < content.size();
+               content_index += 2) {
+            auto new_key =
+                "certificate_" + content[content_index].get<string>();
+            auto new_value = content[content_index + 1].get<string>();
             auto status =
                 m_db_certificate->Put(m_write_options, new_key, new_value);
             handleTrivialError(status);
@@ -99,8 +101,7 @@ void Storage::write(const string &what, json &data,
         auto new_key = "transaction_" + transaction_id + '_' + it.key();
 
         string new_value;
-        if (it.value().is_object() ||
-            it.value().is_array()) // Certificate(Object) || Digest(Array)
+        if (it.value().is_array()) // Certificates or Digests
           new_value = it.value().dump();
         else
           new_value = it.value().get<string>();
@@ -269,42 +270,43 @@ tuple<int, string, json> Storage::readBlock(int height) {
     transaction_json[tx_pos]["type"] = type;
 
     json content = json::parse(findBy("transaction", tx_id, "content"));
-    if (type == "certificates") {
-      for (auto it = content.cbegin(); it != content.cend(); ++it) {
-        transaction_json[tx_pos]["content"][it.key()] =
-            it.value().get<string>();
-      }
-    } else if (type == "digests") {
-      for (size_t i = 0; i < content.size(); ++i) {
-        for (size_t j = 0; j < content[i].size(); ++j) {
-          transaction_json[tx_pos]["content"][i][j] =
-              content[i][j].get<string>();
-        }
-      }
+    if (type == "certificates" || type == "digests") {
+      for (size_t i = 0; i < content.size(); ++i)
+        transaction_json[tx_pos]["content"][i] = content[i].get<string>();
     }
     ++tx_pos;
   }
-  int mtree_size = (stoi(findBy("block_header", block_id, "txcnt")) * 2) - 1;
-  for (int mtree_index = 0; mtree_index < mtree_size; ++mtree_index) {
+  for (int mtree_index = 0; mtree_index < (MAX_MERKLE_LEAVES * 2) - 1;
+       ++mtree_index) {
     string mtree = findBy("transaction", block_id, to_string(mtree_index));
     transaction_json[tx_pos]["mtree"][mtree_index] = mtree;
   }
+
   return make_tuple(height, block_binary, transaction_json);
 }
 
 vector<string> Storage::findSibling(const string &tx_id) {
   string tx_id_pos = findBy("transaction", tx_id, "mPos");
   string block_id = findBy("transaction", tx_id, "bID");
-  string tx_cnt = findBy("block_header", block_id, "txcnt");
-  int iteration_size = int(log2(stoi(tx_cnt)));
-
   vector<string> siblings;
+
+  int iteration_size = int(log2(MAX_MERKLE_LEAVES)); // log2(4096)=12
   int tx_id_pos_int = stoi(tx_id_pos);
-  for (unsigned int i = 0; i < iteration_size; ++i) {
-    int mtree_pos =
-        (tx_id_pos_int % 2 != 0) ? tx_id_pos_int - 1 : tx_id_pos_int + 1;
-    siblings.emplace_back(findBy("transaction", block_id, to_string(mtree_pos)));
-    tx_id_pos_int = stoi(tx_cnt) + (tx_id_pos_int / 2);
+  int node = tx_id_pos_int;
+  int size = MAX_MERKLE_LEAVES;
+  for (size_t i = 0; i < iteration_size; ++i) {
+    node = (node % 2 != 0) ? node - 1 : node + 1;
+    string sibling = findBy("transaction", block_id, to_string(node));
+    if (sibling == "") {
+      siblings.clear();
+      break;
+    } else {
+      siblings.emplace_back(sibling);
+      tx_id_pos_int /= 2;
+      if (i != 0)
+        size += MAX_MERKLE_LEAVES / pow(2, i);
+      node = size + tx_id_pos_int;
+    }
   }
   return siblings;
 }
