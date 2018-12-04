@@ -141,10 +141,11 @@ Status MergerRpcServer::SignerService::openChannel(
     ServerReaderWriter<GrpcMsgReqSsig, Identity> *stream) {
   ReceiverRpcData receiver_rpc = ReceiverRpcData();
   receiver_rpc.stream = stream;
-  uint64_t receiver_id;
+  uint64_t receiver_id = 0;
   Identity receiver_data;
   stream->Read(&receiver_data);
-  memcpy(&receiver_id, &receiver_data.sender()[0], sizeof(uint64_t));
+  memcpy(&receiver_id, &receiver_data.sender()[0],
+         receiver_data.sender().length());
   m_server.m_receiver_list[receiver_id] = receiver_rpc;
   // TODO: 보낼 데이터를 받을 때 까지 rpc 는 종료 되면 안됩니다. nullptr 이
   // 됬다는건 데이터를 전송했다는 뜻이 됩니다.
