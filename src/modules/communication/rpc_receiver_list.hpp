@@ -13,7 +13,7 @@ using namespace grpc;
 using namespace grpc_signer;
 namespace gruut {
 
-enum class RpcStatus { CREATE, PROCESS, WAIT, FINISH };
+enum class RpcCallStatus { CREATE, PROCESS, WAIT, FINISH };
 
 struct SignerRpcInfo {
   void *tag_identity;
@@ -24,6 +24,9 @@ struct SignerRpcInfo {
   ServerAsyncResponseWriter<GrpcMsgChallenge> *send_challenge;
   ServerAsyncResponseWriter<GrpcMsgResponse2> *send_response2;
   ServerAsyncResponseWriter<GrpcMsgAccept> *send_accept;
+  RpcCallStatus *join_status;
+  RpcCallStatus *dhkeyex_status;
+  RpcCallStatus *keyexfinished_status;
 };
 
 class RpcReceiverList : public TemplateSingleton<RpcReceiverList> {
@@ -34,29 +37,42 @@ private:
 public:
   void
   setReqSsig(uint64_t receiver_id,
-             ServerAsyncReaderWriter<GrpcMsgReqSsig, Identity> *req_sig_rpc) {
+             ServerAsyncReaderWriter<GrpcMsgReqSsig, Identity> *req_sig_rpc,
+             void *tag) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list[receiver_id].send_req_ssig = req_sig_rpc;
+    m_receiver_list[receiver_id].tag_identity = tag;
     m_mutex.unlock();
   }
 
   void setChanllenge(uint64_t receiver_id,
-                     ServerAsyncResponseWriter<GrpcMsgChallenge> *challenge) {
+                     ServerAsyncResponseWriter<GrpcMsgChallenge> *challenge,
+                     void *tag, RpcCallStatus *status) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list[receiver_id].send_challenge = challenge;
+    m_receiver_list[receiver_id].tag_join = tag;
+    m_receiver_list[receiver_id].join_status = status;
     m_mutex.unlock();
   }
 
   void setResponse2(uint64_t receiver_id,
-                    ServerAsyncResponseWriter<GrpcMsgResponse2> *response2) {
+                    ServerAsyncResponseWriter<GrpcMsgResponse2> *response2,
+                    void *tag, RpcCallStatus *status) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list[receiver_id].send_response2 = response2;
+    m_receiver_list[receiver_id].tag_dhkeyex = tag;
+    m_receiver_list[receiver_id].dhkeyex_status = status;
+    m_mutex.unlock();
   }
 
   void setAccept(uint64_t receiver_id,
-                 ServerAsyncResponseWriter<GrpcMsgAccept> *accept) {
+                 ServerAsyncResponseWriter<GrpcMsgAccept> *accept, void *tag,
+                 RpcCallStatus *status) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list[receiver_id].send_accept = accept;
+    m_receiver_list[receiver_id].tag_keyexfinished = tag;
+    m_receiver_list[receiver_id].keyexfinished_status = status;
+    m_mutex.unlock();
   }
 
   SignerRpcInfo getSignerRpcInfo(uint64_t receiver_id) {

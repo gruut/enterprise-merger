@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../application.hpp"
-#include "grpc_merger.hpp"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_se.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
@@ -33,7 +32,7 @@ private:
   GruutSeService::AsyncService m_se_service;
   GruutNetworkService::AsyncService m_signer_service;
 
-  void recvData();
+  void recvMessage();
 };
 
 class CallData {
@@ -43,7 +42,7 @@ public:
 protected:
   ServerCompletionQueue *m_completion_queue;
   ServerContext m_context;
-  RpcStatus m_receive_status;
+  RpcCallStatus m_receive_status;
 };
 
 class RecvFromMerger final : public CallData {
@@ -53,7 +52,7 @@ public:
       : m_responder(&m_context) {
     m_service = service;
     m_completion_queue = cq;
-    m_receive_status = RpcStatus::CREATE;
+    m_receive_status = RpcCallStatus::CREATE;
     proceed();
   }
   void proceed();
@@ -70,7 +69,7 @@ public:
       : m_responder(&m_context) {
     m_service = service;
     m_completion_queue = cq;
-    m_receive_status = RpcStatus::CREATE;
+    m_receive_status = RpcCallStatus::CREATE;
     proceed();
   }
   void proceed();
@@ -88,7 +87,7 @@ public:
       : m_stream(&m_context) {
     m_service = service;
     m_completion_queue = cq;
-    m_receive_status = RpcStatus::CREATE;
+    m_receive_status = RpcCallStatus::CREATE;
     m_rpc_receiver_list = RpcReceiverList::getInstance();
     proceed();
   }
@@ -107,7 +106,7 @@ public:
       : m_responder(&m_context) {
     m_service = service;
     m_completion_queue = cq;
-    m_receive_status = RpcStatus::CREATE;
+    m_receive_status = RpcCallStatus::CREATE;
     m_rpc_receiver_list = RpcReceiverList::getInstance();
     proceed();
   }
@@ -126,7 +125,7 @@ public:
       : m_responder(&m_context) {
     m_service = service;
     m_completion_queue = cq;
-    m_receive_status = RpcStatus::CREATE;
+    m_receive_status = RpcCallStatus::CREATE;
     m_rpc_receiver_list = RpcReceiverList::getInstance();
     proceed();
   }
@@ -146,7 +145,7 @@ public:
       : m_responder(&m_context) {
     m_service = service;
     m_completion_queue = cq;
-    m_receive_status = RpcStatus::CREATE;
+    m_receive_status = RpcCallStatus::CREATE;
     m_rpc_receiver_list = RpcReceiverList::getInstance();
     proceed();
   }
@@ -165,7 +164,7 @@ public:
       : m_responder(&m_context) {
     m_service = service;
     m_completion_queue = cq;
-    m_receive_status = RpcStatus::CREATE;
+    m_receive_status = RpcCallStatus::CREATE;
     proceed();
   }
   void proceed();
