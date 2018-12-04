@@ -11,16 +11,16 @@
 #include "message_proxy.hpp"
 #include "signature_requester.hpp"
 #include "signer_pool.hpp"
-#include "transaction_fetcher.hpp"
 
 namespace gruut {
 constexpr unsigned int REQUEST_NUM_OF_SIGNER = 5;
+constexpr unsigned int MAX_COLLECT_TRANSACTION_SIZE = 4096;
 
 void SignatureRequester::requestSignatures() {
   auto signers = selectSigners();
   auto transactions = std::move(fetchTransactions());
   // TODO: 임시 블럭 생성할 수 있을때 주석 해제
-  //  auto partial_block = makePartialBlock(transactions);
+  //    auto partial_block = makePartialBlock(transactions);
   //    auto message = makeMessage(partial_block);
   //
   //  MessageProxy proxy;
@@ -72,10 +72,21 @@ void SignatureRequester::startSignatureCollectTimer(
 }
 
 Transactions SignatureRequester::fetchTransactions() {
-  //      TransactionFetcher transaction_fetcher{move(selected_signers)};
+  auto &transaction_pool = Application::app().getTransactionPool();
 
-  //      return transaction_fetcher.fetchAll();
-  return Transactions();
+  const unsigned int transactions_size =
+      static_cast<const int>(transaction_pool.size());
+  auto t_size = min(transactions_size, MAX_COLLECT_TRANSACTION_SIZE);
+
+  Transactions transactions_list;
+  for (unsigned int i = 0; i < t_size; i++) {
+    // TODO: Lock guard.
+    auto &transaction = transaction_pool.front();
+    transactions_list.emplace_back(transaction);
+    transaction_pool.pop_front();
+  }
+
+  return transactions_list;
 }
 
 PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
