@@ -5,7 +5,6 @@
 
 #include "../../src/application.hpp"
 
-#include "../../src/services/transaction_fetcher.hpp"
 #include "../../src/services/signer_pool_manager.hpp"
 #include "../../src/services/block_generator.hpp"
 #include "../../src/services/message_factory.hpp"
