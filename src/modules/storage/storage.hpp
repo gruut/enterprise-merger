@@ -1,6 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 #define GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 
+#include "../../chain/static_merkle_tree.hpp"
 #include "../../utils/template_singleton.hpp"
 #include "leveldb/db.h"
 #include "leveldb/options.h"
