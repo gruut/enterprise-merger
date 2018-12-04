@@ -128,4 +128,6 @@ size_t SignerPool::find(signer_id_type user_id) {
 
   return NOT_FOUND;
 }
+
+Signer SignerPool::getSigner(int index) { return m_signer_pool[index]; }
 } // namespace gruut

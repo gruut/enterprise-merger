@@ -8,16 +8,86 @@ using namespace std;
 using namespace nlohmann;
 
 namespace gruut {
-TransactionCollector::TransactionCollector() {
-  m_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
-  m_signature_requester = make_shared<SignatureRequester>();
-}
+void TransactionCollector::handleMessage(json message_body_json) {
+  if (isRunnable()) {
+    if (!m_timer_running) {
+      m_timer_running = true;
+      startTimer();
+      m_signature_requester.requestSignatures();
+    }
 
-void TransactionCollector::handleMessage(MessageType &message_type,
-                                         signer_id_type receiver_id,
-                                         json message_body_json) {
-  startTimer();
+    Transaction transaction;
+    bytes signature_message;
+
+    auto txid_vector =
+        Botan::base64_decode(message_body_json["txid"].get<string>());
+    transaction.transaction_id = TypeConverter::toBytes(
+        string(txid_vector.cbegin(), txid_vector.cend()));
+    signature_message.insert(signature_message.cend(), txid_vector.cbegin(),
+                             txid_vector.cend());
+
+    transaction.sent_time =
+        TypeConverter::toTimestampType(message_body_json["time"].get<string>());
+    signature_message.insert(signature_message.cend(),
+                             transaction.sent_time.cbegin(),
+                             transaction.sent_time.cend());
+
+    auto requestor_id_vector =
+        Botan::base64_decode(message_body_json["rID"].get<string>());
+    transaction.requestor_id = TypeConverter::toBytes(
+        string(requestor_id_vector.cbegin(), requestor_id_vector.cend()));
+    signature_message.insert(signature_message.cend(),
+                             requestor_id_vector.cbegin(),
+                             requestor_id_vector.cend());
+
+    string transaction_type_string = message_body_json["type"].get<string>();
+    if (transaction_type_string == "digests")
+      transaction.transaction_type = TransactionType::DIGESTS;
+    else
+      transaction.transaction_type = TransactionType::CERTIFICATE;
+    auto transaction_type_bytes =
+        TypeConverter::toBytes(transaction_type_string);
+    signature_message.insert(signature_message.cend(),
+                             transaction_type_bytes.cbegin(),
+                             transaction_type_bytes.cend());
+
+    json content_array_json = message_body_json["content"];
+    for (auto it = content_array_json.cbegin(); it != content_array_json.cend();
+         ++it) {
+      string elem = (*it).get<string>();
+      auto elem_bytes = TypeConverter::toBytes(elem);
+      signature_message.insert(signature_message.cend(), elem_bytes.cbegin(),
+                               elem_bytes.cend());
+
+      transaction.content_list.emplace_back(elem);
+    }
+
+    auto rsig_vector =
+        Botan::base64_decode(message_body_json["rSig"].get<string>());
+    transaction.signature =
+        vector<uint8_t>(rsig_vector.cbegin(), rsig_vector.cend());
+
+    // TODO: Service endpoint로부터 public_key를 받을 수 있을 때 63-71줄 제거할
+    // 것.
+    string endpoint_public_key =
+        "-----BEGIN PUBLIC KEY-----\n"
+        "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDCtTEic76GBqUetJ1XXrrWZcxd\n"
+        "8vJr2raWRqBjbGpSzLqa3YLvVxVeK49iSlI+5uLX/2WFJdhKAWoqO+03oH4TDSup\n"
+        "olzZrwMFSylxGwR5jPmoNHDMS3nnzUkBtdr3NCfq1C34fQV0iUGdlPtJaiiTBQPM\n"
+        "t4KUcQ1TaazB8TzhqwIDAQAB\n"
+        "-----END PUBLIC KEY-----";
+    Botan::DataSource_Memory pk_datasource(endpoint_public_key);
+    unique_ptr<Botan::Public_Key> public_key(
+        Botan::X509::load_key(pk_datasource));
+
+    bool is_verified = RSA::doVerify(*public_key, signature_message,
+                                     transaction.signature, true);
+
+    if (is_verified) {
+      auto &transaction_pool = Application::app().getTransactionPool();
+      transaction_pool.emplace_back(transaction);
+    }
+  }
 }
 
 bool TransactionCollector::isRunnable() {
@@ -49,11 +119,5 @@ void TransactionCollector::startTimer() {
       auto &transaction_pool = Application::app().getTransactionPool();
     }
   });
-}
-
-void TransactionCollector::startSignatureRequest() {
-  bool request_result = m_signature_requester->requestSignatures();
-  if (!request_result)
-    throw;
 }
 } // namespace gruut

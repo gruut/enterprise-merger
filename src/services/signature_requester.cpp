@@ -1,30 +1,31 @@
+#include <algorithm>
 #include <boost/system/error_code.hpp>
 #include <iostream>
+#include <random>
 
 #include "../application.hpp"
 #include "../chain/signer.hpp"
 #include "../chain/types.hpp"
 #include "block_generator.hpp"
 #include "message_factory.hpp"
+#include "message_proxy.hpp"
 #include "signature_requester.hpp"
 #include "signer_pool.hpp"
 #include "transaction_fetcher.hpp"
 
 namespace gruut {
-SignatureRequester::SignatureRequester() {
-  m_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
-}
+constexpr unsigned int REQUEST_NUM_OF_SIGNER = 5;
 
-bool SignatureRequester::requestSignatures() {
-  // TODO: SignerPool 구조가 변경됨에 따라 블럭 생성 구현할때 주석 해제
-  //  auto transactions = std::move(fetchTransactions());
+void SignatureRequester::requestSignatures() {
+  auto signers = selectSigners();
+  auto transactions = std::move(fetchTransactions());
+  // TODO: 임시 블럭 생성할 수 있을때 주석 해제
   //  auto partial_block = makePartialBlock(transactions);
-  //  auto message = makeMessage(partial_block);
+  //    auto message = makeMessage(partial_block);
   //
-  //  Application::app().getOutputQueue()->push(message);
+  //  MessageProxy proxy;
+  //  proxy.deliverOutputMessage(message);
   //  startSignatureCollectTimer(transactions);
-  return true;
 }
 
 void SignatureRequester::startSignatureCollectTimer(
@@ -68,15 +69,12 @@ void SignatureRequester::startSignatureCollectTimer(
   });
 }
 
-// Transactions SignatureRequester::fetchTransactions() {
-//  // TODO: SignerPool 구조가 변경됨에 따라 블럭 생성 구현할때 주석 해제
-//  auto &&selected_signer_pool =
-//      Application::app().getSignerPoolManager().getSelectedSignerPool();
-//
-//  TransactionFetcher transaction_fetcher{selected_signer_pool.fetchAll()};
-//
-//  return transaction_fetcher.fetchAll();
-//}
+Transactions SignatureRequester::fetchTransactions() {
+  //      TransactionFetcher transaction_fetcher{move(selected_signers)};
+
+  //      return transaction_fetcher.fetchAll();
+  return Transactions();
+}
 
 PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
   BlockGenerator block_generator;
@@ -96,5 +94,39 @@ OutputMessage SignatureRequester::makeMessage(PartialBlock &block) {
   auto message = MessageFactory::createSigRequestMessage(block);
 
   return message;
+}
+
+RandomSignerIndices
+SignatureRequester::generateRandomNumbers(const unsigned int size) {
+  // Generate random number in range(0, size)
+  mt19937 mt;
+  mt.seed(random_device()());
+
+  RandomSignerIndices number_set;
+  while (number_set.size() < size) {
+    uniform_int_distribution<mt19937::result_type> dist(0, size - 1);
+    int random_number = static_cast<int>(dist(mt));
+    number_set.insert(random_number);
+  }
+
+  return number_set;
+}
+
+Signers SignatureRequester::selectSigners() {
+  Signers selected_signers;
+
+  auto &signer_pool = Application::app().getSignerPool();
+  auto signer_pool_size = signer_pool.size();
+  if (signer_pool_size > 0) {
+    auto chosen_signers_index_set =
+        generateRandomNumbers(static_cast<unsigned int>(signer_pool.size()));
+
+    for (auto index : chosen_signers_index_set) {
+      auto signer = signer_pool.getSigner(index);
+      selected_signers.emplace_back(signer);
+    }
+  }
+
+  return selected_signers;
 }
 } // namespace gruut

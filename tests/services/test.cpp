@@ -77,9 +77,7 @@ BOOST_AUTO_TEST_SUITE(Test_SignerPool)
 
       BOOST_CHECK_EQUAL(signer_pool.size(), 1);
     }
-
 BOOST_AUTO_TEST_SUITE_END()
-
 
 BOOST_AUTO_TEST_SUITE(Test_MessageIOQueues)
 
