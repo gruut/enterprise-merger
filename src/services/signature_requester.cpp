@@ -30,6 +30,8 @@ void SignatureRequester::requestSignatures() {
 
 void SignatureRequester::startSignatureCollectTimer(
     Transactions &transactions) {
+  m_timer.reset(
+      new boost::asio::deadline_timer(Application::app().getIoService()));
   m_timer->expires_from_now(
       boost::posix_time::milliseconds(SIGNATURE_COLLECTION_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {

@@ -2,7 +2,12 @@
 
 #include "../application.hpp"
 #include "../chain/transaction.hpp"
+#include "../utils/rsa.hpp"
+#include "../utils/type_converter.hpp"
 #include "transaction_collector.hpp"
+#include <botan/base64.h>
+#include <botan/data_src.h>
+#include <botan/x509_key.h>
 
 using namespace std;
 using namespace nlohmann;
@@ -13,6 +18,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
     if (!m_timer_running) {
       m_timer_running = true;
       startTimer();
+      Application::app().getSignerPool().createTransactions();
       m_signature_requester.requestSignatures();
     }
 
@@ -97,26 +103,22 @@ bool TransactionCollector::isRunnable() {
 }
 
 void TransactionCollector::startTimer() {
+  m_timer.reset(
+      new boost::asio::deadline_timer(Application::app().getIoService()));
   m_timer->expires_from_now(
       boost::posix_time::milliseconds(TRANSACTION_COLLECTION_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       cout << "startTimer: Timer was cancelled or retriggered." << endl;
-      this->m_runnable = false;
+      this->m_timer_running = false;
     } else if (ec.value() == 0) {
-      this->m_runnable = false;
+      this->m_timer_running = false;
+      // TODO: Logger
+      cout << "POOL SIZE: " << Application::app().getTransactionPool().size()
+           << endl;
     } else {
-      this->m_runnable = false;
+      this->m_timer_running = false;
       throw;
-    }
-
-    this->m_worker_thread->join();
-  });
-
-  m_runnable = true;
-  m_worker_thread = new thread([this]() {
-    while (this->m_runnable) {
-      auto &transaction_pool = Application::app().getTransactionPool();
     }
   });
 }

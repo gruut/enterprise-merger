@@ -7,7 +7,6 @@
 #include <thread>
 #include <vector>
 
-#include "../application.hpp"
 #include "../chain/block.hpp"
 #include "../chain/merkle_tree.hpp"
 #include "../chain/message.hpp"
@@ -25,7 +24,7 @@ using Signers = std::vector<Signer>;
 
 class SignatureRequester {
 public:
-  SignatureRequester();
+  SignatureRequester() = default;
 
   void requestSignatures();
 

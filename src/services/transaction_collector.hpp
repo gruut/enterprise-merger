@@ -5,7 +5,6 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <queue>
-#include <thread>
 
 #include "../chain/types.hpp"
 #include "../modules/module.hpp"
@@ -24,13 +23,10 @@ private:
 
   void startTimer();
 
-  void startSignatureRequest();
-
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   SignatureRequester m_signature_requester;
 
-  bool m_runnable = false;
-  std::thread *m_worker_thread;
+  bool m_timer_running = false;
 };
 } // namespace gruut
 #endif

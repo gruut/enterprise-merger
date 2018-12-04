@@ -23,7 +23,6 @@ private:
   Transaction fetch(Signer &signer);
   transaction_id_type generateTransactionId();
 
-  Transactions m_selected_transaction_list;
   Signers m_signers;
 };
 } // namespace gruut
