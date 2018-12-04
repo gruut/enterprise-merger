@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../utils/template_singleton.hpp"
 #include "../chain/types.hpp"
+#include "../utils/template_singleton.hpp"
 #include <deque>
 #include <iostream>
 #include <mutex>
@@ -57,7 +57,7 @@ public:
   OutputMsgEntry fetch(OutputMsgEntry &msg) {
     OutputMsgEntry ret_msg;
     std::lock_guard<std::mutex> lock(m_queue_mutex);
-    if(!m_output_msg_pool.empty()) {
+    if (!m_output_msg_pool.empty()) {
       ret_msg = m_output_msg_pool.front();
       m_output_msg_pool.pop_front();
     }
@@ -65,12 +65,8 @@ public:
     return ret_msg;
   }
 
-  inline bool empty(){
-    return m_output_msg_pool.empty();
-  }
+  inline bool empty() { return m_output_msg_pool.empty(); }
 
-  inline void clearOutputQueue() {
-    m_output_msg_pool.clear();
-  }
+  inline void clearOutputQueue() { m_output_msg_pool.clear(); }
 };
 } // namespace gruut
