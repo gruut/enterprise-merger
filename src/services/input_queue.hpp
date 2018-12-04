@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../utils/template_singleton.hpp"
 #include "../chain/types.hpp"
+#include "../utils/template_singleton.hpp"
 #include <deque>
 #include <iostream>
 #include <mutex>
@@ -13,8 +13,7 @@ namespace gruut {
 struct InputMsgEntry {
   MessageType type;
   nlohmann::json body;
-  InputMsgEntry()
-      : type(MessageType::MSG_NULL), body(nullptr) {}
+  InputMsgEntry() : type(MessageType::MSG_NULL), body(nullptr) {}
   InputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_)
       : type(msg_type_), body(msg_body_) {}
 };
@@ -45,7 +44,7 @@ public:
   InputMsgEntry fetch() {
     InputMsgEntry ret_msg;
     std::lock_guard<std::mutex> lock(m_queue_mutex);
-    if(!m_input_msg_pool.empty()) {
+    if (!m_input_msg_pool.empty()) {
       ret_msg = m_input_msg_pool.front();
       m_input_msg_pool.pop_front();
     }
@@ -53,12 +52,8 @@ public:
     return ret_msg;
   }
 
-  inline bool empty(){
-    return m_input_msg_pool.empty();
-  }
+  inline bool empty() { return m_input_msg_pool.empty(); }
 
-  inline void clearInputQueue() {
-    m_input_msg_pool.clear();
-  }
+  inline void clearInputQueue() { m_input_msg_pool.clear(); }
 };
 } // namespace gruut
