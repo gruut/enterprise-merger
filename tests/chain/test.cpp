@@ -1,45 +1,33 @@
 #define BOOST_TEST_MODULE
 
 #include <boost/test/unit_test.hpp>
+#include <botan/hex.h>
 #include <utility>
 
 #include "../../src/chain/merkle_tree.hpp"
+#include "../../src/utils/type_converter.hpp"
 
 using namespace std;
 using namespace gruut;
 
 BOOST_AUTO_TEST_SUITE(Test_MerkleTree)
-
     BOOST_AUTO_TEST_CASE(generate_merkle_tree) {
+        MerkleTree t;
+        vector<sha256> transaction_ids;
 
-        /* Validates Merkle tree
-                            63CD9C
-                              |
-                CC2207                  614FBD
-                /      \                /     \                                                                                                                                                                                                                                  |
-           F5FC       8BEF56        6C2B76     6C2B76
-           / \         /  \          / \
-    6B86B2 D4735E 4E0740 4B2277 EF2D12 E7F6C0
-        */
-//
-//        MerkleTree t;
-//        vector<sha256> transaction_ids;
-//        transaction_ids.emplace_back("1");
-//        transaction_ids.emplace_back("2");
-//        transaction_ids.emplace_back("3");
-//        transaction_ids.emplace_back("4");
-//        transaction_ids.emplace_back("5");
-//        transaction_ids.emplace_back("6");
-//
-//        auto transaction_root = t.generate(transaction_ids);
+        const string id = "1";
+        auto transaction_id = Sha256::hash(id);
 
-//        bool result = transaction_root == "63CD9C509AA5F6B9B3257123C01D2D1037797271BD4294CA74763F65E4B84812";
-//        BOOST_TEST(true);
-//
-//        auto &tree = t.getTree();
-//        auto childs = *tree.find("63CD9C509AA5F6B9B3257123C01D2D1037797271BD4294CA74763F65E4B84812");
-//        BOOST_TEST(childs.second.first == "CC220774E4FA38B49110107C4DE38DF2C28328B00345E403EF415A577C476E90");
-//        BOOST_TEST(childs.second.second == "614FBDFCE3A9A8A500A369369FC98B3AB96F34E62A604B0D1FFA8C9611363066");
+        transaction_ids.emplace_back(transaction_id);
+        transaction_ids.emplace_back(transaction_id);
+        transaction_ids.emplace_back(transaction_id);
+        transaction_ids.emplace_back(transaction_id);
+        t.generate(transaction_ids);
+
+        auto merkle_tree = t.getMerkleTree();
+
+        auto parent_digest = merkle_tree.back();
+        auto parent_digest_hex = Botan::hex_encode(parent_digest);
+        BOOST_CHECK_EQUAL(parent_digest_hex, "6C195BBC63D4168EFD589E6AEA788CE48F77DFD3F58F652A5E5923731970634A");
     }
-
 BOOST_AUTO_TEST_SUITE_END()
