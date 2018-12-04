@@ -46,7 +46,7 @@ void TransactionGenerator::generate(Signer &signer) {
     string private_key = "";
     new_transaction.signature = RSA::doSign(private_key, signature, true);
 
-    Application::app().getTransactionPool().emplace_back(new_transaction);
+    Application::app().getTransactionPool().push(new_transaction);
   }
 }
 
