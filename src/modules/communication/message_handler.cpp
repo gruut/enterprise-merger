@@ -4,14 +4,13 @@
 
 namespace gruut {
 void MessageHandler::unpackMsg(std::string &packed_msg,
-                               std::promise<grpc::Status> &rpc_status,
-                               std::promise<uint64_t> receiver_id) {
+                               grpc::Status &rpc_status,
+                               uint64_t &receiver_id) {
   using namespace grpc;
   auto &input_queue = Application::app().getInputQueue();
-
   MessageHeader header = HeaderController::parseHeader(packed_msg);
   if (!validateMessage(header)) {
-    rpc_status.set_value(Status(StatusCode::INVALID_ARGUMENT, "Wrong Message"));
+    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message");
     return;
   }
   int body_size = getMsgBodySize(header);
@@ -29,26 +28,23 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
   nlohmann::json json_data = getJson(header.compression_algo_type, msg_body);
 
   if (!JsonValidator::validateSchema(json_data, header.message_type)) {
-    rpc_status.set_value(
-        Status(grpc::StatusCode::INVALID_ARGUMENT, "json schema check fail"));
+    rpc_status =
+        Status(grpc::StatusCode::INVALID_ARGUMENT, "json schema check fail");
     return;
   }
 
   uint64_t id;
   memcpy(&id, &header.sender_id[0], sizeof(uint64_t));
-  receiver_id.set_value(id);
+  receiver_id = id;
 
   input_queue->emplace(make_tuple(header.message_type, id, json_data));
-  rpc_status.set_value(Status::OK);
+  rpc_status = Status::OK;
 }
 
 void MessageHandler::packMsg(OutputMessage &output_msg) {
-  auto &output_queue = Application::app().getOutputQueue();
-  OutputMessage msg = output_queue->front();
-  MessageType msg_type = get<0>(msg);
+  MessageType msg_type = get<0>(output_msg);
 
-  output_queue->pop();
-  nlohmann::json body = get<2>(msg);
+  nlohmann::json body = get<2>(output_msg);
   MessageHeader header;
   header.message_type = msg_type;
   // TODO : Compression type에 따라 수정 될 수 있습니다.
@@ -65,7 +61,7 @@ void MessageHandler::packMsg(OutputMessage &output_msg) {
   //  }
 
   MergerClient merger_client;
-  merger_client.sendMessage(msg_type, get<1>(msg), packed_msg);
+  merger_client.sendMessage(msg_type, get<1>(output_msg), packed_msg);
 }
 
 bool MessageHandler::validateMessage(MessageHeader &header) {
@@ -126,14 +122,4 @@ std::string MessageHandler::genPackedMsg(MessageHeader &header,
       body_dump, header.message_type, header.compression_algo_type);
   return packed_msg;
 }
-
-bool MessageHandler::checkSignerMsgType(MessageType msg_type) {
-  return (msg_type == MessageType::MSG_JOIN ||
-          msg_type == MessageType::MSG_RESPONSE_1 ||
-          msg_type == MessageType::MSG_SUCCESS ||
-          msg_type == MessageType::MSG_ECHO ||
-          msg_type == MessageType::MSG_LEAVE ||
-          msg_type == MessageType::MSG_SSIG);
-}
-
 }; // namespace gruut
