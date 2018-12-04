@@ -28,7 +28,7 @@ public:
     j_partial_block["hgt"] = block.height;
 
     vector<uint64_t> receivers_list;
-    for_each(signers.begin(), signers.end(), [&receivers_list](Signer signer) {
+    for_each(signers.begin(), signers.end(), [&receivers_list](Signer &signer) {
       receivers_list.emplace_back(signer.user_id);
     });
 

@@ -1,12 +1,14 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 #define GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 
+#include "../../chain/merkle_tree.hpp"
 #include "../../utils/template_singleton.hpp"
 #include "leveldb/db.h"
 #include "leveldb/options.h"
 #include "leveldb/write_batch.h"
 #include "nlohmann/json.hpp"
 #include <boost/filesystem/operations.hpp>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -25,7 +27,10 @@ public:
   pair<string, string> findLatestHashAndHeight();
   vector<string> findLatestTxIdList();
   string findCertificate(const string &user_id);
+  string findCertificate(const uint64_t &user_id);
   void deleteAllDirectory(const string &dir_path);
+  tuple<int, string, json> readBlock(int height);
+  vector<string> findSibling(const string &tx_id);
 
 private:
   void handleCriticalError(const leveldb::Status &status);
@@ -44,6 +49,7 @@ private:
   leveldb::DB *m_db_latest_block_header;
   leveldb::DB *m_db_transaction;
   leveldb::DB *m_db_certificate;
+  leveldb::DB *m_db_blockid_height;
 };
 } // namespace gruut
 #endif

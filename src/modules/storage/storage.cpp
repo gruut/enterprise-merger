@@ -18,6 +18,8 @@ Storage::Storage() {
       leveldb::DB::Open(m_options, "./transaction", &m_db_transaction));
   handleCriticalError(
       leveldb::DB::Open(m_options, "./certificate", &m_db_certificate));
+  handleCriticalError(
+      leveldb::DB::Open(m_options, "./blockid_height", &m_db_blockid_height));
 }
 
 Storage::~Storage() {
@@ -26,12 +28,14 @@ Storage::~Storage() {
   delete m_db_latest_block_header;
   delete m_db_transaction;
   delete m_db_certificate;
+  delete m_db_blockid_height;
 
   m_db_block_header = nullptr;
   m_db_block_binary = nullptr;
   m_db_latest_block_header = nullptr;
   m_db_transaction = nullptr;
   m_db_certificate = nullptr;
+  m_db_blockid_height = nullptr;
 }
 
 void Storage::write(const string &what, json &data,
@@ -73,6 +77,8 @@ void Storage::write(const string &what, json &data,
          transaction_iterator_index < data.size() - 1;
          ++transaction_iterator_index) {
       data[transaction_iterator_index]["bID"] = block_id;
+      data[transaction_iterator_index]["mPos"] =
+          to_string(transaction_iterator_index);
 
       string transaction_id = data[transaction_iterator_index]["txID"];
 
@@ -80,10 +86,12 @@ void Storage::write(const string &what, json &data,
            it != data[transaction_iterator_index].cend(); ++it) {
         if (it.key() == "type" &&
             it.value() == "certificates") { // Certificate 저장
-          auto content = data[transaction_iterator_index]["content"];
-          for (auto it = content.cbegin(); it != content.cend(); ++it) {
-            auto new_key = "certificate_" + it.key();
-            auto new_value = it.value().get<string>();
+          json content = data[transaction_iterator_index]["content"];
+          for (auto content_index = 0; content_index < content.size();
+               content_index += 2) {
+            auto new_key =
+                "certificate_" + content[content_index].get<string>();
+            auto new_value = content[content_index + 1].get<string>();
             auto status =
                 m_db_certificate->Put(m_write_options, new_key, new_value);
             handleTrivialError(status);
@@ -93,18 +101,33 @@ void Storage::write(const string &what, json &data,
         auto new_key = "transaction_" + transaction_id + '_' + it.key();
 
         string new_value;
-        if (it.value().is_object() ||
-            it.value().is_array()) // Certificate(Object) || Digest(Array)
+        if (it.value().is_array()) // Certificates or Digests
           new_value = it.value().dump();
         else
           new_value = it.value().get<string>();
-
         auto status =
             m_db_transaction->Put(m_write_options, new_key, new_value);
         handleTrivialError(status);
       }
     }
-    // TODO : mtree
+    for (unsigned int mtree_iteration_index = 0;
+         mtree_iteration_index <
+         data[transaction_iterator_index]["mtree"].size();
+         ++mtree_iteration_index) {
+      auto new_key =
+          "transaction_" + block_id + '_' + to_string(mtree_iteration_index);
+      auto new_value =
+          data[transaction_iterator_index]["mtree"][mtree_iteration_index]
+              .get<string>();
+      auto status = m_db_transaction->Put(m_write_options, new_key, new_value);
+      handleTrivialError(status);
+    }
+  } else if (what == "blockid_height") {
+    auto new_key = data["hgt"].get<string>();
+    auto new_value = block_id;
+
+    auto status = m_db_blockid_height->Put(m_write_options, new_key, new_value);
+    handleTrivialError(status);
   }
 }
 
@@ -113,7 +136,8 @@ string Storage::findBy(const string &what, const string &id = "",
   string key, value;
 
   if (id == "")
-    key = "latest_block_header_" + field;
+    key = (what == "latest_block_header") ? "latest_block_header_" + field
+                                          : field;
   else
     key = field == "" ? what + '_' + id : what + '_' + id + '_' + field;
 
@@ -128,6 +152,8 @@ string Storage::findBy(const string &what, const string &id = "",
     status = m_db_certificate->Get(m_read_options, key, &value);
   else if (what == "transaction")
     status = m_db_transaction->Get(m_read_options, key, &value);
+  else if (what == "blockid_height")
+    status = m_db_blockid_height->Get(m_read_options, key, &value);
   if (!status.ok())
     value.assign("");
 
@@ -171,6 +197,8 @@ void Storage::saveBlock(const string &block_binary, json &block_header,
   write("block_binary", block_binary_json, block_id);
 
   write("transaction", transaction, block_id);
+
+  write("blockid_height", block_header, block_id);
 }
 
 pair<string, string> Storage::findLatestHashAndHeight() {
@@ -209,12 +237,81 @@ int Storage::findTxIdPos(const string &blk_id, const string &tx_id) {
   }
 
   istringstream iss(tx_list_str);
-  int ret_pos = 1;
+  int ret_pos = 0;
   for (std::string token; std::getline(iss, token, '_');) {
     if (token == tx_id)
       return ret_pos;
     ++ret_pos;
   }
   return -1;
+}
+
+tuple<int, string, json> Storage::readBlock(int height) {
+  string block_id = (height == -1)
+                        ? findBy("latest_block_header", "", "bID")
+                        : findBy("blockid_height", "", to_string(height));
+  if (height == -1)
+    height = stoi(findBy("latest_block_header", "", "hgt"));
+  string block_binary = findBy("block_binary", block_id, "");
+
+  json transaction_json;
+  string tx_ids = findBy("block_header", block_id, "txids");
+  vector<string> tx_ids_list;
+  std::istringstream iss(tx_ids);
+  int tx_pos = 0;
+  for (std::string tx_id; std::getline(iss, tx_id, '_');) {
+    transaction_json[tx_pos]["txID"] = tx_id;
+    transaction_json[tx_pos]["time"] = findBy("transaction", tx_id, "time");
+    transaction_json[tx_pos]["rID"] = findBy("transaction", tx_id, "rID");
+    transaction_json[tx_pos]["rSig"] = findBy("transaction", tx_id, "rSig");
+    transaction_json[tx_pos]["bID"] = findBy("transaction", tx_id, "bID");
+    transaction_json[tx_pos]["mPos"] = findBy("transaction", tx_id, "mPos");
+    string type = findBy("transaction", tx_id, "type");
+    transaction_json[tx_pos]["type"] = type;
+
+    json content = json::parse(findBy("transaction", tx_id, "content"));
+    if (type == "certificates" || type == "digests") {
+      for (size_t i = 0; i < content.size(); ++i)
+        transaction_json[tx_pos]["content"][i] = content[i].get<string>();
+    }
+    ++tx_pos;
+  }
+  for (int mtree_index = 0; mtree_index < (MAX_MERKLE_LEAVES * 2) - 1;
+       ++mtree_index) {
+    string mtree = findBy("transaction", block_id, to_string(mtree_index));
+    transaction_json[tx_pos]["mtree"][mtree_index] = mtree;
+  }
+
+  return make_tuple(height, block_binary, transaction_json);
+}
+
+vector<string> Storage::findSibling(const string &tx_id) {
+  string tx_id_pos = findBy("transaction", tx_id, "mPos");
+  string block_id = findBy("transaction", tx_id, "bID");
+  vector<string> siblings;
+
+  int iteration_size = int(log2(MAX_MERKLE_LEAVES)); // log2(4096)=12
+  int tx_id_pos_int = stoi(tx_id_pos);
+  int node = tx_id_pos_int;
+  int size = MAX_MERKLE_LEAVES;
+  for (size_t i = 0; i < iteration_size; ++i) {
+    node = (node % 2 != 0) ? node - 1 : node + 1;
+    string sibling = findBy("transaction", block_id, to_string(node));
+    if (sibling == "") {
+      siblings.clear();
+      break;
+    } else {
+      siblings.emplace_back(sibling);
+      tx_id_pos_int /= 2;
+      if (i != 0)
+        size += MAX_MERKLE_LEAVES / pow(2, i);
+      node = size + tx_id_pos_int;
+    }
+  }
+  return siblings;
+}
+
+string Storage::findCertificate(const uint64_t &user_id) {
+  return findCertificate(to_string(user_id));
 }
 } // namespace gruut

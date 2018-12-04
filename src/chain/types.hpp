@@ -11,6 +11,7 @@ enum class TransactionType { DIGESTS, CERTIFICATE };
 enum class BlockType { PARTIAL, NORMAL };
 
 enum class MessageType : uint8_t {
+  MSG_NULL = 0x00,
   MSG_UP = 0x30,
   MSG_PING = 0x31,
   MSG_REQ_BLOCK = 0x32,
@@ -34,6 +35,7 @@ enum class MACAlgorithmType : uint8_t {
   ECDSA = 0x01,
   EdDSA = 0x02,
   Schnorr = 0x03,
+  RSA_PKCS115 = 0x10,
 
   HMAC = 0xF1,
   NONE = 0xFF

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../chain/types.hpp"
 #include "../utils/template_singleton.hpp"
 #include <deque>
 #include <iostream>
@@ -10,35 +11,38 @@
 namespace gruut {
 
 struct OutputMsgEntry {
-  uint8_t type;
+  MessageType type;
   nlohmann::json body;
   std::vector<std::string> receivers;
-  OutputMsgEntry(uint8_t msg_type_, nlohmann::json &msg_body_,
+  OutputMsgEntry()
+      : type(MessageType::MSG_NULL), body(nullptr), receivers({}) {}
+  OutputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_,
                  std::vector<std::string> &msg_receivers_)
       : type(msg_type_), body(msg_body_), receivers(msg_receivers_) {}
 };
 
-class OutputQueue : public TemplateSingleton<OutputQueue> {
+class OutputQueueAlt : public TemplateSingleton<OutputQueueAlt> {
 private:
   std::deque<OutputMsgEntry> m_output_msg_pool;
   std::mutex m_queue_mutex;
 
 public:
-  void push(std::tuple<uint8_t, nlohmann::json, std::vector<std::string>>
+  void push(std::tuple<MessageType, nlohmann::json, std::vector<std::string>>
                 &msg_entry_tuple) {
     OutputMsgEntry tmp_msg_entry(std::get<0>(msg_entry_tuple),
                                  std::get<1>(msg_entry_tuple),
                                  std::get<2>(msg_entry_tuple));
+
     push(tmp_msg_entry);
   }
 
-  void push(uint8_t msg_type, nlohmann::json &msg_body) {
+  void push(MessageType msg_type, nlohmann::json &msg_body) {
     std::vector<std::string> msg_receivers;
     OutputMsgEntry tmp_msg_entry(msg_type, msg_body, msg_receivers);
     push(tmp_msg_entry);
   }
 
-  void push(uint8_t msg_type, nlohmann::json &msg_body,
+  void push(MessageType msg_type, nlohmann::json &msg_body,
             std::vector<std::string> &msg_receivers) {
     OutputMsgEntry tmp_msg_entry(msg_type, msg_body, msg_receivers);
     push(tmp_msg_entry);
@@ -50,14 +54,19 @@ public:
     m_queue_mutex.unlock();
   }
 
-  OutputMsgEntry fetch() {
-    OutputMsgEntry ret_msg = m_output_msg_pool.front();
+  OutputMsgEntry fetch(OutputMsgEntry &msg) {
+    OutputMsgEntry ret_msg;
     std::lock_guard<std::mutex> lock(m_queue_mutex);
-    m_output_msg_pool.pop_front();
+    if (!m_output_msg_pool.empty()) {
+      ret_msg = m_output_msg_pool.front();
+      m_output_msg_pool.pop_front();
+    }
     m_queue_mutex.unlock();
     return ret_msg;
   }
 
-  void clearOutputQueue() { m_output_msg_pool.clear(); }
+  inline bool empty() { return m_output_msg_pool.empty(); }
+
+  inline void clearOutputQueue() { m_output_msg_pool.clear(); }
 };
 } // namespace gruut
