@@ -5,6 +5,7 @@
 #include "services/signer_pool_manager.hpp"
 #include "services/transaction_collector.hpp"
 #include <boost/asio.hpp>
+#include <list>
 #include <queue>
 #include <thread>
 #include <tuple>
@@ -19,7 +20,7 @@ using namespace std;
 namespace gruut {
 using InputQueue = shared_ptr<queue<InputMessage>>;
 using OutputQueue = shared_ptr<queue<OutputMessage>>;
-using TransactionPool = vector<Transaction>;
+using TransactionPool = list<Transaction>;
 using SignaturePool = vector<Signature>;
 
 class Application {
