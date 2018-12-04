@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 11)
+
 find_package(Boost REQUIRED COMPONENTS system thread random filesystem unit_test_framework)
 
 file(GLOB UNIT_TEST_SOURCE_FILES
@@ -37,12 +38,13 @@ target_sources(services_test
         )
 
 target_include_directories(services_test PRIVATE ${Boost_INCLUDE_DIR} ../../include ../../lib/leveldb /usr/local/include)
+
 target_link_libraries(services_test
         PRIVATE
         ${Boost_LIBRARIES}
-        leveldb
         ${LZ4_LIBS}
         /usr/local/lib/libbotan-2.a
+        leveldb
         )
 
 add_test(

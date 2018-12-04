@@ -110,18 +110,10 @@ void Storage::write(const string &what, json &data,
         handleTrivialError(status);
       }
     }
-    for (unsigned int mtree_iteration_index = 0;
-         mtree_iteration_index <
-         data[transaction_iterator_index]["mtree"].size();
-         ++mtree_iteration_index) {
-      auto new_key =
-          "transaction_" + block_id + '_' + to_string(mtree_iteration_index);
-      auto new_value =
-          data[transaction_iterator_index]["mtree"][mtree_iteration_index]
-              .get<string>();
-      auto status = m_db_transaction->Put(m_write_options, new_key, new_value);
-      handleTrivialError(status);
-    }
+    auto new_key = "transaction_" + block_id;
+    auto new_value = data[transaction_iterator_index]["mtree"].dump();
+    auto status = m_db_transaction->Put(m_write_options, new_key, new_value);
+    handleTrivialError(status);
   } else if (what == "blockid_height") {
     auto new_key = data["hgt"].get<string>();
     auto new_value = block_id;
@@ -276,11 +268,7 @@ tuple<int, string, json> Storage::readBlock(int height) {
     }
     ++tx_pos;
   }
-  for (int mtree_index = 0; mtree_index < (MAX_MERKLE_LEAVES * 2) - 1;
-       ++mtree_index) {
-    string mtree = findBy("transaction", block_id, to_string(mtree_index));
-    transaction_json[tx_pos]["mtree"][mtree_index] = mtree;
-  }
+  transaction_json[tx_pos]["mtree"] = findBy("transaction", block_id, "");
 
   return make_tuple(height, block_binary, transaction_json);
 }
@@ -288,6 +276,7 @@ tuple<int, string, json> Storage::readBlock(int height) {
 vector<string> Storage::findSibling(const string &tx_id) {
   string tx_id_pos = findBy("transaction", tx_id, "mPos");
   string block_id = findBy("transaction", tx_id, "bID");
+  json sibling_json = json::parse(findBy("transaction", block_id, ""));
   vector<string> siblings;
 
   int iteration_size = int(log2(MAX_MERKLE_LEAVES)); // log2(4096)=12
@@ -296,8 +285,8 @@ vector<string> Storage::findSibling(const string &tx_id) {
   int size = MAX_MERKLE_LEAVES;
   for (size_t i = 0; i < iteration_size; ++i) {
     node = (node % 2 != 0) ? node - 1 : node + 1;
-    string sibling = findBy("transaction", block_id, to_string(node));
-    if (sibling == "") {
+    string sibling = sibling_json[node].get<string>();
+    if (sibling.empty()) {
       siblings.clear();
       break;
     } else {
