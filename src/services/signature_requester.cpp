@@ -20,8 +20,8 @@ void SignatureRequester::requestSignatures() {
   auto signers = selectSigners();
   auto transactions = std::move(fetchTransactions());
   // TODO: 임시 블럭 생성할 수 있을때 주석 해제
-  //    auto partial_block = makePartialBlock(transactions);
-  //    auto message = makeMessage(partial_block);
+  //  auto partial_block = makePartialBlock(transactions);
+  //  auto message = makeMessage(partial_block);
   //
   //  MessageProxy proxy;
   //  proxy.deliverOutputMessage(message);
