@@ -27,6 +27,7 @@ public:
   pair<string, string> findLatestHashAndHeight();
   vector<string> findLatestTxIdList();
   string findCertificate(const string &user_id);
+  string findCertificate(const uint64_t &user_id);
   void deleteAllDirectory(const string &dir_path);
   tuple<int, string, json> readBlock(int height);
   vector<string> findSibling(const string &tx_id);

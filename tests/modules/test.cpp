@@ -179,10 +179,12 @@ BOOST_AUTO_TEST_CASE(find_cert) {
   Storage *storage = Storage::getInstance();
   auto certificate1 = storage->findCertificate("CCC1");
   auto certificate2 = storage->findCertificate("QAAA3");
+  auto certificate3 = storage->findCertificate(333); // uint64_t
   Storage::destroyInstance();
 
   BOOST_TEST(certificate1 == "certC1");
   BOOST_TEST(certificate2 == "certQA3");
+  BOOST_TEST(certificate3 == "certA3");
 }
 
 BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
