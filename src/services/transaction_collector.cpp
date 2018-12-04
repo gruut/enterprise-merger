@@ -91,7 +91,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
 
     if (is_verified) {
       auto &transaction_pool = Application::app().getTransactionPool();
-      transaction_pool.emplace_back(transaction);
+      transaction_pool.push(transaction);
     }
   }
 }

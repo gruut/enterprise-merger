@@ -80,10 +80,8 @@ Transactions SignatureRequester::fetchTransactions() {
 
   Transactions transactions_list;
   for (unsigned int i = 0; i < t_size; i++) {
-    // TODO: Lock guard.
-    auto &transaction = transaction_pool.front();
+    auto transaction = transaction_pool.pop();
     transactions_list.emplace_back(transaction);
-    transaction_pool.pop_front();
   }
 
   return transactions_list;
