@@ -14,7 +14,7 @@ namespace gruut {
 using Transactions = vector<Transaction>;
 class BlockGenerator {
 public:
-  PartialBlock generatePartialBlock(sha256 transaction_root_id);
+  PartialBlock generatePartialBlock(vector<sha256> &transactions_digest);
 };
 } // namespace gruut
 

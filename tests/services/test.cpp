@@ -7,7 +7,6 @@
 
 #include "../../src/services/signer_pool_manager.hpp"
 #include "../../src/services/block_generator.hpp"
-#include "../../src/services/message_factory.hpp"
 #include "../../src/services/transaction_pool.hpp"
 
 #include "../../src/chain/transaction.hpp"
@@ -26,15 +25,14 @@ using namespace std;
 BOOST_AUTO_TEST_SUITE(Test_BlockGenerator)
 
     BOOST_AUTO_TEST_CASE(generatePartialBlock) {
-//        vector<Transaction> transactions;
-//        transactions.push_back(Transaction());
-//
-//        BlockGenerator generator;
-//
-//        auto block = generator.generatePartialBlock(sha256());
-//
-//        bool result = stoi(block.sent_time) > 0;
-//        BOOST_TEST(result);
+        BlockGenerator generator;
+
+        vector<sha256> transactions_digest;
+        auto tx_digest = Sha256::hash("1");
+        transactions_digest.emplace_back(tx_digest);
+
+        auto block = generator.generatePartialBlock(transactions_digest);
+        BOOST_TEST(true);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -42,11 +40,11 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(Test_MessageFactory)
 
     BOOST_AUTO_TEST_CASE(createSigRequestMessage) {
-        PartialBlock block;
-        auto output_message = MessageFactory::createSigRequestMessage(block);
-
-        bool result = std::get<0>(output_message) == MessageType::MSG_REQ_SSIG;
-        BOOST_TEST(result);
+//        PartialBlock block;
+//        auto output_message = MessageFactory::createSigRequestMessage(block);
+//
+//        bool result = std::get<0>(output_message) == MessageType::MSG_REQ_SSIG;
+//        BOOST_TEST(result);
 
         // TODO: src/services/message_factory.hpp:30 해결하면 주석해제할 것
 //        json j_string2;
