@@ -18,9 +18,9 @@ constexpr unsigned int MAX_COLLECT_TRANSACTION_SIZE = 4096;
 
 void SignatureRequester::requestSignatures() {
   auto signers = selectSigners();
+
   auto transactions = std::move(fetchTransactions());
-  // TODO: 임시 블럭 생성할 수 있을때 주석 해제
-  //  auto partial_block = makePartialBlock(transactions);
+  auto partial_block = makePartialBlock(transactions);
   //  auto message = makeMessage(partial_block);
   //
   //  MessageProxy proxy;
@@ -95,17 +95,20 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
   for (auto &transaction : transactions)
     transaction_ids.emplace_back(transaction.transaction_id);
 
-  auto root_id = sha256();
-  auto &&block = block_generator.generatePartialBlock(root_id);
+  m_merkle_tree.generate(transaction_ids);
+  vector<sha256> merkle_tree_vector = m_merkle_tree.getMerkleTree();
+  auto &&block = block_generator.generatePartialBlock(merkle_tree_vector);
 
   return block;
 }
 
+/*
 OutputMessage SignatureRequester::makeMessage(PartialBlock &block) {
-  auto message = MessageFactory::createSigRequestMessage(block);
+//  auto message = MessageFactory::createSigRequestMessage(block);
 
   return message;
 }
+*/
 
 RandomSignerIndices
 SignatureRequester::generateRandomNumbers(const unsigned int size) {

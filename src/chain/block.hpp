@@ -2,10 +2,12 @@
 #define GRUUT_ENTERPRISE_MERGER_TEMPORARY_BLOCK_HPP
 
 #include "types.hpp"
+#include <array>
 
 namespace gruut {
 struct PartialBlock {
-  timestamp sent_time;
+  // TODO: array -> alias 'timestamp'
+  std::array<uint8_t, 8> sent_time;
   sender_id_type sender_id;
   chain_id_type chain_id;
   block_height_type height;
