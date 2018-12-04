@@ -311,4 +311,7 @@ vector<string> Storage::findSibling(const string &tx_id) {
   return siblings;
 }
 
+string Storage::findCertificate(const uint64_t &user_id) {
+  return findCertificate(to_string(user_id));
+}
 } // namespace gruut
