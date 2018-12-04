@@ -4,46 +4,38 @@
 #include "../../include/nlohmann/json.hpp"
 #include "../chain/block.hpp"
 #include "../chain/message.hpp"
+#include "../chain/signer.hpp"
 #include "../chain/types.hpp"
-#include "../utils/compressor.hpp"
+#include "../utils/time.hpp"
+#include "../utils/type_converter.hpp"
+
+using namespace nlohmann;
 
 namespace gruut {
+using Signers = std::vector<Signer>;
+
 class MessageFactory {
 public:
-  // TODO: Scalability 를 위해서 이래와 같은 코드로 작성해야 함.
-  //        template <typename T>
-  //        static Message create(T data, MessageType message_type) {
-  //            std::unique_ptr<Message> message_pointer;
-  //            MessageHeader message_header;
-  //
-  //            message_header.message_type = message_type;
-  //            message_pointer.reset(new Message(message_header));
-  //
-  //            return *message_pointer;
-  //        }
+  static OutputMessage createSigRequestMessage(PartialBlock &block,
+                                               Signers &signers) {
+    json j_partial_block;
 
-  /*static OutputMessage createSigRequestMessage(PartialBlock &block) {
-    std::unique_ptr<Message> message_pointer;
-    MessageHeader message_header;
+    j_partial_block["time"] = Time::now();
+    j_partial_block["mID"] = TypeConverter::toBase64Str(block.sender_id);
+    j_partial_block["cID"] = TypeConverter::toBase64Str(block.chain_id);
+    j_partial_block["txrt"] =
+        TypeConverter::toBase64Str(block.transaction_root);
+    j_partial_block["hgt"] = block.height;
 
-    // TODO: sender_id sha256으로 refactor하면 주석해제할것
-    std::unordered_map<std::string, std::string> block_map{
-        {"time", block.sent_time},
-        //        {"mID", block.sender_id},
-        //        {"cID", block.chain_id},
-        //        {"hgt", block.height},
-        //        {"txrt", block.transaction_root}
-    };
-    nlohmann::json j_block_map(block_map);
+    vector<uint64_t> receivers_list;
+    for_each(signers.begin(), signers.end(), [&receivers_list](Signer signer) {
+      receivers_list.emplace_back(signer.user_id);
+    });
 
-    // TODO: sender_list를 가져와야 함 (vector<uint8_t>)
-    //       임시로 111
-    vector<uint64_t> receivers_list{111};
-    auto output_message =
-        std::make_tuple(MessageType::MSG_REQ_SSIG, receivers_list, j_block_map);
-
+    auto output_message = std::make_tuple(MessageType::MSG_REQ_SSIG,
+                                          receivers_list, j_partial_block);
     return output_message;
-  }*/
+  }
 };
 } // namespace gruut
 #endif

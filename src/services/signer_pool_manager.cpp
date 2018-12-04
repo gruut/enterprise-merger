@@ -115,16 +115,10 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     // TODO: 임시로 Merger ID 1로 함
     sender_id_type merger_id = Sha256::hash("1");
-    signer_id_type signer_id;
-
-    // Conversion string to uint64_t
-    auto sender_id_str = message_body_json["sender"].get<string>();
-    std::istringstream iss(sender_id_str);
-    iss >> signer_id;
 
     auto secret_key_vector = TypeConverter::toSecureVector(
         join_temporary_table[receiver_id]->shared_secret_key);
-    signer_pool.pushSigner(signer_id,
+    signer_pool.pushSigner(receiver_id,
                            join_temporary_table[receiver_id]->signer_cert,
                            secret_key_vector, SignerStatus::GOOD);
 

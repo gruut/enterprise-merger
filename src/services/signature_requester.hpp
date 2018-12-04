@@ -35,7 +35,7 @@ private:
 
   PartialBlock makePartialBlock(Transactions &transactions);
 
-  OutputMessage makeMessage(PartialBlock &block);
+  void requestSignature(PartialBlock &block, Signers &signers);
 
   RandomSignerIndices generateRandomNumbers(unsigned int size);
 

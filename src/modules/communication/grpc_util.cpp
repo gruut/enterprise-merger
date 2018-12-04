@@ -146,7 +146,9 @@ grpc::Status HeaderController::analyzeData(std::string &raw_data,
                         "json schema check fail");
   }
   uint64_t id;
-  memcpy(&id, &msg_header.sender_id[0], sizeof(uint64_t));
+  std::reverse(std::begin(msg_header.sender_id),
+               std::end(msg_header.sender_id));
+  memcpy(&id, msg_header.sender_id, sizeof(uint64_t));
   receiver_id = id;
   input_queue->emplace(
       make_tuple(msg_header.message_type, receiver_id, json_data));
