@@ -11,7 +11,7 @@
 #include "signature_requester.hpp"
 
 namespace gruut {
-const int TRANSACTION_COLLECTION_INTERVAL = 5000;
+const int TRANSACTION_COLLECTION_INTERVAL_SEC = 50;
 
 class TransactionCollector {
 public:

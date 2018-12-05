@@ -23,7 +23,7 @@ void SignatureRequester::requestSignatures() {
   auto partial_block = makePartialBlock(transactions);
   requestSignature(partial_block, signers);
 
-  //  startSignatureCollectTimer(transactions);
+  startSignatureCollectTimer(transactions);
 }
 
 void SignatureRequester::startSignatureCollectTimer(
@@ -34,37 +34,19 @@ void SignatureRequester::startSignatureCollectTimer(
       boost::posix_time::milliseconds(SIGNATURE_COLLECTION_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
-      m_runnable = false;
       std::cout
           << "startSignatureCollectTimer: Timer was cancelled or retriggered."
           << std::endl;
     } else if (ec.value() == 0) {
-      m_runnable = false;
       auto &signature_pool = Application::app().getSignaturePool();
-      if (!signature_pool.empty() &&
-          signature_pool.size() == SIGNATURE_COLLECT_SIZE) {
+      if (signature_pool.size() >= MAX_SIGNATURE_COLLECT_SIZE) {
+        cout << "SIG POOL SIZE: " << signature_pool.size() << endl;
         std::cout << "CREATE BLOCK!" << std::endl;
         BlockGenerator generator;
-
-        //                    generator.generateBlock();
       }
     } else {
-      m_runnable = false;
       std::cout << "ERROR: " << ec.message() << std::endl;
-      this->m_signature_check_thread->join();
       throw;
-    }
-
-    this->m_signature_check_thread->join();
-  });
-
-  m_runnable = true;
-  m_signature_check_thread = new thread([this]() {
-    while (this->m_runnable) {
-      auto &signature_pool = Application::app().getSignaturePool();
-      // TODO: SignaturePool에 sig가 들어올때 주석 해제할 것
-      //                if(signature_pool.size() > SIGNATURE_COLLECT_SIZE)
-      m_runnable = false;
     }
   });
 }
