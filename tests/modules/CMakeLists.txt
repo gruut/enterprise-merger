@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(Boost REQUIRED COMPONENTS system thread unit_test_framework random)
+find_package(Boost REQUIRED COMPONENTS system thread unit_test_framework random filesystem)
 
 file(GLOB UNIT_TEST_SOURCE_FILES
         "test.cpp"
@@ -45,13 +45,14 @@ target_sources(modules_test
         ${HEADER_FILES}
         )
 
-target_include_directories(modules_test PRIVATE ${Boost_INCLUDE_DIR} ../../include /usr/local/include)
+target_include_directories(modules_test PRIVATE ${Boost_INCLUDE_DIR} ../../include ../../lib/leveldb /usr/local/include)
 target_link_libraries(modules_test
         PRIVATE
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
         ${Boost_LIBRARIES}
         ${LZ4_LIBS}
         /usr/local/lib/libbotan-2.a
+        leveldb
         ${GRPC_LIBS}
         )
 
