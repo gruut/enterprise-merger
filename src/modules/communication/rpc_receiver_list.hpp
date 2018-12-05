@@ -13,7 +13,7 @@ using namespace grpc;
 using namespace grpc_signer;
 namespace gruut {
 
-enum class RpcCallStatus { CREATE, PROCESS, WAIT, FINISH };
+enum class RpcCallStatus { CREATE, PROCESS, READ, WAIT, FINISH };
 
 struct SignerRpcInfo {
   void *tag_identity;
