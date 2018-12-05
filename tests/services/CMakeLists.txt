@@ -12,7 +12,6 @@ file(GLOB HEADER_FILES
         "../../src/services/*.hpp"
         "../../src/chain/*.hpp"
         "../../src/utils/*.hpp"
-        "../../src/modules/storage/storage.hpp"
         "../../src/application.hpp"
         "../../src/utils/template_singleton.hpp"
         )
@@ -21,7 +20,6 @@ file(GLOB SOURCE_FILES
         "../../src/chain/*.cpp"
         "../../src/services/*.cpp"
         "../../src/application.cpp"
-        "../../src/modules/storage/storage.cpp"
         )
 
 set(LIB_PREFIX "/usr/local/lib")

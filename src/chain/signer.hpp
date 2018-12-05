@@ -4,7 +4,7 @@
 #include <botan/secmem.h>
 #include <string>
 
-#include "../modules/storage/storage.hpp"
+#include "../services/storage.hpp"
 #include "types.hpp"
 
 namespace gruut {
