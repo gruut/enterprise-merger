@@ -2,6 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <string>
+#include <ctime>
 
 #include "../../src/utils/sha256.hpp"
 #include "../../src/utils/compressor.hpp"
@@ -9,6 +10,7 @@
 #include "../../src/utils/random_number_generator.hpp"
 #include "../../src/utils/hmac.hpp"
 #include "../../src/utils/hmac_key_maker.hpp"
+#include "../../src/utils/bytes_builder.hpp"
 
 using namespace std;
 
@@ -158,6 +160,27 @@ BOOST_AUTO_TEST_SUITE(Test_ECDH)
     Botan::secure_vector<uint8_t> bob_ssk = bob_ecdh.getSharedSecretKey(alice_x_str, alice_y_str);
 
     BOOST_TEST(Botan::hex_encode(alice_ssk) == Botan::hex_encode(bob_ssk));
+  }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+BOOST_AUTO_TEST_SUITE(Test_ByteBuilder)
+
+  BOOST_AUTO_TEST_CASE(appendAndGet) {
+
+    BytesBuilder my_builder;
+    my_builder.append(std::time(nullptr)); // 8-byte
+    my_builder.append("Hello,World!!!!!"); // 16-byte
+    my_builder.appendDec("1543323592"); // 8-byte
+    my_builder.appendB64("AAAAAAAAAAE="); // 8-byte
+    my_builder.appendB64("Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg="); // 32-byte
+    my_builder.appendHex("9A68C15C0D6E26C8B4A0743E6B87F074864C2FAE5983C88956CB2882D608F5F5"); // 32-byte
+
+    std::vector<uint8_t> b_bytes = my_builder.getBytes();
+    std::string b_str = my_builder.getString();
+
+    BOOST_TEST((b_bytes.size() == 104 && b_str.size() == 104));
   }
 
 BOOST_AUTO_TEST_SUITE_END()
