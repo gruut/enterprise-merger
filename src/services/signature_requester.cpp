@@ -21,10 +21,8 @@ void SignatureRequester::requestSignatures() {
 
   auto transactions = std::move(fetchTransactions());
   auto partial_block = makePartialBlock(transactions);
-  //  auto message = makeMessage(partial_block);
-  //
-  //  MessageProxy proxy;
-  //  proxy.deliverOutputMessage(message);
+  requestSignature(partial_block, signers);
+
   //  startSignatureCollectTimer(transactions);
 }
 
@@ -102,13 +100,14 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
   return block;
 }
 
-/*
-OutputMessage SignatureRequester::makeMessage(PartialBlock &block) {
-//  auto message = MessageFactory::createSigRequestMessage(block);
-
-  return message;
+void SignatureRequester::requestSignature(PartialBlock &block,
+                                          Signers &signers) {
+  if (signers.size() > 0) {
+    auto message = MessageFactory::createSigRequestMessage(block, signers);
+    MessageProxy proxy;
+    proxy.deliverOutputMessage(message);
+  }
 }
-*/
 
 RandomSignerIndices
 SignatureRequester::generateRandomNumbers(const unsigned int size) {
