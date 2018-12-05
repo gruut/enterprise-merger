@@ -1,25 +1,22 @@
 #include "block_generator.hpp"
 #include "../chain/merkle_tree.hpp"
+#include "../utils/time.hpp"
+#include "../utils/type_converter.hpp"
 
 namespace gruut {
-PartialBlock BlockGenerator::generatePartialBlock(sha256 transaction_root_id) {
+PartialBlock
+BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest) {
   PartialBlock block;
 
-  //  auto sent_time = to_string(std::time(0));
-  //  block.sent_time = sent_time;
-  // TODO: sender_id, Merger ID 임시로 sent_time으로
-  //  block.sender_id = sent_time;
-  // TODO: 위와 같은 이유로 sent_time
-  //  block.chain_id = sent_time;
-  // TODO: 위와 같은 이유로 sent_time
-  //  block.height = sent_time;
-
-  block.transaction_root = transaction_root_id;
+  block.sent_time = TypeConverter::toTimestampType(Time::now());
+  // TODO: Merger id 가 아직 결정 안되어서 임시값 할당
+  block.sender_id = Sha256::hash("1");
+  // TODO: 위와 같은 이유로 임시값 할당
+  block.chain_id = Sha256::hash("1");
+  // TODO: 위와 같은 이유로 임시값 할당
+  block.height = "1";
+  block.transaction_root = transactions_digest.back();
 
   return block;
 }
-
-//    Block BlockGenerator::generateBlock() {
-//        return Block();
-//    }
 } // namespace gruut

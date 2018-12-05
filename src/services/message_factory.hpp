@@ -22,7 +22,7 @@ public:
   //            return *message_pointer;
   //        }
 
-  static OutputMessage createSigRequestMessage(PartialBlock &block) {
+  /*static OutputMessage createSigRequestMessage(PartialBlock &block) {
     std::unique_ptr<Message> message_pointer;
     MessageHeader message_header;
 
@@ -43,7 +43,7 @@ public:
         std::make_tuple(MessageType::MSG_REQ_SSIG, receivers_list, j_block_map);
 
     return output_message;
-  }
+  }*/
 };
 } // namespace gruut
 #endif
