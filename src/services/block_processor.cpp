@@ -4,13 +4,41 @@ namespace gruut {
 
 bool BlockProcessor::messageProcess(InputMsgEntry &entry) {
   if (entry.type == MessageType::MSG_REQ_BLOCK) {
+
+    if (entry.body["mCert"].get<std::string>().empty() ||
+        entry.body["mSig"].get<std::string>().empty()) {
+      // TODO : check whether the requester is trustworthy or not
+    } else {
+      BytesBuilder msg_builder;
+      msg_builder.appendB64(entry.body["mID"].get<std::string>());
+      msg_builder.appendDec(entry.body["time"].get<std::string>());
+      msg_builder.append(entry.body["mCert"].get<std::string>());
+      msg_builder.appendDec(entry.body["hgt"].get<std::string>());
+
+      BytesBuilder sig_builder;
+      sig_builder.appendB64(entry.body["mSig"].get<std::string>());
+
+      if (!RSA::doVerify(entry.body["mCert"].get<std::string>(),
+                         msg_builder.getString(), sig_builder.getBytes(),
+                         true)) {
+        return false;
+      }
+    }
+
     auto msg_blk = m_storage->readBlock(entry.body["hgt"]);
-    // TODO : make MSG_BLOCK
+
+    if (std::get<0>(msg_blk) < 0) {
+      return false;
+    }
 
     OutputMsgEntry msg_block;
     msg_block.type = MessageType::MSG_BLOCK;
-    // TODO : push to outputqueue
-    // m_output_queue->push();
+    msg_block.body["blockraw"] = std::get<1>(msg_blk);
+    msg_block.body["tx"] = std::get<2>(msg_blk);
+    msg_block.receivers.emplace_back(entry.body["mID"].get<std::string>());
+
+    m_output_queue->push(msg_block);
+
   } else if (entry.type == MessageType::MSG_BLOCK) {
     BytesBuilder block_raw_builder;
     block_raw_builder.appendB64(entry.body["blockraw"].get<std::string>());
