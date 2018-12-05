@@ -8,7 +8,6 @@ PartialBlock
 BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest) {
   PartialBlock block;
 
-  block.sent_time = TypeConverter::toTimestampType(Time::now());
   // TODO: Merger id 가 아직 결정 안되어서 임시값 할당
   block.sender_id = Sha256::hash("1");
   // TODO: 위와 같은 이유로 임시값 할당

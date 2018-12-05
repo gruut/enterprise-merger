@@ -6,8 +6,6 @@
 
 namespace gruut {
 struct PartialBlock {
-  // TODO: array -> alias 'timestamp'
-  std::array<uint8_t, 8> sent_time;
   sender_id_type sender_id;
   chain_id_type chain_id;
   block_height_type height;

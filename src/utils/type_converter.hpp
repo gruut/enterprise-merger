@@ -1,9 +1,12 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TYPE_CONVERTER_HPP
 #define GRUUT_ENTERPRISE_MERGER_TYPE_CONVERTER_HPP
 
+#include <botan/base64.h>
 #include <botan/secmem.h>
 #include <string>
 #include <vector>
+
+#include "../chain/types.hpp"
 
 class TypeConverter {
 public:
@@ -30,6 +33,10 @@ public:
     }
 
     return timestamp;
+  }
+
+  static std::string toBase64Str(vector<uint8_t> &bytes_vector) {
+    return Botan::base64_encode(bytes_vector);
   }
 };
 
