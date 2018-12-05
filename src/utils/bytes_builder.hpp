@@ -66,7 +66,7 @@ public:
     int start_pos = sizeof(uint64_t) - len;
 
     for (size_t i = len; i > 0; --i) {
-      bytes[len - i] = (uint8_t)((int_val >> 8 * i) & 0xFF);
+      bytes[len - i] = (uint8_t)((int_val >> 8 * (i - 1)) & 0xFF);
     }
 
     append(bytes);
@@ -84,16 +84,13 @@ public:
   void appendHex(const std::string &hex_str_val, int len = -1) {
 
     if (len < 0)
-      len = (int)hex_str_val.size();
+      len = (int)hex_str_val.size() / 2;
 
-    size_t hex_len = (size_t)len / 2;
+    std::vector<uint8_t> bytes((size_t)len);
 
-    std::vector<uint8_t> bytes(hex_len);
-    for (size_t i = 0; i < len; i += 2) {
-      std::istringstream is_stream(hex_str_val.substr(i, 2));
-      uint8_t x;
-      is_stream >> std::hex >> x;
-      bytes[i] = x;
+    for (int i = 0; i < len; ++i) {
+      bytes[i] =
+          (uint8_t)strtol(hex_str_val.substr(i * 2, 2).c_str(), nullptr, 16);
     }
 
     append(bytes);
