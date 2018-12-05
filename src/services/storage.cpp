@@ -239,34 +239,40 @@ int Storage::findTxIdPos(const string &blk_id, const string &tx_id) {
 }
 
 tuple<int, string, json> Storage::readBlock(int height) {
+  tuple<int, string, json> result;
   string block_id = (height == -1)
                         ? findBy("latest_block_header", "", "bID")
                         : findBy("blockid_height", "", to_string(height));
-  if (height == -1)
-    height = stoi(findBy("latest_block_header", "", "hgt"));
-  string block_binary = findBy("block_binary", block_id, "");
+  if (block_id == "")
+    result = make_tuple(-1, "", "");
+  else {
+    if (height == -1)
+      height = stoi(findBy("latest_block_header", "", "hgt"));
+    string block_binary = findBy("block_binary", block_id, "");
 
-  json transaction_json;
-  string tx_ids = findBy("block_header", block_id, "txids");
-  vector<string> tx_ids_list;
-  std::istringstream iss(tx_ids);
-  int tx_pos = 0;
-  for (std::string tx_id; std::getline(iss, tx_id, '_');) {
-    transaction_json[tx_pos]["txid"] = tx_id;
-    transaction_json[tx_pos]["time"] = findBy("transaction", tx_id, "time");
-    transaction_json[tx_pos]["rID"] = findBy("transaction", tx_id, "rID");
-    transaction_json[tx_pos]["rSig"] = findBy("transaction", tx_id, "rSig");
-    string type = findBy("transaction", tx_id, "type");
-    transaction_json[tx_pos]["type"] = type;
+    json transaction_json;
+    string tx_ids = findBy("block_header", block_id, "txids");
+    vector<string> tx_ids_list;
+    std::istringstream iss(tx_ids);
+    int tx_pos = 0;
+    for (std::string tx_id; std::getline(iss, tx_id, '_');) {
+      transaction_json[tx_pos]["txid"] = tx_id;
+      transaction_json[tx_pos]["time"] = findBy("transaction", tx_id, "time");
+      transaction_json[tx_pos]["rID"] = findBy("transaction", tx_id, "rID");
+      transaction_json[tx_pos]["rSig"] = findBy("transaction", tx_id, "rSig");
+      string type = findBy("transaction", tx_id, "type");
+      transaction_json[tx_pos]["type"] = type;
 
-    json content = json::parse(findBy("transaction", tx_id, "content"));
-    if (type == "certificates" || type == "digests") {
-      for (size_t i = 0; i < content.size(); ++i)
-        transaction_json[tx_pos]["content"][i] = content[i].get<string>();
+      json content = json::parse(findBy("transaction", tx_id, "content"));
+      if (type == "certificates" || type == "digests") {
+        for (size_t i = 0; i < content.size(); ++i)
+          transaction_json[tx_pos]["content"][i] = content[i].get<string>();
+      }
+      ++tx_pos;
     }
-    ++tx_pos;
+    result = make_tuple(height, block_binary, transaction_json);
   }
-  return make_tuple(height, block_binary, transaction_json);
+  return result;
 }
 
 vector<string> Storage::findSibling(const string &tx_id) {
