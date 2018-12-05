@@ -250,7 +250,7 @@ const json SCHEMA_LEAVE = R"({
     "time"
   ]
 })"_json;
-const json SCHEMA_SSIG = R"({
+const json SCHEMA_REQ_SSIG = R"({
   "title": "Partial Block",
   "description": "Merger가 Signer에게 서명을 요청하는 임시블록",
   "type": "object",
@@ -282,6 +282,30 @@ const json SCHEMA_SSIG = R"({
     "cID",
     "hgt",
     "txrt"
+  ]
+})"_json;
+const json SCHEMA_SSIG = R"({
+  "title": "Signer's Signature",
+  "description": "Signer가 Merger에게 보내는 서명",
+  "type": "object",
+  "properties": {
+    "sID": {
+      "description": "signer's ID",
+      "type": "string"
+    },
+    "time": {
+      "description": "송신 시간",
+      "type": "string"
+    },
+    "sig": {
+      "description": "signer's signature",
+      "type": "string"
+    }
+  },
+  "required": [
+    "sID",
+    "time",
+    "sig"
   ]
 })"_json;
 const json SCHEMA_ERROR = R"({
@@ -365,6 +389,7 @@ std::map<MessageType, json> MessageSchema::schema_list = {
     {MessageType::MSG_RESPONSE_1, SCHEMA_RESPONSE_FIRST},
     {MessageType::MSG_SUCCESS, SCHEMA_SUCCESS},
     {MessageType::MSG_LEAVE, SCHEMA_LEAVE},
+    {MessageType::MSG_REQ_SSIG, SCHEMA_REQ_SSIG},
     {MessageType::MSG_SSIG, SCHEMA_SSIG},
     {MessageType::MSG_ERROR, SCHEMA_ERROR},
     {MessageType::MSG_TX, SCHEMA_TX}};
