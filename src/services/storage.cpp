@@ -252,12 +252,10 @@ tuple<int, string, json> Storage::readBlock(int height) {
   std::istringstream iss(tx_ids);
   int tx_pos = 0;
   for (std::string tx_id; std::getline(iss, tx_id, '_');) {
-    transaction_json[tx_pos]["txID"] = tx_id;
+    transaction_json[tx_pos]["txid"] = tx_id;
     transaction_json[tx_pos]["time"] = findBy("transaction", tx_id, "time");
     transaction_json[tx_pos]["rID"] = findBy("transaction", tx_id, "rID");
     transaction_json[tx_pos]["rSig"] = findBy("transaction", tx_id, "rSig");
-    transaction_json[tx_pos]["bID"] = findBy("transaction", tx_id, "bID");
-    transaction_json[tx_pos]["mPos"] = findBy("transaction", tx_id, "mPos");
     string type = findBy("transaction", tx_id, "type");
     transaction_json[tx_pos]["type"] = type;
 
@@ -268,8 +266,6 @@ tuple<int, string, json> Storage::readBlock(int height) {
     }
     ++tx_pos;
   }
-  transaction_json[tx_pos]["mtree"] = findBy("transaction", block_id, "");
-
   return make_tuple(height, block_binary, transaction_json);
 }
 
