@@ -9,7 +9,7 @@
 
 namespace gruut {
 struct Signer {
-  signer_id_type user_id{0};
+  signer_id_type user_id;
   std::string pk_cert;
   hmac_key_type hmac_key;
   uint64_t last_update{0};

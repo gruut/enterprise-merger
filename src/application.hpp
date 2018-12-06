@@ -51,6 +51,8 @@ public:
 
   SignaturePool &getSignaturePool();
 
+  PartialBlock &getTemporaryPartialBlock();
+
   void start(const vector<shared_ptr<Module>> &modules);
 
   void exec();
@@ -61,6 +63,7 @@ private:
   shared_ptr<boost::asio::io_service> m_io_serv;
   InputQueue m_input_queue;
   OutputQueue m_output_queue;
+  PartialBlock temporary_partial_block;
   shared_ptr<SignerPool> m_signer_pool;
   shared_ptr<SignerPoolManager> m_signer_pool_manager;
   shared_ptr<TransactionPool> m_transaction_pool;
