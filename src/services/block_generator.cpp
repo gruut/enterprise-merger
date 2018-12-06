@@ -11,7 +11,7 @@ BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest) {
   // TODO: 설정파일이 없어서 하드코딩(1)
   block.merger_id = 1;
   // TODO: 위와 같은 이유로 임시값 할당
-  block.chain_id = Sha256::hash("1");
+  block.chain_id = 1;
   // TODO: 위와 같은 이유로 임시값 할당
   block.height = "1";
   block.transaction_root = transactions_digest.back();
