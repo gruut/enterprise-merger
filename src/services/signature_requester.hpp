@@ -16,7 +16,6 @@ namespace gruut {
 class Transaction;
 
 const int SIGNATURE_COLLECTION_INTERVAL = 10000;
-const int MAX_SIGNATURE_COLLECT_SIZE = 1;
 
 using RandomSignerIndices = std::set<int>;
 using Transactions = std::vector<Transaction>;
