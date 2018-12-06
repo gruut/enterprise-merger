@@ -1,4 +1,5 @@
 #include "signer_pool.hpp"
+#include "../utils/time.hpp"
 #include "transaction_generator.hpp"
 
 namespace gruut {
@@ -12,7 +13,7 @@ void SignerPool::pushSigner(signer_id_type user_id, std::string &pk_cert,
   new_signer.pk_cert = pk_cert;
   new_signer.hmac_key = hmac_key;
   new_signer.status = status;
-  new_signer.last_update = std::time(nullptr);
+  new_signer.last_update = Time::now_int();
 
   auto signer_index = find(new_signer.user_id);
   if (signer_index == NOT_FOUND) {
@@ -49,8 +50,7 @@ bool SignerPool::updateHmacKey(signer_id_type user_id,
   } else {
     std::lock_guard<std::mutex> guard(m_update_mutex);
     m_signer_pool[signer_index].hmac_key = hmac_key;
-    m_signer_pool[signer_index].last_update =
-        static_cast<uint64_t>(std::time(nullptr));
+    m_signer_pool[signer_index].last_update = Time::now_int();
     m_update_mutex.unlock();
 
     return true;
@@ -65,7 +65,7 @@ bool SignerPool::updateStatus(uint64_t user_id, SignerStatus status) {
   } else {
     std::lock_guard<std::mutex> guard(m_update_mutex);
     m_signer_pool[signer_index].status = status;
-    m_signer_pool[signer_index].last_update = std::time(nullptr);
+    m_signer_pool[signer_index].last_update = Time::now_int();
     m_update_mutex.unlock();
 
     return true;

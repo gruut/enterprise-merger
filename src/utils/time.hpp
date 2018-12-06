@@ -7,11 +7,17 @@
 class Time {
 public:
   static std::string now() {
+    auto now = now_int();
+
+    return std::to_string(now);
+  }
+
+  static uint64_t now_int() {
     auto now = std::chrono::duration_cast<std::chrono::seconds>(
                    std::chrono::system_clock::now().time_since_epoch())
                    .count();
 
-    return std::to_string(now);
+    return now;
   }
 };
 
