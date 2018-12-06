@@ -11,7 +11,6 @@
 using namespace std;
 
 namespace gruut {
-using Transactions = vector<Transaction>;
 class BlockGenerator {
 public:
   PartialBlock generatePartialBlock(vector<sha256> &transactions_digest);
