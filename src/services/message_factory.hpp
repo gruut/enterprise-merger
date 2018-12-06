@@ -21,7 +21,10 @@ public:
     json j_partial_block;
 
     j_partial_block["time"] = Time::now();
-    j_partial_block["mID"] = TypeConverter::toBase64Str(block.sender_id);
+
+    auto merger_id_str = to_string(block.merger_id);
+    j_partial_block["mID"] = TypeConverter::toBase64Str(merger_id_str);
+
     j_partial_block["cID"] = TypeConverter::toBase64Str(block.chain_id);
     j_partial_block["txrt"] =
         TypeConverter::toBase64Str(block.transaction_root);

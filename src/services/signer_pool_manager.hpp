@@ -24,8 +24,7 @@ private:
   bool verifySignature(signer_id_type signer_id,
                        nlohmann::json message_body_json);
   string getCertificate();
-  string signMessage(vector<uint8_t>, vector<uint8_t>, vector<uint8_t>,
-                     vector<uint8_t>, vector<uint8_t>);
+  string signMessage(string, string, string, string, string);
   bool isJoinable();
 
   // A temporary table for connection establishment.

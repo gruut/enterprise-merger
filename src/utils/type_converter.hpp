@@ -10,35 +10,52 @@
 
 class TypeConverter {
 public:
-  template <class T> inline static std::vector<uint8_t> toBytes(T t) {
-    return std::vector<uint8_t>(t.cbegin(), t.cend());
+  template <class T> inline static std::vector<uint8_t> toBytes(T input) {
+    std::vector<uint8_t> v;
+    v.reserve(sizeof(input));
+
+    for (auto i = 0; i < sizeof(input); ++i) {
+      v.push_back(input & 0xFF);
+      input >>= 8;
+    }
+    return v;
   }
 
-  static Botan::secure_vector<uint8_t>
-  toSecureVector(std::vector<uint8_t> vec) {
+  inline static std::vector<uint8_t> stringToBytes(std::string &input) {
+    return std::vector<uint8_t>(input.cbegin(), input.cend());
+  }
+
+  inline static Botan::secure_vector<uint8_t>
+  toSecureVector(std::vector<uint8_t> &vec) {
     return Botan::secure_vector<uint8_t>(vec.begin(), vec.end());
   }
 
-  static std::array<uint8_t, 8> to8BytesArray(std::string str) {
+  static std::vector<uint8_t> digitStringToBytes(std::string &str) {
     uint64_t target_integer = static_cast<uint64_t>(stoll(str));
-    std::array<uint8_t, 8> bytes_arr = {0, 0, 0, 0, 0, 0, 0, 0};
+    std::vector<uint8_t> bytes = {0, 0, 0, 0, 0, 0, 0, 0};
 
-    auto unassigned_index = bytes_arr.size() - 1;
+    auto unassigned_index = bytes.size() - 1;
     while (target_integer != 0) {
       uint8_t byte = static_cast<uint8_t>(target_integer & 0xFF);
-      bytes_arr[unassigned_index] = byte;
+      bytes[unassigned_index] = byte;
 
       target_integer >>= 8;
       --unassigned_index;
     }
 
-    return bytes_arr;
+    return bytes;
   }
 
-  static std::string toBase64Str(vector<uint8_t> &bytes_vector) {
-    return Botan::base64_encode(bytes_vector);
+  template <typename T> inline static std::string toBase64Str(T &t) {
+    return Botan::base64_encode(vector<uint8_t>(t.begin(), t.end()));
   }
 
+  template <typename T>
+  inline static std::vector<uint8_t> decodeBase64(T &input) {
+    auto s_vector = Botan::base64_decode(input);
+
+    return std::vector<uint8_t>(s_vector.begin(), s_vector.end());
+  }
   template <class Container>
   static inline std::string toString(const Container &bytes) {
     return std::string(bytes.cbegin(), bytes.cend());

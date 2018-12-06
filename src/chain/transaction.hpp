@@ -9,7 +9,7 @@
 namespace gruut {
 struct Transaction {
   transaction_id_type transaction_id;
-  std::array<uint8_t, 8> sent_time;
+  std::vector<uint8_t> sent_time;
   requestor_id_type requestor_id;
   TransactionType transaction_type;
   signature_type signature;
