@@ -27,6 +27,7 @@
 using namespace gruut;
 using namespace nlohmann;
 using namespace std;
+using namespace macaron;
 
 BOOST_AUTO_TEST_SUITE(Test_BlockGenerator)
 
@@ -119,10 +120,11 @@ BOOST_AUTO_TEST_SUITE(Test_MessageIOQueues)
     BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
       Storage *storage = Storage::getInstance();
       storage->deleteAllDirectory("./block_header");
-      storage->deleteAllDirectory("./block_binary");
+      storage->deleteAllDirectory("./block_meta_header");
       storage->deleteAllDirectory("./certificate");
       storage->deleteAllDirectory("./latest_block_header");
-      storage->deleteAllDirectory("./transaction");
+      storage->deleteAllDirectory("./block_body");
+      storage->deleteAllDirectory("./blockid_height");
       Storage::destroyInstance();
 
       BOOST_TEST(true);
@@ -144,13 +146,13 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
   BOOST_AUTO_TEST_CASE(save_block) {
     // make mtree for test
     for(size_t i=0; i<(MAX_MERKLE_LEAVES*2)-1; ++i)
-      transaction1[4]["mtree"][i]=transaction2[4]["mtree"][i]='h'+to_string(i);
+      block_body1["mtree"][i]=block_body2["mtree"][i]='h'+to_string(i);
 
     Storage *storage = Storage::getInstance();
-    string block_binary1 = "bbbbbbbbbbbbbinary1";
-    storage->saveBlock(block_binary1, block_header1, transaction1);
-    string block_binary2 = "bbbbbbbbbbbbbinary2";
-    storage->saveBlock(block_binary2, block_header2, transaction2);
+    string block_meta_header1 = Base64().Encode(block_header1.dump()); // for test
+    storage->saveBlock(block_meta_header1, block_header1, block_body1);
+    string block_meta_header2 = Base64().Encode(block_header2.dump()); // for test
+    storage->saveBlock(block_meta_header2, block_header2, block_body2);
     Storage::destroyInstance();
 
     BOOST_TEST(true);
@@ -161,7 +163,12 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     pair<string, string> hash_and_height = storage->findLatestHashAndHeight();
     Storage::destroyInstance();
 
-    BOOST_TEST(hash_and_height.first == "bbbbbbbbbbbbbinary2");
+    // for test
+    Sha256 sha;
+    block_header1.erase("txids");
+    block_header2.erase("txids");
+    sha256 hash = sha.hash(Base64().Encode(block_header2.dump()));
+    BOOST_TEST(hash_and_height.first == sha.toString(hash));
     BOOST_TEST(hash_and_height.second == "2");
   }
 
@@ -170,22 +177,22 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     vector<string> tx_ids_list = storage->findLatestTxIdList();
     Storage::destroyInstance();
 
-    BOOST_TEST(tx_ids_list[0] == "QQQQaaaaaaaaa");
-    BOOST_TEST(tx_ids_list[1] == "QQQQbbbbbbbbb");
-    BOOST_TEST(tx_ids_list[2] == "QQQQccccccccc");
-    BOOST_TEST(tx_ids_list[3] == "QQQQddddddddd");
+    BOOST_TEST(tx_ids_list[0] == "Qa");
+    BOOST_TEST(tx_ids_list[1] == "Qb");
+    BOOST_TEST(tx_ids_list[2] == "Qc");
+    BOOST_TEST(tx_ids_list[3] == "Qd");
   }
 
   BOOST_AUTO_TEST_CASE(find_cert) {
     Storage *storage = Storage::getInstance();
-    auto certificate1 = storage->findCertificate("CCC1");
-    auto certificate2 = storage->findCertificate("QAAA3");
-    auto certificate3 = storage->findCertificate(333); // uint64_t
+    auto certificate1 = storage->findCertificate("Qc4");
+    auto certificate2 = storage->findCertificate("c1");
+    //auto certificate3 = storage->findCertificate(333); // uint64_t
     Storage::destroyInstance();
 
-    BOOST_TEST(certificate1 == "certC1");
-    BOOST_TEST(certificate2 == "certQA3");
-    BOOST_TEST(certificate3 == "certA3");
+    BOOST_TEST(certificate1 == "certQc4");
+    BOOST_TEST(certificate2 == "certc1");
+    //BOOST_TEST(certificate3 == "certA3");
   }
 
   BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
@@ -197,20 +204,21 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     Storage::destroyInstance();
 
     BOOST_TEST(1 == get<0>(height_metaheader_tx));
-    BOOST_TEST("bbbbbbbbbbbbbinary1" == get<1>(height_metaheader_tx));
-    //BOOST_TEST(transaction1 == get<2>(height_metaheader_tx));
+    BOOST_TEST(Base64().Encode(block_header1.dump()) == get<1>(height_metaheader_tx));
+    //cout << get<2>(height_metaheader_tx) << endl;
 
     BOOST_TEST(2 == get<0>(latest_height_metaheader_tx));
-    BOOST_TEST("bbbbbbbbbbbbbinary2" == get<1>(latest_height_metaheader_tx));
-    //BOOST_TEST(transaction2 == get<2>(latest_height_metaheader_tx));
+    BOOST_TEST(Base64().Encode(block_header2.dump()) == get<1>(latest_height_metaheader_tx));
+    //cout << get<2>(latest_height_metaheader_tx) <<endl;
 
     BOOST_TEST(-1 == get<0>(no_data_metaheader_tx));
     BOOST_TEST("" == get<1>(no_data_metaheader_tx));
+    BOOST_TEST("" == get<2>(no_data_metaheader_tx));
   }
 
   BOOST_AUTO_TEST_CASE(find_sibling) {
     Storage *storage = Storage::getInstance();
-    vector<string> siblings = storage->findSibling("QQQQccccccccc"); // tx_pos = 2
+    vector<string> siblings = storage->findSibling("c"); // tx_pos = 2
     Storage::destroyInstance();
     if(!siblings.empty()){
       BOOST_TEST("h3" == siblings[0]);
@@ -232,10 +240,10 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
   BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
     Storage *storage = Storage::getInstance();
     storage->deleteAllDirectory("./block_header");
-    storage->deleteAllDirectory("./block_binary");
+    storage->deleteAllDirectory("./block_meta_header");
     storage->deleteAllDirectory("./certificate");
     storage->deleteAllDirectory("./latest_block_header");
-    storage->deleteAllDirectory("./transaction");
+    storage->deleteAllDirectory("./block_body");
     storage->deleteAllDirectory("./blockid_height");
     Storage::destroyInstance();
 
