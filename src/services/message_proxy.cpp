@@ -23,6 +23,10 @@ void MessageProxy::deliverInputMessage(InputMessage &input_message) {
     Application::app().getTransactionCollector().handleMessage(
         message_body_json);
   } break;
+  case MessageType::MSG_SSIG: {
+    Application::app().getSignaturePool().handleMessage(receiver_id,
+                                                        message_body_json);
+  } break;
   default:
     break;
   }

@@ -106,7 +106,7 @@ void TransactionCollector::startTimer() {
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
   m_timer->expires_from_now(
-      boost::posix_time::milliseconds(TRANSACTION_COLLECTION_INTERVAL));
+      boost::posix_time::seconds(TRANSACTION_COLLECTION_INTERVAL_SEC));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       cout << "startTimer: Timer was cancelled or retriggered." << endl;
@@ -114,8 +114,8 @@ void TransactionCollector::startTimer() {
     } else if (ec.value() == 0) {
       this->m_timer_running = false;
       // TODO: Logger
-      cout << "POOL SIZE: " << Application::app().getTransactionPool().size()
-           << endl;
+      cout << "Transaction POOL SIZE: "
+           << Application::app().getTransactionPool().size() << endl;
     } else {
       this->m_timer_running = false;
       throw;

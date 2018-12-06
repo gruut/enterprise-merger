@@ -28,8 +28,8 @@ void MessageFetcher::fetch() {
     }
   });
 
-  // TODO: 임시로 3000(3초)
-  m_timer->expires_from_now(boost::posix_time::milliseconds(3000));
+  // TODO: 임시로 1000(1초)
+  m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       std::cout << "MessageFetcher: Timer was cancelled or retriggered."

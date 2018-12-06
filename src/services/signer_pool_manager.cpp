@@ -65,8 +65,10 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       // TODO: 임시로 Merger ID 1로 함
       sender_id_type sender_id = Sha256::hash("1");
 
-      join_temporary_table[receiver_id]->signer_cert =
-          message_body_json["cert"].get<string>();
+      auto signer_pk_cert = message_body_json["cert"].get<string>();
+      auto cert_vector = Botan::base64_decode(signer_pk_cert);
+      string decoded_cert_str(cert_vector.begin(), cert_vector.end());
+      join_temporary_table[receiver_id]->signer_cert = decoded_cert_str;
 
       json message_body;
       message_body["sender"] = Sha256::toString(sender_id);

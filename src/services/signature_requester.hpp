@@ -16,7 +16,7 @@ namespace gruut {
 class Transaction;
 
 const int SIGNATURE_COLLECTION_INTERVAL = 10000;
-const int SIGNATURE_COLLECT_SIZE = 10;
+const int MAX_SIGNATURE_COLLECT_SIZE = 1;
 
 using RandomSignerIndices = std::set<int>;
 using Transactions = std::vector<Transaction>;
@@ -41,8 +41,6 @@ private:
 
   Signers selectSigners();
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
-  std::thread *m_signature_check_thread;
-  bool m_runnable = false;
   MerkleTree m_merkle_tree;
 };
 } // namespace gruut

@@ -14,15 +14,15 @@
 #include <vector>
 
 #include "chain/message.hpp"
-#include "chain/signature.cpp"
+#include "chain/signature.hpp"
 #include "chain/transaction.hpp"
+#include "services/signature_pool.hpp"
 
 using namespace std;
 
 namespace gruut {
 using InputQueue = shared_ptr<queue<InputMessage>>;
 using OutputQueue = shared_ptr<queue<OutputMessage>>;
-using SignaturePool = vector<Signature>;
 
 class Application {
 public:
