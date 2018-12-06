@@ -2,7 +2,6 @@
 #define GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 
 #include <array>
-#include <ctime>
 #include <deque>
 #include <mutex>
 #include <string>
