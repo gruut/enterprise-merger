@@ -14,6 +14,9 @@ namespace gruut {
 class BlockGenerator {
 public:
   PartialBlock generatePartialBlock(vector<sha256> &transactions_digest);
+  Block generateBlock(PartialBlock &partial_block,
+                      vector<Transaction> &transactions,
+                      vector<Signature> &signatures, MerkleTree &merkle_tree);
 };
 } // namespace gruut
 

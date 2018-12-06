@@ -29,6 +29,13 @@ void SignaturePool::push(Signature &signature) {
   m_signature_pool.emplace_back(signature);
 }
 
+Signatures SignaturePool::fetchN(size_t n) {
+  Signatures signatures;
+  copy_n(m_signature_pool.begin(), n, back_inserter(signatures));
+
+  return signatures;
+}
+
 size_t SignaturePool::size() { return 0; }
 
 bool SignaturePool::empty() { return size() == 0; }

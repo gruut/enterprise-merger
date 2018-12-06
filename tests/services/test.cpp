@@ -13,6 +13,7 @@
 #include "../../src/services/transaction_pool.hpp"
 
 #include "../../src/chain/transaction.hpp"
+#include "../../src/chain/signature.hpp"
 #include "../../src/chain/message.hpp"
 #include "../../src/chain/types.hpp"
 
@@ -137,6 +138,21 @@ BOOST_AUTO_TEST_SUITE(Test_TransactionPool)
 
       BOOST_CHECK_EQUAL(transaction_pool.size(), 1);
     }
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_SignaturePool)
+  BOOST_AUTO_TEST_CASE(fetchN) {
+    SignaturePool signature_pool;
+    Signature signature1;
+    Signature signature2;
+
+    signature_pool.push(signature1);
+    signature_pool.push(signature2);
+
+    auto signatures = signature_pool.fetchN(2);
+
+    BOOST_CHECK_EQUAL(signatures.size(), 2);
+  }
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_Storage_Service)

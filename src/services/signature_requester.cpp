@@ -13,8 +13,10 @@
 #include "signer_pool.hpp"
 
 namespace gruut {
-constexpr unsigned int REQUEST_NUM_OF_SIGNER = 5;
 constexpr unsigned int MAX_COLLECT_TRANSACTION_SIZE = 4096;
+constexpr size_t MIN_SIGNATURE_COLLECT_SIZE =
+    1; // TODO: 테스트를 위해 임시로 1개로 설정
+constexpr size_t MAX_SIGNATURE_COLLECT_SIZE = 4096;
 
 void SignatureRequester::requestSignatures() {
   auto signers = selectSigners();
@@ -34,17 +36,27 @@ void SignatureRequester::startSignatureCollectTimer(
       new boost::asio::deadline_timer(Application::app().getIoService()));
   m_timer->expires_from_now(
       boost::posix_time::milliseconds(SIGNATURE_COLLECTION_INTERVAL));
-  m_timer->async_wait([this](const boost::system::error_code &ec) {
+  m_timer->async_wait([&](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       std::cout
           << "startSignatureCollectTimer: Timer was cancelled or retriggered."
           << std::endl;
     } else if (ec.value() == 0) {
       auto &signature_pool = Application::app().getSignaturePool();
-      if (signature_pool.size() >= MAX_SIGNATURE_COLLECT_SIZE) {
+      if (signature_pool.size() >= MIN_SIGNATURE_COLLECT_SIZE &&
+          signature_pool.size() <= MAX_SIGNATURE_COLLECT_SIZE) {
         cout << "SIG POOL SIZE: " << signature_pool.size() << endl;
         std::cout << "CREATE BLOCK!" << std::endl;
+
+        auto temp_partial_block = Application::app().getTemporaryPartialBlock();
+
+        auto signatures_size =
+            max(signature_pool.size(), MAX_SIGNATURE_COLLECT_SIZE);
+        auto signatures = signature_pool.fetchN(signatures_size);
+
         BlockGenerator generator;
+        Block block = generator.generateBlock(temp_partial_block, transactions,
+                                              signatures, m_merkle_tree);
       }
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;

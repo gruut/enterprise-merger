@@ -10,17 +10,21 @@
 using namespace nlohmann;
 
 namespace gruut {
+using Signatures = std::vector<Signature>;
+
 class SignaturePool {
 public:
   void handleMessage(signer_id_type receiver_id, nlohmann::json);
+
+  void push(Signature &signature);
 
   bool empty();
 
   size_t size();
 
-private:
-  void push(Signature &signature);
+  Signatures fetchN(size_t n);
 
+private:
   bool verifySignature(signer_id_type, json);
 
   std::list<Signature> m_signature_pool;
