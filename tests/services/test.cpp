@@ -193,6 +193,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
 
     auto height_metaheader_tx = storage->readBlock(1);
     auto latest_height_metaheader_tx = storage->readBlock(-1);
+    auto no_data_metaheader_tx = storage->readBlock(9999);
     Storage::destroyInstance();
 
     BOOST_TEST(1 == get<0>(height_metaheader_tx));
@@ -202,6 +203,9 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     BOOST_TEST(2 == get<0>(latest_height_metaheader_tx));
     BOOST_TEST("bbbbbbbbbbbbbinary2" == get<1>(latest_height_metaheader_tx));
     //BOOST_TEST(transaction2 == get<2>(latest_height_metaheader_tx));
+
+    BOOST_TEST(-1 == get<0>(no_data_metaheader_tx));
+    BOOST_TEST("" == get<1>(no_data_metaheader_tx));
   }
 
   BOOST_AUTO_TEST_CASE(find_sibling) {
