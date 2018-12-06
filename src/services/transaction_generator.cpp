@@ -20,7 +20,7 @@ void TransactionGenerator::generate(Signer &signer) {
                              new_transaction.transaction_id.cend());
 
     string timestamp = Time::now();
-    new_transaction.sent_time = TypeConverter::to8BytesArray(timestamp);
+    new_transaction.sent_time = TypeConverter::digitStringToBytes(timestamp);
     signature_message.insert(signature_message.cend(),
                              new_transaction.sent_time.cbegin(),
                              new_transaction.sent_time.cend());

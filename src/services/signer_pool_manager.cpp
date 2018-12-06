@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <botan/base64.h>
 #include <botan/pem.h>
 #include <botan/pubkey.h>
 #include <botan/rsa.h>
@@ -12,6 +11,7 @@
 
 #include "../application.hpp"
 #include "../chain/types.hpp"
+#include "../utils/bytes_builder.hpp"
 #include "../utils/hmac_key_maker.hpp"
 #include "../utils/random_number_generator.hpp"
 #include "../utils/sha256.hpp"
@@ -27,6 +27,8 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
                                       json message_body_json) {
   MessageProxy proxy;
   vector<uint64_t> receiver_list{receiver_id};
+  // TODO: 설정파일이 없어서 하드코딩(MERGER-1 => base64 => TUVSR0VSLTE)
+  merger_id_type merger_id = 1;
 
   auto now = std::chrono::duration_cast<std::chrono::seconds>(
                  std::chrono::system_clock::now().time_since_epoch())
@@ -42,10 +44,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       join_temporary_table[receiver_id].reset(new JoinTemporaryData());
 
       json message_body;
-      // TODO: Merger id 가 아직 결정 안되어서 임시값 할당
-      sender_id_type sender_id = Sha256::hash("1");
-
-      message_body["sender"] = Sha256::toString(sender_id);
+      message_body["sender"] = merger_id;
       message_body["time"] = timestamp;
 
       join_temporary_table[receiver_id]->merger_nonce =
@@ -62,16 +61,13 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     if (verifySignature(receiver_id, message_body_json)) {
       std::cout << "Validation success!" << std::endl;
 
-      // TODO: 임시로 Merger ID 1로 함
-      sender_id_type sender_id = Sha256::hash("1");
-
       auto signer_pk_cert = message_body_json["cert"].get<string>();
-      auto cert_vector = Botan::base64_decode(signer_pk_cert);
+      auto cert_vector = TypeConverter::decodeBase64(signer_pk_cert);
       string decoded_cert_str(cert_vector.begin(), cert_vector.end());
       join_temporary_table[receiver_id]->signer_cert = decoded_cert_str;
 
       json message_body;
-      message_body["sender"] = Sha256::toString(sender_id);
+      message_body["sender"] = merger_id;
       message_body["time"] = timestamp;
       message_body["cert"] = getCertificate();
 
@@ -92,16 +88,9 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       join_temporary_table[receiver_id]->shared_secret_key = vector<uint8_t>(
           shared_secret_key_vector.begin(), shared_secret_key_vector.end());
 
-      auto merger_nonce_bytes = TypeConverter::toBytes(
-          join_temporary_table[receiver_id]->merger_nonce);
-      auto signer_nonce_bytes =
-          TypeConverter::toBytes(message_body_json["sN"].get<string>());
-      auto dhx_bytes = TypeConverter::toBytes(dhx);
-      auto dhy_bytes = TypeConverter::toBytes(dhy);
-      auto timestamp_bytes = TypeConverter::toBytes(timestamp);
-
-      message_body["sig"] = signMessage(merger_nonce_bytes, signer_nonce_bytes,
-                                        dhx_bytes, dhy_bytes, timestamp_bytes);
+      message_body["sig"] = signMessage(
+          join_temporary_table[receiver_id]->merger_nonce,
+          message_body_json["sN"].get<string>(), dhx, dhy, timestamp);
 
       output_message =
           make_tuple(MessageType::MSG_RESPONSE_2, receiver_list, message_body);
@@ -115,9 +104,6 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   case MessageType::MSG_SUCCESS: {
     auto &signer_pool = Application::app().getSignerPool();
 
-    // TODO: 임시로 Merger ID 1로 함
-    sender_id_type merger_id = Sha256::hash("1");
-
     auto secret_key_vector = TypeConverter::toSecureVector(
         join_temporary_table[receiver_id]->shared_secret_key);
     signer_pool.pushSigner(receiver_id,
@@ -125,7 +111,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
                            secret_key_vector, SignerStatus::GOOD);
 
     json message_body;
-    message_body["sender"] = Sha256::toString(merger_id);
+    message_body["sender"] = merger_id;
     message_body["time"] = timestamp;
     message_body["val"] = true;
 
@@ -189,22 +175,20 @@ string SignerPoolManager::getCertificate() {
   return tmp_cert;
 }
 
-string SignerPoolManager::signMessage(vector<uint8_t> merger_nonce,
-                                      vector<uint8_t> signer_nonce,
-                                      vector<uint8_t> dhx, vector<uint8_t> dhy,
-                                      vector<uint8_t> timestamp) {
+string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
+                                      string dhx, string dhy,
+                                      string timestamp) {
   // TODO: 임시 rsa_sk_pem
   string rsa_sk_pem = "";
 
-  vector<uint8_t> message_bytes;
-  message_bytes.insert(message_bytes.end(), merger_nonce.begin(),
-                       merger_nonce.end());
-  message_bytes.insert(message_bytes.end(), signer_nonce.begin(),
-                       signer_nonce.end());
-  message_bytes.insert(message_bytes.end(), dhx.begin(), dhx.end());
-  message_bytes.insert(message_bytes.end(), dhy.begin(), dhy.end());
-  message_bytes.insert(message_bytes.end(), timestamp.begin(), timestamp.end());
+  BytesBuilder builder;
+  builder.append(merger_nonce);
+  builder.append(signer_nonce);
+  builder.append(dhx);
+  builder.append(dhy);
+  builder.append(timestamp);
 
+  auto message_bytes = builder.getBytes();
   auto signature = RSA::doSign(rsa_sk_pem, message_bytes, true);
 
   return Botan::base64_encode(signature);

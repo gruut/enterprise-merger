@@ -52,7 +52,7 @@ using block_height_type = std::string;
 
 using transaction_id_type = bytes;
 using requestor_id_type = sha256;
-using sender_id_type = sha256;
+using merger_id_type = uint64_t;
 using signer_id_type = uint64_t;
 using transaction_root_type = sha256;
 using chain_id_type = sha256;

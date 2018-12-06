@@ -2,10 +2,10 @@
 
 #include "../application.hpp"
 #include "../chain/transaction.hpp"
+#include "../utils/bytes_builder.hpp"
 #include "../utils/rsa.hpp"
 #include "../utils/type_converter.hpp"
 #include "transaction_collector.hpp"
-#include <botan/base64.h>
 #include <botan/data_src.h>
 #include <botan/x509_key.h>
 
@@ -23,28 +23,22 @@ void TransactionCollector::handleMessage(json message_body_json) {
     }
 
     Transaction transaction;
-    bytes signature_message;
+    BytesBuilder bytes_builder;
 
-    auto txid_vector =
-        Botan::base64_decode(message_body_json["txid"].get<string>());
-    transaction.transaction_id = TypeConverter::toBytes(
-        string(txid_vector.cbegin(), txid_vector.cend()));
-    signature_message.insert(signature_message.cend(), txid_vector.cbegin(),
-                             txid_vector.cend());
+    string txid_str = message_body_json["txid"].get<string>();
+    auto txid_bytes = TypeConverter::decodeBase64(txid_str);
+    transaction.transaction_id = txid_bytes;
+    bytes_builder.append(transaction.transaction_id);
 
-    transaction.sent_time =
-        TypeConverter::to8BytesArray(message_body_json["time"].get<string>());
-    signature_message.insert(signature_message.cend(),
-                             transaction.sent_time.cbegin(),
-                             transaction.sent_time.cend());
+    string t_str = message_body_json["time"].get<string>();
+    auto sent_time = TypeConverter::digitStringToBytes(t_str);
+    transaction.sent_time = sent_time;
+    bytes_builder.append(sent_time);
 
-    auto requestor_id_vector =
-        Botan::base64_decode(message_body_json["rID"].get<string>());
-    transaction.requestor_id = TypeConverter::toBytes(
-        string(requestor_id_vector.cbegin(), requestor_id_vector.cend()));
-    signature_message.insert(signature_message.cend(),
-                             requestor_id_vector.cbegin(),
-                             requestor_id_vector.cend());
+    string r_id_str = message_body_json["rID"].get<string>();
+    auto requestor_id_vector = TypeConverter::decodeBase64(r_id_str);
+    transaction.requestor_id = requestor_id_vector;
+    bytes_builder.append(requestor_id_vector);
 
     string transaction_type_string = message_body_json["type"].get<string>();
     if (transaction_type_string == "digests")
@@ -52,18 +46,15 @@ void TransactionCollector::handleMessage(json message_body_json) {
     else
       transaction.transaction_type = TransactionType::CERTIFICATE;
     auto transaction_type_bytes =
-        TypeConverter::toBytes(transaction_type_string);
-    signature_message.insert(signature_message.cend(),
-                             transaction_type_bytes.cbegin(),
-                             transaction_type_bytes.cend());
+        TypeConverter::stringToBytes(transaction_type_string);
+    bytes_builder.append(transaction_type_bytes);
 
     json content_array_json = message_body_json["content"];
     for (auto it = content_array_json.cbegin(); it != content_array_json.cend();
          ++it) {
       string elem = (*it).get<string>();
-      auto elem_bytes = TypeConverter::toBytes(elem);
-      signature_message.insert(signature_message.cend(), elem_bytes.cbegin(),
-                               elem_bytes.cend());
+      auto elem_bytes = TypeConverter::stringToBytes(elem);
+      bytes_builder.append(elem_bytes);
 
       transaction.content_list.emplace_back(elem);
     }
@@ -86,7 +77,8 @@ void TransactionCollector::handleMessage(json message_body_json) {
     unique_ptr<Botan::Public_Key> public_key(
         Botan::X509::load_key(pk_datasource));
 
-    bool is_verified = RSA::doVerify(*public_key, signature_message,
+    auto signature_message_bytes = bytes_builder.getBytes();
+    bool is_verified = RSA::doVerify(*public_key, signature_message_bytes,
                                      transaction.signature, true);
 
     if (is_verified) {
