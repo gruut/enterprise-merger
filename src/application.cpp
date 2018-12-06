@@ -61,4 +61,8 @@ Application::Application() {
 
   m_thread_group = make_shared<std::vector<std::thread>>();
 }
+
+PartialBlock &Application::getTemporaryPartialBlock() {
+  return temporary_partial_block;
+}
 } // namespace gruut

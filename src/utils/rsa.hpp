@@ -81,6 +81,22 @@ public:
     return verifier.verify_message(data, sig);
   }
 
+  static bool doVerify(std::string &rsa_pk, const std::vector<uint8_t> &data,
+                       const std::vector<uint8_t> &sig, bool pkcs1v15 = false) {
+    try {
+      Botan::DataSource_Memory cert_datasource(rsa_pk);
+      Botan::X509_Certificate cert(cert_datasource);
+      Botan::RSA_PublicKey public_key(cert.subject_public_key_algo(),
+                                      cert.subject_public_key_bitstring());
+
+      return doVerify(public_key, data, sig, pkcs1v15);
+    } catch (Botan::Exception &exception) {
+      // TODO: Logging
+      std::cout << "error on PEM to RSA PK: " << exception.what() << std::endl;
+      return false;
+    }
+  }
+
 private:
   static std::string getEmsa(bool is_pkcs1v15) {
     return is_pkcs1v15 ? "EMSA3(SHA-256)" : "EMSA4(SHA-256)";

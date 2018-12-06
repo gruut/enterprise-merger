@@ -20,9 +20,11 @@ void SignatureRequester::requestSignatures() {
   auto signers = selectSigners();
 
   auto transactions = std::move(fetchTransactions());
-  auto partial_block = makePartialBlock(transactions);
-  requestSignature(partial_block, signers);
 
+  auto partial_block = makePartialBlock(transactions);
+  Application::app().getTemporaryPartialBlock() = partial_block;
+
+  requestSignature(partial_block, signers);
   startSignatureCollectTimer(transactions);
 }
 

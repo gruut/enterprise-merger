@@ -33,7 +33,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
                              txid_vector.cend());
 
     transaction.sent_time =
-        TypeConverter::toTimestampType(message_body_json["time"].get<string>());
+        TypeConverter::to8BytesArray(message_body_json["time"].get<string>());
     signature_message.insert(signature_message.cend(),
                              transaction.sent_time.cbegin(),
                              transaction.sent_time.cend());
