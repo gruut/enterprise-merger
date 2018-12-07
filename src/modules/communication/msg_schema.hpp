@@ -118,21 +118,29 @@ const json SCHEMA_ECHO = R"(
             }
             )"_json;
 const json SCHEMA_BLOCK = R"(
-            {
-              "title": "Block",
-              "description": "Merger가 브로드캐스팅할 블록",
-              "type": "object",
-              "properties": {
-                "blockraw": {
-                  "description": "meta, compressed JSON, mSig",
-                  "type": "string"
-                },
-                "secret": {
-                  "description": "mtree, txCnt, tx",
-                  "type": "string"
-                }
-              }
-            }
+
+			{
+			  "title": "Block",
+			  "description": "Merger가 브로드캐스팅할 블록",
+			  "type": "object",
+			  "properties": {
+				"blockraw": {
+				  "description": "meta, compressed JSON, mSig",
+				  "type": "string"
+				},
+				"tx": {
+				  "description": "트랜잭션",
+				  "type": "array",
+				  "items": {
+						"type": "string"
+				  }
+				}
+			  },
+			  "required": [
+				"blockraw",
+				"tx"
+			  ]
+			}
             )"_json;
 const json SCHEMA_JOIN = R"({
   "title": "Join",
