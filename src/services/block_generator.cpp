@@ -33,8 +33,7 @@ Block BlockGenerator::generateBlock(PartialBlock &partial_block,
   BytesBuilder signature_builder;
 
   // Meta
-  // TODO: 설정파일(config)로 설정해야 함
-  block.compression_algo_type = CompressionAlgorithmType::LZ4;
+  block.compression_algo_type = config::COMPRESSION_ALGO_TYPE;
   string compression_algo_type_str;
   if (block.compression_algo_type == CompressionAlgorithmType::LZ4)
     compression_algo_type_str = "LZ4";

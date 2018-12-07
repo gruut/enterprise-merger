@@ -26,6 +26,7 @@ file(GLOB HEADER_FILES
         "src/module.hpp"
         "src/utils/*.hpp"
         "src/chain/*.hpp"
+        "src/config/config.hpp"
         "src/modules/communication/protos/*.h"
         )
 

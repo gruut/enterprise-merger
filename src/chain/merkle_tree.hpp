@@ -2,15 +2,14 @@
 
 #include <vector>
 
+#include "../config/config.hpp"
 #include "../utils/sha256.hpp"
 #include "types.hpp"
 
 using namespace std;
+using namespace gruut::config;
 
 namespace gruut {
-
-constexpr size_t MAX_MERKLE_LEAVES = 4096;
-
 class MerkleTree {
 public:
   MerkleTree() { m_merkle_tree.resize(MAX_MERKLE_LEAVES * 2 - 1); }
