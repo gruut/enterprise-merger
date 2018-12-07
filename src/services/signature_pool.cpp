@@ -36,7 +36,7 @@ Signatures SignaturePool::fetchN(size_t n) {
   return signatures;
 }
 
-size_t SignaturePool::size() { return 0; }
+size_t SignaturePool::size() { return m_signature_pool.size(); }
 
 bool SignaturePool::empty() { return size() == 0; }
 

@@ -57,6 +57,18 @@ public:
     append(int_val, len);
   }
 
+  void append(uint32_t int_val) {
+    std::vector<uint8_t> v;
+    v.reserve(sizeof(int_val));
+
+    for (auto i = 0; i < sizeof(int_val); ++i) {
+      v.push_back(int_val & 0xFF);
+      int_val >>= 8;
+    }
+
+    append(v);
+  }
+
   void append(uint64_t int_val, size_t len = 8) {
     if (len > sizeof(uint64_t))
       len = sizeof(uint64_t);

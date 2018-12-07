@@ -16,6 +16,8 @@ struct PartialBlock {
   chain_id_type chain_id;
   block_height_type height;
   transaction_root_type transaction_root;
+
+  vector<Transaction> transactions;
 };
 
 struct Block : public PartialBlock {
@@ -43,7 +45,6 @@ struct Block : public PartialBlock {
   // Body
   MerkleTree merkle_tree;
   size_t transactions_count;
-  vector<Transaction> transactions;
 };
 } // namespace gruut
 #endif

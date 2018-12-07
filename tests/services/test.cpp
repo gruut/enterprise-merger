@@ -38,7 +38,10 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator)
         auto tx_digest = Sha256::hash("1");
         transactions_digest.emplace_back(tx_digest);
 
-        auto block = generator.generatePartialBlock(transactions_digest);
+        vector<Transaction> transactions;
+        transactions.emplace_back(Transaction());
+
+        auto block = generator.generatePartialBlock(transactions_digest, transactions);
         BOOST_TEST(true);
     }
 
