@@ -51,12 +51,12 @@ void SignatureRequester::startSignatureCollectTimer(
         auto temp_partial_block = Application::app().getTemporaryPartialBlock();
 
         auto signatures_size =
-            max(signature_pool.size(), MAX_SIGNATURE_COLLECT_SIZE);
+            min(signature_pool.size(), MAX_SIGNATURE_COLLECT_SIZE);
         auto signatures = signature_pool.fetchN(signatures_size);
 
         BlockGenerator generator;
-        Block block = generator.generateBlock(temp_partial_block, transactions,
-                                              signatures, m_merkle_tree);
+        Block block = generator.generateBlock(temp_partial_block, signatures,
+                                              m_merkle_tree);
       }
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;
@@ -91,7 +91,8 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
 
   m_merkle_tree.generate(transaction_ids);
   vector<sha256> merkle_tree_vector = m_merkle_tree.getMerkleTree();
-  auto &&block = block_generator.generatePartialBlock(merkle_tree_vector);
+  auto &&block =
+      block_generator.generatePartialBlock(merkle_tree_vector, transactions);
 
   return block;
 }
