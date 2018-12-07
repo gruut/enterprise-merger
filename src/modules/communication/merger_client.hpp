@@ -20,7 +20,7 @@ class MergerClient {
 public:
   MergerClient() { m_rpc_receiver_list = RpcReceiverList::getInstance(); }
   void sendMessage(MessageType msg_type, std::vector<uint64_t> &receiver_list,
-                   std::string &packed_msg);
+                   std::vector<std::string> &packed_msg_list);
 
 private:
   RpcReceiverList *m_rpc_receiver_list;
@@ -30,7 +30,7 @@ private:
   void sendToMerger(MessageType msg_type, std::vector<uint64_t> &receiver_list,
                     std::string &packed_msg);
   void sendToSigner(MessageType msg_type, std::vector<uint64_t> &receiver_list,
-                    std::string &packed_msg);
+                    std::vector<std::string> &packed_msg_list);
 
   bool checkMergerMsgType(MessageType msg_tpye);
   bool checkSignerMsgType(MessageType msg_tpye);

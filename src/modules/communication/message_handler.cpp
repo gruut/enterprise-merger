@@ -14,16 +14,34 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
     return;
   }
   int body_size = getMsgBodySize(header);
-  // TODO:  HMAC 검증을 위해 key를 가져올 수 있게 되면. 가져오면 주석 해제
-  //  if(header.mac_algo_type ==  MACAlgorithmType::HMAC){
-  //    std::string msg = packed_msg.substr(0, HEADER_LENGTH +
-  //    body_size); std::vector<uint8_t> hmac(packed_msg.begin() + HEADER_LENGTH
-  //    + body_size , packed_msg.end()); std::vector<uint8_t> key;
-  //    if(!Hmac::verifyHMAC(msg, hmac, key)){
-  //      rpc_status.set_value(Status(StatusCode::UNAUTHENTICATED, "Wrong
-  //      HMAC")); return;
-  //    }
-  //  }
+  uint64_t id;
+  memcpy(&id, &header.sender_id[0], sizeof(uint64_t));
+  receiver_id = id;
+
+  if (header.mac_algo_type == MACAlgorithmType::HMAC) {
+    std::string msg = packed_msg.substr(0, HEADER_LENGTH + body_size);
+    std::vector<uint8_t> hmac(packed_msg.begin() + HEADER_LENGTH + body_size,
+                              packed_msg.end());
+
+    std::vector<uint8_t> key;
+    if (header.message_type == MessageType::MSG_SUCCESS) {
+      auto &signer_pool_manager = Application::app().getSignerPoolManager();
+      // TODO: signer_pool_manager의 join_temporary_table에서 key를 임시로
+      // 가져와서 테스트할 것. key = signer_pool_manager.getKey(id);
+    } else if (header.message_type == MessageType::MSG_SSIG) {
+      auto &signer_pool = Application::app().getSignerPool();
+      Botan::secure_vector<uint8_t> secure_vector_key =
+          signer_pool.getHmacKey(id);
+      key = std::vector<uint8_t>(secure_vector_key.begin(),
+                                 secure_vector_key.end());
+    }
+
+    if (!Hmac::verifyHMAC(msg, hmac, key)) {
+      rpc_status = Status(StatusCode::UNAUTHENTICATED, "Wrong HMAC");
+      return;
+    }
+  }
+
   std::string msg_body = getMsgBody(packed_msg, body_size);
   nlohmann::json json_data = getJson(header.compression_algo_type, msg_body);
 
@@ -32,10 +50,6 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
         Status(grpc::StatusCode::INVALID_ARGUMENT, "json schema check fail");
     return;
   }
-
-  uint64_t id;
-  memcpy(&id, &header.sender_id[0], sizeof(uint64_t));
-  receiver_id = id;
 
   input_queue->emplace(make_tuple(header.message_type, id, json_data));
   rpc_status = Status::OK;
@@ -50,18 +64,28 @@ void MessageHandler::packMsg(OutputMessage &output_msg) {
   // TODO : Compression type에 따라 수정 될 수 있습니다.
   header.compression_algo_type = CompressionAlgorithmType::NONE;
   std::string packed_msg = genPackedMsg(header, body);
+  std::vector<std::string> packed_msg_list;
 
-  // TODO: hmac을 붙히는 부분, key를 가져오게되면 주석 해제
-  //  if(msg_type == MessageType::MSG_ACCEPT || msg_type ==
-  //  MessageType::MSG_REQ_SSIG){
-  //    std::vector<uint8_t> key;
-  //    std::vector<uint8_t> hmac = Hmac::generateHMAC(packed_msg, key);
-  //    std::string str_hmac(hmac.begin(), hmac.end());
-  //    packed_msg += str_hmac;
-  //  }
+  if (msg_type == MessageType::MSG_ACCEPT ||
+      msg_type == MessageType::MSG_REQ_SSIG) {
+    auto &signer_pool = Application::app().getSignerPool();
+
+    for (auto receiver_id : get<1>(output_msg)) {
+      Botan::secure_vector<uint8_t> secure_vector_key =
+          signer_pool.getHmacKey(receiver_id);
+      std::vector<uint8_t> key(secure_vector_key.begin(),
+                               secure_vector_key.end());
+      std::vector<uint8_t> hmac = Hmac::generateHMAC(packed_msg, key);
+      std::string str_hmac(hmac.begin(), hmac.end());
+      std::string hmac_packed_data = packed_msg + str_hmac;
+      packed_msg_list.emplace_back(hmac_packed_data);
+    }
+  } else {
+    packed_msg_list.emplace_back(packed_msg);
+  }
 
   MergerClient merger_client;
-  merger_client.sendMessage(msg_type, get<1>(output_msg), packed_msg);
+  merger_client.sendMessage(msg_type, get<1>(output_msg), packed_msg_list);
 }
 
 bool MessageHandler::validateMessage(MessageHeader &header) {

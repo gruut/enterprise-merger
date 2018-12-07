@@ -4,16 +4,14 @@
 namespace gruut {
 void MergerClient::sendMessage(MessageType msg_type,
                                std::vector<uint64_t> &receiver_list,
-                               std::string &packed_msg) {
+                               std::vector<std::string> &packed_msg_list) {
 
   if (checkMergerMsgType(msg_type)) {
-    sendToMerger(msg_type, receiver_list, packed_msg);
+    sendToMerger(msg_type, receiver_list, packed_msg_list[0]);
   } else if (checkSignerMsgType(msg_type)) {
-    sendToSigner(msg_type, receiver_list, packed_msg);
-  }
-
-  if (checkSEMsgType(msg_type)) {
-    sendToSE(msg_type, receiver_list, packed_msg);
+    sendToSigner(msg_type, receiver_list, packed_msg_list);
+  } else if (checkSEMsgType(msg_type)) {
+    sendToSE(msg_type, receiver_list, packed_msg_list[0]);
   }
 }
 
@@ -64,18 +62,20 @@ void MergerClient::sendToMerger(MessageType msg_type,
 
 void MergerClient::sendToSigner(MessageType msg_type,
                                 std::vector<uint64_t> &receiver_list,
-                                std::string &packed_msg) {
+                                std::vector<std::string> &packed_msg_list) {
 
-  for (uint64_t signer_id : receiver_list) {
+  int num_of_signer = receiver_list.size();
+
+  for (int i = 0; i < num_of_signer; i++) {
     SignerRpcInfo signer_rpc_info =
-        m_rpc_receiver_list->getSignerRpcInfo(signer_id);
+        m_rpc_receiver_list->getSignerRpcInfo(receiver_list[i]);
     switch (msg_type) {
     case MessageType::MSG_CHALLENGE: {
       auto tag = static_cast<Join *>(signer_rpc_info.tag_join);
       *signer_rpc_info.join_status = RpcCallStatus::FINISH;
 
       GrpcMsgChallenge reply;
-      reply.set_message(packed_msg);
+      reply.set_message(packed_msg_list[i]);
 
       signer_rpc_info.send_challenge->Finish(reply, Status::OK, tag);
     } break;
@@ -85,7 +85,7 @@ void MergerClient::sendToSigner(MessageType msg_type,
       *signer_rpc_info.dhkeyex_status = RpcCallStatus::FINISH;
 
       GrpcMsgResponse2 reply;
-      reply.set_message(packed_msg);
+      reply.set_message(packed_msg_list[i]);
 
       signer_rpc_info.send_response2->Finish(reply, Status::OK, tag);
     } break;
@@ -96,7 +96,7 @@ void MergerClient::sendToSigner(MessageType msg_type,
       *signer_rpc_info.keyexfinished_status = RpcCallStatus::FINISH;
 
       GrpcMsgAccept reply;
-      reply.set_message(packed_msg);
+      reply.set_message(packed_msg_list[i]);
 
       signer_rpc_info.send_accept->Finish(reply, Status::OK, tag);
     } break;
@@ -105,7 +105,7 @@ void MergerClient::sendToSigner(MessageType msg_type,
       auto tag = static_cast<Identity *>(signer_rpc_info.tag_identity);
 
       GrpcMsgReqSsig reply;
-      reply.set_message(packed_msg);
+      reply.set_message(packed_msg_list[i]);
       signer_rpc_info.send_req_ssig->Write(reply, tag);
     } break;
 
