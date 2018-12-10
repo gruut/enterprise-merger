@@ -118,7 +118,6 @@ const json SCHEMA_ECHO = R"(
             }
             )"_json;
 const json SCHEMA_BLOCK = R"(
-
 			{
 			  "title": "Block",
 			  "description": "Merger가 브로드캐스팅할 블록",
@@ -132,7 +131,38 @@ const json SCHEMA_BLOCK = R"(
 				  "description": "트랜잭션",
 				  "type": "array",
 				  "items": {
-						"type": "string"
+						"type": "object",
+						"properties": {
+						  "txid": {
+							"type": "string"
+						  },
+						  "time": {
+							"type": "string"
+						  },
+						  "rID": {
+							"type": "string"
+						  },
+						  "type": {
+							"type": "string"
+						  },
+						  "content": {
+							"type": "array",
+							"item": {
+							  "type": "string"
+							}
+						  },
+						  "rSig": {
+							"type": "string"
+						  }
+						},
+						"required": [
+						  "txid",
+						  "time",
+						  "rID",
+						  "type",
+						  "content",
+						  "rSig"
+						  ]
 				  }
 				}
 			  },
@@ -363,7 +393,10 @@ const json SCHEMA_TX = R"({
     },
     "content": {
       "description": "트랜잭션 내용. 체크섬 혹은 Signer의 인증서",
-      "type": "array"
+      "type": "array",
+      "item": {
+        "type": "string"
+      }
     },
     "rSig": {
       "description": "requestor's signature",
