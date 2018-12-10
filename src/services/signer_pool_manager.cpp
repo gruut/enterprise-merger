@@ -130,6 +130,15 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   }
 }
 
+const vector<uint8_t>
+SignerPoolManager::getSecretKey(signer_id_type receiver_id) {
+  if (join_temporary_table[receiver_id]) {
+    return join_temporary_table[receiver_id]->shared_secret_key;
+  }
+
+  return vector<uint8_t>();
+}
+
 bool SignerPoolManager::verifySignature(signer_id_type signer_id,
                                         json message_body_json) {
   const auto decoded_signer_signature =

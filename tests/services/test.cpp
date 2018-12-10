@@ -160,6 +160,16 @@ BOOST_AUTO_TEST_SUITE(Test_SignaturePool)
   }
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(Test_SignerPoolManger)
+  BOOST_AUTO_TEST_CASE(getSecretKey) {
+    SignerPoolManager manager;
+
+    auto sk = manager.getSecretKey(0);
+
+    BOOST_CHECK_EQUAL(sk.size(), 0);
+  }
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
 
   BOOST_AUTO_TEST_CASE(save_block) {

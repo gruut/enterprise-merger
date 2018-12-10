@@ -19,6 +19,7 @@ public:
   SignerPoolManager() = default;
   void handleMessage(MessageType &message_type, signer_id_type receiver_id,
                      nlohmann::json message_body_json);
+  const vector<uint8_t> getSecretKey(signer_id_type receiver_id);
 
 private:
   bool verifySignature(signer_id_type signer_id,
