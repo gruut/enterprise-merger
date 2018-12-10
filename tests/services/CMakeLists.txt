@@ -17,7 +17,6 @@ file(GLOB HEADER_FILES
         )
 
 file(GLOB SOURCE_FILES
-        "../../src/chain/*.cpp"
         "../../src/services/*.cpp"
         "../../src/application.cpp"
         )

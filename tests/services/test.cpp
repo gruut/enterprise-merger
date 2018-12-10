@@ -216,19 +216,25 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     BOOST_TEST(tx_ids_list[0] == "Qa");
     BOOST_TEST(tx_ids_list[1] == "Qb");
     BOOST_TEST(tx_ids_list[2] == "Qc");
-    BOOST_TEST(tx_ids_list[3] == "Qd");
   }
 
   BOOST_AUTO_TEST_CASE(find_cert) {
-    Storage *storage = Storage::getInstance();
-    auto certificate1 = storage->findCertificate("Qc4");
-    auto certificate2 = storage->findCertificate("c1");
-    //auto certificate3 = storage->findCertificate(333); // uint64_t
-    Storage::destroyInstance();
+    // block_body1 = a1 : 20171210~20181210, a2 : 20160303~20170303
+    // block_body2 = a1 : 20180201~20190201, a2 : 20170505~20180505
 
-    BOOST_TEST(certificate1 == "certQc4");
-    BOOST_TEST(certificate2 == "certc1");
-    //BOOST_TEST(certificate3 == "certA3");
+    Storage *storage = Storage::getInstance();
+    auto certificate1 = storage->findCertificate("a1"); // 최신(20180201에 등록) 인증서
+    auto certificate2 = storage->findCertificate("a2"); // 최신(20170505에 등록) 인증서
+
+    BOOST_TEST(certificate1 == block_body2["tx"][0]["content"][1].get<string>());
+    BOOST_TEST(certificate2 == block_body2["tx"][0]["content"][3].get<string>());
+
+    auto certificate3 = storage->findCertificate("a1", 1530409054); // 20180701
+    auto certificate4 = storage->findCertificate("a2", 1491874654); // 20170411
+
+    BOOST_TEST(certificate3 == block_body2["tx"][0]["content"][1].get<string>());
+    BOOST_TEST(certificate4 == "");
+    Storage::destroyInstance();
   }
 
   BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {

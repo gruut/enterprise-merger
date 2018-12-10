@@ -39,32 +39,71 @@ json block_body1 = {
           {"rSig", "a"},
           {"type", "certificates"},
           {"content",
-           {"a1", "certa1", "a2", "certa2", "a3", "certa3", "a4", "certa4"}}},
+           // a1 : 20171210~20181210, a2 : 20160303~20170303
+           {"a1",
+            "-----BEGIN CERTIFICATE-----\n"
+            "MIIDXTCCAkWgAwIBAgIJAJeEA17SFCGLMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
+            "BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX\n"
+            "aWRnaXRzIFB0eSBMdGQwHhcNMTcxMjEwMDQyNTAzWhcNMTgxMjEwMDQyNTAzWjBF\n"
+            "MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50\n"
+            "ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB\n"
+            "CgKCAQEApcYkflgKmtX9ZhAkHnn47F7lkdJv23tpdomZsg0eAsDskb1m9cDqN07O\n"
+            "tm7c2/ajMLQGP2p19O3mlNJeG6ox+t+xGPR6YRLhCK9avkIZJuT3vtfAhWhTnQN9\n"
+            "MMynIFB3yFbkn8mLAb7RaokDiJc7DAPiBPS0+almHjnloA+Yv64CbQ6QpLYMFjP1\n"
+            "tNYO/n0Drlb4S587HhVzLa1qKlz8s+PRtWz8tqSsCwrCht+TdlnDfJWpi9/njXEh\n"
+            "rrRE/T5epXhGTGJKX3tcMHqRqKvA9ImrQu7JYHjbRlcAaBlTZsh6Ty00OHv7DzPf\n"
+            "nW7dQLiR3JfjThYL6JWbAfaI4f2w8wIDAQABo1AwTjAdBgNVHQ4EFgQUR4nACjxK\n"
+            "58x7z5GlsuG1W06qQjswHwYDVR0jBBgwFoAUR4nACjxK58x7z5GlsuG1W06qQjsw\n"
+            "DAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAi0crtWanFcorOotJLOim\n"
+            "Wwe89H+lU/49FR1pB1vszqb1QgAT+YHOo2I3NQ8ZjzFm+DGe6XTQLzAI5a2UNSIb\n"
+            "oV0FKlWGI3bEwo9uWq7igV1lDqgyZrm7DQglW4O17dI7Yxa3saBAFYCYt4DbIRRG\n"
+            "geTMX971KkN9es+djX367jUlCzW0AttjgahIkwfK/VCkok88TAscZCNuvcto2EUD\n"
+            "H8Rnpg4es4nSPfbqAba8bXfNQU86hjmVyk+38IEHWctazf98TxAn0gGqEU+36gfv\n"
+            "argbxR2j1auP5foPQTKz2DtpBqIzIY1eg9M0KEmaqzLA6L6qpU+l+Zw2tkM8yhUt\n"
+            "WA==\n"
+            "-----END CERTIFICATE-----",
+            "a2",
+            "-----BEGIN CERTIFICATE-----\n"
+            "MIIDXTCCAkWgAwIBAgIJALV2n/vUEHSGMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
+            "BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX\n"
+            "aWRnaXRzIFB0eSBMdGQwHhcNMTYwMzAzMDQyNjA5WhcNMTcwMzAzMDQyNjA5WjBF\n"
+            "MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50\n"
+            "ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB\n"
+            "CgKCAQEApcYkflgKmtX9ZhAkHnn47F7lkdJv23tpdomZsg0eAsDskb1m9cDqN07O\n"
+            "tm7c2/ajMLQGP2p19O3mlNJeG6ox+t+xGPR6YRLhCK9avkIZJuT3vtfAhWhTnQN9\n"
+            "MMynIFB3yFbkn8mLAb7RaokDiJc7DAPiBPS0+almHjnloA+Yv64CbQ6QpLYMFjP1\n"
+            "tNYO/n0Drlb4S587HhVzLa1qKlz8s+PRtWz8tqSsCwrCht+TdlnDfJWpi9/njXEh\n"
+            "rrRE/T5epXhGTGJKX3tcMHqRqKvA9ImrQu7JYHjbRlcAaBlTZsh6Ty00OHv7DzPf\n"
+            "nW7dQLiR3JfjThYL6JWbAfaI4f2w8wIDAQABo1AwTjAdBgNVHQ4EFgQUR4nACjxK\n"
+            "58x7z5GlsuG1W06qQjswHwYDVR0jBBgwFoAUR4nACjxK58x7z5GlsuG1W06qQjsw\n"
+            "DAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAceNOuaasbU1idUKnU3zE\n"
+            "TLDjhEZd8n8EqMa9T+lffH4hmo6WKScXjfNyB7IfncXxg6FZ+8X5CTRDRvY8iJLW\n"
+            "YLggNCkyn7FUJm3zab5FlhM6ylCnRgFBoFy2EAb0+KNK/cVAfwqiAsKxG8Kzb7UW\n"
+            "uX6D9/j82nEma45L4soGfljMyDcEt3Z52qPvzE+mdupb1AVe+jdr6zgE243mOJOW\n"
+            "Bjvbj+AFVRyJLeynitoKKn5ck2PZDG5xjnwTYEIPvfdnd9RM2zwov9DMUxa6nL+G\n"
+            "cEjnEbNinHq8SuajL3Qun3ziD3fEw5B/C6fP6bTjcmnrNTjusD/KP1Z1JwGV/FBh\n"
+            "+g==\n"
+            "-----END CERTIFICATE-----"}}},
          {{"txID", "b"},
           {"time", "b"},
           {"rID", "b"},
           {"rSig", "b"},
-          {"type", "certificates"},
+          {"type", "digests"},
           {"content",
-           {"b1", "certb1", "b2", "certb2", "b3", "certb3", "b4", "certb4"}}},
+           {"dig01", "dig02", "dig03", "dig04", "dig11", "dig12", "dig13",
+            "dig14"}}},
          {{"txID", "c"},
           {"time", "c"},
           {"rID", "c"},
           {"rSig", "c"},
-          {"type", "certificates"},
-          {"content",
-           {"c1", "certc1", "c2", "certc2", "c3", "certc3", "c4", "certc4"}}},
-         {{"txID", "d"},
-          {"time", "d"},
-          {"rID", "d"},
-          {"rSig", "d"},
           {"type", "digests"},
           {"content",
-           {"dd1", "dd2", "dd3", "dd4", "dd5", "dd6", "dd7", "dd8"}}},
+           {"dig01", "dig02", "dig03", "dig04", "dig11", "dig12", "dig13",
+            "dig14"}}},
      }},
     //{"mtree", {"ee", "ff"}}, 4096*2-1개라서 Test 파일에서 반복문 돌려
     //생성하였음
-    {"txCnt", "4"}};
+    {"txCnt", "2"}};
 
 json block_header2 = {
     {"bID", "bbbbbbbbbID2"},
@@ -93,39 +132,75 @@ json block_body2 = {
     {"tx",
      {
          {{"txID", "Qa"},
-          {"time", "a"},
-          {"rID", "a"},
-          {"rSig", "a"},
+          {"time", "Qa"},
+          {"rID", "Qa"},
+          {"rSig", "Qa"},
           {"type", "certificates"},
           {"content",
-           {"Qa1", "certQa1", "Qa2", "certQa2", "Qa3", "certQa3", "Qa4",
-            "certQa4"}}},
+           // a1 : 20180201~20190201, a2 : 20170505~20180505
+           {"a1",
+            "-----BEGIN CERTIFICATE-----\n"
+            "MIIDXTCCAkWgAwIBAgIJAJoknRxDWC2cMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
+            "BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX\n"
+            "aWRnaXRzIFB0eSBMdGQwHhcNMTgwMjAxMDQyNzMxWhcNMTkwMjAxMDQyNzMxWjBF\n"
+            "MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50\n"
+            "ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB\n"
+            "CgKCAQEApcYkflgKmtX9ZhAkHnn47F7lkdJv23tpdomZsg0eAsDskb1m9cDqN07O\n"
+            "tm7c2/ajMLQGP2p19O3mlNJeG6ox+t+xGPR6YRLhCK9avkIZJuT3vtfAhWhTnQN9\n"
+            "MMynIFB3yFbkn8mLAb7RaokDiJc7DAPiBPS0+almHjnloA+Yv64CbQ6QpLYMFjP1\n"
+            "tNYO/n0Drlb4S587HhVzLa1qKlz8s+PRtWz8tqSsCwrCht+TdlnDfJWpi9/njXEh\n"
+            "rrRE/T5epXhGTGJKX3tcMHqRqKvA9ImrQu7JYHjbRlcAaBlTZsh6Ty00OHv7DzPf\n"
+            "nW7dQLiR3JfjThYL6JWbAfaI4f2w8wIDAQABo1AwTjAdBgNVHQ4EFgQUR4nACjxK\n"
+            "58x7z5GlsuG1W06qQjswHwYDVR0jBBgwFoAUR4nACjxK58x7z5GlsuG1W06qQjsw\n"
+            "DAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAjV3LJG4ppme0LcOeG4SU\n"
+            "jeQ/6QkOxKSXDspoCg5u1FWU4KKdnXOOgePvRX+Je2KGMTosxBTCdm+RNrPFHuH1\n"
+            "rlab/N9fL3VmfGuHSJ6jrwVeUThumzhZ2nHKMofFqSJmAyoSaadCiZ+lsja5MQmV\n"
+            "feRqFnjkqcnAJAKkD7rSZzCRuk3R5IAE3iAfeTZzVaccr4lrEDzxeeonXwdUFBCd\n"
+            "El7L5juFHnQTPeOcfGU80cPdCl8/hXx6RVCT28clkUiz9kzn5WOvWdUorSI8liQX\n"
+            "2DEeNEcaBHwCycf9aNBd71T5gGtvnV/nHpTZefNu7Jh5ZNW6jP4P7p4l/9to8r/j\n"
+            "0g==\n"
+            "-----END CERTIFICATE-----",
+            "a2",
+            "-----BEGIN CERTIFICATE-----\n"
+            "MIIDXTCCAkWgAwIBAgIJAKKfBrtyBzGgMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
+            "BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX\n"
+            "aWRnaXRzIFB0eSBMdGQwHhcNMTcwNTA1MDQyODAzWhcNMTgwNTA1MDQyODAzWjBF\n"
+            "MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50\n"
+            "ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB\n"
+            "CgKCAQEApcYkflgKmtX9ZhAkHnn47F7lkdJv23tpdomZsg0eAsDskb1m9cDqN07O\n"
+            "tm7c2/ajMLQGP2p19O3mlNJeG6ox+t+xGPR6YRLhCK9avkIZJuT3vtfAhWhTnQN9\n"
+            "MMynIFB3yFbkn8mLAb7RaokDiJc7DAPiBPS0+almHjnloA+Yv64CbQ6QpLYMFjP1\n"
+            "tNYO/n0Drlb4S587HhVzLa1qKlz8s+PRtWz8tqSsCwrCht+TdlnDfJWpi9/njXEh\n"
+            "rrRE/T5epXhGTGJKX3tcMHqRqKvA9ImrQu7JYHjbRlcAaBlTZsh6Ty00OHv7DzPf\n"
+            "nW7dQLiR3JfjThYL6JWbAfaI4f2w8wIDAQABo1AwTjAdBgNVHQ4EFgQUR4nACjxK\n"
+            "58x7z5GlsuG1W06qQjswHwYDVR0jBBgwFoAUR4nACjxK58x7z5GlsuG1W06qQjsw\n"
+            "DAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAoxC78x09lXsOOLNfb4Gs\n"
+            "IvsXkiK/k5AWpWJfEjhSj4hO8nnbtdwsZ+ycrOMqCgZdBxCcI51u6HoFw1hDMsbU\n"
+            "L4iT1oDtqf731KM7qIQLLvmnUn32T7Y2zWfzRIGiAt+mDA8sLzmx3QL2Y7hUg2av\n"
+            "7AcjEWiC1ckfQ63sd7rGDoZ5D6gfzlcPzP0QiqG/GZ8PO0K+GZCUheKea/I3Rm9q\n"
+            "nJwWLOAaPCkJ97cIVXxT1/Zr0kJgcE5diSKcACpwQ793F43yN55fU13fv9j5Kh5s\n"
+            "aChaqtEd9TOz8PJeAqqsvrxWwxSKhYRBxExYmyvEzbGsZubwFGyUSBwKLYeELwRQ\n"
+            "gA==\n"
+            "-----END CERTIFICATE-----"}}},
          {{"txID", "Qb"},
-          {"time", "b"},
-          {"rID", "b"},
-          {"rSig", "b"},
-          {"type", "certificates"},
-          {"content",
-           {"Qb1", "certQb1", "Qb2", "certQb2", "Qb3", "certQb3", "Qb4",
-            "certQb4"}}},
-         {{"txID", "Qc"},
-          {"time", "c"},
-          {"rID", "c"},
-          {"rSig", "c"},
-          {"type", "certificates"},
-          {"content",
-           {"Qc1", "certQc1", "Qc2", "certQc2", "Qc3", "certQc3", "Qc4",
-            "certQc4"}}},
-         {{"txID", "Qd"},
-          {"time", "d"},
-          {"rID", "d"},
-          {"rSig", "d"},
+          {"time", "Qb"},
+          {"rID", "Qb"},
+          {"rSig", "Qb"},
           {"type", "digests"},
           {"content",
-           {"dd1", "dd2", "dd3", "dd4", "dd5", "dd6", "dd7", "dd8"}}},
+           {"dig01", "dig02", "dig03", "dig04", "dig11", "dig12", "dig13",
+            "dig14"}}},
+         {{"txID", "Qc"},
+          {"time", "Qc"},
+          {"rID", "Qc"},
+          {"rSig", "Qc"},
+          {"type", "digests"},
+          {"content",
+           {"dig01", "dig02", "dig03", "dig04", "dig11", "dig12", "dig13",
+            "dig14"}}},
      }},
     //{"mtree", {"ee", "ff"}}, 4096*2-1개라서 Test 파일에서 반복문 돌려
     //생성하였음
-    {"txCnt", "4"}};
+    {"txCnt", "2"}};
 } // namespace gruut
 #endif

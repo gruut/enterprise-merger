@@ -90,11 +90,32 @@ void Storage::write(const string &what, json &data,
           json content = data["tx"][transaction_iterator_index]["content"];
           for (auto content_index = 0; content_index < content.size();
                content_index += 2) {
-            auto new_key =
-                "certificate_" + content[content_index].get<string>();
-            auto new_value = content[content_index + 1].get<string>();
+            string user_id = content[content_index].get<string>();
+
+            string cert_idx = findBy("certificate", user_id, "");
+            auto new_key = "certificate_" + user_id;
+            auto new_value =
+                (cert_idx != "") ? to_string(stoi(cert_idx) + 1) : "0";
             auto status =
                 m_db_certificate->Put(m_write_options, new_key, new_value);
+            handleTrivialError(status);
+
+            new_key = (cert_idx != "") ? "certificate_" + user_id + "_" +
+                                             to_string(stoi(cert_idx) + 1)
+                                       : "certificate_" + user_id + "_0";
+            string pem = content[content_index + 1].get<string>();
+            Botan::DataSource_Memory cert_datasource(pem);
+            Botan::X509_Certificate cert(cert_datasource);
+
+            json tmp_cert;
+            tmp_cert[0] = to_string(
+                Botan::X509_Time(cert.not_before()).time_since_epoch());
+            tmp_cert[1] = to_string(
+                Botan::X509_Time(cert.not_after()).time_since_epoch());
+            tmp_cert[2] = pem;
+
+            new_value = tmp_cert.dump();
+            status = m_db_certificate->Put(m_write_options, new_key, new_value);
             handleTrivialError(status);
           }
         }
@@ -214,8 +235,31 @@ vector<string> Storage::findLatestTxIdList() {
   return tx_ids_list;
 }
 
-string Storage::findCertificate(const string &user_id) {
-  return findBy("certificate", user_id, "");
+string Storage::findCertificate(const string &user_id,
+                                const timestamp_type &at_this_time) {
+  string cert = "";
+  string cert_size = findBy("certificate", user_id, "");
+  if (cert_size != "") {
+    if (at_this_time == 0)
+      cert = json::parse(findBy("certificate", user_id, cert_size))[2]
+                 .get<string>();
+    else {
+      timestamp_type max = 0;
+      for (int i = 0; i <= stoi(cert_size); ++i) {
+        json cert_json =
+            json::parse(findBy("certificate", user_id, to_string(i)));
+        timestamp_type start_date = stoi(cert_json[0].get<string>());
+        timestamp_type end_date = stoi(cert_json[1].get<string>());
+        if (start_date <= at_this_time && at_this_time <= end_date) {
+          if (max < start_date) {
+            max = start_date;
+            cert = cert_json[2].get<string>();
+          }
+        }
+      }
+    }
+  }
+  return cert;
 }
 
 void Storage::deleteAllDirectory(const string &dir_path) {
@@ -309,10 +353,12 @@ vector<string> Storage::findSibling(const string &tx_id) {
   return siblings;
 }
 
-string Storage::findCertificate(const uint64_t &user_id) {
+string Storage::findCertificate(const uint64_t user_id,
+                                const timestamp_type &at_this_time) {
   BytesBuilder b64_id_builder;
   b64_id_builder.append(user_id);
 
-  return findCertificate(macaron::Base64::Encode(b64_id_builder.getString()));
+  return findCertificate(macaron::Base64::Encode(b64_id_builder.getString()),
+                         at_this_time);
 }
 } // namespace gruut

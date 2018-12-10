@@ -2,9 +2,12 @@
 #define GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 
 #include "../chain/merkle_tree.hpp"
+#include "../chain/types.hpp"
 #include "../utils/bytes_builder.hpp"
+#include "../utils/rsa.hpp"
 #include "../utils/sha256.hpp"
 #include "../utils/template_singleton.hpp"
+#include "../utils/time.hpp"
 #include "base64.hpp"
 #include "leveldb/db.h"
 #include "leveldb/options.h"
@@ -29,8 +32,10 @@ public:
                  json &block_body);
   pair<string, string> findLatestHashAndHeight();
   vector<string> findLatestTxIdList();
-  string findCertificate(const string &user_id);
-  string findCertificate(const uint64_t &user_id);
+  string findCertificate(const string &user_id,
+                         const timestamp_type &at_this_time = 0);
+  string findCertificate(const uint64_t user_id,
+                         const timestamp_type &at_this_time = 0);
   void deleteAllDirectory(const string &dir_path);
   tuple<int, string, json> readBlock(int height);
   vector<string> findSibling(const string &tx_id);
