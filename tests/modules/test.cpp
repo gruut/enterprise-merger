@@ -8,6 +8,7 @@
 #include "../../src/modules/communication/grpc_util.hpp"
 #include "../../src/chain/transaction.hpp"
 #include "../../src/modules/message_fetcher/message_fetcher.hpp"
+#include "../../src/config/config.hpp"
 
 using namespace std;
 using namespace gruut;
@@ -21,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
         msg_hdr.version = '1';
         msg_hdr.message_type = MessageType::MSG_ECHO;
         msg_hdr.mac_algo_type = MACAlgorithmType::NONE;
-        msg_hdr.compression_algo_type = CompressionAlgorithmType::LZ4;
+        msg_hdr.compression_algo_type = config::COMPRESSION_ALGO_TYPE;
         msg_hdr.dummy = '1';
 
         string data("ggg");

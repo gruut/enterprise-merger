@@ -4,14 +4,14 @@
 #include <vector>
 
 #include "../../include/base64.hpp"
+#include "../config/config.hpp"
 #include "../utils/sha256.hpp"
 #include "types.hpp"
 
 using namespace std;
+using namespace gruut::config;
 
 namespace gruut {
-
-constexpr size_t MAX_MERKLE_LEAVES = 4096;
 
 const std::map<std::string, std::string> HASH_LOOKUP = {
     {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"

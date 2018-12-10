@@ -12,12 +12,9 @@
 #include "signature_requester.hpp"
 #include "signer_pool.hpp"
 
-namespace gruut {
-constexpr unsigned int MAX_COLLECT_TRANSACTION_SIZE = 4096;
-constexpr size_t MIN_SIGNATURE_COLLECT_SIZE =
-    1; // TODO: 테스트를 위해 임시로 1개로 설정
-constexpr size_t MAX_SIGNATURE_COLLECT_SIZE = 4096;
+using namespace gruut::config;
 
+namespace gruut {
 void SignatureRequester::requestSignatures() {
   auto signers = selectSigners();
 
@@ -51,12 +48,12 @@ void SignatureRequester::startSignatureCollectTimer(
         auto temp_partial_block = Application::app().getTemporaryPartialBlock();
 
         auto signatures_size =
-            max(signature_pool.size(), MAX_SIGNATURE_COLLECT_SIZE);
+            min(signature_pool.size(), MAX_SIGNATURE_COLLECT_SIZE);
         auto signatures = signature_pool.fetchN(signatures_size);
 
         BlockGenerator generator;
-        Block block = generator.generateBlock(temp_partial_block, transactions,
-                                              signatures, m_merkle_tree);
+        Block block = generator.generateBlock(temp_partial_block, signatures,
+                                              m_merkle_tree);
       }
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;
@@ -68,9 +65,8 @@ void SignatureRequester::startSignatureCollectTimer(
 Transactions SignatureRequester::fetchTransactions() {
   auto &transaction_pool = Application::app().getTransactionPool();
 
-  const unsigned int transactions_size =
-      static_cast<const int>(transaction_pool.size());
-  auto t_size = min(transactions_size, MAX_COLLECT_TRANSACTION_SIZE);
+  const size_t transactions_size = transaction_pool.size();
+  auto t_size = std::min(transactions_size, MAX_COLLECT_TRANSACTION_SIZE);
 
   Transactions transactions_list;
   for (unsigned int i = 0; i < t_size; i++) {
@@ -91,7 +87,8 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
 
   m_merkle_tree.generate(transaction_ids);
   vector<sha256> merkle_tree_vector = m_merkle_tree.getMerkleTree();
-  auto &&block = block_generator.generatePartialBlock(merkle_tree_vector);
+  auto &&block =
+      block_generator.generatePartialBlock(merkle_tree_vector, transactions);
 
   return block;
 }
