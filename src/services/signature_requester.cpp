@@ -4,7 +4,6 @@
 #include <random>
 
 #include "../application.hpp"
-#include "../chain/signer.hpp"
 #include "../chain/types.hpp"
 #include "block_generator.hpp"
 #include "message_factory.hpp"
@@ -57,6 +56,7 @@ void SignatureRequester::startSignatureCollectTimer(
         BlockGenerator generator;
         Block block = generator.generateBlock(temp_partial_block, signatures,
                                               m_merkle_tree);
+        saveBlock(block);
       }
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;
@@ -138,5 +138,11 @@ Signers SignatureRequester::selectSigners() {
   }
 
   return selected_signers;
+}
+
+void SignatureRequester::saveBlock(Block &block) {
+  Storage *storage = Storage::getInstance();
+
+  storage->saveBlock(block);
 }
 } // namespace gruut

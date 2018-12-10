@@ -1,4 +1,6 @@
 #include "storage.hpp"
+#include "../chain/transaction.hpp"
+#include "../utils/type_converter.hpp"
 
 namespace gruut {
 using namespace std;
@@ -170,6 +172,85 @@ void Storage::handleTrivialError(const leveldb::Status &status) {
   }
 }
 
+void Storage::saveBlock(Block &block) {
+  // Meta
+  BytesBuilder meta_header_builder;
+
+  string compression_algo_type_str;
+  if (block.compression_algo_type == CompressionAlgorithmType::LZ4)
+    compression_algo_type_str = "LZ4";
+  else
+    compression_algo_type_str = "NONE";
+
+  meta_header_builder.append(compression_algo_type_str);
+  meta_header_builder.append(block.header_length);
+  string meta_header = meta_header_builder.getString();
+
+  // Header
+  json block_header;
+  block_header["ver"] = to_string(block.version);
+  auto chain_id_str = to_string(block.chain_id);
+  block_header["cID"] = TypeConverter::toBase64Str(chain_id_str);
+  block_header["prevH"] =
+      TypeConverter::toBase64Str(block.previous_header_hash);
+  block_header["prevbID"] = TypeConverter::toBase64Str(block.previous_block_id);
+  block_header["time"] = to_string(block.timestamp);
+  block_header["hgt"] = block.height;
+  block_header["txrt"] = TypeConverter::toBase64Str(block.transaction_root);
+
+  vector<string> tx_ids;
+  std::transform(block.transaction_ids.begin(), block.transaction_ids.end(),
+                 back_inserter(tx_ids),
+                 [](const transaction_id_type &transaction_id) {
+                   return TypeConverter::toBase64Str(transaction_id);
+                 });
+  block_header["txids"] = tx_ids;
+
+  unordered_map<signer_id_type, signature_type> sig_map;
+  std::for_each(block.signer_signatures.begin(), block.signer_signatures.end(),
+                [&sig_map](Signature &sig) {
+                  sig_map[sig.signer_id] = sig.signer_signature;
+                });
+  block_header["SSig"] = sig_map;
+
+  auto merger_id_str = to_string(block.merger_id);
+  block_header["mID"] = TypeConverter::toBase64Str(merger_id_str);
+
+  BytesBuilder b_id_builder;
+  b_id_builder.append(chain_id_str);
+  b_id_builder.append(block.height);
+  b_id_builder.append(block.merger_id);
+  auto b_id_bytes = b_id_builder.getBytes();
+
+  auto hashed_b_id = Sha256::hash(b_id_bytes);
+  block_header["bID"] = TypeConverter::toBase64Str(hashed_b_id);
+
+  // Body
+  json block_body;
+  vector<string> mtree;
+  auto merkle_tree = block.merkle_tree;
+  auto tree_nodes_vector = merkle_tree.getMerkleTree();
+  std::transform(tree_nodes_vector.begin(), tree_nodes_vector.end(),
+                 back_inserter(mtree), [](sha256 &transaction_id) {
+                   return TypeConverter::toBase64Str(transaction_id);
+                 });
+  block_body["mtree"] = mtree;
+
+  block_body["txCnt"] = to_string(block.transactions_count);
+
+  vector<json> transactions_arr;
+  std::transform(block.transactions.begin(), block.transactions.end(),
+                 back_inserter(transactions_arr), [this](Transaction &tx) {
+                   json transaction_json;
+                   this->toJson(transaction_json, tx);
+
+                   return transaction_json;
+                 });
+  block_body["tx"] = transactions_arr;
+
+  saveBlock(meta_header, block_header, block_body);
+}
+
 void Storage::saveBlock(const string &block_meta_header, json &block_header,
                         json &block_body) {
   string block_id = block_header["bID"];
@@ -182,7 +263,6 @@ void Storage::saveBlock(const string &block_meta_header, json &block_header,
     tx_ids << '_';
   }
   block_header["txids"] = tx_ids.str();
-
   write("block_header", block_header, block_id);
 
   Sha256 sha;
@@ -314,5 +394,31 @@ string Storage::findCertificate(const uint64_t &user_id) {
   b64_id_builder.append(user_id);
 
   return findCertificate(macaron::Base64::Encode(b64_id_builder.getString()));
+}
+
+void Storage::toJson(json &j, const Transaction &tx) {
+  auto tx_id = TypeConverter::toBase64Str(tx.transaction_id);
+  auto tx_time = TypeConverter::toBase64Str(tx.sent_time);
+  auto requester_id = TypeConverter::toBase64Str(tx.requestor_id);
+
+  std::string transaction_type_str;
+  if (tx.transaction_type == TransactionType::CERTIFICATE)
+    transaction_type_str = "CERTIFICATE";
+  else
+    transaction_type_str = "DIGESTS";
+  auto transaction_type = TypeConverter::toBase64Str(transaction_type_str);
+
+  auto signature = TypeConverter::toBase64Str(tx.signature);
+
+  std::vector<std::string> encoded_content_list;
+  std::transform(tx.content_list.cbegin(), tx.content_list.cend(),
+                 back_inserter(encoded_content_list),
+                 [](const content_type &content) {
+                   return TypeConverter::toBase64Str(content);
+                 });
+
+  j = json{{"txID", tx_id},       {"time", tx_time},
+           {"rID", requester_id}, {"type", transaction_type},
+           {"rSig", signature},   {"content", encoded_content_list}};
 }
 } // namespace gruut

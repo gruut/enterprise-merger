@@ -39,6 +39,9 @@ private:
   RandomSignerIndices generateRandomNumbers(unsigned int size);
 
   Signers selectSigners();
+
+  void saveBlock(Block &);
+
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   MerkleTree m_merkle_tree;
 };

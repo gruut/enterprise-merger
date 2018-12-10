@@ -21,6 +21,7 @@
 
 #include "../../src/utils/compressor.hpp"
 #include "../../src/utils/type_converter.hpp"
+#include "../../src/utils/time.hpp"
 
 #include "../../src/services/storage.hpp"
 #include "../../src/services/block_json.hpp"
@@ -177,95 +178,153 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     BOOST_TEST(true);
   }
 
-  BOOST_AUTO_TEST_CASE(find_latest_hash_and_height) {
-    Storage *storage = Storage::getInstance();
-    pair<string, string> hash_and_height = storage->findLatestHashAndHeight();
-    Storage::destroyInstance();
-
-    // for test
-    Sha256 sha;
-    block_header1.erase("txids");
-    block_header2.erase("txids");
-    sha256 hash = sha.hash(Base64().Encode(block_header2.dump()));
-    BOOST_TEST(hash_and_height.first == sha.toString(hash));
-    BOOST_TEST(hash_and_height.second == "2");
-  }
-
-  BOOST_AUTO_TEST_CASE(find_latest_txid_list) {
-    Storage *storage = Storage::getInstance();
-    vector<string> tx_ids_list = storage->findLatestTxIdList();
-    Storage::destroyInstance();
-
-    BOOST_TEST(tx_ids_list[0] == "Qa");
-    BOOST_TEST(tx_ids_list[1] == "Qb");
-    BOOST_TEST(tx_ids_list[2] == "Qc");
-    BOOST_TEST(tx_ids_list[3] == "Qd");
-  }
-
-  BOOST_AUTO_TEST_CASE(find_cert) {
-    Storage *storage = Storage::getInstance();
-    auto certificate1 = storage->findCertificate("Qc4");
-    auto certificate2 = storage->findCertificate("c1");
-    //auto certificate3 = storage->findCertificate(333); // uint64_t
-    Storage::destroyInstance();
-
-    BOOST_TEST(certificate1 == "certQc4");
-    BOOST_TEST(certificate2 == "certc1");
-    //BOOST_TEST(certificate3 == "certA3");
-  }
-
-  BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
+  BOOST_AUTO_TEST_CASE(save_block_by_block_object) {
     Storage *storage = Storage::getInstance();
 
-    auto height_metaheader_tx = storage->readBlock(1);
-    auto latest_height_metaheader_tx = storage->readBlock(-1);
-    auto no_data_metaheader_tx = storage->readBlock(9999);
+    PartialBlock p_block;
+    p_block.merger_id = 1;
+    p_block.chain_id = 1;
+    p_block.height = "1";
+    p_block.transaction_root = vector<uint8_t>(4, 1);
+
+    Transaction t;
+    string tx_id_str = "1";
+    t.transaction_id = TypeConverter::stringToBytes(tx_id_str);
+    auto now = Time::now();
+    t.sent_time = TypeConverter::stringToBytes(now);
+    t.requestor_id = TypeConverter::toBytes(1);
+    t.transaction_type = TransactionType::DIGESTS;
+    t.signature = TypeConverter::toBytes(1);
+    t.content_list.emplace_back("Hello world!");
+
+    p_block.transactions.push_back(t);
+
+    Block block(p_block);
+    block.compression_algo_type = CompressionAlgorithmType::LZ4;
+    block.header_length = 1;
+
+    block.version = 1;
+    block.previous_header_hash = Sha256::hash("1");
+    block.previous_block_id = Sha256::hash("1");
+    block.block_id = Sha256::hash("1");
+    block.timestamp = Time::now_int();
+
+    Signature signature;
+    signature.signer_id = 1;
+    signature.signer_signature = TypeConverter::toBytes(1);
+
+    block.signer_signatures.push_back(signature);
+    block.signature = TypeConverter::toBytes(1);
+
+    MerkleTree tree;
+    vector<sha256> tx_digest = {t.transaction_id};
+    tree.generate(tx_digest);
+    block.merkle_tree = tree;
+    block.transactions_count = block.transactions.size();
+
+    storage->saveBlock(block);
+
+    auto hash_and_height = storage->findLatestHashAndHeight();
+    BOOST_CHECK_EQUAL(hash_and_height.second, "1");
+
+    auto latest_list = storage->findLatestTxIdList();
+    auto tx_id = latest_list[0];
+
+    string encoded_tx_id = TypeConverter::toBase64Str(t.transaction_id);
+    BOOST_CHECK_EQUAL(tx_id, encoded_tx_id);
+
     Storage::destroyInstance();
-
-    BOOST_TEST(1 == get<0>(height_metaheader_tx));
-    BOOST_TEST(Base64().Encode(block_header1.dump()) == get<1>(height_metaheader_tx));
-    //cout << get<2>(height_metaheader_tx) << endl;
-
-    BOOST_TEST(2 == get<0>(latest_height_metaheader_tx));
-    BOOST_TEST(Base64().Encode(block_header2.dump()) == get<1>(latest_height_metaheader_tx));
-    //cout << get<2>(latest_height_metaheader_tx) <<endl;
-
-    BOOST_TEST(-1 == get<0>(no_data_metaheader_tx));
-    BOOST_TEST("" == get<1>(no_data_metaheader_tx));
-    BOOST_TEST("" == get<2>(no_data_metaheader_tx));
   }
 
-  BOOST_AUTO_TEST_CASE(find_sibling) {
-    Storage *storage = Storage::getInstance();
-    vector<string> siblings = storage->findSibling("c"); // tx_pos = 2
-    Storage::destroyInstance();
-    if(!siblings.empty()){
-      BOOST_TEST("h3" == siblings[0]);
-      BOOST_TEST("h4096" == siblings[1]);
-      BOOST_TEST("h6145" == siblings[2]);
-      BOOST_TEST("h7169" == siblings[3]);
-      BOOST_TEST("h7681" == siblings[4]);
-      BOOST_TEST("h7937" == siblings[5]);
-      BOOST_TEST("h8065" == siblings[6]);
-      BOOST_TEST("h8129" == siblings[7]);
-      BOOST_TEST("h8161" == siblings[8]);
-      BOOST_TEST("h8177" == siblings[9]);
-      BOOST_TEST("h8185" == siblings[10]);
-      BOOST_TEST("h8189" == siblings[11]);
-    } else
-      BOOST_TEST("EMPTY");
-  }
+//  BOOST_AUTO_TEST_CASE(find_latest_hash_and_height) {
+//    Storage *storage = Storage::getInstance();
+//    pair<string, string> hash_and_height = storage->findLatestHashAndHeight();
+//    Storage::destroyInstance();
+//
+//    // for test
+//    Sha256 sha;
+//    block_header1.erase("txids");
+//    block_header2.erase("txids");
+//    sha256 hash = sha.hash(Base64().Encode(block_header2.dump()));
+//    BOOST_TEST(hash_and_height.first == sha.toString(hash));
+//    BOOST_TEST(hash_and_height.second == "2");
+//  }
 
-  BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
-    Storage *storage = Storage::getInstance();
-    storage->deleteAllDirectory("./block_header");
-    storage->deleteAllDirectory("./block_meta_header");
-    storage->deleteAllDirectory("./certificate");
-    storage->deleteAllDirectory("./latest_block_header");
-    storage->deleteAllDirectory("./block_body");
-    storage->deleteAllDirectory("./blockid_height");
-    Storage::destroyInstance();
+//  BOOST_AUTO_TEST_CASE(find_latest_txid_list) {
+//    Storage *storage = Storage::getInstance();
+//    vector<string> tx_ids_list = storage->findLatestTxIdList();
+//    Storage::destroyInstance();
+//
+//    BOOST_TEST(tx_ids_list[0] == "Qa");
+//    BOOST_TEST(tx_ids_list[1] == "Qb");
+//    BOOST_TEST(tx_ids_list[2] == "Qc");
+//    BOOST_TEST(tx_ids_list[3] == "Qd");
+//  }
 
-    BOOST_TEST(true);
-  }
+//  BOOST_AUTO_TEST_CASE(find_cert) {
+//    Storage *storage = Storage::getInstance();
+//    auto certificate1 = storage->findCertificate("Qc4");
+//    auto certificate2 = storage->findCertificate("c1");
+//    //auto certificate3 = storage->findCertificate(333); // uint64_t
+//    Storage::destroyInstance();
+//
+//    BOOST_TEST(certificate1 == "certQc4");
+//    BOOST_TEST(certificate2 == "certc1");
+//    //BOOST_TEST(certificate3 == "certA3");
+//  }
+//
+//  BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
+//    Storage *storage = Storage::getInstance();
+//
+//    auto height_metaheader_tx = storage->readBlock(1);
+//    auto latest_height_metaheader_tx = storage->readBlock(-1);
+//    auto no_data_metaheader_tx = storage->readBlock(9999);
+//    Storage::destroyInstance();
+//
+//    BOOST_TEST(1 == get<0>(height_metaheader_tx));
+//    BOOST_TEST(Base64().Encode(block_header1.dump()) == get<1>(height_metaheader_tx));
+//    //cout << get<2>(height_metaheader_tx) << endl;
+//
+//    BOOST_TEST(2 == get<0>(latest_height_metaheader_tx));
+//    BOOST_TEST(Base64().Encode(block_header2.dump()) == get<1>(latest_height_metaheader_tx));
+//    //cout << get<2>(latest_height_metaheader_tx) <<endl;
+//
+//    BOOST_TEST(-1 == get<0>(no_data_metaheader_tx));
+//    BOOST_TEST("" == get<1>(no_data_metaheader_tx));
+//    BOOST_TEST("" == get<2>(no_data_metaheader_tx));
+//  }
+//
+//  BOOST_AUTO_TEST_CASE(find_sibling) {
+//    Storage *storage = Storage::getInstance();
+//    vector<string> siblings = storage->findSibling("c"); // tx_pos = 2
+//    Storage::destroyInstance();
+//    if(!siblings.empty()){
+//      BOOST_TEST("h3" == siblings[0]);
+//      BOOST_TEST("h4096" == siblings[1]);
+//      BOOST_TEST("h6145" == siblings[2]);
+//      BOOST_TEST("h7169" == siblings[3]);
+//      BOOST_TEST("h7681" == siblings[4]);
+//      BOOST_TEST("h7937" == siblings[5]);
+//      BOOST_TEST("h8065" == siblings[6]);
+//      BOOST_TEST("h8129" == siblings[7]);
+//      BOOST_TEST("h8161" == siblings[8]);
+//      BOOST_TEST("h8177" == siblings[9]);
+//      BOOST_TEST("h8185" == siblings[10]);
+//      BOOST_TEST("h8189" == siblings[11]);
+//    } else
+//      BOOST_TEST("EMPTY");
+//  }
+//
+//  BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
+//    Storage *storage = Storage::getInstance();
+//    storage->deleteAllDirectory("./block_header");
+//    storage->deleteAllDirectory("./block_meta_header");
+//    storage->deleteAllDirectory("./certificate");
+//    storage->deleteAllDirectory("./latest_block_header");
+//    storage->deleteAllDirectory("./block_body");
+//    storage->deleteAllDirectory("./blockid_height");
+//    Storage::destroyInstance();
+//
+//    BOOST_TEST(true);
+//  }
 BOOST_AUTO_TEST_SUITE_END()

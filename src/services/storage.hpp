@@ -1,6 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 #define GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 
+#include "../chain/block.hpp"
 #include "../chain/merkle_tree.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/sha256.hpp"
@@ -25,6 +26,7 @@ public:
   Storage();
   ~Storage();
 
+  void saveBlock(Block &);
   void saveBlock(const string &block_meta_header, json &block_header,
                  json &block_body);
   pair<string, string> findLatestHashAndHeight();
@@ -39,6 +41,7 @@ private:
   void handleCriticalError(const leveldb::Status &status);
   void handleTrivialError(const leveldb::Status &status);
   void write(const string &what, json &data, const string &block_id);
+  void toJson(json &j, const Transaction &tx);
   string findBy(const string &what, const string &id, const string &field);
   int findTxIdPos(const string &blk_id, const string &tx_id);
 

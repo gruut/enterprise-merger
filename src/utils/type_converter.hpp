@@ -47,7 +47,7 @@ public:
   }
 
   template <typename T> inline static std::string toBase64Str(T &t) {
-    return Botan::base64_encode(vector<uint8_t>(t.begin(), t.end()));
+    return Botan::base64_encode(std::vector<uint8_t>(t.begin(), t.end()));
   }
 
   template <typename T>
