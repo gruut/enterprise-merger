@@ -18,8 +18,6 @@ void TransactionCollector::handleMessage(json message_body_json) {
     if (!m_timer_running) {
       m_timer_running = true;
       startTimer();
-      Application::app().getSignerPool().createTransactions();
-      m_signature_requester.requestSignatures();
     }
 
     Transaction transaction;
@@ -108,6 +106,9 @@ void TransactionCollector::startTimer() {
       // TODO: Logger
       cout << "Transaction POOL SIZE: "
            << Application::app().getTransactionPool().size() << endl;
+
+      Application::app().getSignerPool().createTransactions();
+      m_signature_requester.requestSignatures();
     } else {
       this->m_timer_running = false;
       throw;
