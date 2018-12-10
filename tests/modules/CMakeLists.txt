@@ -17,6 +17,7 @@ file(GLOB HEADER_FILES
         "../../src/services/*.hpp"
         "../../src/modules/communication/msg_schema.hpp"
         "../../src/modules/communication/grpc_util.hpp"
+        "../../src/config/config.hpp"
         )
 
 file(GLOB SOURCE_FILES

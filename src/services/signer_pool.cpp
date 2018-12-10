@@ -2,9 +2,9 @@
 #include "../utils/time.hpp"
 #include "transaction_generator.hpp"
 
-namespace gruut {
-constexpr size_t NOT_FOUND = static_cast<const size_t>(-1);
+using namespace gruut::config;
 
+namespace gruut {
 void SignerPool::pushSigner(signer_id_type user_id, std::string &pk_cert,
                             Botan::secure_vector<uint8_t> &hmac_key,
                             SignerStatus status) {
