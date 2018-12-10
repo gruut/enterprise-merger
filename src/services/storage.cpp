@@ -3,6 +3,7 @@
 namespace gruut {
 using namespace std;
 using namespace nlohmann;
+using namespace macaron;
 
 Storage::Storage() {
   m_options.create_if_missing = true;
@@ -10,12 +11,12 @@ Storage::Storage() {
 
   handleCriticalError(
       leveldb::DB::Open(m_options, "./block_header", &m_db_block_header));
-  handleCriticalError(
-      leveldb::DB::Open(m_options, "./block_binary", &m_db_block_binary));
+  handleCriticalError(leveldb::DB::Open(m_options, "./block_meta_header",
+                                        &m_db_block_meta_header));
   handleCriticalError(leveldb::DB::Open(m_options, "./latest_block_header",
                                         &m_db_latest_block_header));
   handleCriticalError(
-      leveldb::DB::Open(m_options, "./transaction", &m_db_transaction));
+      leveldb::DB::Open(m_options, "./block_body", &m_db_block_body));
   handleCriticalError(
       leveldb::DB::Open(m_options, "./certificate", &m_db_certificate));
   handleCriticalError(
@@ -24,29 +25,31 @@ Storage::Storage() {
 
 Storage::~Storage() {
   delete m_db_block_header;
-  delete m_db_block_binary;
+  delete m_db_block_meta_header;
   delete m_db_latest_block_header;
-  delete m_db_transaction;
+  delete m_db_block_body;
   delete m_db_certificate;
   delete m_db_blockid_height;
 
   m_db_block_header = nullptr;
-  m_db_block_binary = nullptr;
+  m_db_block_meta_header = nullptr;
   m_db_latest_block_header = nullptr;
-  m_db_transaction = nullptr;
+  m_db_block_body = nullptr;
   m_db_certificate = nullptr;
   m_db_blockid_height = nullptr;
 }
 
 void Storage::write(const string &what, json &data,
                     const string &block_id = "") {
-  if (what == "block_header" || what == "latest_block_header") {
+  if (what == "block_header" || what == "latest_block_header" ||
+      what == "block_meta_header") {
     for (auto it = data.cbegin(); it != data.cend(); ++it) {
       if (it.key() == "bID" && what == "block_header")
         continue;
 
-      string prefix =
-          (what == "block_header") ? "block_header_" : "latest_block_header";
+      string prefix = (what == "block_header" || what == "block_meta_header")
+                          ? what + '_'
+                          : "latest_block_header";
       auto new_key = prefix + block_id + "_" + it.key();
 
       string new_value;
@@ -59,34 +62,32 @@ void Storage::write(const string &what, json &data,
         auto status =
             m_db_block_header->Put(m_write_options, new_key, new_value);
         handleTrivialError(status);
-      } else {
+      } else if (what == "latest_block_header") {
         auto status =
             m_db_latest_block_header->Put(m_write_options, new_key, new_value);
         handleTrivialError(status);
+      } else if (what == "block_meta_header") {
+        auto status =
+            m_db_block_meta_header->Put(m_write_options, new_key, new_value);
+        handleTrivialError(status);
       }
     }
-  } else if (what == "block_binary") {
-    auto new_key = "block_binary_" + block_id;
-    auto new_value = data["block_binary"].get<string>();
-
-    auto status = m_db_block_binary->Put(m_write_options, new_key, new_value);
-    handleTrivialError(status);
-  } else if (what == "transaction") {
+  } else if (what == "block_body") {
     unsigned int transaction_iterator_index;
     for (transaction_iterator_index = 0;
-         transaction_iterator_index < data.size() - 1;
+         transaction_iterator_index < data["tx"].size();
          ++transaction_iterator_index) {
-      data[transaction_iterator_index]["bID"] = block_id;
-      data[transaction_iterator_index]["mPos"] =
+      data["tx"][transaction_iterator_index]["bID"] = block_id;
+      data["tx"][transaction_iterator_index]["mPos"] =
           to_string(transaction_iterator_index);
 
-      string transaction_id = data[transaction_iterator_index]["txID"];
+      string transaction_id = data["tx"][transaction_iterator_index]["txID"];
 
-      for (auto it = data[transaction_iterator_index].cbegin();
-           it != data[transaction_iterator_index].cend(); ++it) {
+      for (auto it = data["tx"][transaction_iterator_index].cbegin();
+           it != data["tx"][transaction_iterator_index].cend(); ++it) {
         if (it.key() == "type" &&
             it.value() == "certificates") { // Certificate 저장
-          json content = data[transaction_iterator_index]["content"];
+          json content = data["tx"][transaction_iterator_index]["content"];
           for (auto content_index = 0; content_index < content.size();
                content_index += 2) {
             auto new_key =
@@ -98,21 +99,20 @@ void Storage::write(const string &what, json &data,
           }
         }
 
-        auto new_key = "transaction_" + transaction_id + '_' + it.key();
+        auto new_key = "block_body_" + transaction_id + '_' + it.key();
 
         string new_value;
         if (it.value().is_array()) // Certificates or Digests
           new_value = it.value().dump();
         else
           new_value = it.value().get<string>();
-        auto status =
-            m_db_transaction->Put(m_write_options, new_key, new_value);
+        auto status = m_db_block_body->Put(m_write_options, new_key, new_value);
         handleTrivialError(status);
       }
     }
-    auto new_key = "transaction_" + block_id;
-    auto new_value = data[transaction_iterator_index]["mtree"].dump();
-    auto status = m_db_transaction->Put(m_write_options, new_key, new_value);
+    auto new_key = "block_body_" + block_id;
+    auto new_value = data["mtree"].dump();
+    auto status = m_db_block_body->Put(m_write_options, new_key, new_value);
     handleTrivialError(status);
   } else if (what == "blockid_height") {
     auto new_key = data["hgt"].get<string>();
@@ -136,14 +136,14 @@ string Storage::findBy(const string &what, const string &id = "",
   leveldb::Status status;
   if (what == "latest_block_header")
     status = m_db_latest_block_header->Get(m_read_options, key, &value);
-  else if (what == "block_binary")
-    status = m_db_block_binary->Get(m_read_options, key, &value);
+  else if (what == "block_meta_header")
+    status = m_db_block_meta_header->Get(m_read_options, key, &value);
   else if (what == "block_header")
     status = m_db_block_header->Get(m_read_options, key, &value);
   else if (what == "certificate")
     status = m_db_certificate->Get(m_read_options, key, &value);
-  else if (what == "transaction")
-    status = m_db_transaction->Get(m_read_options, key, &value);
+  else if (what == "block_body")
+    status = m_db_block_body->Get(m_read_options, key, &value);
   else if (what == "blockid_height")
     status = m_db_blockid_height->Get(m_read_options, key, &value);
   if (!status.ok())
@@ -170,32 +170,35 @@ void Storage::handleTrivialError(const leveldb::Status &status) {
   }
 }
 
-void Storage::saveBlock(const string &block_binary, json &block_header,
-                        json &transaction) {
+void Storage::saveBlock(const string &block_meta_header, json &block_header,
+                        json &block_body) {
   string block_id = block_header["bID"];
 
   write("latest_block_header", block_header, "");
 
   ostringstream tx_ids;
-  for (size_t idx = 0; idx < transaction.size() - 1; ++idx) {
-    tx_ids << transaction[idx]["txID"].get<string>();
+  for (size_t idx = 0; idx < block_body["tx"].size(); ++idx) {
+    tx_ids << block_body["tx"][idx]["txID"].get<string>();
     tx_ids << '_';
   }
   block_header["txids"] = tx_ids.str();
 
   write("block_header", block_header, block_id);
 
-  json block_binary_json = {{"block_binary", block_binary}};
-  write("block_binary", block_binary_json, block_id);
+  Sha256 sha;
+  sha256 hash = sha.hash(block_meta_header);
+  json block_meta_header_json = {{"b64", block_meta_header},
+                                 {"h", sha.toString(hash)}};
+  write("block_meta_header", block_meta_header_json, block_id);
 
-  write("transaction", transaction, block_id);
+  write("block_body", block_body, block_id);
 
   write("blockid_height", block_header, block_id);
 }
 
 pair<string, string> Storage::findLatestHashAndHeight() {
   auto block_id = findBy("latest_block_header", "", "bID");
-  auto hash = findBy("block_binary", block_id, "");
+  auto hash = findBy("block_meta_header", block_id, "h");
   auto height = findBy("latest_block_header", "", "hgt");
   return make_pair(hash, height);
 }
@@ -248,7 +251,7 @@ tuple<int, string, json> Storage::readBlock(int height) {
   else {
     if (height == -1)
       height = stoi(findBy("latest_block_header", "", "hgt"));
-    string block_binary = findBy("block_binary", block_id, "");
+    string block_meta_header = findBy("block_meta_header", block_id, "b64");
 
     json transaction_json;
     string tx_ids = findBy("block_header", block_id, "txids");
@@ -256,29 +259,33 @@ tuple<int, string, json> Storage::readBlock(int height) {
     std::istringstream iss(tx_ids);
     int tx_pos = 0;
     for (std::string tx_id; std::getline(iss, tx_id, '_');) {
-      transaction_json[tx_pos]["txid"] = tx_id;
-      transaction_json[tx_pos]["time"] = findBy("transaction", tx_id, "time");
-      transaction_json[tx_pos]["rID"] = findBy("transaction", tx_id, "rID");
-      transaction_json[tx_pos]["rSig"] = findBy("transaction", tx_id, "rSig");
-      string type = findBy("transaction", tx_id, "type");
-      transaction_json[tx_pos]["type"] = type;
+      transaction_json["tx"][tx_pos]["txid"] = tx_id;
+      transaction_json["tx"][tx_pos]["time"] =
+          findBy("block_body", tx_id, "time");
+      transaction_json["tx"][tx_pos]["rID"] =
+          findBy("block_body", tx_id, "rID");
+      transaction_json["tx"][tx_pos]["rSig"] =
+          findBy("block_body", tx_id, "rSig");
+      string type = findBy("block_body", tx_id, "type");
+      transaction_json["tx"][tx_pos]["type"] = type;
 
-      json content = json::parse(findBy("transaction", tx_id, "content"));
+      json content = json::parse(findBy("block_body", tx_id, "content"));
       if (type == "certificates" || type == "digests") {
         for (size_t i = 0; i < content.size(); ++i)
-          transaction_json[tx_pos]["content"][i] = content[i].get<string>();
+          transaction_json["tx"][tx_pos]["content"][i] =
+              content[i].get<string>();
       }
       ++tx_pos;
     }
-    result = make_tuple(height, block_binary, transaction_json);
+    result = make_tuple(height, block_meta_header, transaction_json);
   }
   return result;
 }
 
 vector<string> Storage::findSibling(const string &tx_id) {
-  string tx_id_pos = findBy("transaction", tx_id, "mPos");
-  string block_id = findBy("transaction", tx_id, "bID");
-  json sibling_json = json::parse(findBy("transaction", block_id, ""));
+  string tx_id_pos = findBy("block_body", tx_id, "mPos");
+  string block_id = findBy("block_body", tx_id, "bID");
+  json sibling_json = json::parse(findBy("block_body", block_id, ""));
   vector<string> siblings;
 
   int iteration_size = int(log2(MAX_MERKLE_LEAVES)); // log2(4096)=12
@@ -303,6 +310,9 @@ vector<string> Storage::findSibling(const string &tx_id) {
 }
 
 string Storage::findCertificate(const uint64_t &user_id) {
-  return findCertificate(to_string(user_id));
+  BytesBuilder b64_id_builder;
+  b64_id_builder.append(user_id);
+
+  return findCertificate(macaron::Base64::Encode(b64_id_builder.getString()));
 }
 } // namespace gruut

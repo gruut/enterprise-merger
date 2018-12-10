@@ -2,7 +2,10 @@
 #define GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 
 #include "../chain/merkle_tree.hpp"
+#include "../utils/bytes_builder.hpp"
+#include "../utils/sha256.hpp"
 #include "../utils/template_singleton.hpp"
+#include "base64.hpp"
 #include "leveldb/db.h"
 #include "leveldb/options.h"
 #include "leveldb/write_batch.h"
@@ -22,8 +25,8 @@ public:
   Storage();
   ~Storage();
 
-  void saveBlock(const string &block_binary, json &block_header,
-                 json &transaction);
+  void saveBlock(const string &block_meta_header, json &block_header,
+                 json &block_body);
   pair<string, string> findLatestHashAndHeight();
   vector<string> findLatestTxIdList();
   string findCertificate(const string &user_id);
@@ -45,9 +48,9 @@ private:
   leveldb::ReadOptions m_read_options;
 
   leveldb::DB *m_db_block_header;
-  leveldb::DB *m_db_block_binary;
+  leveldb::DB *m_db_block_meta_header;
   leveldb::DB *m_db_latest_block_header;
-  leveldb::DB *m_db_transaction;
+  leveldb::DB *m_db_block_body;
   leveldb::DB *m_db_certificate;
   leveldb::DB *m_db_blockid_height;
 };
