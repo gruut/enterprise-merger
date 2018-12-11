@@ -92,6 +92,13 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
           join_temporary_table[receiver_id]->merger_nonce,
           message_body_json["sN"].get<string>(), dhx, dhy, timestamp);
 
+      auto &signer_pool = Application::app().getSignerPool();
+      auto secret_key_vector = TypeConverter::toSecureVector(
+          join_temporary_table[receiver_id]->shared_secret_key);
+      signer_pool.pushSigner(receiver_id,
+                             join_temporary_table[receiver_id]->signer_cert,
+                             secret_key_vector, SignerStatus::TEMPORARY);
+
       output_message =
           make_tuple(MessageType::MSG_RESPONSE_2, receiver_list, message_body);
     } else {
@@ -103,12 +110,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   } break;
   case MessageType::MSG_SUCCESS: {
     auto &signer_pool = Application::app().getSignerPool();
-
-    auto secret_key_vector = TypeConverter::toSecureVector(
-        join_temporary_table[receiver_id]->shared_secret_key);
-    signer_pool.pushSigner(receiver_id,
-                           join_temporary_table[receiver_id]->signer_cert,
-                           secret_key_vector, SignerStatus::GOOD);
+    signer_pool.updateStatus(receiver_id, SignerStatus::GOOD);
 
     json message_body;
     message_body["sender"] = merger_id;
