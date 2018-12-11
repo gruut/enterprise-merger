@@ -25,11 +25,13 @@ private:
                        nlohmann::json message_body_json);
   string getCertificate();
   string signMessage(string, string, string, string, string);
+  void deliverErrorMessage(vector<uint64_t> &);
   bool isJoinable();
+  bool isTimeout(signer_id_type signer_id);
 
   // A temporary table for connection establishment.
   unordered_map<signer_id_type, unique_ptr<JoinTemporaryData>>
-      join_temporary_table;
+      m_join_temporary_table;
 };
 } // namespace gruut
 #endif

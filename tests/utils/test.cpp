@@ -11,6 +11,7 @@
 #include "../../src/utils/hmac.hpp"
 #include "../../src/utils/hmac_key_maker.hpp"
 #include "../../src/utils/bytes_builder.hpp"
+#include "../../src/utils/time.hpp"
 
 using namespace std;
 
@@ -164,7 +165,6 @@ BOOST_AUTO_TEST_SUITE(Test_ECDH)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-
 BOOST_AUTO_TEST_SUITE(Test_ByteBuilder)
 
   BOOST_AUTO_TEST_CASE(appendAndGet) {
@@ -181,6 +181,17 @@ BOOST_AUTO_TEST_SUITE(Test_ByteBuilder)
     std::string b_str = my_builder.getString();
 
     BOOST_TEST((b_bytes.size() == 104 && b_str.size() == 104));
+  }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_Time)
+
+  BOOST_AUTO_TEST_CASE(from_now) {
+    auto now = Time::now_int();
+    auto ten_seconds_from_now = Time::from_now(10);
+
+    BOOST_CHECK_EQUAL(now + 10, ten_seconds_from_now);
   }
 
 BOOST_AUTO_TEST_SUITE_END()

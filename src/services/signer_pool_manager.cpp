@@ -11,10 +11,12 @@
 
 #include "../application.hpp"
 #include "../chain/types.hpp"
+#include "../config/config.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/hmac_key_maker.hpp"
 #include "../utils/random_number_generator.hpp"
 #include "../utils/sha256.hpp"
+#include "../utils/time.hpp"
 #include "../utils/type_converter.hpp"
 #include "message_proxy.hpp"
 #include "signer_pool_manager.hpp"
@@ -37,19 +39,19 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   switch (message_type) {
   case MessageType::MSG_JOIN: {
     if (!isJoinable()) {
-      OutputMessage output_message =
-          make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
-      proxy.deliverOutputMessage(output_message);
+      deliverErrorMessage(receiver_list);
     } else {
-      join_temporary_table[receiver_id].reset(new JoinTemporaryData());
+      m_join_temporary_table[receiver_id].reset(new JoinTemporaryData());
+      m_join_temporary_table[receiver_id]->expires_at =
+          Time::from_now(config::JOIN_TIMEOUT_SEC);
 
       json message_body;
       message_body["sender"] = merger_id;
       message_body["time"] = timestamp;
 
-      join_temporary_table[receiver_id]->merger_nonce =
+      m_join_temporary_table[receiver_id]->merger_nonce =
           RandomNumGenerator::toString(RandomNumGenerator::randomize(32));
-      message_body["mN"] = join_temporary_table[receiver_id]->merger_nonce;
+      message_body["mN"] = m_join_temporary_table[receiver_id]->merger_nonce;
 
       OutputMessage output_message =
           make_tuple(MessageType::MSG_CHALLENGE, receiver_list, message_body);
@@ -57,6 +59,12 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     }
   } break;
   case MessageType::MSG_RESPONSE_1: {
+    if (isTimeout(receiver_id)) {
+      m_join_temporary_table[receiver_id].release();
+      deliverErrorMessage(receiver_list);
+      return;
+    }
+
     OutputMessage output_message;
     if (verifySignature(receiver_id, message_body_json)) {
       std::cout << "Validation success!" << std::endl;
@@ -64,7 +72,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       auto signer_pk_cert = message_body_json["cert"].get<string>();
       auto cert_vector = TypeConverter::decodeBase64(signer_pk_cert);
       string decoded_cert_str(cert_vector.begin(), cert_vector.end());
-      join_temporary_table[receiver_id]->signer_cert = decoded_cert_str;
+      m_join_temporary_table[receiver_id]->signer_cert = decoded_cert_str;
 
       json message_body;
       message_body["sender"] = merger_id;
@@ -85,18 +93,18 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
       auto shared_secret_key_vector =
           key_maker.getSharedSecretKey(signer_dhx, signer_dhy, 32);
-      join_temporary_table[receiver_id]->shared_secret_key = vector<uint8_t>(
+      m_join_temporary_table[receiver_id]->shared_secret_key = vector<uint8_t>(
           shared_secret_key_vector.begin(), shared_secret_key_vector.end());
 
       message_body["sig"] = signMessage(
-          join_temporary_table[receiver_id]->merger_nonce,
+          m_join_temporary_table[receiver_id]->merger_nonce,
           message_body_json["sN"].get<string>(), dhx, dhy, timestamp);
 
       auto &signer_pool = Application::app().getSignerPool();
       auto secret_key_vector = TypeConverter::toSecureVector(
-          join_temporary_table[receiver_id]->shared_secret_key);
+          m_join_temporary_table[receiver_id]->shared_secret_key);
       signer_pool.pushSigner(receiver_id,
-                             join_temporary_table[receiver_id]->signer_cert,
+                             m_join_temporary_table[receiver_id]->signer_cert,
                              secret_key_vector, SignerStatus::TEMPORARY);
 
       output_message =
@@ -110,6 +118,14 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   } break;
   case MessageType::MSG_SUCCESS: {
     auto &signer_pool = Application::app().getSignerPool();
+
+    if (isTimeout(receiver_id)) {
+      m_join_temporary_table[receiver_id].release();
+      signer_pool.removeSigner(receiver_id);
+      deliverErrorMessage(receiver_list);
+      return;
+    }
+
     signer_pool.updateStatus(receiver_id, SignerStatus::GOOD);
 
     json message_body;
@@ -143,7 +159,7 @@ bool SignerPoolManager::verifySignature(signer_id_type signer_id,
   const vector<uint8_t> signer_signature(decoded_signer_signature.begin(),
                                          decoded_signer_signature.end());
 
-  const string message = join_temporary_table[signer_id]->merger_nonce +
+  const string message = m_join_temporary_table[signer_id]->merger_nonce +
                          message_body_json["sN"].get<string>() +
                          message_body_json["dhx"].get<string>() +
                          message_body_json["dhy"].get<string>() +
@@ -199,5 +215,24 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
 bool SignerPoolManager::isJoinable() {
   // TODO: 현재 100명 정도 가입할 수 있다. Config 관련 코드 구현하면 제거할 것
   return true;
+}
+
+bool SignerPoolManager::isTimeout(signer_id_type signer_id) {
+  if (m_join_temporary_table[signer_id]) {
+    auto expires_at = m_join_temporary_table[signer_id]->expires_at;
+    auto timeout = expires_at < Time::now_int();
+    // TODO: Logger
+    if (timeout)
+      std::cout << "Signer " << signer_id << " is expired" << std::endl;
+    return timeout;
+  }
+  return false;
+}
+
+void SignerPoolManager::deliverErrorMessage(vector<uint64_t> &receiver_list) {
+  MessageProxy proxy;
+  OutputMessage output_message =
+      make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
+  proxy.deliverOutputMessage(output_message);
 }
 } // namespace gruut

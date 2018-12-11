@@ -15,6 +15,8 @@ constexpr size_t MAX_COLLECT_TRANSACTION_SIZE = 4096;
 constexpr size_t MIN_SIGNATURE_COLLECT_SIZE =
     1; // TODO: 테스트를 위해 임시로 1개로 설정
 constexpr size_t MAX_SIGNATURE_COLLECT_SIZE = 4096;
+
+constexpr uint64_t JOIN_TIMEOUT_SEC = 10;
 } // namespace config
 } // namespace gruut
 #endif
