@@ -48,7 +48,7 @@ enum class SignerStatus { UNKNOWN, TEMPORARY, ERROR, GOOD };
 using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
 using timestamp_type = uint64_t;
-using block_height_type = std::string;
+using block_height_type = uint64_t;
 
 using transaction_id_type = bytes;
 using requestor_id_type = sha256;

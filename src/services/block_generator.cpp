@@ -19,7 +19,7 @@ BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest,
   // TODO: 위와 같은 이유로 임시값 할당
   block.chain_id = 1;
   // TODO: 위와 같은 이유로 임시값 할당
-  block.height = "1";
+  block.height = 1;
   block.transaction_root = transactions_digest.back();
   block.transactions = transactions;
 
