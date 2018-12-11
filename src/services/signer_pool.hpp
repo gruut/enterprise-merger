@@ -2,7 +2,7 @@
 #define GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 
 #include <array>
-#include <deque>
+#include <list>
 #include <mutex>
 #include <string>
 
@@ -44,9 +44,9 @@ public:
   // operations are required.
 
 private:
-  size_t find(signer_id_type user_id);
+  std::list<Signer>::iterator find(signer_id_type user_id);
 
-  std::deque<Signer> m_signer_pool;
+  std::list<Signer> m_signer_pool;
   std::mutex m_push_mutex;
   std::mutex m_update_mutex;
 };
