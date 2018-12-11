@@ -21,24 +21,23 @@ private:
 
 public:
   BootStraper() { m_outputQueue = OutputQueueAlt::getInstance(); }
-  ~BootStraper() { m_outputQueue = nullptr; }
+  ~BootStraper() {}
 
   bool sendMsgUp() {
     nlohmann::json msg_up = {{"mID", MY_MID},
                              {"time", std::to_string(std::time(nullptr))},
                              {"ver", MY_VER},
                              {"cID", MY_CID}};
-    std::cout << "msg up" << std::endl;
+
     m_outputQueue->push(MessageType::MSG_UP, msg_up);
   }
 
   bool startSync() {
-    std::cout << "start sync" << std::endl;
-    m_block_synchronizer.startBlockSync(&endSync);
+    m_block_synchronizer.startBlockSync(
+        std::bind(&BootStraper::endSync, this, std::placeholders::_1));
   }
 
-  void endSync() {
-    std::cout << "end sync" << std::endl;
+  void endSync(int x) {
     sendMsgUp();
     // TODO : BPscheduler, MessageFetcher 구동
   }
