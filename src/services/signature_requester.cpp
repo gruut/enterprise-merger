@@ -6,6 +6,7 @@
 #include "../application.hpp"
 #include "../chain/signer.hpp"
 #include "../chain/types.hpp"
+#include "../config/config.hpp"
 #include "block_generator.hpp"
 #include "message_factory.hpp"
 #include "message_proxy.hpp"
@@ -102,35 +103,16 @@ void SignatureRequester::requestSignature(PartialBlock &block,
   }
 }
 
-RandomSignerIndices
-SignatureRequester::generateRandomNumbers(const unsigned int size) {
-  // Generate random number in range(0, size)
-  mt19937 mt;
-  mt.seed(random_device()());
-
-  RandomSignerIndices number_set;
-  while (number_set.size() < size) {
-    uniform_int_distribution<mt19937::result_type> dist(0, size - 1);
-    int random_number = static_cast<int>(dist(mt));
-    number_set.insert(random_number);
-  }
-
-  return number_set;
-}
-
 Signers SignatureRequester::selectSigners() {
   Signers selected_signers;
 
   auto &signer_pool = Application::app().getSignerPool();
   auto signer_pool_size = signer_pool.size();
-  if (signer_pool_size > 0) {
-    auto chosen_signers_index_set =
-        generateRandomNumbers(static_cast<unsigned int>(signer_pool.size()));
 
-    for (auto index : chosen_signers_index_set) {
-      auto signer = signer_pool.getSigner(index);
-      selected_signers.emplace_back(signer);
-    }
+  if (signer_pool_size > 0) {
+    auto req_signers_num =
+        std::min(config::REQ_SSIG_SIGNERS_NUM, signer_pool_size);
+    selected_signers = signer_pool.getRandomSigners(req_signers_num);
   }
 
   return selected_signers;

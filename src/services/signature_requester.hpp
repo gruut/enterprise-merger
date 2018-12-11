@@ -36,9 +36,8 @@ private:
 
   void requestSignature(PartialBlock &block, Signers &signers);
 
-  RandomSignerIndices generateRandomNumbers(unsigned int size);
-
   Signers selectSigners();
+
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   MerkleTree m_merkle_tree;
 };

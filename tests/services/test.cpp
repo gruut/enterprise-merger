@@ -77,17 +77,30 @@ BOOST_FIXTURE_TEST_SUITE(Test_SignerPool, SignerPoolFixture)
 
     BOOST_AUTO_TEST_CASE(pushSigner) {
       SignerPoolFixture signer_pool_fixture;
+      signer_pool_fixture.push();
       BOOST_CHECK_EQUAL(signer_pool_fixture.signer_pool.size(), 1);
     }
 
     BOOST_AUTO_TEST_CASE(updateStatus) {
       SignerPoolFixture signer_pool_fixture;
-      signer_pool_fixture.signer_pool.updateStatus(signer_pool_fixture.id, SignerStatus::TEMPORARY);
+      signer_pool_fixture.push();
+      signer_pool_fixture.signer_pool.updateStatus(signer_pool_fixture.id - 1, SignerStatus::TEMPORARY);
 
       auto signer = signer_pool_fixture.signer_pool.getSigner(0);
       bool result = signer.status == SignerStatus::TEMPORARY;
       BOOST_TEST(result);
     }
+
+  BOOST_AUTO_TEST_CASE(getNumSignerBy) {
+    SignerPoolFixture signer_pool_fixture;
+    signer_pool_fixture.push();
+    signer_pool_fixture.push();
+    signer_pool_fixture.push();
+    signer_pool_fixture.push();
+
+    auto signers = signer_pool_fixture.signer_pool.getRandomSigners(2);
+    BOOST_CHECK_EQUAL(signers.size(), 2);
+  }
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_MessageIOQueues)
