@@ -24,7 +24,7 @@ private:
   bool verifySignature(signer_id_type signer_id,
                        nlohmann::json message_body_json);
   string getCertificate();
-  string signMessage(string, string, string, string, string);
+  string signMessage(string, string, string, string, uint64_t);
   void deliverErrorMessage(vector<uint64_t> &);
   bool isJoinable();
   bool isTimeout(signer_id_type signer_id);

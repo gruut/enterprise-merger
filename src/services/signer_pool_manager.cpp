@@ -96,9 +96,9 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       m_join_temporary_table[receiver_id]->shared_secret_key = vector<uint8_t>(
           shared_secret_key_vector.begin(), shared_secret_key_vector.end());
 
-      message_body["sig"] = signMessage(
-          m_join_temporary_table[receiver_id]->merger_nonce,
-          message_body_json["sN"].get<string>(), dhx, dhy, timestamp);
+      message_body["sig"] =
+          signMessage(m_join_temporary_table[receiver_id]->merger_nonce,
+                      message_body_json["sN"].get<string>(), dhx, dhy, now);
 
       auto &signer_pool = Application::app().getSignerPool();
       auto secret_key_vector = TypeConverter::toSecureVector(
@@ -110,6 +110,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       output_message =
           make_tuple(MessageType::MSG_RESPONSE_2, receiver_list, message_body);
     } else {
+      m_join_temporary_table[receiver_id].release();
       output_message =
           make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
     }
@@ -159,13 +160,16 @@ bool SignerPoolManager::verifySignature(signer_id_type signer_id,
   const vector<uint8_t> signer_signature(decoded_signer_signature.begin(),
                                          decoded_signer_signature.end());
 
-  const string message = m_join_temporary_table[signer_id]->merger_nonce +
-                         message_body_json["sN"].get<string>() +
-                         message_body_json["dhx"].get<string>() +
-                         message_body_json["dhy"].get<string>() +
-                         message_body_json["time"].get<string>();
+  BytesBuilder sig_builder;
+  sig_builder.appendB64(m_join_temporary_table[signer_id]->merger_nonce);
+  sig_builder.appendB64(message_body_json["sN"].get<string>());
+  sig_builder.appendHex(message_body_json["dhx"].get<string>());
+  sig_builder.appendHex(message_body_json["dhy"].get<string>());
+  sig_builder.appendDec(message_body_json["time"].get<string>());
 
-  return RSA::doVerify(cert_in, message, signer_signature, true);
+  const bytes message_bytes = sig_builder.getBytes();
+
+  return RSA::doVerify(cert_in, message_bytes, signer_signature, true);
 }
 
 string SignerPoolManager::getCertificate() {
@@ -195,15 +199,15 @@ string SignerPoolManager::getCertificate() {
 
 string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
                                       string dhx, string dhy,
-                                      string timestamp) {
+                                      uint64_t timestamp) {
   // TODO: 임시 rsa_sk_pem
   string rsa_sk_pem = "";
 
   BytesBuilder builder;
-  builder.append(merger_nonce);
-  builder.append(signer_nonce);
-  builder.append(dhx);
-  builder.append(dhy);
+  builder.appendB64(merger_nonce);
+  builder.appendB64(signer_nonce);
+  builder.appendHex(dhx);
+  builder.appendHex(dhy);
   builder.append(timestamp);
 
   auto message_bytes = builder.getBytes();
