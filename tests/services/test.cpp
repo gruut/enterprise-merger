@@ -25,6 +25,8 @@
 #include "../../src/services/storage.hpp"
 #include "../../src/services/block_json.hpp"
 
+#include "fixture.hpp"
+
 using namespace gruut;
 using namespace nlohmann;
 using namespace std;
@@ -71,18 +73,20 @@ BOOST_AUTO_TEST_SUITE(Test_MessageFactory)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(Test_SignerPool)
+BOOST_FIXTURE_TEST_SUITE(Test_SignerPool, SignerPoolFixture)
 
     BOOST_AUTO_TEST_CASE(pushSigner) {
-      SignerPool signer_pool;
+      SignerPoolFixture signer_pool_fixture;
+      BOOST_CHECK_EQUAL(signer_pool_fixture.signer_pool.size(), 1);
+    }
 
-      signer_id_type id = 1;
-      string test_cert = "MIIC7zCCAdegAwIBAgIBADANBgkqhkiG9w0BAQsFADBhMRQwEgYDVQQDEwt0aGVWYXVsdGVyczELMAkGA1UEBhMCS1IxCTAHBgNVBAgTADEQMA4GA1UEBxMHSW5jaGVvbjEUMBIGA1UEChMLdGhlVmF1bHRlcnMxCTAHBgNVBAsTADAeFw0xODExMjgwNTM1NDFaFw0xOTExMjgwNTM1NDFaMBUxEzARBgNVBAMMCkdSVVVUX0FVVEgwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDV2RKC+oo6sBeAoSJn55ZZJ+U9bRh4z/TOsc4V/92NsV5qXpiWhUMTqPfNGHTjR7ScI57ZH9lqltcBJ2mcqhBWY1A/lQfdWAJf+3/eh+H/ZvDcZW8s9PFeuJcftmEDtUMlh9xMUoL5a74dS5lhrdbH0tXRMfhB3w02fmkuvqW+MCsUubhL7mu0PDbJeWjqqu8P+c+6PWO0CRgkMmry1f1VksXTzp54wARW2O3Zut6Z56VknrMOP2f4IYGiLy8zC/oO/JRCPCFvW1cM5UDdjVaq8UkIZ7B/z4zqFjwT3gXHHdMp+RLS8t+tA15rhZ2iRtKPcSwlpV95BTBG3Jpbm7xTAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAEAzwa2yTQMR6nRUgafc/v0z7PylG4ohkXljBzMxfFipYju1/AKse1PCBq2H9DSnSbeL/BI4lQjsXXJLCDSnWXNnJSt1oatOHv4JeJ2Ob88EBVkx7G0aK2S2yijfMx5Bpptp8FIYxZX0QuOJ2oNK73j1Dx9Xax+5ZkBE8wxYYXpsZ0R/BGw8Es1bNFyFcbNYWd3iQOwoXOenWWa6YOyzRhZ2EAw+l7C7LB6I68xIIAP0BBSMTOfq4Smdizdd3qWYJyouUcv83AZn8KWBJjRKNJgHQvnYzCCGnhOwekbh9WlrGVEUvr/b6yV/aXX6kMqsCAfLhloqQ7Ai24QvOfdOAEQ=";
-      vector<uint8_t> secret_key(32, 0);
-      auto secret_key_vector = TypeConverter::toSecureVector(secret_key);
-      signer_pool.pushSigner(4, test_cert, secret_key_vector, SignerStatus::GOOD);
+    BOOST_AUTO_TEST_CASE(updateStatus) {
+      SignerPoolFixture signer_pool_fixture;
+      signer_pool_fixture.signer_pool.updateStatus(signer_pool_fixture.id, SignerStatus::TEMPORARY);
 
-      BOOST_CHECK_EQUAL(signer_pool.size(), 1);
+      auto signer = signer_pool_fixture.signer_pool.getSigner(0);
+      bool result = signer.status == SignerStatus::TEMPORARY;
+      BOOST_TEST(result);
     }
 BOOST_AUTO_TEST_SUITE_END()
 

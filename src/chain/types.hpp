@@ -43,7 +43,7 @@ enum class MACAlgorithmType : uint8_t {
 
 enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
 
-enum class SignerStatus { UNKNOWN, ERROR, GOOD };
+enum class SignerStatus { UNKNOWN, TEMPORARY, ERROR, GOOD };
 
 using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
