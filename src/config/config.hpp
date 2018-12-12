@@ -17,6 +17,8 @@ constexpr size_t MIN_SIGNATURE_COLLECT_SIZE =
 constexpr size_t MAX_SIGNATURE_COLLECT_SIZE = 4096;
 
 constexpr uint64_t JOIN_TIMEOUT_SEC = 10;
+
+constexpr size_t REQ_SSIG_SIGNERS_NUM = 10;
 } // namespace config
 } // namespace gruut
 #endif

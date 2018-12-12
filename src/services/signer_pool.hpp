@@ -1,10 +1,10 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 
-#include <array>
 #include <list>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "../chain/signer.hpp"
 #include "../chain/types.hpp"
@@ -42,6 +42,8 @@ public:
   bool isFull();
   // TODO: May be we should do more operation, but we cannot recognize what
   // operations are required.
+
+  std::vector<Signer> getRandomSigners(size_t number);
 
 private:
   std::list<Signer>::iterator find(signer_id_type user_id);

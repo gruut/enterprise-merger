@@ -1,6 +1,8 @@
 #include "signer_pool.hpp"
 #include "../utils/time.hpp"
 #include "transaction_generator.hpp"
+#include <algorithm>
+#include <random>
 
 using namespace gruut::config;
 
@@ -118,6 +120,22 @@ void SignerPool::clearPool() {
 
 const size_t SignerPool::size() { return m_signer_pool.size(); }
 
+std::vector<Signer> SignerPool::getRandomSigners(size_t number) {
+  std::vector<Signer> signers;
+  signers.reserve(number);
+
+  std::for_each(m_signer_pool.begin(), m_signer_pool.end(),
+                [&signers](Signer &signer) {
+                  if (signer.status == SignerStatus::GOOD)
+                    signers.push_back(signer);
+                });
+
+  std::shuffle(signers.begin(), signers.end(),
+               std::mt19937(std::random_device()()));
+
+  return vector<Signer>(signers.begin(), signers.begin() + number);
+}
+
 std::list<Signer>::iterator SignerPool::find(signer_id_type user_id) {
   auto it = std::find_if(
       m_signer_pool.begin(), m_signer_pool.end(),
@@ -127,8 +145,6 @@ std::list<Signer>::iterator SignerPool::find(signer_id_type user_id) {
 }
 
 Signer SignerPool::getSigner(int index) {
-  // TODO:
-  // https://thevaulters.atlassian.net/secure/RapidBoard.jspa?rapidView=21&projectKey=GEN&modal=detail&selectedIssue=GEN-141
   auto it = m_signer_pool.begin();
   std::advance(it, index);
   return *it;
