@@ -79,6 +79,8 @@ private:
                                  mtree)) {
       it_map->second.mtree = mtree;
     }
+
+    return true;
   }
 
   bool pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
@@ -277,7 +279,6 @@ private:
       }
 
       // step 5 - finishing
-
       if (std::time(nullptr) - m_last_task_time > MAX_WAIT_TIME) {
         m_sync_done = true;
         m_sync_fail = true;
@@ -354,11 +355,12 @@ public:
     m_outputQueue = OutputQueueAlt::getInstance();
   }
 
-  void setMyID(std::string &my_ID) { m_id = my_ID; }
+  // TODO : TYPE이 정해지면 바꿀 것
+  inline void setMyID(const std::string &my_ID) { m_id = my_ID; }
 
   void start() override {
-    messageFetch();     // inf-loop until SyncJobStage::SYNC_DONE
-    blockSyncControl(); // inf-loop until SyncJobStage::BLOCK_FETCHING
+    messageFetch();
+    blockSyncControl();
   }
 
   bool startBlockSync(std::function<void(int)> callback) {
