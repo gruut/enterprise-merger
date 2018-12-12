@@ -81,7 +81,8 @@ public:
     return verifier.verify_message(data, sig);
   }
 
-  static bool doVerify(std::string &rsa_pk, const std::vector<uint8_t> &data,
+  static bool doVerify(const std::string &rsa_pk,
+                       const std::vector<uint8_t> &data,
                        const std::vector<uint8_t> &sig, bool pkcs1v15 = false) {
     try {
       Botan::DataSource_Memory cert_datasource(rsa_pk);
