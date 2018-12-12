@@ -60,9 +60,7 @@ bool SignaturePool::verifySignature(signer_id_type receiver_id,
     string merger_id_str = to_string(partial_block.merger_id);
     bytes_builder.append(merger_id_str);
 
-    auto height = partial_block.height;
-    auto height_vec = TypeConverter::digitStringToBytes(height);
-    bytes_builder.append(height_vec);
+    bytes_builder.append(partial_block.height);
 
     auto tx_root = partial_block.transaction_root;
     bytes_builder.append(tx_root);
