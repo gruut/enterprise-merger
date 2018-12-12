@@ -50,7 +50,9 @@ using bytes = std::vector<uint8_t>;
 using timestamp_type = uint64_t;
 using block_height_type = uint64_t;
 
-using transaction_id_type = bytes;
+constexpr auto TRANSACTION_ID_TYPE_SIZE = 32;
+using transaction_id_type = std::array<uint8_t, TRANSACTION_ID_TYPE_SIZE>;
+
 using requestor_id_type = sha256;
 using merger_id_type = uint64_t;
 using signer_id_type = uint64_t;

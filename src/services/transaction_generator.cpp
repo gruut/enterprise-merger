@@ -26,7 +26,7 @@ void TransactionGenerator::generate(Signer &signer) {
                              new_transaction.sent_time.cend());
 
     // TODO: requestor_id <- Merger Id, 임시로 txID
-    new_transaction.requestor_id = new_transaction.transaction_id;
+    new_transaction.requestor_id = requestor_id_type();
     signature_message.insert(signature_message.cend(),
                              new_transaction.requestor_id.cbegin(),
                              new_transaction.requestor_id.cend());
@@ -61,6 +61,11 @@ transaction_id_type TransactionGenerator::generateTransactionId() {
 
   std::uniform_int_distribution<std::mt19937::result_type> dist;
   auto random_number = dist(mt);
-  return Sha256::hash(to_string(random_number));
+
+  auto bytes = TypeConverter::toBytes(random_number);
+  transaction_id_type tx_id =
+      TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(bytes);
+
+  return tx_id;
 }
 } // namespace gruut

@@ -36,6 +36,16 @@ public:
     hash_function->update(data);
     return hash_function->final_stdvec();
   }
+
+  template <size_t S> static sha256 hash(std::array<uint8_t, S> &data) {
+    std::unique_ptr<Botan::HashFunction> hash_function(
+        Botan::HashFunction::create("SHA-256"));
+
+    std::vector<uint8_t> data_vec(data.begin(), data.end());
+
+    hash_function->update(data_vec);
+    return hash_function->final_stdvec();
+  }
 };
 
 #endif
