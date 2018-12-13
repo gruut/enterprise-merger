@@ -21,8 +21,9 @@ public:
   ~MergerServer() {
     m_server->Shutdown();
     m_completion_queue->Shutdown();
+    m_rpc_receivers->destroyInstance();
   }
-  void runServer(char const *port);
+  void runServer(const std::string &port_num);
 
 private:
   std::unique_ptr<Server> m_server;
@@ -31,6 +32,7 @@ private:
   MergerCommunication::AsyncService m_merger_service;
   GruutSeService::AsyncService m_se_service;
   GruutNetworkService::AsyncService m_signer_service;
+  RpcReceiverList *m_rpc_receivers;
 
   void recvMessage();
 };

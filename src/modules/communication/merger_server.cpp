@@ -3,15 +3,12 @@
 #include "rpc_receiver_list.hpp"
 #include <chrono>
 #include <cstring>
-#include <future>
 #include <thread>
 namespace gruut {
 
-void MergerServer::runServer(char const *port) {
-  std::string port_num(port);
+void MergerServer::runServer(const std::string &port_num) {
   std::string server_address("0.0.0.0:");
   server_address += port_num;
-
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&m_merger_service);
@@ -21,10 +18,6 @@ void MergerServer::runServer(char const *port) {
   m_server = builder.BuildAndStart();
   std::cout << "Server listening on " << server_address << std::endl;
 
-  recvMessage();
-}
-
-void MergerServer::recvMessage() {
   new RecvFromMerger(&m_merger_service, m_completion_queue.get());
   new RecvFromSE(&m_se_service, m_completion_queue.get());
   new OpenChannel(&m_signer_service, m_completion_queue.get());
@@ -33,6 +26,10 @@ void MergerServer::recvMessage() {
   new KeyExFinished(&m_signer_service, m_completion_queue.get());
   new SigSend(&m_signer_service, m_completion_queue.get());
 
+  recvMessage();
+}
+
+void MergerServer::recvMessage() {
   void *tag;
   bool ok;
   while (true) {
