@@ -50,13 +50,11 @@ private:
 
   std::unique_ptr<boost::asio::deadline_timer> m_timer_msg_fetching;
   std::unique_ptr<boost::asio::deadline_timer> m_timer_sync_control;
-
   std::unique_ptr<boost::asio::io_service::strand> m_block_sync_strand;
 
   int m_my_last_height;
   std::string m_my_last_bhash;
   std::string m_id;
-
   int m_first_recv_block_height{-1};
 
   std::function<void(int)> m_finish_callback;
@@ -67,21 +65,6 @@ private:
 
   bool m_sync_done{false};
   bool m_sync_fail{false};
-
-  bool validateBlock(int height) {
-    auto it_map = m_block_list.find(height);
-    if (it_map == m_block_list.end())
-      return false;
-
-    std::vector<sha256> mtree;
-
-    if (BlockValidator::validate(it_map->second.block_json, it_map->second.txs,
-                                 mtree)) {
-      it_map->second.mtree = mtree;
-    }
-
-    return true;
-  }
 
   bool pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
@@ -178,6 +161,21 @@ private:
     msg_req_block.receivers = receivers;
 
     m_outputQueue->push(msg_req_block);
+
+    return true;
+  }
+
+  bool validateBlock(int height) {
+    auto it_map = m_block_list.find(height);
+    if (it_map == m_block_list.end())
+      return false;
+
+    std::vector<sha256> mtree;
+
+    if (BlockValidator::validate(it_map->second.block_json, it_map->second.txs,
+                                 mtree)) {
+      it_map->second.mtree = mtree;
+    }
 
     return true;
   }

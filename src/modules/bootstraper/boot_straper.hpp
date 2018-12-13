@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../services/output_queue.hpp"
+#include "../../utils/time.hpp"
 #include "block_synchronizer.hpp"
 #include "nlohmann/json.hpp"
 
@@ -22,15 +23,13 @@ private:
   OutputQueueAlt *m_outputQueue;
   BlockSynchronizer m_block_synchronizer;
 
-  std::unique_ptr<boost::asio::deadline_timer> m_timer_restart;
-
 public:
   BootStraper() { m_outputQueue = OutputQueueAlt::getInstance(); }
   ~BootStraper() {}
 
   bool sendMsgUp() {
     nlohmann::json msg_up = {{"mID", MY_MID},
-                             {"time", std::to_string(std::time(nullptr))},
+                             {"time", Time::now()},
                              {"ver", MY_VER},
                              {"cID", MY_CID}};
 
@@ -49,8 +48,7 @@ public:
       sendMsgUp();
       // TODO : BPscheduler, MessageFetcher 구동
     } else {
-      std::this_thread::sleep_until(std::chrono::system_clock::now() +
-                                    std::chrono::seconds(20));
+      std::this_thread::sleep_for(std::chrono::seconds(20));
       startSync();
     }
   }
