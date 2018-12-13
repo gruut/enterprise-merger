@@ -33,7 +33,7 @@ struct Block : public PartialBlock {
   header_length_type header_length;
 
   // Header
-  version_type version;
+  block_version_type version;
   block_header_hash_type previous_header_hash;
   block_id_type previous_block_id;
   block_id_type block_id;

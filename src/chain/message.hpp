@@ -10,7 +10,7 @@ using namespace std;
 namespace gruut {
 struct MessageHeader {
   uint8_t identifier;
-  uint8_t version;
+  message_version_type version;
   MessageType message_type;
   MACAlgorithmType mac_algo_type = MACAlgorithmType::RSA;
   CompressionAlgorithmType compression_algo_type;
