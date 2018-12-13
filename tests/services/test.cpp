@@ -23,7 +23,7 @@
 #include "../../src/utils/type_converter.hpp"
 
 #include "../../src/services/storage.hpp"
-#include "../../src/services/block_json.hpp"
+#include "block_json.hpp"
 
 #include "fixture.hpp"
 
@@ -140,12 +140,7 @@ BOOST_AUTO_TEST_SUITE(Test_MessageIOQueues)
 
     BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
       Storage *storage = Storage::getInstance();
-      storage->deleteAllDirectory("./block_header");
-      storage->deleteAllDirectory("./block_meta_header");
-      storage->deleteAllDirectory("./certificate");
-      storage->deleteAllDirectory("./latest_block_header");
-      storage->deleteAllDirectory("./block_body");
-      storage->deleteAllDirectory("./blockid_height");
+      storage->deleteAllDirectory();
       Storage::destroyInstance();
 
       BOOST_TEST(true);
@@ -179,83 +174,60 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
 
-  BOOST_AUTO_TEST_CASE(save_block) {
-    // make mtree for test
-    for(size_t i=0; i<(MAX_MERKLE_LEAVES*2)-1; ++i)
-      block_body1["mtree"][i]=block_body2["mtree"][i]='h'+to_string(i);
-
-    Storage *storage = Storage::getInstance();
-    string block_meta_header1 = Base64().Encode(block_header1.dump()); // for test
-    storage->saveBlock(block_meta_header1, block_header1, block_body1);
-    string block_meta_header2 = Base64().Encode(block_header2.dump()); // for test
-    storage->saveBlock(block_meta_header2, block_header2, block_body2);
-    Storage::destroyInstance();
-
-    BOOST_TEST(true);
-  }
-
   BOOST_AUTO_TEST_CASE(find_latest_hash_and_height) {
-    Storage *storage = Storage::getInstance();
-    pair<string, string> hash_and_height = storage->findLatestHashAndHeight();
-    Storage::destroyInstance();
+    StorageFixture storage_fixture;
+    pair<string, string> hash_and_height = storage_fixture.m_storage->findLatestHashAndHeight();
 
-    // for test
-    Sha256 sha;
-    block_header1.erase("txids");
-    block_header2.erase("txids");
-    sha256 hash = sha.hash(Base64().Encode(block_header2.dump()));
-    BOOST_TEST(hash_and_height.first == sha.toString(hash));
+    BOOST_TEST(hash_and_height.first == Sha256::toString(hash_sample));
     BOOST_TEST(hash_and_height.second == "2");
   }
 
   BOOST_AUTO_TEST_CASE(find_latest_txid_list) {
-    Storage *storage = Storage::getInstance();
-    vector<string> tx_ids_list = storage->findLatestTxIdList();
-    Storage::destroyInstance();
+    StorageFixture storage_fixture;
+    vector<string> tx_ids_list = storage_fixture.m_storage->findLatestTxIdList();
 
     BOOST_TEST(tx_ids_list[0] == "Qa");
     BOOST_TEST(tx_ids_list[1] == "Qb");
     BOOST_TEST(tx_ids_list[2] == "Qc");
-    BOOST_TEST(tx_ids_list[3] == "Qd");
   }
 
   BOOST_AUTO_TEST_CASE(find_cert) {
-    Storage *storage = Storage::getInstance();
-    auto certificate1 = storage->findCertificate("Qc4");
-    auto certificate2 = storage->findCertificate("c1");
-    //auto certificate3 = storage->findCertificate(333); // uint64_t
-    Storage::destroyInstance();
+    // 1번째로 등록된 certificates sample - a1 : 20171210~20181210, a2 : 20160303~20170303
+    // 2번째로 등록된 certificates sample - a1 : 20180201~20190201, a2 : 20170505~20180505
+    StorageFixture storage_fixture;
+    auto certificate1 = storage_fixture.m_storage->findCertificate("a1"); // 최신(20180201에 등록) 인증서
+    auto certificate2 = storage_fixture.m_storage->findCertificate("a2"); // 최신(20170505에 등록) 인증서
+    auto certificate3 = storage_fixture.m_storage->findCertificate("a1", 1530409054); // 20180701
+    auto certificate4 = storage_fixture.m_storage->findCertificate("a2", 1491874654); // 20170411
 
-    BOOST_TEST(certificate1 == "certQc4");
-    BOOST_TEST(certificate2 == "certc1");
-    //BOOST_TEST(certificate3 == "certA3");
+    BOOST_TEST(certificate1 == block_body_sample2["tx"][0]["content"][1].get<string>());
+    BOOST_TEST(certificate2 == block_body_sample2["tx"][0]["content"][3].get<string>());
+    BOOST_TEST(certificate3 == block_body_sample2["tx"][0]["content"][1].get<string>());
+    BOOST_TEST(certificate4 == "");
   }
 
   BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
-    Storage *storage = Storage::getInstance();
+    StorageFixture storage_fixture;
+    auto height_raw_tx = storage_fixture.m_storage->readBlock(1);
+    auto latest_height_raw_tx = storage_fixture.m_storage->readBlock(-1);
+    auto no_data_raw_tx = storage_fixture.m_storage->readBlock(9999);
 
-    auto height_metaheader_tx = storage->readBlock(1);
-    auto latest_height_metaheader_tx = storage->readBlock(-1);
-    auto no_data_metaheader_tx = storage->readBlock(9999);
-    Storage::destroyInstance();
+    BOOST_TEST(1 == get<0>(height_raw_tx));
+    BOOST_TEST(Base64().Encode(block_header_sample1.dump()) == get<1>(height_raw_tx));
+    //cout << get<2>(height_raw_tx) << endl;
 
-    BOOST_TEST(1 == get<0>(height_metaheader_tx));
-    BOOST_TEST(Base64().Encode(block_header1.dump()) == get<1>(height_metaheader_tx));
-    //cout << get<2>(height_metaheader_tx) << endl;
+    BOOST_TEST(2 == get<0>(latest_height_raw_tx));
+    BOOST_TEST(Base64().Encode(block_header_sample2.dump()) == get<1>(latest_height_raw_tx));
+    //cout << get<2>(latest_height_raw_tx) <<endl;
 
-    BOOST_TEST(2 == get<0>(latest_height_metaheader_tx));
-    BOOST_TEST(Base64().Encode(block_header2.dump()) == get<1>(latest_height_metaheader_tx));
-    //cout << get<2>(latest_height_metaheader_tx) <<endl;
-
-    BOOST_TEST(-1 == get<0>(no_data_metaheader_tx));
-    BOOST_TEST("" == get<1>(no_data_metaheader_tx));
-    BOOST_TEST("" == get<2>(no_data_metaheader_tx));
+    BOOST_TEST(-1 == get<0>(no_data_raw_tx));
+    BOOST_TEST("" == get<1>(no_data_raw_tx));
+    BOOST_TEST("" == get<2>(no_data_raw_tx));
   }
 
   BOOST_AUTO_TEST_CASE(find_sibling) {
-    Storage *storage = Storage::getInstance();
-    vector<string> siblings = storage->findSibling("c"); // tx_pos = 2
-    Storage::destroyInstance();
+    StorageFixture storage_fixture;
+    vector<string> siblings = storage_fixture.m_storage->findSibling("c");
     if(!siblings.empty()){
       BOOST_TEST("h3" == siblings[0]);
       BOOST_TEST("h4096" == siblings[1]);
@@ -271,18 +243,5 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
       BOOST_TEST("h8189" == siblings[11]);
     } else
       BOOST_TEST("EMPTY");
-  }
-
-  BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
-    Storage *storage = Storage::getInstance();
-    storage->deleteAllDirectory("./block_header");
-    storage->deleteAllDirectory("./block_meta_header");
-    storage->deleteAllDirectory("./certificate");
-    storage->deleteAllDirectory("./latest_block_header");
-    storage->deleteAllDirectory("./block_body");
-    storage->deleteAllDirectory("./blockid_height");
-    Storage::destroyInstance();
-
-    BOOST_TEST(true);
   }
 BOOST_AUTO_TEST_SUITE_END()

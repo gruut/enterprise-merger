@@ -3,7 +3,7 @@
 
 #include "../../src/chain/types.hpp"
 #include "../../src/services/signer_pool.hpp"
-
+#include "block_json.hpp"
 using namespace gruut;
 
 struct SignerPoolFixture {
@@ -24,5 +24,25 @@ struct SignerPoolFixture {
   signer_id_type id;
   string test_cert;
   Botan::secure_vector<uint8_t> secret_key_vector;
+};
+
+class StorageFixture {
+public:
+  Storage *m_storage;
+  bool m_save_status1;
+  bool m_save_status2;
+  StorageFixture() {
+    m_storage = Storage::getInstance();
+    m_save_status1 = m_storage->saveBlock(block_raw_sample1, block_header_sample1, block_body_sample1);
+    m_save_status2 = m_storage->saveBlock(block_raw_sample2, block_header_sample2, block_body_sample2);
+    if(m_save_status1&&m_save_status2)
+      cout<<"DB 저장 성공"<<endl;
+    else
+      cout<<"DB 저장 실패"<<endl;
+  }
+  ~StorageFixture(){
+    m_storage->deleteAllDirectory();
+    Storage::destroyInstance();
+  }
 };
 #endif
