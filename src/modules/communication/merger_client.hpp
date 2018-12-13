@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../application.hpp"
-#include "grpc_merger.hpp"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_se.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
