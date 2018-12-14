@@ -235,6 +235,12 @@ bool Storage::putBlockBody(json &data, const string &block_id) {
     }
   }
 
+  size_t mtree_size = data["mtree"].size();
+  for (size_t i = mtree_size - 1; i > 0; --i) {
+    if (data["mtree"][i].get<string>() == data["mtree"][i - 1].get<string>())
+      data["mtree"][i] = "";
+  }
+
   key = prefix + block_id + "_mtree";
   value = data["mtree"].dump();
   if (!put(DBType::BLOCK_BODY, key, value))
@@ -445,15 +451,19 @@ vector<string> Storage::findSibling(const string &tx_id) {
         node = (node % 2 != 0) ? node - 1 : node + 1;
         string sibling = mtree_json[node].get<string>();
         if (sibling.empty()) {
-          siblings.clear();
-          break;
-        } else {
-          siblings.emplace_back(sibling);
-          tx_id_pos_int /= 2;
-          if (i != 0)
-            size += MAX_MERKLE_LEAVES / pow(2, i);
-          node = size + tx_id_pos_int;
+          for (int duplicate_idx = node - 1; duplicate_idx >= 0;
+               --duplicate_idx) {
+            if (mtree_json[duplicate_idx].get<string>() != "") {
+              sibling = mtree_json[duplicate_idx].get<string>();
+              break;
+            }
+          }
         }
+        siblings.emplace_back(sibling);
+        tx_id_pos_int /= 2;
+        if (i != 0)
+          size += MAX_MERKLE_LEAVES / pow(2, i);
+        node = size + tx_id_pos_int;
       }
     }
   }

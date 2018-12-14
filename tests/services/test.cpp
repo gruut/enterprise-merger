@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     StorageFixture storage_fixture;
     vector<string> siblings = storage_fixture.m_storage->findSibling("c");
     if(!siblings.empty()){
-      BOOST_TEST("h3" == siblings[0]);
+      BOOST_TEST("h2" == siblings[0]);
       BOOST_TEST("h4096" == siblings[1]);
       BOOST_TEST("h6145" == siblings[2]);
       BOOST_TEST("h7169" == siblings[3]);
@@ -244,4 +244,5 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     } else
       BOOST_TEST("EMPTY");
   }
+
 BOOST_AUTO_TEST_SUITE_END()
