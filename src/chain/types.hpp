@@ -54,7 +54,7 @@ constexpr auto TRANSACTION_ID_TYPE_SIZE = 32;
 using transaction_id_type = std::array<uint8_t, TRANSACTION_ID_TYPE_SIZE>;
 
 using requestor_id_type = sha256;
-using merger_id_type = uint64_t;
+using merger_id_type = bytes;
 using signer_id_type = uint64_t;
 using transaction_root_type = sha256;
 using block_header_hash_type = sha256;

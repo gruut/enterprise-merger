@@ -11,6 +11,7 @@
 #include "../../src/utils/hmac.hpp"
 #include "../../src/utils/hmac_key_maker.hpp"
 #include "../../src/utils/bytes_builder.hpp"
+#include "../../src/utils/type_converter.hpp"
 #include "../../src/utils/time.hpp"
 
 using namespace std;
@@ -192,6 +193,18 @@ BOOST_AUTO_TEST_SUITE(Test_Time)
     auto ten_seconds_from_now = Time::from_now(10);
 
     BOOST_CHECK_EQUAL(now + 10, ten_seconds_from_now);
+  }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_TypeConverter)
+
+  BOOST_AUTO_TEST_CASE(digitBytesToIntegerStr) {
+    uint64_t original_val = 19999;
+    auto bytes = TypeConverter::toBytes(19999);
+    auto value = TypeConverter::digitBytesToIntegerStr(bytes);
+
+    BOOST_CHECK_EQUAL(to_string(original_val), value);
   }
 
 BOOST_AUTO_TEST_SUITE_END()
