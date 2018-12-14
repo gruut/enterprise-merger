@@ -65,7 +65,13 @@ public:
     append(int_val, len);
   }
 
-  void append(uint32_t int_val) {
+  void append(uint8_t byte) {
+    std::vector<uint8_t> v(1, byte);
+    append(v);
+  }
+
+  void append(uint32_t int_val, size_t len = 4) {
+    /*
     std::vector<uint8_t> v;
     v.reserve(sizeof(int_val));
 
@@ -73,8 +79,9 @@ public:
       v.push_back(int_val & 0xFF);
       int_val >>= 8;
     }
+     */
 
-    append(v);
+    append((uint64_t)int_val, len);
   }
 
   void append(uint64_t int_val, size_t len = 8) {

@@ -15,8 +15,8 @@ class BlockGenerator {
 public:
   PartialBlock generatePartialBlock(vector<sha256> &transactions_digest,
                                     vector<Transaction> &);
-  void generateBlock(PartialBlock &partial_block, vector<Signature> &signatures,
-                     MerkleTree &merkle_tree);
+  void generateBlock(PartialBlock &partial_block,
+                     vector<Signature> &support_sigs, MerkleTree &merkle_tree);
   void toJson(json &j, const Transaction &tx);
 };
 } // namespace gruut

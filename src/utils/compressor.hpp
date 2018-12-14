@@ -8,7 +8,7 @@
 using namespace std;
 class Compressor {
 public:
-  static int compressData(string &src, string &dest) {
+  static int compressData(const string &src, string &dest) {
     int src_size = static_cast<int>(src.size());
     int dst_size = LZ4_compressBound(src_size);
     dest.resize(dst_size);
@@ -16,7 +16,7 @@ public:
                                 dst_size);
   }
 
-  static vector<uint8_t> compressData(vector<uint8_t> &src) {
+  static vector<uint8_t> compressData(const vector<uint8_t> &src) {
     int src_size = static_cast<int>(src.size());
     int dest_size = LZ4_compressBound(src_size);
     vector<uint8_t> dest(dest_size);

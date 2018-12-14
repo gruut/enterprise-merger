@@ -187,7 +187,7 @@ bool Storage::putBlockBody(json &data, const string &block_id) {
     for (auto &item : DB_BLOCK_TX_SUFFIX) {
       // Certificate 저장하는 부분
       if (item.first == "type" &&
-          data["tx"][tx_idx][item.first].get<string>() == "certificates") {
+          data["tx"][tx_idx][item.first].get<string>() == TXTYPE_CERTIFICATES) {
         for (auto content_idx = 0; content_idx < content.size();
              content_idx += 2) {
           string user_id = content[content_idx].get<string>();
@@ -320,6 +320,19 @@ pair<string, string> Storage::findLatestHashAndHeight() {
   return make_pair(hash, height);
 }
 
+tuple<string, string, size_t> Storage::findLatestBlockBasicInfo() {
+  tuple<string, string, size_t> ret_tuple;
+
+  auto block_id = getDataByKey(DBType::BLOCK_LATEST, "bID");
+  if (!block_id.empty()) {
+    std::get<0>(ret_tuple) = block_id;
+    std::get<1>(ret_tuple) =
+        getDataByKey(DBType::BLOCK_RAW, block_id + "_hash");
+    std::get<2>(ret_tuple) = stoll(getDataByKey(DBType::BLOCK_LATEST, "hgt"));
+  }
+  return ret_tuple;
+}
+
 vector<string> Storage::findLatestTxIdList() {
   vector<string> tx_ids_list;
 
@@ -418,7 +431,7 @@ tuple<int, string, json> Storage::readBlock(int height) {
         transaction_json["tx"][tx_pos]["type"] = type;
         json content =
             json::parse(getDataByKey(DBType::BLOCK_BODY, tx_id + "_content"));
-        if (type == "certificates" || type == "digests") {
+        if (type == TXTYPE_CERTIFICATES || type == TXTYPE_DIGESTS) {
           for (size_t i = 0; i < content.size(); ++i)
             transaction_json["tx"][tx_pos]["content"][i] =
                 content[i].get<string>();
