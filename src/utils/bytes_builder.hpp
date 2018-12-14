@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <iterator>
@@ -9,6 +10,7 @@
 #include <iostream>
 
 #include "../../include/base64.hpp"
+#include "../../src/utils/type_converter.hpp"
 
 class BytesBuilder {
 private:
@@ -46,6 +48,12 @@ public:
 
       m_filled_len += len;
     }
+  }
+
+  template <size_t S>
+  void append(std::array<uint8_t, S> &bytes_val, int len = -1) {
+    auto vec = TypeConverter::arrayToVector<S>(bytes_val);
+    append(vec);
   }
 
   void append(time_t time_val, size_t len = 8) {

@@ -1,12 +1,16 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TYPE_CONVERTER_HPP
 #define GRUUT_ENTERPRISE_MERGER_TYPE_CONVERTER_HPP
 
+#include <algorithm>
+#include <array>
 #include <botan/base64.h>
 #include <botan/secmem.h>
 #include <string>
 #include <vector>
 
 #include "../chain/types.hpp"
+
+using namespace std;
 
 class TypeConverter {
 public:
@@ -19,6 +23,23 @@ public:
       input >>= 8;
     }
     return v;
+  }
+
+  template <size_t S>
+  inline static std::array<uint8_t, S> bytesToArray(std::vector<uint8_t> b) {
+    using Array = std::array<uint8_t, S>;
+
+    Array arr;
+    std::copy(b.begin(), b.end(), arr.begin());
+
+    return arr;
+  }
+
+  template <size_t S>
+  inline static std::vector<uint8_t> arrayToVector(std::array<uint8_t, S> arr) {
+    vector<uint8_t> vec(arr.begin(), arr.end());
+
+    return vec;
   }
 
   inline static std::vector<uint8_t> stringToBytes(std::string &input) {

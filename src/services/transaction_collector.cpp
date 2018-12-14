@@ -1,13 +1,13 @@
-#include <iostream>
-
+#include "transaction_collector.hpp"
 #include "../application.hpp"
 #include "../chain/transaction.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/rsa.hpp"
 #include "../utils/type_converter.hpp"
-#include "transaction_collector.hpp"
+#include <boost/assert.hpp>
 #include <botan/data_src.h>
 #include <botan/x509_key.h>
+#include <iostream>
 
 using namespace std;
 using namespace nlohmann;
@@ -25,8 +25,11 @@ void TransactionCollector::handleMessage(json message_body_json) {
 
     string txid_str = message_body_json["txid"].get<string>();
     auto txid_bytes = TypeConverter::decodeBase64(txid_str);
-    transaction.transaction_id = txid_bytes;
-    bytes_builder.append(transaction.transaction_id);
+    BOOST_ASSERT_MSG(txid_bytes.size() == 32,
+                     "The size of the transaction is not 32 bytes");
+    transaction.transaction_id =
+        TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(txid_bytes);
+    bytes_builder.append(txid_bytes);
 
     string t_str = message_body_json["time"].get<string>();
     auto sent_time = TypeConverter::digitStringToBytes(t_str);

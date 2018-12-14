@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <boost/system/error_code.hpp>
 #include <iostream>
 #include <random>
@@ -80,13 +79,8 @@ Transactions SignatureRequester::fetchTransactions() {
 
 PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
   BlockGenerator block_generator;
-  vector<sha256> transaction_ids;
 
-  transaction_ids.reserve(transactions.size());
-  for (auto &transaction : transactions)
-    transaction_ids.emplace_back(transaction.transaction_id);
-
-  m_merkle_tree.generate(transaction_ids);
+  m_merkle_tree.generate(transactions);
   vector<sha256> merkle_tree_vector = m_merkle_tree.getMerkleTree();
   auto &&block =
       block_generator.generatePartialBlock(merkle_tree_vector, transactions);

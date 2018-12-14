@@ -4,7 +4,9 @@
 #include <vector>
 
 #include "../../include/base64.hpp"
+#include "../chain/transaction.hpp"
 #include "../config/config.hpp"
+#include "../utils/bytes_builder.hpp"
 #include "../utils/sha256.hpp"
 #include "types.hpp"
 
@@ -65,13 +67,17 @@ public:
     }
   }
 
-  void generate(vector<sha256> &tx_digest) {
+  void generate(vector<Transaction> &transactions) {
+    vector<sha256> tx_digests;
+
+    generateTxDigests(tx_digests, transactions);
+
     const bytes dummy_leaf(32, 0); // for SHA-256
 
-    auto min_addable_size = min(MAX_MERKLE_LEAVES, tx_digest.size());
+    auto min_addable_size = min(MAX_MERKLE_LEAVES, tx_digests.size());
 
     for (size_t i = 0; i < min_addable_size; ++i)
-      m_merkle_tree[i] = tx_digest[i];
+      m_merkle_tree[i] = tx_digests[i];
 
     for (size_t i = min_addable_size; i < MAX_MERKLE_LEAVES; ++i)
       m_merkle_tree[i] = dummy_leaf;
@@ -98,6 +104,35 @@ private:
     } else {
       return Sha256::hash(left);
     }
+  }
+
+  void generateTxDigests(vector<sha256> &tx_digests,
+                         vector<Transaction> &transactions) {
+    transform(transactions.begin(), transactions.end(),
+              back_inserter(tx_digests), [](Transaction &t) {
+                BytesBuilder tx_digest_builder;
+
+                tx_digest_builder.append(t.transaction_id);
+                tx_digest_builder.append(t.sent_time);
+                tx_digest_builder.append(t.requestor_id);
+
+                string transaction_type_str;
+                if (t.transaction_type == TransactionType::CERTIFICATE)
+                  transaction_type_str = "CERTIFICATE";
+                else
+                  transaction_type_str = "DIGESTS";
+                tx_digest_builder.append(transaction_type_str);
+
+                for_each(t.content_list.begin(), t.content_list.end(),
+                         [&tx_digest_builder](content_type &content) {
+                           tx_digest_builder.append(content);
+                         });
+
+                tx_digest_builder.append(t.signature);
+
+                auto tx_digest_bytes = tx_digest_builder.getBytes();
+                return Sha256::hash(tx_digest_bytes);
+              });
   }
 
   vector<sha256> m_merkle_tree;
