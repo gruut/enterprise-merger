@@ -23,18 +23,11 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
     std::vector<uint8_t> hmac(packed_msg.begin() + HEADER_LENGTH + body_size,
                               packed_msg.end());
 
-    std::vector<uint8_t> key;
-    if (header.message_type == MessageType::MSG_SUCCESS) {
-      auto &signer_pool_manager = Application::app().getSignerPoolManager();
-      // TODO: signer_pool_manager의 m_join_temporary_table에서 key를 임시로
-      // 가져와서 테스트할 것. key = signer_pool_manager.getKey(id);
-    } else if (header.message_type == MessageType::MSG_SSIG) {
-      auto &signer_pool = Application::app().getSignerPool();
-      Botan::secure_vector<uint8_t> secure_vector_key =
-          signer_pool.getHmacKey(id);
-      key = std::vector<uint8_t>(secure_vector_key.begin(),
-                                 secure_vector_key.end());
-    }
+    auto &signer_pool = Application::app().getSignerPool();
+    Botan::secure_vector<uint8_t> secure_vector_key =
+        signer_pool.getHmacKey(id);
+    std::vector<uint8_t> key = std::vector<uint8_t>(secure_vector_key.begin(),
+                                                    secure_vector_key.end());
 
     if (!Hmac::verifyHMAC(msg, hmac, key)) {
       rpc_status = Status(StatusCode::UNAUTHENTICATED, "Wrong HMAC");

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../utils/template_singleton.hpp"
-#include "grpc_merger.hpp"
 #include "protos/protobuf_signer.grpc.pb.h"
 #include <memory>
 #include <mutex>
