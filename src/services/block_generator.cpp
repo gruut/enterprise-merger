@@ -47,7 +47,7 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
 
   // Header
   // TODO: 임시처리
-  version_type version = 1;
+  block_version_type version = 1;
   block_raw_builder.append(version);
 
   block_raw_builder.append(partial_block.chain_id);
@@ -101,7 +101,7 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   // Header (JSON)
   json block_header;
   block_header["ver"] = to_string(version);
-  auto chain_id_str = to_string(partial_block.chain_id);
+  auto chain_id_str = TypeConverter::toString(partial_block.chain_id);
   block_header["cID"] = TypeConverter::toBase64Str(chain_id_str);
   block_header["prevH"] = TypeConverter::toBase64Str(previous_header_hash);
   block_header["prevbID"] = TypeConverter::toBase64Str(previous_block_id);
@@ -125,11 +125,11 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
         TypeConverter::toBase64Str(signer_signatures[i].signer_signature);
   }
 
-  auto merger_id_str = to_string(partial_block.merger_id);
+  auto merger_id_str = TypeConverter::toString(partial_block.merger_id);
   block_header["mID"] = TypeConverter::toBase64Str(merger_id_str);
 
   BytesBuilder b_id_builder;
-  b_id_builder.appendDec(chain_id_str);
+  b_id_builder.append(partial_block.chain_id);
   b_id_builder.append(partial_block.height);
   b_id_builder.append(partial_block.merger_id);
   auto b_id_bytes = b_id_builder.getBytes();

@@ -250,28 +250,28 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
   BOOST_AUTO_TEST_CASE(save_block_by_block_object) {
     PartialBlock p_block;
-    p_block.merger_id = 1;
-    p_block.chain_id = 1;
+    p_block.merger_id = TypeConverter::integerToBytes(1);
+    p_block.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(1);
     p_block.height = 1;
     p_block.transaction_root = vector<uint8_t>(4, 1);
 
     Transaction t;
     string tx_id_str = "1";
-    t.transaction_id = TypeConverter::stringToBytes(tx_id_str);
+    t.transaction_id = TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(TypeConverter::stringToBytes(tx_id_str));
     auto now = Time::now();
     t.sent_time = TypeConverter::stringToBytes(now);
-    t.requestor_id = TypeConverter::toBytes(1);
+    t.requestor_id = TypeConverter::integerToBytes(1);
     t.transaction_type = TransactionType::DIGESTS;
-    t.signature = TypeConverter::toBytes(1);
+    t.signature = TypeConverter::integerToBytes(1);
     t.content_list.emplace_back("Hello world!");
     p_block.transactions.push_back(t);
 
     vector<Signature> signature;
-    signature.push_back({1, TypeConverter::toBytes(1)});
+    signature.push_back({1, TypeConverter::integerToBytes(1)});
 
     MerkleTree tree;
-    vector<sha256> tx_digest = {t.transaction_id};
-    tree.generate(tx_digest);
+    vector<Transaction> transactions = {t};
+    tree.generate(transactions);
 
     BlockGenerator generator;
     generator.generateBlock(p_block, signature, tree);
