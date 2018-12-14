@@ -1,6 +1,7 @@
 #include "block_generator.hpp"
 #include "../chain/merkle_tree.hpp"
 #include "../chain/signature.hpp"
+#include "../chain/types.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/rsa.hpp"
 #include "../utils/time.hpp"
@@ -17,7 +18,7 @@ BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest,
   // TODO: 설정파일이 없어서 하드코딩(1)
   block.merger_id = TypeConverter::integerToBytes(1);
   // TODO: 위와 같은 이유로 임시값 할당
-  block.chain_id = 1;
+  block.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(1);
   // TODO: 위와 같은 이유로 임시값 할당
   block.height = 1;
   block.transaction_root = transactions_digest.back();
