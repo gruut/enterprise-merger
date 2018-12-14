@@ -12,6 +12,8 @@ constexpr size_t MAX_THREAD = 10;
 constexpr CompressionAlgorithmType COMPRESSION_ALGO_TYPE =
     CompressionAlgorithmType::LZ4;
 
+constexpr size_t BP_INTERVAL = 10;
+
 constexpr size_t MAX_MERKLE_LEAVES = 4096;
 
 constexpr size_t MAX_COLLECT_TRANSACTION_SIZE = 4096;
