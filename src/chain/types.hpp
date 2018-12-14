@@ -73,11 +73,14 @@ using transaction_root_type = sha256;
 using block_header_hash_type = sha256;
 using block_id_type = sha256;
 using signature_type = bytes;
-using version_type = uint32_t;
+using block_version_type = uint32_t;
 using header_length_type = uint32_t;
 
 using content_type = std::string;
 
 using hmac_key_type = Botan::secure_vector<uint8_t>;
+
+// Message
+using message_version_type = uint8_t;
 } // namespace gruut
 #endif
