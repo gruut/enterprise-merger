@@ -330,7 +330,7 @@ vector<string> Storage::findLatestTxIdList() {
       json tx_ids_json = json::parse(tx_ids);
       for (size_t tx_ids_idx = 0; tx_ids_idx < tx_ids_json.size();
            ++tx_ids_idx) {
-        tx_ids_list.emplace_back(tx_ids_json[tx_ids_idx]);
+        tx_ids_list.emplace_back(tx_ids_json[tx_ids_idx].get<string>());
       }
     }
   }
