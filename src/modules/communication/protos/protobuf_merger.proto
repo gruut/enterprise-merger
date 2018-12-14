@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package grpc_merger;
+
+service MergerCommunication {
+    rpc pushData (MergerDataRequest) returns (MergerDataReply) {}
+}
+
+message MergerDataRequest{
+    bytes data = 1;
+}
+
+message MergerDataReply{
+    bool checker = 1;
+}
+

@@ -25,7 +25,6 @@
 # Compiled Static libraries
 *.lai
 *.la
-*.a
 *.lib
 
 # Executables
@@ -44,3 +43,20 @@ cmake-build-release/
 Makefile
 output.txt
 build
+*.cbp
+compile_commands.json
+
+# Test
+Testing
+*_test
+gruut_enterprise_merger
+
+lib/leveldb/include/port/port_config\.h
+
+lib/leveldb/leveldbutil
+
+lib/leveldb/libleveldb\.a
+
+CTestTestfile\.cmake
+
+lib/leveldb/leveldbConfigVersion\.cmake
