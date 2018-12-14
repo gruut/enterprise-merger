@@ -21,9 +21,7 @@ public:
     json j_partial_block;
 
     j_partial_block["time"] = Time::now();
-
-    auto merger_id_str = to_string(block.merger_id);
-    j_partial_block["mID"] = TypeConverter::toBase64Str(merger_id_str);
+    j_partial_block["mID"] = TypeConverter::toBase64Str(block.merger_id);
 
     string block_chain_id_str = to_string(block.chain_id);
     j_partial_block["cID"] = TypeConverter::toBase64Str(block_chain_id_str);

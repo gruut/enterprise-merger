@@ -5,6 +5,7 @@
 #include <array>
 #include <botan/base64.h>
 #include <botan/secmem.h>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -22,6 +23,8 @@ public:
       v.push_back(input & 0xFF);
       input >>= 8;
     }
+
+    reverse(v.begin(), v.end());
     return v;
   }
 
@@ -65,6 +68,18 @@ public:
     }
 
     return bytes;
+  }
+
+  inline static std::string digitBytesToIntegerStr(vector<uint8_t> &bytes) {
+    auto bit_shift_step = bytes.size() - 1;
+    auto num = std::accumulate(bytes.begin(), bytes.end(), 0,
+                               [&bit_shift_step](size_t sum, int value) {
+                                 sum |= (value << (bit_shift_step * 8));
+                                 --bit_shift_step;
+                                 return sum;
+                               });
+
+    return to_string(num);
   }
 
   template <typename T> inline static std::string toBase64Str(T &t) {

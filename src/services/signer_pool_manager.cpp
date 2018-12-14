@@ -30,7 +30,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   MessageProxy proxy;
   vector<uint64_t> receiver_list{receiver_id};
   // TODO: 설정파일이 없어서 하드코딩(MERGER-1 => base64 => TUVSR0VSLTE)
-  merger_id_type merger_id = 1;
+  merger_id_type merger_id = TypeConverter::toBytes(1);
 
   auto now = std::chrono::duration_cast<std::chrono::seconds>(
                  std::chrono::system_clock::now().time_since_epoch())
@@ -46,7 +46,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
           Time::from_now(config::JOIN_TIMEOUT_SEC);
 
       json message_body;
-      message_body["sender"] = merger_id;
+      message_body["sender"] = TypeConverter::toBase64Str(merger_id);
       message_body["time"] = timestamp;
 
       m_join_temporary_table[receiver_id]->merger_nonce =
@@ -75,7 +75,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       m_join_temporary_table[receiver_id]->signer_cert = decoded_cert_str;
 
       json message_body;
-      message_body["sender"] = merger_id;
+      message_body["sender"] = TypeConverter::toBase64Str(merger_id);
       message_body["time"] = timestamp;
       message_body["cert"] = getCertificate();
 
@@ -130,7 +130,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     signer_pool.updateStatus(receiver_id, SignerStatus::GOOD);
 
     json message_body;
-    message_body["sender"] = merger_id;
+    message_body["sender"] = TypeConverter::toBase64Str(merger_id);
     message_body["time"] = timestamp;
     message_body["val"] = true;
 
