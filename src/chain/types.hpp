@@ -53,13 +53,15 @@ using block_height_type = uint64_t;
 constexpr auto TRANSACTION_ID_TYPE_SIZE = 32;
 using transaction_id_type = std::array<uint8_t, TRANSACTION_ID_TYPE_SIZE>;
 
+constexpr auto CHAIN_ID_TYPE_SIZE = 8;
+using local_chain_id_type = std::array<uint8_t, CHAIN_ID_TYPE_SIZE>;
+
 using requestor_id_type = sha256;
 using merger_id_type = bytes;
 using signer_id_type = uint64_t;
 using transaction_root_type = sha256;
 using block_header_hash_type = sha256;
 using block_id_type = sha256;
-using chain_id_type = uint64_t;
 using signature_type = bytes;
 using version_type = uint32_t;
 using header_length_type = uint32_t;
@@ -67,8 +69,5 @@ using header_length_type = uint32_t;
 using content_type = std::string;
 
 using hmac_key_type = Botan::secure_vector<uint8_t>;
-
-// Message
-using local_chain_id_type = uint8_t;
 } // namespace gruut
 #endif

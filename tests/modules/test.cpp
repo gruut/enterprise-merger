@@ -106,7 +106,10 @@ BOOST_AUTO_TEST_SUITE(Test_HeaderController)
                    static_cast<uint8_t>(compare_hdr.compression_algo_type));
         BOOST_TEST(origin_hdr.dummy == compare_hdr.dummy);
         BOOST_TEST(memcmp(origin_hdr.total_length, compare_hdr.total_length, 4) == 0);
-        BOOST_TEST(memcmp(origin_hdr.local_chain_id, compare_hdr.local_chain_id, 8) == 0);
+
+        bool is_equal_local_chain_id = origin_hdr.local_chain_id == compare_hdr.local_chain_id;
+        BOOST_TEST(is_equal_local_chain_id);
+
         BOOST_TEST(memcmp(origin_hdr.sender_id, compare_hdr.sender_id, 8) == 0);
         BOOST_TEST(memcmp(origin_hdr.reserved_space, compare_hdr.reserved_space, 6) == 0);
     }

@@ -13,7 +13,7 @@ using namespace std;
 namespace gruut {
 struct PartialBlock {
   merger_id_type merger_id;
-  chain_id_type chain_id;
+  local_chain_id_type chain_id;
   block_height_type height;
   transaction_root_type transaction_root;
 

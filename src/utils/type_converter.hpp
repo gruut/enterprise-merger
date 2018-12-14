@@ -29,6 +29,16 @@ public:
     return v;
   }
 
+  template <size_t S, typename T = uint8_t>
+  inline static std::array<uint8_t, S> integerToArray(T input) {
+    using Array = std::array<uint8_t, S>;
+
+    auto bytes = integerToBytes(input);
+    Array arr = bytesToArray<S>(bytes);
+
+    return arr;
+  }
+
   template <size_t S>
   inline static std::array<uint8_t, S> bytesToArray(std::vector<uint8_t> b) {
     using Array = std::array<uint8_t, S>;
@@ -84,7 +94,7 @@ public:
   }
 
   template <typename T> inline static std::string toBase64Str(T &t) {
-    return Botan::base64_encode(vector<uint8_t>(t.begin(), t.end()));
+    return Botan::base64_encode(vector<uint8_t>(begin(t), end(t)));
   }
 
   template <typename T>

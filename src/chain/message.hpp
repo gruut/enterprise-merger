@@ -16,7 +16,7 @@ struct MessageHeader {
   CompressionAlgorithmType compression_algo_type;
   uint8_t dummy;
   uint8_t total_length[4];
-  local_chain_id_type local_chain_id[8];
+  local_chain_id_type local_chain_id;
   uint8_t sender_id[8];
   uint8_t reserved_space[6];
 };
