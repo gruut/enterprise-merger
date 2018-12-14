@@ -30,7 +30,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   MessageProxy proxy;
   vector<uint64_t> receiver_list{receiver_id};
   // TODO: 설정파일이 없어서 하드코딩(MERGER-1 => base64 => TUVSR0VSLTE)
-  merger_id_type merger_id = TypeConverter::toBytes(1);
+  merger_id_type merger_id = TypeConverter::integerToBytes(1);
 
   auto now = std::chrono::duration_cast<std::chrono::seconds>(
                  std::chrono::system_clock::now().time_since_epoch())

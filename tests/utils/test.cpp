@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_SUITE(Test_TypeConverter)
 
   BOOST_AUTO_TEST_CASE(digitBytesToIntegerStr) {
     uint64_t original_val = 19999;
-    auto bytes = TypeConverter::toBytes(19999);
+    auto bytes = TypeConverter::integerToBytes(19999);
     auto value = TypeConverter::digitBytesToIntegerStr(bytes);
 
     BOOST_CHECK_EQUAL(to_string(original_val), value);

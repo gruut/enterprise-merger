@@ -15,7 +15,8 @@ using namespace std;
 
 class TypeConverter {
 public:
-  template <class T> inline static std::vector<uint8_t> toBytes(T input) {
+  template <class T>
+  inline static std::vector<uint8_t> integerToBytes(T input) {
     std::vector<uint8_t> v;
     v.reserve(sizeof(input));
 

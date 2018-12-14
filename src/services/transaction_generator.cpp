@@ -62,7 +62,7 @@ transaction_id_type TransactionGenerator::generateTransactionId() {
   std::uniform_int_distribution<std::mt19937::result_type> dist;
   auto random_number = dist(mt);
 
-  auto bytes = TypeConverter::toBytes(random_number);
+  auto bytes = TypeConverter::integerToBytes(random_number);
   transaction_id_type tx_id =
       TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(bytes);
 
