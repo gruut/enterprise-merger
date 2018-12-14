@@ -1,6 +1,7 @@
 #include "merger_server.hpp"
 #include "message_handler.hpp"
 #include "rpc_receiver_list.hpp"
+#include "../../utils/type_converter.hpp"
 #include <chrono>
 #include <cstring>
 #include <thread>
@@ -123,6 +124,9 @@ void OpenChannel::proceed() {
     // TODO :: 고칩시다!
     std::string id(sizeof(uint64_t) - m_request.sender().length(), 0x00);
     id += m_request.sender();
+    // uint64_t receiver_id;
+    // std::string encoded_id = m_request.sender();
+    // std::vector<uint8_t> id = TypeConverter::decodeBase64(encoded_id);
     std::memcpy(&receiver_id, &id[0], sizeof(uint64_t));
 
     m_rpc_receiver_list->setReqSsig(receiver_id, &m_stream, this);
