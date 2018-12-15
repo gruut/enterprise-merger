@@ -46,10 +46,12 @@ void TransactionGenerator::generate(Signer &signer) {
     signature_message.insert(signature_message.cend(), signer.pk_cert.cbegin(),
                              signer.pk_cert.cend());
 
-    // TODO: private_key 하드코딩 되어있음. 설정파일 생성되면 제거할 것
-    string private_key = "";
+    auto &setting = Application::app().getSetting();
+    string rsa_sk_pem = setting.getMySK();
+    string rsa_sk_pass = setting.getMyPass();
+
     new_transaction.signature =
-        RSA::doSign(private_key, signature_message, true);
+        RSA::doSign(rsa_sk_pem, signature_message, true, rsa_sk_pass);
 
     Application::app().getTransactionPool().push(new_transaction);
   }

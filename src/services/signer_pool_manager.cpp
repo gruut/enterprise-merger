@@ -200,8 +200,10 @@ string SignerPoolManager::getCertificate() {
 string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
                                       string dhx, string dhy,
                                       uint64_t timestamp) {
-  // TODO: 임시 rsa_sk_pem
-  string rsa_sk_pem = "";
+
+  auto &setting = Application::app().getSetting();
+  string rsa_sk_pem = setting.getMySK();
+  string rsa_sk_pass = setting.getMyPass();
 
   BytesBuilder builder;
   builder.appendB64(merger_nonce);
@@ -211,7 +213,7 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
   builder.append(timestamp);
 
   auto message_bytes = builder.getBytes();
-  auto signature = RSA::doSign(rsa_sk_pem, message_bytes, true);
+  auto signature = RSA::doSign(rsa_sk_pem, message_bytes, true, rsa_sk_pass);
 
   return Botan::base64_encode(signature);
 }
