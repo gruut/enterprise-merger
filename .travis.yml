@@ -53,8 +53,6 @@ script:
   git submodule update --init
   sudo make
   sudo make install
-  cd third_party/protobuf
-  sudo make install
   cd ../../..
 - |
   cd botan
