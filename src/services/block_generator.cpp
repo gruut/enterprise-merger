@@ -2,6 +2,7 @@
 #include "../chain/merkle_tree.hpp"
 #include "../chain/signature.hpp"
 #include "../chain/types.hpp"
+#include "../src/application.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/compressor.hpp"
 #include "../utils/rsa.hpp"
