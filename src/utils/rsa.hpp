@@ -32,7 +32,7 @@ public:
   }
 
   static std::vector<uint8_t> doSign(std::string &rsa_sk_pem,
-                                     std::vector<uint8_t> &data,
+                                     const std::vector<uint8_t> &data,
                                      bool pkcs1v15 = false,
                                      const std::string &pass = "") {
     try {
@@ -47,7 +47,7 @@ public:
   }
 
   static std::vector<uint8_t> doSign(Botan::RSA_PrivateKey &rsa_sk,
-                                     std::vector<uint8_t> &data,
+                                     const std::vector<uint8_t> &data,
                                      bool pkcs1v15 = false) {
     Botan::AutoSeeded_RNG auto_rng;
     Botan::PK_Signer signer(rsa_sk, auto_rng,
@@ -109,11 +109,15 @@ private:
   static Botan::RSA_PrivateKey getPrivateKey(std::string &rsa_sk_pem,
                                              const std::string &pass = "") {
 
-    Botan::DataSource_Memory signkey_datasource(rsa_sk_pem);
-    std::unique_ptr<Botan::Private_Key> signkey(
-        Botan::PKCS8::load_key(signkey_datasource, pass));
-    return Botan::RSA_PrivateKey(signkey->algorithm_identifier(),
-                                 signkey->private_key_bits());
+    try {
+      Botan::DataSource_Memory signkey_datasource(rsa_sk_pem);
+      std::unique_ptr<Botan::Private_Key> signkey(
+          Botan::PKCS8::load_key(signkey_datasource, pass));
+      return Botan::RSA_PrivateKey(signkey->algorithm_identifier(),
+                                   signkey->private_key_bits());
+    } catch (Botan::Exception &exception) {
+      throw;
+    }
   }
 };
 
