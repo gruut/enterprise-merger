@@ -45,6 +45,8 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
 
   // step 1) preparing basic data
 
+  auto &setting = Application::app().getSetting();
+
   Storage *storage = Storage::getInstance();
 
   block_version_type version = 1;
@@ -121,8 +123,10 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   block_raw_builder.append(header_length);                  // 4-bytes
   block_raw_builder.append(compressed_json);
 
-  string rsa_sk = ""; // TODO : from config
-  auto signature = RSA::doSign(rsa_sk, block_raw_builder.getBytes(), true);
+  string rsa_sk = setting.getMySK();
+  string rsa_sk_pass = setting.getMyPass();
+  auto signature =
+      RSA::doSign(rsa_sk, block_raw_builder.getBytes(), true, rsa_sk_pass);
   block_raw_builder.append(signature); // == mSig
 
   bytes block_raw_bytes = block_raw_builder.getBytes();

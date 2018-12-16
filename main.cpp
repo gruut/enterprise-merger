@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 
 #include "cxxopts.hpp"
 
@@ -7,6 +6,8 @@
 #include "src/modules/message_fetcher/message_fetcher.hpp"
 #include "src/modules/message_fetcher/out_message_fetcher.hpp"
 #include "src/modules/communication/communication.hpp"
+
+#include "src/utils/file_io.hpp"
 
 using namespace std;
 using namespace gruut;
@@ -18,8 +19,8 @@ json parseArg(int argc, char *argv[]){
                            "Merger for Gruut Enterprise Networks (C++)\n");
   options.add_options("basic")("help", "Print help description")(
     "in", "Setting file",
-    cxxopts::value<std::string>()->default_value("./setting.json"))
-    ("pass","Password to decrypt secret key",cxxopts::value<std::string>()->default_value(""));
+    cxxopts::value<string>()->default_value("./setting.json"))
+    ("pass","Password to decrypt secret key",cxxopts::value<string>()->default_value(""));
 
   if (argc == 1) {
     cout << options.help({"basic"}) << endl;
@@ -35,20 +36,16 @@ json parseArg(int argc, char *argv[]){
       exit(1);
     }
 
-    string setting_file_path = result["in"].as<std::string>();
-    ifstream ifs(setting_file_path);
-    if (!ifs || !ifs.is_open()) {
-      cout << "cannot open setting file (" << setting_file_path << ")" << endl;
+    string setting_json_str = FileIo::file2str(result["in"].as<string>());
+
+    if(setting_json_str.empty()) {
+      cout << "error opening setting files" << endl;
       exit(1);
     }
 
-    string setting_json_str((std::istreambuf_iterator<char>(ifs)),
-                            (std::istreambuf_iterator<char>()));
-    ifs.close();
-
     json setting_json = json::parse(setting_json_str);
 
-    setting_json["pass"] = result["pass"].as<std::string>();
+    setting_json["pass"] = result["pass"].as<string>();
 
     return setting_json;
 
