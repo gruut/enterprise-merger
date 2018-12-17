@@ -13,6 +13,15 @@
 #include "leveldb/options.h"
 #include "leveldb/write_batch.h"
 #include "nlohmann/json.hpp"
+
+#include <botan-2/botan/auto_rng.h>
+#include <botan-2/botan/data_src.h>
+#include <botan-2/botan/exceptn.h>
+#include <botan-2/botan/pkcs8.h>
+#include <botan-2/botan/pubkey.h>
+#include <botan-2/botan/rsa.h>
+#include <botan-2/botan/x509cert.h>
+
 #include <boost/filesystem/operations.hpp>
 #include <cmath>
 #include <iostream>
@@ -32,10 +41,10 @@ const map<DBType, string> DB_PREFIX = {
     {DBType::BLOCK_CERT, "certificate_"}};
 
 const vector<pair<string, string>> DB_BLOCK_HEADER_SUFFIX = {
-    {"bID", "_bID"},     {"ver", "_ver"},   {"cID", "_cID"},
-    {"time", "_time"},   {"hgt", "_hgt"},   {"SSig", "_SSig"},
-    {"mID", "_mID"},     {"mSig", "_mSig"}, {"prevbID", "_prevbID"},
-    {"prevH", "_prevH"}, {"txrt", "_txrt"}, {"txids", "_txids"}};
+    {"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
+    {"time", "_time"}, {"hgt", "_hgt"},         {"SSig", "_SSig"},
+    {"mID", "_mID"},   {"prevbID", "_prevbID"}, {"prevH", "_prevH"},
+    {"txrt", "_txrt"}, {"txids", "_txids"}};
 
 const vector<pair<string, string>> DB_BLOCK_TX_SUFFIX = {
     {"time", "_time"}, {"rID", "_rID"},         {"rSig", "_rSig"},
@@ -53,7 +62,7 @@ public:
   vector<string> findLatestTxIdList();
   string findCertificate(const string &user_id,
                          const timestamp_type &at_this_time = 0);
-  string findCertificate(const uint64_t user_id,
+  string findCertificate(const signer_id_type &user_id,
                          const timestamp_type &at_this_time = 0);
   void deleteAllDirectory();
   tuple<int, string, json> readBlock(int height);

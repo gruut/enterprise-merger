@@ -9,8 +9,8 @@ using namespace nlohmann;
 using namespace std;
 
 namespace gruut {
-void SignaturePool::handleMessage(signer_id_type receiver_id,
-                                  json message_body_json) {
+void SignaturePool::handleMessage(signer_id_type &receiver_id,
+                                  json &message_body_json) {
   if (verifySignature(receiver_id, message_body_json)) {
     Signature s;
 
@@ -40,8 +40,8 @@ size_t SignaturePool::size() { return m_signature_pool.size(); }
 
 bool SignaturePool::empty() { return size() == 0; }
 
-bool SignaturePool::verifySignature(signer_id_type receiver_id,
-                                    json message_body_json) {
+bool SignaturePool::verifySignature(signer_id_type &receiver_id,
+                                    json &message_body_json) {
   auto pk_cert = Application::app().getSignerPool().getPkCert(receiver_id);
   if (pk_cert != "") {
     BytesBuilder bytes_builder;

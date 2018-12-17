@@ -4,8 +4,7 @@
 
 namespace gruut {
 void MessageHandler::unpackMsg(std::string &packed_msg,
-                               grpc::Status &rpc_status,
-                               uint64_t &receiver_id) {
+                               grpc::Status &rpc_status, id_type &recv_id) {
   using namespace grpc;
   auto &input_queue = Application::app().getInputQueue();
   MessageHeader header = HeaderController::parseHeader(packed_msg);
@@ -14,9 +13,6 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
     return;
   }
   int body_size = getMsgBodySize(header);
-  uint64_t id;
-  memcpy(&id, &header.sender_id[0], sizeof(uint64_t));
-  receiver_id = id;
 
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
     std::string msg = packed_msg.substr(0, HEADER_LENGTH + body_size);
@@ -25,7 +21,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
 
     auto &signer_pool = Application::app().getSignerPool();
     Botan::secure_vector<uint8_t> secure_vector_key =
-        signer_pool.getHmacKey(id);
+        signer_pool.getHmacKey(recv_id);
     std::vector<uint8_t> key = std::vector<uint8_t>(secure_vector_key.begin(),
                                                     secure_vector_key.end());
 
@@ -44,7 +40,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
     return;
   }
 
-  input_queue->emplace(make_tuple(header.message_type, id, json_data));
+  input_queue->emplace(make_tuple(header.message_type, recv_id, json_data));
   rpc_status = Status::OK;
 }
 
@@ -63,9 +59,9 @@ void MessageHandler::packMsg(OutputMessage &output_msg) {
       msg_type == MessageType::MSG_REQ_SSIG) {
     auto &signer_pool = Application::app().getSignerPool();
 
-    for (auto receiver_id : get<1>(output_msg)) {
+    for (auto &recv_id : get<1>(output_msg)) {
       Botan::secure_vector<uint8_t> secure_vector_key =
-          signer_pool.getHmacKey(receiver_id);
+          signer_pool.getHmacKey(recv_id);
       std::vector<uint8_t> key(secure_vector_key.begin(),
                                secure_vector_key.end());
       std::vector<uint8_t> hmac = Hmac::generateHMAC(packed_msg, key);

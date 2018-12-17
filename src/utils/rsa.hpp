@@ -1,13 +1,13 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGMANAGER_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGMANAGER_HPP
 
-#include <botan/auto_rng.h>
-#include <botan/data_src.h>
-#include <botan/exceptn.h>
-#include <botan/pkcs8.h>
-#include <botan/pubkey.h>
-#include <botan/rsa.h>
-#include <botan/x509cert.h>
+#include <botan-2/botan/auto_rng.h>
+#include <botan-2/botan/data_src.h>
+#include <botan-2/botan/exceptn.h>
+#include <botan-2/botan/pkcs8.h>
+#include <botan-2/botan/pubkey.h>
+#include <botan-2/botan/rsa.h>
+#include <botan-2/botan/x509cert.h>
 #include <iostream>
 #include <string>
 #include <vector>

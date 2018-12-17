@@ -27,7 +27,7 @@ public:
         TypeConverter::toBase64Str(block.transaction_root);
     j_partial_block["hgt"] = block.height;
 
-    vector<uint64_t> receivers_list;
+    vector<id_type> receivers_list;
     for_each(signers.begin(), signers.end(), [&receivers_list](Signer signer) {
       receivers_list.emplace_back(signer.user_id);
     });

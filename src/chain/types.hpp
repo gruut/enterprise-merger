@@ -1,7 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 #define GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 
-#include <botan/secmem.h>
+#include <botan-2/botan/secmem.h>
 #include <string>
 #include <vector>
 
@@ -71,9 +71,6 @@ using transaction_id_type = std::array<uint8_t, TRANSACTION_ID_TYPE_SIZE>;
 constexpr auto CHAIN_ID_TYPE_SIZE = 8;
 using local_chain_id_type = std::array<uint8_t, CHAIN_ID_TYPE_SIZE>;
 
-using requestor_id_type = sha256;
-using merger_id_type = bytes;
-using signer_id_type = uint64_t;
 using transaction_root_type = sha256;
 using block_header_hash_type = sha256;
 using block_id_type = sha256;
@@ -85,6 +82,12 @@ using content_type = std::string;
 
 using hmac_key_type = Botan::secure_vector<uint8_t>;
 
+// 아래는 모두 동일한 타입, 문맥에 맞춰서 쓸 것
+// 구별이 안되거나 혼용되어 있으면, id_type을 쓸 것
+using requestor_id_type = bytes;
+using merger_id_type = bytes;
+using signer_id_type = bytes;
+using servend_id_type = bytes;
 using id_type = bytes;
 
 // Message

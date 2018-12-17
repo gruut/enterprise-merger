@@ -21,8 +21,8 @@ struct MessageHeader {
   uint8_t reserved_space[6];
 };
 
-using InputMessage = tuple<MessageType, uint64_t, nlohmann::json>;
-using OutputMessage = tuple<MessageType, vector<uint64_t>, nlohmann::json>;
+using InputMessage = tuple<MessageType, id_type, nlohmann::json>;
+using OutputMessage = tuple<MessageType, vector<id_type>, nlohmann::json>;
 
 struct Message : public MessageHeader {
   Message() = delete;
