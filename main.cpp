@@ -4,6 +4,8 @@
 
 #include "src/application.hpp"
 #include "src/services/setting.hpp"
+#include "src/services/input_queue.hpp"
+#include "src/services/output_queue.hpp"
 #include "src/modules/message_fetcher/message_fetcher.hpp"
 #include "src/modules/message_fetcher/out_message_fetcher.hpp"
 #include "src/modules/communication/communication.hpp"
