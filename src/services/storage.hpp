@@ -32,10 +32,10 @@ const map<DBType, string> DB_PREFIX = {
     {DBType::BLOCK_CERT, "certificate_"}};
 
 const vector<pair<string, string>> DB_BLOCK_HEADER_SUFFIX = {
-    {"bID", "_bID"},     {"ver", "_ver"},   {"cID", "_cID"},
-    {"time", "_time"},   {"hgt", "_hgt"},   {"SSig", "_SSig"},
-    {"mID", "_mID"},     {"mSig", "_mSig"}, {"prevbID", "_prevbID"},
-    {"prevH", "_prevH"}, {"txrt", "_txrt"}, {"txids", "_txids"}};
+    {"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
+    {"time", "_time"}, {"hgt", "_hgt"},         {"SSig", "_SSig"},
+    {"mID", "_mID"},   {"prevbID", "_prevbID"}, {"prevH", "_prevH"},
+    {"txrt", "_txrt"}, {"txids", "_txids"}};
 
 const vector<pair<string, string>> DB_BLOCK_TX_SUFFIX = {
     {"time", "_time"}, {"rID", "_rID"},         {"rSig", "_rSig"},
