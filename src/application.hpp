@@ -1,6 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 #define GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 
+#include "modules/bp_scheduler/bp_scheduler.hpp"
 #include "modules/module.hpp"
 #include "services/setting.hpp"
 #include "services/signer_pool_manager.hpp"
@@ -54,6 +55,8 @@ public:
 
   PartialBlock &getTemporaryPartialBlock();
 
+  BpScheduler &getBpScheduler();
+
   void start(const vector<shared_ptr<Module>> &modules);
 
   void exec();
@@ -61,6 +64,7 @@ public:
   void quit();
 
 private:
+  shared_ptr<BpScheduler> m_bp_scheduler;
   shared_ptr<boost::asio::io_service> m_io_serv;
   InputQueue m_input_queue;
   OutputQueue m_output_queue;

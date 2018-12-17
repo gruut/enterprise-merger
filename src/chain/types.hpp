@@ -4,8 +4,18 @@
 #include <botan-2/botan/secmem.h>
 #include <string>
 #include <vector>
+#include <array>
 
 namespace gruut {
+
+enum class BpStatus {
+  IN_BOOT_WAIT,
+  IDLE,
+  PRIMARY,
+  SECONDARY,
+  ERROR_ON_SIGNERS,
+  UNKNOWN
+};
 
 enum class TransactionType { DIGESTS, CERTIFICATE };
 

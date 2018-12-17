@@ -1,13 +1,14 @@
 #pragma once
-#include "../../application.hpp"
+#include "../module.hpp"
 #include "../../chain/types.hpp"
 #include "../../services/input_queue.hpp"
-#include "../../services/message_proxy.hpp"
 #include "../../services/output_queue.hpp"
 #include "../../utils/time.hpp"
 #include "../../utils/type_converter.hpp"
+#include "../../services/setting.hpp"
 
 #include "boost/date_time/local_time/local_time.hpp"
+#include <boost/asio.hpp>
 #include <algorithm>
 #include <chrono>
 #include <memory>
@@ -15,15 +16,6 @@
 #include <vector>
 
 namespace gruut {
-
-enum class BpStatus {
-  IN_BOOT_WAIT,
-  IDLE,
-  PRIMARY,
-  SECONDARY,
-  ERROR_ON_SIGNERS,
-  UNKNOWN
-};
 
 const std::map<BpStatus, std::string> STATUS_STRING = {
     {BpStatus::IN_BOOT_WAIT, "IN_BOOT_WAIT"},
@@ -41,15 +33,16 @@ public:
   BpScheduler();
   void handleMessage(InputMsgEntry &msg);
   void start() override;
-  void setMyIds();
 
 private:
-  void setTxCollectorStatus(BpStatus stat);
+  void setMyIds();
   void sendPingMsg();
   void lockStatus();
   void updateRecvStatus(const std::string &id_b64, size_t timeslot,
                         BpStatus stat);
   void reschedule();
+
+  void postLockJob();
 
   std::string statusToString(BpStatus status);
   BpStatus stringToStatus(const std::string &str);
@@ -69,6 +62,7 @@ private:
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_lock_timer;
   OutputQueueAlt *m_output_queue;
+  Setting *m_setting;
 };
 
 } // namespace gruut

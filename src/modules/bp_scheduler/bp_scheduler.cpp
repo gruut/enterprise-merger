@@ -1,30 +1,30 @@
 #include "bp_scheduler.hpp"
+#include "../../application.hpp"
 
 namespace gruut {
 
 BpScheduler::BpScheduler() {
-  m_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
-  m_lock_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
   m_output_queue = OutputQueueAlt::getInstance();
+  m_setting = Setting::getInstance();
 }
 
 void BpScheduler::start() {
+  m_timer.reset(
+	  new boost::asio::deadline_timer(Application::app().getIoService()));
+  m_lock_timer.reset(
+	  new boost::asio::deadline_timer(Application::app().getIoService()));
   setMyIds();
-
   size_t timeslot = Time::now_int() / BP_INTERVAL;
   updateRecvStatus(m_my_mid_b64, timeslot, BpStatus::IN_BOOT_WAIT);
 
   m_up_time = Time::now_int();
-  sendPingMsg(); // start send ping!
   lockStatus();
+  sendPingMsg();
 }
 
 void BpScheduler::setMyIds() {
-  auto &setting = Application::app().getSetting();
-  id_type  my_mid = setting.getMyId();
-  local_chain_id_type my_cid = setting.getLocalChainId();
+  id_type  my_mid = m_setting->getMyId();
+  local_chain_id_type my_cid = m_setting->getLocalChainId();
 
   m_my_mid_b64 = TypeConverter::toBase64Str(my_mid);
   m_my_cid_b64 = TypeConverter::toBase64Str(my_cid);
@@ -119,17 +119,7 @@ void BpScheduler::reschedule() {
 }
 
 void BpScheduler::lockStatus() {
-  auto &io_service = Application::app().getIoService();
 
-  io_service.post([this]() {
-    size_t up_slot = m_up_time / BP_INTERVAL;
-    size_t current_slot = Time::now_int() / BP_INTERVAL;
-
-    if (up_slot == current_slot) {
-      return;
-    }
-    m_is_lock = true;
-  });
 
   size_t current_slot = Time::now_int() / BP_INTERVAL;
   time_t next_slot_begin = (current_slot + 1) * BP_INTERVAL;
@@ -140,10 +130,19 @@ void BpScheduler::lockStatus() {
   m_lock_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
     } else if (ec.value() == 0) {
+	  postLockJob();
       lockStatus();
     } else {
       throw;
     }
+  });
+}
+
+void BpScheduler::postLockJob(){
+  auto &io_service = Application::app().getIoService();
+  io_service.post([this]() {
+	Application::app().getTransactionCollector().setTxCollectStatus(m_current_status);
+	m_is_lock = true;
   });
 }
 
@@ -179,7 +178,6 @@ void BpScheduler::sendPingMsg() {
     m_output_queue->push(output_msg);
 
     m_is_lock = false;
-	setTxCollectorStatus(m_current_status);
     updateRecvStatus(m_my_mid_b64, current_slot, m_current_status);
   });
 
@@ -269,20 +267,6 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
   default:
     break;
-  }
-}
-
-void BpScheduler::setTxCollectorStatus(BpStatus stat){
-  auto &tx_collector = Application::app().getTransactionCollector();
-  switch(stat){
-  case BpStatus::PRIMARY:
-  case BpStatus::SECONDARY:{
-
-  }break;
-
-  default:{
-
-  }break;
   }
 }
 
