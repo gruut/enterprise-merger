@@ -1,3 +1,5 @@
+services:
+  - docker
 notifications:
   slack:
     secure: JK36/ekCeSFhBWynVFio7/CSJct2ccd+RNiCt6rc33EuYp2hYd7854LfSsqzFFU/E3ES+9rXVoOGeZ62YnEKeYF3CjatHVQ6NXXW5IPFshxLsOuJQvQ/DdERTf/mxvlbyNyErlS+dwhHZjU/sXTnj4P11xcZztMkV/ZIs3mceQnp6pdAhub/6aq3kxwvRsLE05Phvf5ar4mZyhlSUXIxHimlToOwvMDJ5x5zR8r9w0JDUkOU3qgfOQe3G+T8cXn3U1N84riRkCh8HCsaROaL0TGy8plHZ2OqFU8HbXvHFmVy7E94plhRDI/iNtWr7+VTE06qpjTO2CdjPNqt12Zc5vdBjXE743scKKsRfak/kamjQY2QIdhec4ng9h2DAiPFSHA5f44uoSaPVcUr8ThNSKUtOoT9EHCJCKSXCF2QlEgt/ULO+gHveJsyncjlLxQ7FqTzh9p2WVFVVZcghhYhVi85agAbpNtRZWeAEwq2Yz9Jdc3NMwUGS9tb1ZG9goVFU5nRFIixNxn4wGEan66LIgfaOlvZ6fAC895IrT6CuwPmt2Yqh/vsIgdKE0TfD8RtQ6RxzPV9GWioOefuRIUkeHYYyxwEyMcoBzYCJHBwUglSluhZx6uSHW4urUoCU7rDNLhiG4KsHzoVENsmypXplcP5mxVbs/szubEAdhzKdQQ=
@@ -8,76 +10,34 @@ os: linux
 compiler:
 - clang
 cache: ccache
-addons:
-  apt:
-    sources:
-    - sourceline: ppa:mhier/libboost-latest
-    packages:
-    - boost1.67
 before_install:
-- sudo apt-get update
+  - docker pull doscode/merger-build-env:1.1
+  - docker run -d --name build-env --rm -i -t doscode/merger-build-env:1.1 bash
 install:
-- sudo apt-get install -y python3-pip python3-setuptools
-- pip3 install cmake
-- |
-  if [[ -z $(ls | grep grpc) ]]; then
-    git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
-  fi
-- |
-  if [[ -z $(ls | grep botan) ]]; then
-    git clone https://github.com/randombit/botan.git
-  fi
-- |
-  if [[ -z $(ls | grep lz4) ]]; then
-    git clone https://github.com/lz4/lz4.git
-  fi
-before_script:
-- sudo -i  which clang
-- sudo -i clang --version
-- sudo ln -s /usr/local/clang-7.0.0/bin/clang++ /usr/bin/clang++
-- sudo ln -s /usr/local/clang-7.0.0/bin/clang /usr/bin/clang
 script:
-- |
-  cd lz4
-  sudo make install
-  cd ..
-- |
-  cd lib/leveldb
-  mkdir -p build
-  cd build
-  cmake -DCMAKE_BUILD_TYPE=Release ..
-  cmake --build .
-  cd ../../../
-- |
-  cd grpc
-  git submodule update --init
-  sudo make
-  sudo make install
-  cd third_party/protobuf
-  sudo make install
-  cd ../../..
-- |
-  cd botan
-  ./configure.py
-  sudo make install
-  sudo ln -s /usr/local/include/botan-2/botan /usr/local/include
-  cd ..
-- mkdir -p build && cd build
-- cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_COMPILER="clang++" ..
-- cp ../scripts/run-clang-tidy.py run-clang-tidy.py
-- pip3 install wheel
-- pip3 install pyyaml
-- python3 run-clang-tidy.py > lint_output.txt
-- |
-  if [[ -n $(grep "warning: " lint_output.txt) ]] || [[ -n $(grep "error: " lint_output.txt) ]]; then
-
-    echo "You must pass the clang tidy checks before submitting a pull request"
-    echo ""
-    grep --color -E '^|warning: |error: ' lint_output.txt
-    exit -1;
-  else
-    echo -e "\033[1;32m\xE2\x9C\x93 passed:\033[0m $1";
-  fi
-- ls
-- cmake --build .
-- ctest --verbose
+  - docker exec build-env sh -c "
+    mkdir -p workspace && cd workspace;
+    git clone --depth=50 --branch=$TRAVIS_BRANCH https://github.com/gruut/enterprise-merger.git
+    "
+  - docker exec build-env sh -c "
+    cd workspace/enterprise-merger/lib/leveldb;
+    mkdir -p build && cd build;
+    cmake -DCMAKE_BUILD_TYPE=Release ..;
+    cmake --build .
+    "
+  - docker exec build-env sh -c "
+    cd workspace/enterprise-merger/;
+    mkdir -p build && cd build;
+    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_COMPILER="clang++" ..
+    "
+  - docker exec build-env sh -c "
+    cd workspace/enterprise-merger/build/;
+    cp ../scripts/run-clang-tidy.py run-clang-tidy.py;
+    python3 run-clang-tidy.py > lint_output.txt;
+    ~/clang-tidy-checker.sh
+    "
+  - docker exec build-env sh -c "
+    cd workspace/enterprise-merger/build/;
+    cmake --build .;
+    ctest --verbose
+    "
