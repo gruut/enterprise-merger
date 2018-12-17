@@ -3,7 +3,7 @@
 
 namespace gruut {
 void MergerClient::sendMessage(MessageType msg_type,
-                               std::vector<uint64_t> &receiver_list,
+                               std::vector<id_type> &receiver_list,
                                std::vector<std::string> &packed_msg_list) {
 
   if (checkMergerMsgType(msg_type)) {
@@ -16,9 +16,9 @@ void MergerClient::sendMessage(MessageType msg_type,
 }
 
 void MergerClient::sendToSE(MessageType msg_type,
-                            std::vector<uint64_t> &receiver_list,
+                            std::vector<id_type> &receiver_list,
                             std::string &packed_msg) {
-  for (uint64_t se_id : receiver_list) {
+  for (servend_id_type &se_id : receiver_list) {
     // TODO: SE ID에 따른 ip와 port를 저장해 놓을 곳 필요.
     std::unique_ptr<GruutSeService::Stub> stub = GruutSeService::NewStub(
         CreateChannel("SE ip and port", InsecureChannelCredentials()));
@@ -39,9 +39,9 @@ void MergerClient::sendToSE(MessageType msg_type,
 }
 
 void MergerClient::sendToMerger(MessageType msg_type,
-                                std::vector<uint64_t> &receiver_list,
+                                std::vector<id_type> &receiver_list,
                                 std::string &packed_msg) {
-  for (uint64_t merger_id : receiver_list) {
+  for (merger_id_type &merger_id : receiver_list) {
     // TODO: Merger ID에 따른 ip와 port를 저장해 놓을 곳 필요.
     std::unique_ptr<MergerCommunication::Stub> stub =
         MergerCommunication::NewStub(
@@ -61,7 +61,7 @@ void MergerClient::sendToMerger(MessageType msg_type,
 }
 
 void MergerClient::sendToSigner(MessageType msg_type,
-                                std::vector<uint64_t> &receiver_list,
+                                std::vector<id_type> &receiver_list,
                                 std::vector<std::string> &packed_msg_list) {
 
   int num_of_signer = receiver_list.size();

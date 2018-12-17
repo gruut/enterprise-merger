@@ -17,16 +17,16 @@ PartialBlock
 BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest,
                                      vector<Transaction> &transactions) {
 
+  Setting *setting = Setting::getInstance();
+
   Storage *storage = Storage::getInstance();
   tuple<string, string, size_t> latest_block_info =
       storage->findLatestBlockBasicInfo();
 
   PartialBlock block;
 
-  // TODO: 설정파일이 없어서 하드코딩(1)
-  block.merger_id = TypeConverter::integerToBytes((uint64_t)1); // for 8-byte
-  // TODO: 위와 같은 이유로 임시값 할당
-  block.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(1);
+  block.merger_id = setting->getMyId();
+  block.chain_id = setting->getLocalChainId();
 
   if (std::get<0>(latest_block_info).empty())
     block.height = 1; // this is genesis block
@@ -61,8 +61,8 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
     prev_header_id_b64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     prev_header_hash_b64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
   } else {
-    prev_header_id_b64 = std::get<1>(latest_block_info);
-    prev_header_hash_b64 = std::get<2>(latest_block_info);
+    prev_header_id_b64 = std::get<0>(latest_block_info);
+    prev_header_hash_b64 = std::get<1>(latest_block_info);
   }
 
   vector<transaction_id_type> transaction_ids;
@@ -97,13 +97,10 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
                  });
   block_header["txids"] = tx_ids;
 
-  vector<unordered_map<signer_id_type, signature_type>> sig_map;
   for (size_t i = 0; i < support_sigs.size(); ++i) {
-    // TODO :: 나중에  signer 아이디 형태를 바꿀 때 수정할 것
-    bytes signer_id_bytes =
-        TypeConverter::integerToBytes(support_sigs[i].signer_id);
+
     block_header["SSig"][i]["sID"] =
-        TypeConverter::toBase64Str(signer_id_bytes);
+        TypeConverter::toBase64Str(support_sigs[i].signer_id);
     block_header["SSig"][i]["sig"] =
         TypeConverter::toBase64Str(support_sigs[i].signer_signature);
   }
@@ -168,9 +165,9 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   // TODO : change to use OutputQueueAlt
 
   auto msg_header_msg =
-      std::make_tuple(MessageType::MSG_HEADER, vector<uint64_t>{}, msg_header);
+      std::make_tuple(MessageType::MSG_HEADER, vector<id_type>{}, msg_header);
   auto msg_block_msg =
-      std::make_tuple(MessageType::MSG_BLOCK, vector<uint64_t>{}, msg_block);
+      std::make_tuple(MessageType::MSG_BLOCK, vector<id_type>{}, msg_block);
 
   MessageProxy proxy;
   proxy.deliverOutputMessage(msg_header_msg);
@@ -179,7 +176,7 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
 
 void BlockGenerator::toJson(json &j, const Transaction &tx) {
   auto tx_id = TypeConverter::toBase64Str(tx.transaction_id);
-  auto tx_time = TypeConverter::toString(tx.sent_time);
+  auto tx_time = to_string(tx.sent_time);
   auto requester_id = TypeConverter::toBase64Str(tx.requestor_id);
   string transaction_type;
   if (tx.transaction_type == TransactionType::CERTIFICATE)
