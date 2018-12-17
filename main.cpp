@@ -3,6 +3,7 @@
 #include "cxxopts.hpp"
 
 #include "src/application.hpp"
+#include "src/services/setting.hpp"
 #include "src/modules/message_fetcher/message_fetcher.hpp"
 #include "src/modules/message_fetcher/out_message_fetcher.hpp"
 #include "src/modules/communication/communication.hpp"
@@ -62,7 +63,11 @@ int main(int argc, char *argv[]) {
 
     json setting_json = parseArg(argc,argv);
 
-    Application::app().setup(setting_json);
+    Setting * setting = Setting::getInstance();
+    if(!setting->setJson(setting_json)) {
+      cout << "Setting file is not a valid json " << endl;
+      return 1;
+    }
 
     vector<shared_ptr<Module>> module_vector;
     module_vector.push_back(make_shared<Communication>());
@@ -73,6 +78,8 @@ int main(int argc, char *argv[]) {
     Application::app().exec();
     Application::app().quit();
 
+    Setting::destroyInstance();
+    Storage::destroyInstance();
 
   return 0;
 }

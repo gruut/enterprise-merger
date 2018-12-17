@@ -201,9 +201,9 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
                                       string dhx, string dhy,
                                       uint64_t timestamp) {
 
-  auto &setting = Application::app().getSetting();
-  string rsa_sk_pem = setting.getMySK();
-  string rsa_sk_pass = setting.getMyPass();
+  Setting *setting = Setting::getInstance();
+  string rsa_sk_pem = setting->getMySK();
+  string rsa_sk_pass = setting->getMyPass();
 
   BytesBuilder builder;
   builder.appendB64(merger_nonce);
