@@ -3,9 +3,11 @@
 #include "../chain/signature.hpp"
 #include "../chain/types.hpp"
 #include "../utils/bytes_builder.hpp"
+#include "../utils/compressor.hpp"
 #include "../utils/rsa.hpp"
 #include "../utils/time.hpp"
 #include "../utils/type_converter.hpp"
+#include "message_proxy.hpp"
 
 using namespace std;
 
@@ -13,92 +15,177 @@ namespace gruut {
 PartialBlock
 BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest,
                                      vector<Transaction> &transactions) {
+
+  Storage *storage = Storage::getInstance();
+  tuple<string, string, size_t> latest_block_info =
+      storage->findLatestBlockBasicInfo();
+
   PartialBlock block;
 
   // TODO: 설정파일이 없어서 하드코딩(1)
-  block.merger_id = TypeConverter::integerToBytes(1);
+  block.merger_id = TypeConverter::integerToBytes((uint64_t)1); // for 8-byte
   // TODO: 위와 같은 이유로 임시값 할당
   block.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(1);
-  // TODO: 위와 같은 이유로 임시값 할당
-  block.height = 1;
+
+  if (std::get<0>(latest_block_info).empty())
+    block.height = 1; // this is genesis block
+  else
+    block.height = std::get<2>(latest_block_info) + 1;
+
   block.transaction_root = transactions_digest.back();
   block.transactions = transactions;
 
   return block;
 }
 
-Block BlockGenerator::generateBlock(PartialBlock &partial_block,
-                                    vector<Signature> &signatures,
-                                    MerkleTree &merkle_tree) {
-  Block block(partial_block);
-  BytesBuilder signature_builder;
+void BlockGenerator::generateBlock(PartialBlock &partial_block,
+                                   vector<Signature> &support_sigs,
+                                   MerkleTree &merkle_tree) {
 
-  // Meta
-  block.compression_algo_type = config::COMPRESSION_ALGO_TYPE;
-  string compression_algo_type_str;
-  if (block.compression_algo_type == CompressionAlgorithmType::LZ4)
-    compression_algo_type_str = "LZ4";
-  else
-    compression_algo_type_str = "NONE";
-  signature_builder.append(compression_algo_type_str);
+  // step 1) preparing basic data
 
-  // TODO: 임시처리
-  block.header_length = 1;
-  signature_builder.append(block.header_length);
+  Storage *storage = Storage::getInstance();
 
-  // Header
-  // TODO: 임시처리
-  block.version = 1;
-  signature_builder.append(block.version);
+  block_version_type version = 1;
+  tuple<string, string, size_t> latest_block_info =
+      storage->findLatestBlockBasicInfo();
 
-  signature_builder.append(block.chain_id);
+  auto timestamp = Time::now_int();
 
-  // TODO: 임시처리
-  block.previous_header_hash = Sha256::hash("1");
-  signature_builder.append(block.previous_header_hash);
+  std::string prev_header_id_b64;
+  std::string prev_header_hash_b64;
 
-  BytesBuilder builder;
-  builder.append(block.chain_id);
-  builder.append(block.height);
-  builder.append(block.merger_id);
-  // TODO: 과거 블럭에 대한 해시를 계산할 수 없어서 현재 블럭해시로 입력
-  block.previous_block_id = Sha256::hash(builder.getString());
-  signature_builder.append(block.previous_block_id);
+  if (std::get<0>(latest_block_info).empty()) { // this is genesis block
+    prev_header_id_b64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    prev_header_hash_b64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+  } else {
+    prev_header_id_b64 = std::get<1>(latest_block_info);
+    prev_header_hash_b64 = std::get<2>(latest_block_info);
+  }
 
-  block.block_id = Sha256::hash(builder.getString());
-  signature_builder.append(block.block_id);
-
-  block.timestamp = Time::now_int();
-  signature_builder.append(block.timestamp);
-
-  signature_builder.append(block.height);
-
-  transform(block.transactions.begin(), block.transactions.end(),
-            back_inserter(block.transaction_ids),
+  vector<transaction_id_type> transaction_ids;
+  transform(partial_block.transactions.begin(),
+            partial_block.transactions.end(), back_inserter(transaction_ids),
             [](Transaction &t) { return t.transaction_id; });
 
-  signature_builder.append(block.merger_id);
+  BytesBuilder b_id_builder;
+  b_id_builder.append(partial_block.chain_id);
+  b_id_builder.append(partial_block.height);
+  b_id_builder.append(partial_block.merger_id);
+  auto hashed_b_id = Sha256::hash(b_id_builder.getString());
 
-  BytesBuilder signer_signatures_builder;
-  block.signer_signatures = move(signatures);
-  for_each(block.signer_signatures.begin(), block.signer_signatures.end(),
-           [&signer_signatures_builder](const Signature &signer_sig) {
-             signer_signatures_builder.append(signer_sig.signer_id);
-             auto signer_sig_bytes = signer_sig.signer_signature;
-             signer_signatures_builder.append(signer_sig_bytes);
-           });
-  auto signer_sig_bytes = signer_signatures_builder.getBytes();
-  signature_builder.append(signer_sig_bytes);
+  // step 2) making block_header (JSON)
 
-  // Body
-  block.merkle_tree = merkle_tree;
-  block.transactions_count = block.transactions.size();
+  json block_header;
+  block_header["ver"] = to_string(version);
+  block_header["cID"] = TypeConverter::toBase64Str(partial_block.chain_id);
+  block_header["prevH"] = prev_header_hash_b64;
+  block_header["prevbID"] = prev_header_id_b64;
+  block_header["bID"] = TypeConverter::toBase64Str(hashed_b_id);
+  block_header["time"] = to_string(timestamp);
+  block_header["hgt"] = to_string(partial_block.height);
+  block_header["txrt"] =
+      TypeConverter::toBase64Str(partial_block.transaction_root);
 
-  auto sig_bytes = signature_builder.getBytes();
-  // TODO: Config로 부터 sk 읽어와야 함
-  string rsa_sk = "";
-  block.signature = RSA::doSign(rsa_sk, sig_bytes, true);
+  vector<string> tx_ids;
+  std::transform(transaction_ids.begin(), transaction_ids.end(),
+                 back_inserter(tx_ids),
+                 [](const transaction_id_type &transaction_id) {
+                   return TypeConverter::toBase64Str(transaction_id);
+                 });
+  block_header["txids"] = tx_ids;
 
-  return block;
+  vector<unordered_map<signer_id_type, signature_type>> sig_map;
+  for (size_t i = 0; i < support_sigs.size(); ++i) {
+    // TODO :: 나중에  signer 아이디 형태를 바꿀 때 수정할 것
+    bytes signer_id_bytes =
+        TypeConverter::integerToBytes(support_sigs[i].signer_id);
+    block_header["SSig"][i]["sID"] =
+        TypeConverter::toBase64Str(signer_id_bytes);
+    block_header["SSig"][i]["sig"] =
+        TypeConverter::toBase64Str(support_sigs[i].signer_signature);
+  }
+
+  block_header["mID"] = TypeConverter::toBase64Str(partial_block.merger_id);
+
+  // step-3) making block_raw with mSig
+
+  header_length_type header_length = 1;
+  bytes compressed_json = Compressor::compressData(
+      TypeConverter::stringToBytes(block_header.dump()));
+
+  BytesBuilder block_raw_builder;
+  block_raw_builder.append(
+      static_cast<uint8_t>(config::COMPRESSION_ALGO_TYPE)); // 1-byte
+  block_raw_builder.append(header_length);                  // 4-bytes
+  block_raw_builder.append(compressed_json);
+
+  string rsa_sk = ""; // TODO : from config
+  auto signature = RSA::doSign(rsa_sk, block_raw_builder.getBytes(), true);
+  block_raw_builder.append(signature); // == mSig
+
+  bytes block_raw_bytes = block_raw_builder.getBytes();
+  std::string block_raw_b64 = TypeConverter::toBase64Str(block_raw_bytes);
+
+  // step-4) making block_body (JSON)
+  json block_body;
+  vector<string> mtree;
+  auto tree_nodes_vector = merkle_tree.getMerkleTree();
+  std::transform(tree_nodes_vector.begin(), tree_nodes_vector.end(),
+                 back_inserter(mtree), [](sha256 &transaction_id) {
+                   return TypeConverter::toBase64Str(transaction_id);
+                 });
+  block_body["mtree"] = mtree;
+  block_body["txCnt"] = to_string(partial_block.transactions.size());
+
+  vector<json> transactions_arr;
+  std::transform(partial_block.transactions.begin(),
+                 partial_block.transactions.end(),
+                 back_inserter(transactions_arr), [this](Transaction &tx) {
+                   json transaction_json;
+                   this->toJson(transaction_json, tx);
+                   return transaction_json;
+                 });
+  block_body["tx"] = transactions_arr;
+
+  // step-5) save block
+
+  storage->saveBlock(block_raw_b64, block_header, block_body);
+
+  // setp-6) send blocks to others
+
+  json msg_header; // MSG_HEADER = 0xB5
+  msg_header["blockraw"] = block_raw_b64;
+
+  json msg_block; // MSG_BLOCK = 0xB4
+  msg_block["blockraw"] = block_raw_b64;
+  msg_block["tx"] = block_body["tx"];
+
+  // TODO : change to use OutputQueueAlt
+
+  auto msg_header_msg =
+      std::make_tuple(MessageType::MSG_HEADER, vector<uint64_t>{}, msg_header);
+  auto msg_block_msg =
+      std::make_tuple(MessageType::MSG_BLOCK, vector<uint64_t>{}, msg_block);
+
+  MessageProxy proxy;
+  proxy.deliverOutputMessage(msg_header_msg);
+  proxy.deliverOutputMessage(msg_block_msg);
+}
+
+void BlockGenerator::toJson(json &j, const Transaction &tx) {
+  auto tx_id = TypeConverter::toBase64Str(tx.transaction_id);
+  auto tx_time = TypeConverter::toString(tx.sent_time);
+  auto requester_id = TypeConverter::toBase64Str(tx.requestor_id);
+  string transaction_type;
+  if (tx.transaction_type == TransactionType::CERTIFICATE)
+    transaction_type = TXTYPE_CERTIFICATES;
+  else
+    transaction_type = TXTYPE_DIGESTS;
+  auto signature = TypeConverter::toBase64Str(tx.signature);
+
+  j = json{{"txID", tx_id},       {"time", tx_time},
+           {"rID", requester_id}, {"type", transaction_type},
+           {"rSig", signature},   {"content", tx.content_list}};
 }
 } // namespace gruut

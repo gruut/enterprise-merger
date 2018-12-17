@@ -10,10 +10,12 @@
 #include <botan/x509cert.h>
 #include <iostream>
 #include <string>
+#include <vector>
 
 class RSA {
 public:
-  static std::vector<uint8_t> doSign(std::string &rsa_sk_pem, std::string &msg,
+  static std::vector<uint8_t> doSign(const std::string &rsa_sk_pem,
+                                     const std::string &msg,
                                      bool pkcs1v15 = false) {
     try {
       auto rsa_sk = getPrivateKey(rsa_sk_pem);
@@ -29,8 +31,8 @@ public:
     }
   }
 
-  static std::vector<uint8_t> doSign(std::string &rsa_sk_pem,
-                                     std::vector<uint8_t> &data,
+  static std::vector<uint8_t> doSign(const std::string &rsa_sk_pem,
+                                     const std::vector<uint8_t> &data,
                                      bool pkcs1v15 = false) {
     try {
       auto rsa_sk = getPrivateKey(rsa_sk_pem);

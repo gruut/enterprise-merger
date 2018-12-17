@@ -52,8 +52,7 @@ void SignatureRequester::startSignatureCollectTimer(
         auto signatures = signature_pool.fetchN(signatures_size);
 
         BlockGenerator generator;
-        Block block = generator.generateBlock(temp_partial_block, signatures,
-                                              m_merkle_tree);
+        generator.generateBlock(temp_partial_block, signatures, m_merkle_tree);
       }
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;

@@ -49,6 +49,7 @@ public:
 
   bool saveBlock(const string &block_raw, json &block_header, json &block_body);
   pair<string, string> findLatestHashAndHeight();
+  tuple<string, string, size_t> findLatestBlockBasicInfo();
   vector<string> findLatestTxIdList();
   string findCertificate(const string &user_id,
                          const timestamp_type &at_this_time = 0);

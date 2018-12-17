@@ -6,7 +6,11 @@
 #include <vector>
 
 namespace gruut {
+
 enum class TransactionType { DIGESTS, CERTIFICATE };
+
+const std::string TXTYPE_CERTIFICATES = "CERTIFICATES";
+const std::string TXTYPE_DIGESTS = "DIGESTS";
 
 enum class BlockType { PARTIAL, NORMAL };
 
@@ -27,6 +31,7 @@ enum class MessageType : uint8_t {
   MSG_REQ_SSIG = 0xB2,
   MSG_SSIG = 0xB3,
   MSG_BLOCK = 0xB4,
+  MSG_HEADER = 0xB5,
   MSG_ERROR = 0xFF
 };
 

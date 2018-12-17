@@ -56,7 +56,7 @@ public:
     return vec;
   }
 
-  inline static std::vector<uint8_t> stringToBytes(std::string &input) {
+  inline static std::vector<uint8_t> stringToBytes(const std::string &input) {
     return std::vector<uint8_t>(input.cbegin(), input.cend());
   }
 

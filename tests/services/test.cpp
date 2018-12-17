@@ -246,3 +246,49 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
   }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
+  BOOST_AUTO_TEST_CASE(save_block_by_block_object) {
+    PartialBlock p_block;
+    p_block.merger_id = TypeConverter::integerToBytes(1);
+    p_block.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(1);
+    p_block.height = 1;
+    p_block.transaction_root = vector<uint8_t>(4, 1);
+
+    Transaction t;
+    string tx_id_str = "1";
+    t.transaction_id = TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(TypeConverter::stringToBytes(tx_id_str));
+    auto now = Time::now();
+    t.sent_time = TypeConverter::stringToBytes(now);
+    t.requestor_id = TypeConverter::integerToBytes(1);
+    t.transaction_type = TransactionType::DIGESTS;
+    t.signature = TypeConverter::integerToBytes(1);
+    t.content_list.emplace_back("Hello world!");
+    p_block.transactions.push_back(t);
+
+    vector<Signature> signature;
+    signature.push_back({1, TypeConverter::integerToBytes(1)});
+
+    MerkleTree tree;
+    vector<Transaction> transactions = {t};
+    tree.generate(transactions);
+
+    BlockGenerator generator;
+    generator.generateBlock(p_block, signature, tree);
+
+
+    Storage *storage = Storage::getInstance();
+
+    auto hash_and_height = storage->findLatestHashAndHeight();
+    BOOST_CHECK_EQUAL(hash_and_height.second, "1");
+
+    auto latest_list = storage->findLatestTxIdList();
+    auto tx_id = latest_list[0];
+    string encoded_tx_id = TypeConverter::toBase64Str(t.transaction_id);
+    BOOST_CHECK_EQUAL(tx_id, encoded_tx_id);
+
+    storage->deleteAllDirectory();
+    Storage::destroyInstance();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
