@@ -64,7 +64,7 @@ Application::Application() {
   m_transaction_pool = make_shared<TransactionPool>();
   m_transaction_collector = make_shared<TransactionCollector>();
   m_signature_pool = make_shared<SignaturePool>();
-
+  m_setting = make_shared<Setting>();
   m_thread_group = make_shared<std::vector<std::thread>>();
 }
 

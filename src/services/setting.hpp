@@ -46,7 +46,7 @@ private:
   std::vector<MergerInfo> m_mergers;
 
 public:
-  Setting();
+  Setting() {}
 
   Setting(json &setting_json) {
     if (!setJson(setting_json)) {
