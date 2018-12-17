@@ -383,8 +383,8 @@ string Storage::findCertificate(const string &user_id,
         }
       }
     }
-  } else
-    cert.assign("");
+  }
+
   return cert;
 }
 
@@ -484,12 +484,12 @@ vector<string> Storage::findSibling(const string &tx_id) {
   return siblings;
 }
 
-string Storage::findCertificate(const uint64_t user_id,
+string Storage::findCertificate(const signer_id_type &user_id,
                                 const timestamp_type &at_this_time) {
-  BytesBuilder b64_id_builder;
-  b64_id_builder.append(user_id);
+  // BytesBuilder b64_id_builder;
+  // b64_id_builder.append(user_id);
+  string user_id_b64 = TypeConverter::toBase64Str(user_id);
 
-  return findCertificate(macaron::Base64::Encode(b64_id_builder.getString()),
-                         at_this_time);
+  return findCertificate(user_id_b64);
 }
 } // namespace gruut

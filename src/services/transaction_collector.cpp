@@ -5,8 +5,9 @@
 #include "../utils/rsa.hpp"
 #include "../utils/type_converter.hpp"
 #include <boost/assert.hpp>
-#include <botan/data_src.h>
-#include <botan/x509_key.h>
+#include <botan-2/botan/base64.h>
+#include <botan-2/botan/data_src.h>
+#include <botan-2/botan/x509_key.h>
 #include <iostream>
 
 using namespace std;
@@ -32,7 +33,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
     bytes_builder.append(txid_bytes);
 
     string t_str = message_body_json["time"].get<string>();
-    auto sent_time = TypeConverter::digitStringToBytes(t_str);
+    timestamp_type sent_time = (timestamp_type)stoll(t_str);
     transaction.sent_time = sent_time;
     bytes_builder.append(sent_time);
 
@@ -42,7 +43,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
     bytes_builder.append(requestor_id_vector);
 
     string transaction_type_string = message_body_json["type"].get<string>();
-    if (transaction_type_string == "digests")
+    if (transaction_type_string == TXTYPE_DIGESTS)
       transaction.transaction_type = TransactionType::DIGESTS;
     else
       transaction.transaction_type = TransactionType::CERTIFICATE;
@@ -65,21 +66,21 @@ void TransactionCollector::handleMessage(json message_body_json) {
     transaction.signature =
         vector<uint8_t>(rsig_vector.cbegin(), rsig_vector.cend());
 
-    // TODO: Service endpoint로부터 public_key를 받을 수 있을 때 63-71줄 제거할
-    // 것.
-    string endpoint_public_key =
-        "-----BEGIN PUBLIC KEY-----\n"
-        "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDCtTEic76GBqUetJ1XXrrWZcxd\n"
-        "8vJr2raWRqBjbGpSzLqa3YLvVxVeK49iSlI+5uLX/2WFJdhKAWoqO+03oH4TDSup\n"
-        "olzZrwMFSylxGwR5jPmoNHDMS3nnzUkBtdr3NCfq1C34fQV0iUGdlPtJaiiTBQPM\n"
-        "t4KUcQ1TaazB8TzhqwIDAQAB\n"
-        "-----END PUBLIC KEY-----";
-    Botan::DataSource_Memory pk_datasource(endpoint_public_key);
-    unique_ptr<Botan::Public_Key> public_key(
-        Botan::X509::load_key(pk_datasource));
+    Setting *setting = Setting::getInstance();
+
+    std::vector<ServiceEndpointInfo> servend_info =
+        setting->getServiceEndpointInfo();
+
+    string endpoint_cert;
+
+    for (auto &item : servend_info) {
+      if (item.id == requestor_id_vector) {
+        endpoint_cert = item.cert;
+      }
+    }
 
     auto signature_message_bytes = bytes_builder.getBytes();
-    bool is_verified = RSA::doVerify(*public_key, signature_message_bytes,
+    bool is_verified = RSA::doVerify(endpoint_cert, signature_message_bytes,
                                      transaction.signature, true);
 
     if (is_verified) {

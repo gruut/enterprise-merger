@@ -14,7 +14,7 @@ namespace gruut {
 class MessageHandler {
 public:
   void unpackMsg(std::string &packed_msg, grpc::Status &rpc_status,
-                 uint64_t &receiver_id);
+                 id_type &receiver_id);
   void packMsg(OutputMessage &output_msg);
 
 private:

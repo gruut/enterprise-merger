@@ -6,10 +6,14 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
+
 namespace gruut {
-struct Transaction {
+class Transaction {
+public:
+  Transaction() { std::cout << "!!!" << std::endl; };
   transaction_id_type transaction_id;
-  std::vector<uint8_t> sent_time;
+  timestamp_type sent_time;
   requestor_id_type requestor_id;
   TransactionType transaction_type;
   signature_type signature;
@@ -18,7 +22,7 @@ struct Transaction {
   virtual bool isNull() { return false; }
 };
 
-struct NullTransaction : public Transaction {
+class NullTransaction : public Transaction {
   virtual bool isNull() { return true; }
 };
 } // namespace gruut

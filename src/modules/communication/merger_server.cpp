@@ -54,10 +54,10 @@ void RecvFromMerger::proceed() {
 
     std::string packed_msg = m_request.data();
     Status rpc_status;
-    uint64_t receiver_id;
+    id_type recv_id;
 
     MessageHandler message_handler;
-    message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
+    message_handler.unpackMsg(packed_msg, rpc_status, recv_id);
 
     MergerDataReply m_reply;
     m_receive_status = RpcCallStatus::FINISH;
@@ -85,7 +85,7 @@ void RecvFromSE::proceed() {
     std::string packed_msg = m_request.message();
 
     Status rpc_status;
-    uint64_t receiver_id;
+    servend_id_type receiver_id;
 
     MessageHandler message_handler;
     message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
@@ -118,10 +118,13 @@ void OpenChannel::proceed() {
   } break;
 
   case RpcCallStatus::PROCESS: {
-    uint64_t receiver_id;
+    id_type receiver_id;
+
+    // TODO :: 고칩시다!
     std::string id(sizeof(uint64_t) - m_request.sender().length(), 0x00);
     id += m_request.sender();
     std::memcpy(&receiver_id, &id[0], sizeof(uint64_t));
+
     m_rpc_receiver_list->setReqSsig(receiver_id, &m_stream, this);
     m_receive_status = RpcCallStatus::WAIT;
   } break;
@@ -154,7 +157,7 @@ void Join::proceed() {
     std::string packed_msg = m_request.message();
 
     Status rpc_status;
-    uint64_t receiver_id;
+    id_type receiver_id;
 
     MessageHandler message_handler;
     message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
@@ -189,7 +192,7 @@ void DHKeyEx::proceed() {
 
     std::string packed_msg = m_request.message();
     Status rpc_status;
-    uint64_t receiver_id;
+    id_type receiver_id;
 
     MessageHandler message_handler;
     message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
@@ -225,7 +228,7 @@ void KeyExFinished::proceed() {
 
     std::string packed_msg = m_request.message();
     Status rpc_status;
-    uint64_t receiver_id;
+    id_type receiver_id;
 
     MessageHandler message_handler;
     message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
@@ -259,7 +262,7 @@ void SigSend::proceed() {
 
     std::string packed_msg = m_request.message();
     Status rpc_status;
-    uint64_t receiver_id;
+    id_type receiver_id;
 
     MessageHandler message_handler;
     message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
