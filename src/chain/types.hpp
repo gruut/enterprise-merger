@@ -85,6 +85,8 @@ using content_type = std::string;
 
 using hmac_key_type = Botan::secure_vector<uint8_t>;
 
+using id_type = bytes;
+
 // Message
 using message_version_type = uint8_t;
 } // namespace gruut

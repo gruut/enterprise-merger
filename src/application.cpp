@@ -11,6 +11,8 @@ OutputQueue &Application::getOutputQueue() { return m_output_queue; }
 
 SignerPool &Application::getSignerPool() { return *m_signer_pool; }
 
+Setting &Application::getSetting() { return *m_setting; }
+
 SignerPoolManager &Application::getSignerPoolManager() {
   return *m_signer_pool_manager;
 }
@@ -24,6 +26,10 @@ TransactionCollector &Application::getTransactionCollector() {
 }
 
 SignaturePool &Application::getSignaturePool() { return *m_signature_pool; }
+
+void Application::setup(json &setting_json) {
+  m_setting.reset(new Setting(setting_json));
+}
 
 void Application::start(const vector<shared_ptr<Module>> &modules) {
   try {
