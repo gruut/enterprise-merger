@@ -46,9 +46,9 @@ void TransactionGenerator::generate(Signer &signer) {
     signature_message.insert(signature_message.cend(), signer.pk_cert.cbegin(),
                              signer.pk_cert.cend());
 
-    auto &setting = Application::app().getSetting();
-    string rsa_sk_pem = setting.getMySK();
-    string rsa_sk_pass = setting.getMyPass();
+    Setting *setting = Setting::getInstance();
+    string rsa_sk_pem = setting->getMySK();
+    string rsa_sk_pass = setting->getMyPass();
 
     new_transaction.signature =
         RSA::doSign(rsa_sk_pem, signature_message, true, rsa_sk_pass);

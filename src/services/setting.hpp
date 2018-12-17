@@ -6,6 +6,7 @@
 
 #include "../../include/nlohmann/json.hpp"
 #include "../chain/types.hpp"
+#include "../utils/template_singleton.hpp"
 #include "../utils/type_converter.hpp"
 
 namespace gruut {
@@ -30,7 +31,7 @@ struct MergerInfo {
   std::string cert;
 };
 
-class Setting {
+class Setting : public TemplateSingleton<Setting> {
 private:
   id_type m_id;
   std::string m_sk;
@@ -46,7 +47,7 @@ private:
   std::vector<MergerInfo> m_mergers;
 
 public:
-  Setting();
+  Setting() {}
 
   Setting(json &setting_json) {
     if (!setJson(setting_json)) {
