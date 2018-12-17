@@ -44,8 +44,6 @@ public:
 
   SignerPool &getSignerPool();
 
-  Setting &getSetting();
-
   SignerPoolManager &getSignerPoolManager();
 
   TransactionPool &getTransactionPool();
@@ -55,8 +53,6 @@ public:
   SignaturePool &getSignaturePool();
 
   PartialBlock &getTemporaryPartialBlock();
-
-  void setup(json &setting_json);
 
   void start(const vector<shared_ptr<Module>> &modules);
 
@@ -74,8 +70,6 @@ private:
   shared_ptr<TransactionPool> m_transaction_pool;
   shared_ptr<TransactionCollector> m_transaction_collector;
   shared_ptr<SignaturePool> m_signature_pool;
-
-  shared_ptr<Setting> m_setting;
 
   shared_ptr<std::vector<std::thread>> m_thread_group;
   Application();
