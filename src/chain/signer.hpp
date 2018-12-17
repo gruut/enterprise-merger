@@ -17,7 +17,7 @@ struct Signer {
 
   bool isNew() {
     auto cert = Storage::getInstance()->findCertificate(user_id);
-    return cert.empty();
+    return (cert.empty() || cert != pk_cert);
   }
 };
 } // namespace gruut

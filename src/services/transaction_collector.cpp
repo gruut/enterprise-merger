@@ -33,7 +33,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
     bytes_builder.append(txid_bytes);
 
     string t_str = message_body_json["time"].get<string>();
-    timestamp_type sent_time = (timestamp_type)stoll(t_str);
+    auto sent_time = (timestamp_type)stoll(t_str);
     transaction.sent_time = sent_time;
     bytes_builder.append(sent_time);
 

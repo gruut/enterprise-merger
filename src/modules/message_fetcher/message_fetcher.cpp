@@ -4,6 +4,7 @@
 
 #include "../../application.hpp"
 #include "../../chain/types.hpp"
+#include "../../config/config.hpp"
 #include "../../services/message_proxy.hpp"
 #include "message_fetcher.hpp"
 
@@ -28,8 +29,8 @@ void MessageFetcher::fetch() {
     }
   });
 
-  // TODO: 임시로 1000(1초)
-  m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
+  m_timer->expires_from_now(
+      boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       std::cout << "MessageFetcher: Timer was cancelled or retriggered."

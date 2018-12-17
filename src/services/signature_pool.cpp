@@ -43,38 +43,39 @@ bool SignaturePool::empty() { return size() == 0; }
 bool SignaturePool::verifySignature(signer_id_type &receiver_id,
                                     json &message_body_json) {
   auto pk_cert = Application::app().getSignerPool().getPkCert(receiver_id);
-  if (pk_cert != "") {
-    BytesBuilder bytes_builder;
-
-    auto not_decoded_id = message_body_json["sID"].get<string>();
-    auto signer_id_str =
-        TypeConverter::toString(TypeConverter::decodeBase64(not_decoded_id));
-    auto signer_id_vector = TypeConverter::digitStringToBytes(signer_id_str);
-    bytes_builder.append(signer_id_vector);
-
-    auto timestamp = message_body_json["time"].get<string>();
-    auto timestamp_bytes = TypeConverter::digitStringToBytes(timestamp);
-    bytes_builder.append(timestamp_bytes);
-
-    PartialBlock &partial_block = Application::app().getTemporaryPartialBlock();
-    bytes_builder.append(partial_block.merger_id);
-
-    bytes_builder.append(partial_block.height);
-
-    auto tx_root = partial_block.transaction_root;
-    bytes_builder.append(tx_root);
-
-    auto signer_signature_str = message_body_json["sig"].get<string>();
-    auto signer_signature_bytes =
-        TypeConverter::decodeBase64(signer_signature_str);
-    auto signature_message_bytes = bytes_builder.getBytes();
-
-    bool verify_result = RSA::doVerify(pk_cert, signature_message_bytes,
-                                       signer_signature_bytes, true);
-
-    return verify_result;
+  if (pk_cert.empty()) {
+    Storage *storage = Storage::getInstance();
+    pk_cert = storage->findCertificate(receiver_id);
   }
 
-  return false;
+  if (pk_cert.empty()) {
+    return false;
+  }
+
+  BytesBuilder bytes_builder;
+
+  auto signer_id_b64 = message_body_json["sID"].get<string>();
+  signer_id_type signer_id = TypeConverter::decodeBase64(signer_id_b64);
+  bytes_builder.append(signer_id);
+
+  auto timestamp =
+      (timestamp_type)stoll(message_body_json["time"].get<string>());
+  bytes_builder.append(timestamp);
+
+  PartialBlock &partial_block = Application::app().getTemporaryPartialBlock();
+
+  bytes_builder.append(partial_block.merger_id);
+  bytes_builder.append(partial_block.height);
+  bytes_builder.append(partial_block.transaction_root);
+
+  auto signer_signature_str = message_body_json["sig"].get<string>();
+  auto signer_signature_bytes =
+      TypeConverter::decodeBase64(signer_signature_str);
+  auto signature_message_bytes = bytes_builder.getBytes();
+
+  bool verify_result = RSA::doVerify(pk_cert, signature_message_bytes,
+                                     signer_signature_bytes, true);
+
+  return verify_result;
 }
 } // namespace gruut

@@ -43,10 +43,8 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   MessageProxy proxy;
   vector<signer_id_type> receiver_list{recv_id};
 
-  auto now = std::chrono::duration_cast<std::chrono::seconds>(
-                 std::chrono::system_clock::now().time_since_epoch())
-                 .count();
-  string timestamp = to_string(now);
+  auto current_time = Time::now_int();
+  string timestamp = to_string(current_time);
   switch (message_type) {
   case MessageType::MSG_JOIN: {
     if (!isJoinable()) {
@@ -107,9 +105,9 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       m_join_temporary_table[recv_id_b64]->shared_secret_key = vector<uint8_t>(
           shared_secret_key_vector.begin(), shared_secret_key_vector.end());
 
-      message_body["sig"] =
-          signMessage(m_join_temporary_table[recv_id_b64]->merger_nonce,
-                      message_body_json["sN"].get<string>(), dhx, dhy, now);
+      message_body["sig"] = signMessage(
+          m_join_temporary_table[recv_id_b64]->merger_nonce,
+          message_body_json["sN"].get<string>(), dhx, dhy, current_time);
 
       auto &signer_pool = Application::app().getSignerPool();
       auto secret_key_vector = TypeConverter::toSecureVector(
@@ -187,7 +185,7 @@ bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
 
 string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
                                       string dhx, string dhy,
-                                      uint64_t timestamp) {
+                                      timestamp_type timestamp) {
 
   Setting *setting = Setting::getInstance();
   string rsa_sk_pem = setting->getMySK();
@@ -207,8 +205,7 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
 }
 
 bool SignerPoolManager::isJoinable() {
-  // TODO: 현재 100명 정도 가입할 수 있다. Config 관련 코드 구현하면 제거할 것
-  return true;
+  return (config::MAX_SIGNER_NUM < Application::app().getSignerPool().size());
 }
 
 bool SignerPoolManager::isTimeout(string &signer_id_b64) {

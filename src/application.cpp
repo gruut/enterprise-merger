@@ -1,5 +1,6 @@
 #include "application.hpp"
 #include "chain/transaction.hpp"
+#include "config/config.hpp"
 #include "modules/module.hpp"
 
 namespace gruut {
@@ -37,7 +38,7 @@ void Application::start(const vector<shared_ptr<Module>> &modules) {
 }
 
 void Application::exec() {
-  for (auto i = 0; i < 4; i++) {
+  for (auto i = 0; i < config::MAX_THREAD; i++) {
     m_thread_group->emplace_back([this]() { m_io_serv->run(); });
   }
 
