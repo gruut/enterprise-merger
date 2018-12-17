@@ -2,6 +2,7 @@
 #define GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 
 #include "modules/module.hpp"
+#include "services/setting.hpp"
 #include "services/signer_pool_manager.hpp"
 #include "services/transaction_collector.hpp"
 #include "services/transaction_pool.hpp"

@@ -13,43 +13,32 @@ void TransactionGenerator::generate(Signer &signer) {
   if (signer.isNew()) {
     Transaction new_transaction;
     bytes signature_message;
+    BytesBuilder msg_builder;
+
+    Setting *setting = Setting::getInstance();
+    string rsa_sk_pem = setting->getMySK();
+    string rsa_sk_pass = setting->getMyPass();
 
     new_transaction.transaction_id = generateTransactionId();
-    signature_message.insert(signature_message.cend(),
-                             new_transaction.transaction_id.cbegin(),
-                             new_transaction.transaction_id.cend());
 
-    string timestamp = Time::now();
-    new_transaction.sent_time = TypeConverter::digitStringToBytes(timestamp);
-    signature_message.insert(signature_message.cend(),
-                             new_transaction.sent_time.cbegin(),
-                             new_transaction.sent_time.cend());
-
-    // TODO: requestor_id <- Merger Id, 임시로 txID
-    new_transaction.requestor_id = requestor_id_type();
-    signature_message.insert(signature_message.cend(),
-                             new_transaction.requestor_id.cbegin(),
-                             new_transaction.requestor_id.cend());
-
+    timestamp_type timestamp = (timestamp_type)Time::now_int();
+    new_transaction.sent_time = timestamp;
+    new_transaction.requestor_id = setting->getMyId();
     new_transaction.transaction_type = TransactionType::CERTIFICATE;
-    string transaction_type_str = "certificate";
-    signature_message.insert(signature_message.cend(),
-                             transaction_type_str.cbegin(),
-                             transaction_type_str.cend());
 
-    auto user_id_str = to_string(signer.user_id);
+    auto user_id_str = TypeConverter::toBase64Str(signer.user_id);
     new_transaction.content_list.emplace_back(user_id_str);
-    signature_message.insert(signature_message.cend(), user_id_str.cbegin(),
-                             user_id_str.cend());
-
     new_transaction.content_list.emplace_back(signer.pk_cert);
-    signature_message.insert(signature_message.cend(), signer.pk_cert.cbegin(),
-                             signer.pk_cert.cend());
 
-    // TODO: private_key 하드코딩 되어있음. 설정파일 생성되면 제거할 것
-    string private_key = "";
+    msg_builder.append(new_transaction.transaction_id);
+    msg_builder.append(timestamp);
+    msg_builder.append(new_transaction.requestor_id);
+    msg_builder.append(TXTYPE_CERTIFICATES);
+    msg_builder.append(user_id_str);
+    msg_builder.append(signer.pk_cert);
+
     new_transaction.signature =
-        RSA::doSign(private_key, signature_message, true);
+        RSA::doSign(rsa_sk_pem, msg_builder.getBytes(), true, rsa_sk_pass);
 
     Application::app().getTransactionPool().push(new_transaction);
   }

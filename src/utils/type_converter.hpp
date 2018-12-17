@@ -3,11 +3,12 @@
 
 #include <algorithm>
 #include <array>
-#include <botan/base64.h>
-#include <botan/secmem.h>
 #include <numeric>
 #include <string>
 #include <vector>
+
+#include <botan-2/botan/base64.h>
+#include <botan-2/botan/secmem.h>
 
 #include "../chain/types.hpp"
 
@@ -16,12 +17,14 @@ using namespace std;
 class TypeConverter {
 public:
   template <class T>
-  inline static std::vector<uint8_t> integerToBytes(T input) {
-    std::vector<uint8_t> v;
-    v.reserve(sizeof(input));
+  inline static std::vector<uint8_t> integerToBytes(T input_) {
 
-    for (auto i = 0; i < sizeof(input); ++i) {
-      v.push_back(input & 0xFF);
+    uint64_t input = input_;
+    std::vector<uint8_t> v;
+    v.reserve(sizeof(uint64_t));
+
+    for (auto i = 0; i < sizeof(uint64_t); ++i) {
+      v.push_back((uint8_t)(input & 0xFF));
       input >>= 8;
     }
 

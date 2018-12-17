@@ -18,17 +18,17 @@ namespace gruut {
 class MergerClient {
 public:
   MergerClient() { m_rpc_receiver_list = RpcReceiverList::getInstance(); }
-  void sendMessage(MessageType msg_type, std::vector<uint64_t> &receiver_list,
+  void sendMessage(MessageType msg_type, std::vector<id_type> &receiver_list,
                    std::vector<std::string> &packed_msg_list);
 
 private:
   RpcReceiverList *m_rpc_receiver_list;
 
-  void sendToSE(MessageType msg_type, std::vector<uint64_t> &receiver_list,
+  void sendToSE(MessageType msg_type, std::vector<id_type> &receiver_list,
                 std::string &packed_msg);
-  void sendToMerger(MessageType msg_type, std::vector<uint64_t> &receiver_list,
+  void sendToMerger(MessageType msg_type, std::vector<id_type> &receiver_list,
                     std::string &packed_msg);
-  void sendToSigner(MessageType msg_type, std::vector<uint64_t> &receiver_list,
+  void sendToSigner(MessageType msg_type, std::vector<id_type> &receiver_list,
                     std::vector<std::string> &packed_msg_list);
 
   bool checkMergerMsgType(MessageType msg_tpye);
