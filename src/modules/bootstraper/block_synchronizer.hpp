@@ -8,8 +8,10 @@
 #include "../../services/storage.hpp"
 #include "../../utils/bytes_builder.hpp"
 #include "../../utils/compressor.hpp"
+#include "../../utils/random_number_generator.hpp"
 #include "../../utils/rsa.hpp"
 #include "../../utils/sha256.hpp"
+#include "../../utils/type_converter.hpp"
 #include "../module.hpp"
 #include "nlohmann/json.hpp"
 
@@ -54,14 +56,14 @@ private:
 
   int m_my_last_height;
   std::string m_my_last_bhash;
-  std::string m_id;
+  merger_id_type m_id;
   int m_first_recv_block_height{-1};
 
   std::function<void(int)> m_finish_callback;
   std::map<int, RcvBlock> m_block_list;
   std::mutex m_block_list_mutex;
 
-  time_t m_last_task_time{0};
+  timestamp_type m_last_task_time{0};
 
   bool m_sync_done{false};
   bool m_sync_fail{false};
@@ -148,13 +150,13 @@ private:
       receivers.emplace_back(ans_merger_list[dist(prng)]);
     }
 
-    m_last_task_time = std::time(nullptr);
+    m_last_task_time = Time::now_int();
 
     OutputMsgEntry msg_req_block;
 
     msg_req_block.type = MessageType::MSG_REQ_BLOCK;
     msg_req_block.body["mID"] = m_id;
-    msg_req_block.body["time"] = to_string(std::time(nullptr));
+    msg_req_block.body["time"] = to_string(Time::now_int());
     msg_req_block.body["mCert"] = {};
     msg_req_block.body["hgt"] = std::to_string(height);
     msg_req_block.body["mSig"] = {};
@@ -223,11 +225,15 @@ private:
               it_map->second.state = BlockState::TOSAVE;
               m_block_list_mutex.unlock();
 
-              m_my_last_bhash = macaron::Base64::Encode(std::string(
+              //              m_my_last_bhash =
+              //              macaron::Base64::Encode(std::string(
+              //                  it_map->second.hash.begin(),
+              //                  it_map->second.hash.end()));
+              m_my_last_bhash = TypeConverter::toBase64Str(std::string(
                   it_map->second.hash.begin(), it_map->second.hash.end()));
               m_my_last_height = it_map->first;
 
-              m_last_task_time = std::time(nullptr);
+              m_last_task_time = Time::now_int();
 
             } else {
               std::lock_guard<std::mutex> lock(m_block_list_mutex);
@@ -277,7 +283,7 @@ private:
       }
 
       // step 5 - finishing
-      if (std::time(nullptr) - m_last_task_time > MAX_WAIT_TIME) {
+      if (Time::now_int() - m_last_task_time > MAX_WAIT_TIME) {
         m_sync_done = true;
         m_sync_fail = true;
       }
@@ -344,7 +350,6 @@ public:
     auto &io_service = Application::app().getIoService();
 
     m_block_sync_strand.reset(new boost::asio::io_service::strand(io_service));
-
     m_timer_msg_fetching.reset(new boost::asio::deadline_timer(io_service));
     m_timer_sync_control.reset(new boost::asio::deadline_timer(io_service));
 
@@ -354,7 +359,7 @@ public:
   }
 
   // TODO : TYPE이 정해지면 바꿀 것
-  inline void setMyID(const std::string &my_ID) { m_id = my_ID; }
+  inline void setMyID(const merger_id_type &my_ID) { m_id = my_ID; }
 
   void start() override {
     messageFetch();

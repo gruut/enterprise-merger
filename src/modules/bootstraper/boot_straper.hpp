@@ -1,9 +1,10 @@
 #pragma once
 
+#include "../../../include/nlohmann/json.hpp"
+#include "../../chain/types.hpp"
 #include "../../services/output_queue.hpp"
 #include "../../utils/time.hpp"
 #include "block_synchronizer.hpp"
-#include "nlohmann/json.hpp"
 
 #include <boost/asio.hpp>
 #include <chrono>
@@ -29,7 +30,7 @@ public:
 
   bool sendMsgUp() {
     nlohmann::json msg_up = {{"mID", MY_MID},
-                             {"time", Time::now()},
+                             {"time", to_string(Time::now_int())},
                              {"ver", MY_VER},
                              {"cID", MY_CID}};
 
