@@ -30,9 +30,9 @@ void SignatureRequester::checkProcess() {
 
   m_check_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
-  m_timer->expires_from_now(boost::posix_time::milliseconds(
-      config::SIGNATURE_COLLECTION_CHECK_INTVAL));
-  m_timer->async_wait([&](const boost::system::error_code &ec) {
+  m_check_timer->expires_from_now(boost::posix_time::milliseconds(
+      config::SIGNATURE_COLLECTION_CHECK_INTERVAL));
+  m_check_timer->async_wait([&](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       std::cout << "startSignatureCollectTimer: CheckTimer was cancelled or "
                    "retriggered."
@@ -82,6 +82,8 @@ void SignatureRequester::timerStopAndCreateBlock() {
     BlockGenerator generator;
     generator.generateBlock(temp_partial_block, signatures, m_merkle_tree);
   }
+
+  signature_pool.clear();
 }
 
 void SignatureRequester::startSignatureCollectTimer() {

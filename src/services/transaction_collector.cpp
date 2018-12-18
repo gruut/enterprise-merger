@@ -33,7 +33,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
     bytes_builder.append(txid_bytes);
 
     string t_str = message_body_json["time"].get<string>();
-    auto sent_time = (timestamp_type)stoll(t_str);
+    auto sent_time = static_cast<timestamp_type>(stoll(t_str));
     transaction.sent_time = sent_time;
     bytes_builder.append(sent_time);
 
@@ -78,6 +78,9 @@ void TransactionCollector::handleMessage(json message_body_json) {
         endpoint_cert = item.cert;
       }
     }
+
+    if (endpoint_cert.empty())
+      return;
 
     auto signature_message_bytes = bytes_builder.getBytes();
     bool is_verified = RSA::doVerify(endpoint_cert, signature_message_bytes,

@@ -205,7 +205,7 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
 }
 
 bool SignerPoolManager::isJoinable() {
-  return (config::MAX_SIGNER_NUM < Application::app().getSignerPool().size());
+  return (config::MAX_SIGNER_NUM > Application::app().getSignerPool().size());
 }
 
 bool SignerPoolManager::isTimeout(string &signer_id_b64) {

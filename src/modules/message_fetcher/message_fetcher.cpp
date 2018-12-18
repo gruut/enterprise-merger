@@ -30,7 +30,7 @@ void MessageFetcher::fetch() {
   });
 
   m_timer->expires_from_now(
-      boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTVAL));
+      boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       std::cout << "MessageFetcher: Timer was cancelled or retriggered."

@@ -24,11 +24,11 @@ constexpr size_t JOIN_TIMEOUT_SEC = 10;
 constexpr size_t MAX_SIGNER_NUM = 200;
 constexpr size_t REQ_SSIG_SIGNERS_NUM = 10;
 
-constexpr size_t INQUEUE_MSG_FETCHER_INTVAL = 100;
-constexpr size_t OUTQUEUE_MSG_FETCHER_INTVAL = 100;
+constexpr size_t INQUEUE_MSG_FETCHER_INTERVAL = 100;
+constexpr size_t OUTQUEUE_MSG_FETCHER_INTERVAL = 100;
 
 constexpr size_t SIGNATURE_COLLECTION_INTERVAL = 3000;
-constexpr size_t SIGNATURE_COLLECTION_CHECK_INTVAL = 500;
+constexpr size_t SIGNATURE_COLLECTION_CHECK_INTERVAL = 500;
 
 const std::string PORT_NUM = "50051";
 } // namespace config

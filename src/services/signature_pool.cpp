@@ -58,8 +58,8 @@ bool SignaturePool::verifySignature(signer_id_type &receiver_id,
   signer_id_type signer_id = TypeConverter::decodeBase64(signer_id_b64);
   bytes_builder.append(signer_id);
 
-  auto timestamp =
-      (timestamp_type)stoll(message_body_json["time"].get<string>());
+  auto timestamp = static_cast<timestamp_type>(
+      stoll(message_body_json["time"].get<string>()));
   bytes_builder.append(timestamp);
 
   PartialBlock &partial_block = Application::app().getTemporaryPartialBlock();

@@ -24,8 +24,8 @@ void TransactionGenerator::generate(vector<Signer> &signers) {
 
   new_transaction.transaction_id = generateTransactionId();
 
-  auto timestamp = (timestamp_type)Time::now_int();
-  new_transaction.sent_time = timestamp;
+  auto timestamp = Time::now_int();
+  new_transaction.sent_time = static_cast<timestamp_type>(timestamp);
   new_transaction.requestor_id = setting->getMyId();
   new_transaction.transaction_type = TransactionType::CERTIFICATE;
 
