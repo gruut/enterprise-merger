@@ -2,8 +2,8 @@
 #include "../../../include/json_schema.hpp"
 #include "../../utils/compressor.hpp"
 #include "msg_schema.hpp"
-#include <botan/hex.h>
-#include <botan/mac.h>
+#include <botan-2/botan/hex.h>
+#include <botan-2/botan/mac.h>
 #include <cstring>
 
 namespace gruut {
@@ -118,41 +118,6 @@ std::string HeaderController::makeHeaderAddedData(MessageHeader &msg_hdr,
                                                msg_hdr.compression_algo_type);
 
   return header_added_data;
-}
-
-grpc::Status HeaderController::analyzeData(std::string &raw_data,
-                                           uint64_t &receiver_id) {
-  auto &input_queue = Application::app().getInputQueue();
-
-  MessageHeader msg_header = HeaderController::parseHeader(raw_data);
-  if (!HeaderController::validateMessage(msg_header)) {
-    return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, "Wrong Message");
-  }
-  int body_size = getMsgBodySize(msg_header);
-  // TODO:  HMAC 검증을 위해 key를 가져올 수 있게 되면. 가져오면 주석 해제
-  /*if(msg_header.mac_algo_type ==  MACAlgorithmType::HMAC){
-      std::string header_added_data = raw_data.substr(0, HEADER_LENGTH +
-    body_size); std::vector<uint8_t> hmac(raw_data.begin() + HEADER_LENGTH +
-    json_size , raw_data.end()); std::vector<uint8_t> key;
-      if(!Hmac::verifyHMAC(header_added_data, hmac, key))
-        return grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "Wrong HMAC");
-    }*/
-  std::string msg_body = HeaderController::getMsgBody(raw_data, body_size);
-  nlohmann::json json_data = HeaderController::getJsonMessage(
-      msg_header.compression_algo_type, msg_body);
-
-  if (!JsonValidator::validateSchema(json_data, msg_header.message_type)) {
-    return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT,
-                        "json schema check fail");
-  }
-  uint64_t id;
-  std::reverse(std::begin(msg_header.sender_id),
-               std::end(msg_header.sender_id));
-  memcpy(&id, msg_header.sender_id, sizeof(uint64_t));
-  receiver_id = id;
-  input_queue->emplace(
-      make_tuple(msg_header.message_type, receiver_id, json_data));
-  return grpc::Status::OK;
 }
 
 int HeaderController::convertU8ToU32BE(uint8_t *len_bytes) {

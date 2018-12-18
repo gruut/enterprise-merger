@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cstdlib>
-
-/*
 #include <mutex>
 
 template <typename T> class TemplateSingleton {
@@ -21,23 +19,30 @@ private:
 template <typename T>
 std::shared_ptr<T> TemplateSingleton<T>::m_instance = nullptr;
 template <typename T> std::once_flag TemplateSingleton<T>::m_once_flag;
-*/
 
+/*
 template <typename T> class TemplateSingleton {
+protected:
+  TemplateSingleton() {}
+  virtual ~TemplateSingleton() {}
+
 public:
-  static std::shared_ptr<T> getInstance() {
-    auto pointer = m_instance.lock();
+  static T *getInstance() {
+    if (m_instance == nullptr)
+      m_instance = new T;
+    return m_instance;
+  };
 
-    if (!pointer) {
-      pointer = std::make_shared<T>();
-      m_instance = pointer;
+  static void destroyInstance() {
+    if (m_instance) {
+      delete m_instance;
+      m_instance = nullptr;
     }
-
-    return pointer;
-  }
+  };
 
 private:
-  static std::weak_ptr<T> m_instance;
+  static T *m_instance;
 };
 
-template <typename T> std::weak_ptr<T> TemplateSingleton<T>::m_instance;
+template <typename T> T *TemplateSingleton<T>::m_instance = 0;
+ */

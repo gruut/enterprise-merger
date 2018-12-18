@@ -13,7 +13,7 @@ public:
   void deliverOutputMessage(OutputMsgEntry &ouput_message);
 
 private:
-  shared_ptr<OutputQueueAlt> m_output_queue;
+  OutputQueueAlt* m_output_queue;
 };
 } // namespace gruut
 

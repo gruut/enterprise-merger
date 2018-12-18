@@ -2,10 +2,14 @@
 #define GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 
 #include "modules/module.hpp"
+#include "modules/communication/communication.hpp"
+#include "modules/message_fetcher/message_fetcher.hpp"
+#include "modules/message_fetcher/out_message_fetcher.hpp"
 #include "services/setting.hpp"
 #include "services/signer_pool_manager.hpp"
 #include "services/transaction_collector.hpp"
 #include "services/transaction_pool.hpp"
+#include "services/boot_straper.hpp"
 
 #include <boost/asio.hpp>
 #include <list>
@@ -22,9 +26,6 @@
 using namespace std;
 
 namespace gruut {
-using InputQueue = shared_ptr<queue<InputMessage>>;
-using OutputQueue = shared_ptr<queue<OutputMessage>>;
-
 class Application {
 public:
   static Application &app() {
@@ -38,10 +39,6 @@ public:
 
   boost::asio::io_service &getIoService();
 
-  InputQueue &getInputQueue();
-
-  OutputQueue &getOutputQueue();
-
   SignerPool &getSignerPool();
 
   SignerPoolManager &getSignerPoolManager();
@@ -54,16 +51,18 @@ public:
 
   PartialBlock &getTemporaryPartialBlock();
 
-  void start(const vector<shared_ptr<Module>> &modules);
-
+  void regModule(shared_ptr<Module> module);
+  void regBootstraper(shared_ptr<BootStraper> bootstraper);
+  void regMessageFetcher(shared_ptr<MessageFetcher> message_fetcher);
+  void start();
   void exec();
-
   void quit();
 
 private:
+
+  void runScheduler(int exit_code);
+
   shared_ptr<boost::asio::io_service> m_io_serv;
-  InputQueue m_input_queue;
-  OutputQueue m_output_queue;
   PartialBlock temporary_partial_block;
   shared_ptr<SignerPool> m_signer_pool;
   shared_ptr<SignerPoolManager> m_signer_pool_manager;
@@ -72,6 +71,13 @@ private:
   shared_ptr<SignaturePool> m_signature_pool;
 
   shared_ptr<std::vector<std::thread>> m_thread_group;
+
+  std::vector<shared_ptr<Module>> m_modules;
+
+  shared_ptr<BootStraper> m_bootstraper;
+  shared_ptr<MessageFetcher> m_message_fetcher;
+
+
   Application();
 
   ~Application() {}

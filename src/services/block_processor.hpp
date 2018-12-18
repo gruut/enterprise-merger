@@ -26,8 +26,8 @@ namespace gruut {
 
 class BlockProcessor {
 private:
-  shared_ptr<OutputQueueAlt> m_output_queue;
-  shared_ptr<Storage> m_storage;
+  OutputQueueAlt* m_output_queue;
+  Storage* m_storage;
 
 public:
   BlockProcessor();

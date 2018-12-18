@@ -71,12 +71,20 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  vector<shared_ptr<Module>> module_vector;
-  module_vector.push_back(make_shared<Communication>());
-  module_vector.push_back(make_shared<MessageFetcher>());
-  module_vector.push_back(make_shared<OutMessageFetcher>());
+  shared_ptr<BootStraper> bootstraper = make_shared<BootStraper>();
 
-  Application::app().start(move(module_vector));
+  // modules
+  shared_ptr<Communication> moudle_communication = make_shared<Communication>();
+  shared_ptr<MessageFetcher> module_message_fetcher = make_shared<MessageFetcher>();
+  shared_ptr<OutMessageFetcher> module_out_message_fetcher = make_shared<OutMessageFetcher>();
+
+  Application::app().regModule(moudle_communication);
+  //Application::app().regModule(module_message_fetcher);
+  Application::app().regModule(module_out_message_fetcher);
+  Application::app().regBootstraper(bootstraper);
+  Application::app().regMessageFetcher(module_message_fetcher);
+
+  Application::app().start();
   Application::app().exec();
   Application::app().quit();
 

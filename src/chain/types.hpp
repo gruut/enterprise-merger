@@ -4,6 +4,7 @@
 #include <botan-2/botan/secmem.h>
 #include <string>
 #include <vector>
+#include <array>
 
 namespace gruut {
 

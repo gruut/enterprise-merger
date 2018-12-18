@@ -21,7 +21,7 @@ public:
   void packMsg(OutputMsgEntry &output_msg);
 
 private:
-  shared_ptr<InputQueueAlt> m_input_queue;
+  InputQueueAlt* m_input_queue;
   bool validateMessage(MessageHeader &header);
   int getMsgBodySize(MessageHeader &header);
   std::string getMsgBody(std::string &packed_msg, int body_size);

@@ -95,7 +95,7 @@ public:
   void proceed();
 
 private:
-  shared_ptr<RpcReceiverList> m_rpc_receiver_list;
+  RpcReceiverList* m_rpc_receiver_list;
   GruutNetworkService::AsyncService *m_service;
   Identity m_request;
   ServerAsyncReaderWriter<GrpcMsgReqSsig, Identity> m_stream;
@@ -114,7 +114,7 @@ public:
   void proceed();
 
 private:
-  shared_ptr<RpcReceiverList> m_rpc_receiver_list;
+  RpcReceiverList* m_rpc_receiver_list;
   GruutNetworkService::AsyncService *m_service;
   GrpcMsgJoin m_request;
   ServerAsyncResponseWriter<GrpcMsgChallenge> m_responder;
@@ -133,7 +133,7 @@ public:
   void proceed();
 
 private:
-  shared_ptr<RpcReceiverList> m_rpc_receiver_list;
+  RpcReceiverList* m_rpc_receiver_list;
   GruutNetworkService::AsyncService *m_service;
   GrpcMsgResponse1 m_request;
   ServerAsyncResponseWriter<GrpcMsgResponse2> m_responder;
@@ -153,7 +153,7 @@ public:
   void proceed();
 
 private:
-  shared_ptr<RpcReceiverList> m_rpc_receiver_list;
+  RpcReceiverList* m_rpc_receiver_list;
   GruutNetworkService::AsyncService *m_service;
   GrpcMsgSuccess m_request;
   ServerAsyncResponseWriter<GrpcMsgAccept> m_responder;
