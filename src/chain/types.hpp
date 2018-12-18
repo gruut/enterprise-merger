@@ -60,6 +60,8 @@ enum class DBType : int {
   BLOCK_CERT
 };
 
+enum class BlockState { RECEIVED, TOSAVE, TODELETE, RETRIED };
+
 using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
 using timestamp_type = uint64_t;

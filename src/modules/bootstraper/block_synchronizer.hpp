@@ -2,6 +2,7 @@
 
 #include "../../application.hpp"
 #include "../../chain/types.hpp"
+#include "../../config/config.hpp"
 #include "../../services/block_validator.hpp"
 #include "../../services/input_queue.hpp"
 #include "../../services/output_queue.hpp"
@@ -27,11 +28,6 @@
 #include <vector>
 
 namespace gruut {
-
-const int MAX_REQ_BLOCK_RETRY = 5;
-const int MAX_WAIT_TIME = 5;
-
-enum class BlockState { RECEIVED, TOSAVE, TODELETE, RETRIED };
 
 struct RcvBlock {
   sha256 hash;
@@ -70,15 +66,14 @@ private:
 
   bool pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
-    std::string block_raw_str = macaron::Base64::Decode(
-        input_msg_entry.body["blockraw"].get<std::string>());
-    std::vector<uint8_t> block_raw(block_raw_str.begin(), block_raw_str.end());
+    std::string block_raw_str =
+        input_msg_entry.body["blockraw"].get<std::string>();
+    bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
 
     nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
 
-    if (block_json.empty()) {
+    if (block_json.empty())
       return false;
-    }
 
     int block_hgt = stoi(block_json["hgt"].get<std::string>());
 
@@ -126,7 +121,7 @@ private:
 
   bool sendBlockRequest(int height) {
 
-    std::vector<std::string> receivers = {};
+    std::vector<id_type> receivers = {};
 
     if (height != -1) { // unicast
 
@@ -150,13 +145,13 @@ private:
       receivers.emplace_back(ans_merger_list[dist(prng)]);
     }
 
-    m_last_task_time = Time::now_int();
+    m_last_task_time = static_cast<timestamp_type>(Time::now_int());
 
     OutputMsgEntry msg_req_block;
 
     msg_req_block.type = MessageType::MSG_REQ_BLOCK;
     msg_req_block.body["mID"] = m_id;
-    msg_req_block.body["time"] = to_string(Time::now_int());
+    msg_req_block.body["time"] = Time::now();
     msg_req_block.body["mCert"] = {};
     msg_req_block.body["hgt"] = std::to_string(height);
     msg_req_block.body["mSig"] = {};
@@ -192,11 +187,14 @@ private:
     nlohmann::json block_body;
     block_body["tx"] = it_map->second.txs;
     block_body["txCnt"] = it_map->second.txs.size();
-    nlohmann::json mtree(it_map->second.mtree.size(), "");
+
+    std::vector<std::string> mtree_nodes_b64;
+
     for (size_t i = 0; i < it_map->second.mtree.size(); ++i) {
-      mtree[i] = it_map->second.mtree[i];
+      mtree_nodes_b64[i] = TypeConverter::toBase64Str(it_map->second.mtree[i]);
     }
-    block_body["mtree"] = mtree;
+
+    block_body["mtree"] = mtree_nodes_b64;
 
     m_storage->saveBlock(std::string(it_map->second.block_raw.begin(),
                                      it_map->second.block_raw.end()),
@@ -225,12 +223,7 @@ private:
               it_map->second.state = BlockState::TOSAVE;
               m_block_list_mutex.unlock();
 
-              //              m_my_last_bhash =
-              //              macaron::Base64::Encode(std::string(
-              //                  it_map->second.hash.begin(),
-              //                  it_map->second.hash.end()));
-              m_my_last_bhash = TypeConverter::toBase64Str(std::string(
-                  it_map->second.hash.begin(), it_map->second.hash.end()));
+              m_my_last_bhash = TypeConverter::toBase64Str(it_map->second.hash);
               m_my_last_height = it_map->first;
 
               m_last_task_time = Time::now_int();
@@ -268,7 +261,7 @@ private:
       for (auto it_map = m_block_list.begin(); it_map != m_block_list.end();
            ++it_map) {
 
-        if (it_map->second.num_retry > MAX_REQ_BLOCK_RETRY) {
+        if (it_map->second.num_retry > config::MAX_REQ_BLOCK_RETRY) {
           m_sync_done = true;
           m_sync_fail = true;
           break;
@@ -283,7 +276,7 @@ private:
       }
 
       // step 5 - finishing
-      if (Time::now_int() - m_last_task_time > MAX_WAIT_TIME) {
+      if (Time::now_int() - m_last_task_time > config::MAX_WAIT_TIME) {
         m_sync_done = true;
         m_sync_fail = true;
       }
@@ -358,7 +351,6 @@ public:
     m_outputQueue = OutputQueueAlt::getInstance();
   }
 
-  // TODO : TYPE이 정해지면 바꿀 것
   inline void setMyID(const merger_id_type &my_ID) { m_id = my_ID; }
 
   void start() override {
@@ -366,7 +358,7 @@ public:
     blockSyncControl();
   }
 
-  bool startBlockSync(std::function<void(int)> callback) {
+  void startBlockSync(std::function<void(int)> callback) {
 
     std::cout << "block sync" << std::endl;
 

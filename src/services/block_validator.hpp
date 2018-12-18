@@ -42,7 +42,7 @@ public:
       Compressor::decompressData(block_header_comp, block_json_str,
                                  (int)header_end - 5);
     } else if (block_raw[0] ==
-        static_cast<uint8_t>(CompressionAlgorithmType::NONE)) {
+               static_cast<uint8_t>(CompressionAlgorithmType::NONE)) {
       block_json_str.assign(block_header_comp);
     } else {
       std::cout << "unknown compress type" << std::endl;

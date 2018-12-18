@@ -30,6 +30,11 @@ constexpr size_t OUTQUEUE_MSG_FETCHER_INTERVAL = 100;
 constexpr size_t SIGNATURE_COLLECTION_INTERVAL = 3000;
 constexpr size_t SIGNATURE_COLLECTION_CHECK_INTERVAL = 500;
 
+constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 20;
+
+constexpr size_t MAX_REQ_BLOCK_RETRY = 5;
+constexpr size_t MAX_WAIT_TIME = 5;
+
 const std::string PORT_NUM = "50051";
 } // namespace config
 } // namespace gruut

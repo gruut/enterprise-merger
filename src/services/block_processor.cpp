@@ -45,8 +45,8 @@ bool BlockProcessor::messageProcess(InputMsgEntry &entry) {
 
   } else if (entry.type == MessageType::MSG_BLOCK) {
 
-    std::string blockraw_str = entry.body["blockraw"].get<std::string>();
-    bytes block_raw = TypeConverter::decodeBase64(blockraw_str);
+    std::string block_raw_str = entry.body["blockraw"].get<std::string>();
+    bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
 
     nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
 
