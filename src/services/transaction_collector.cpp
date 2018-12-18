@@ -66,7 +66,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
     transaction.signature =
         vector<uint8_t>(rsig_vector.cbegin(), rsig_vector.cend());
 
-    Setting *setting = Setting::getInstance();
+    auto setting = Setting::getInstance();
 
     std::vector<ServiceEndpointInfo> servend_info =
         setting->getServiceEndpointInfo();

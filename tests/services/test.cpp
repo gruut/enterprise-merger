@@ -110,18 +110,15 @@ BOOST_AUTO_TEST_SUITE(Test_MessageIOQueues)
     nlohmann::json msg_body = "{}"_json;
     std::vector<id_type> msg_receiver = {};
 
-    InputQueueAlt * input_queue = InputQueueAlt::getInstance();
+    auto input_queue = InputQueueAlt::getInstance();
     InputMsgEntry test_input_msg(MessageType::MSG_ACCEPT, msg_body);
     input_queue->push(test_input_msg);
 
-    OutputQueueAlt * output_queue = OutputQueueAlt::getInstance();
+    auto output_queue = OutputQueueAlt::getInstance();
     OutputMsgEntry test_output_msg(MessageType::MSG_ACCEPT, msg_body, msg_receiver);
     output_queue->push(test_output_msg);
 
     bool test_result = (!input_queue->empty() && !output_queue->empty());
-
-    InputQueueAlt::destroyInstance();
-    OutputQueueAlt::destroyInstance();
 
     BOOST_TEST(test_result);
   }
@@ -142,9 +139,8 @@ BOOST_AUTO_TEST_SUITE(Test_MessageIOQueues)
 //  }
 
   BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
-    Storage *storage = Storage::getInstance();
+    auto storage = Storage::getInstance();
     storage->deleteAllDirectory();
-    Storage::destroyInstance();
 
     BOOST_TEST(true);
   }
@@ -280,7 +276,7 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
     BlockGenerator generator;
     generator.generateBlock(p_block, signature, tree);
 
-    Storage *storage = Storage::getInstance();
+    auto storage = Storage::getInstance();
 
     auto hash_and_height = storage->findLatestHashAndHeight();
     BOOST_CHECK_EQUAL(hash_and_height.second, "1");
@@ -291,7 +287,6 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
     BOOST_CHECK_EQUAL(tx_id, encoded_tx_id);
 
     storage->deleteAllDirectory();
-    Storage::destroyInstance();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

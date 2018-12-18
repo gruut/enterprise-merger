@@ -30,7 +30,7 @@ using namespace nlohmann;
 
 namespace gruut {
 SignerPoolManager::SignerPoolManager() {
-  Setting *setting = Setting::getInstance();
+  auto setting = Setting::getInstance();
   m_my_cert = setting->getMyCert();
   m_my_id = setting->getMyId();
 }
@@ -194,7 +194,7 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
                                       string dhx, string dhy,
                                       timestamp_type timestamp) {
 
-  Setting *setting = Setting::getInstance();
+  auto setting = Setting::getInstance();
   string rsa_sk_pem = setting->getMySK();
   string rsa_sk_pass = setting->getMyPass();
 

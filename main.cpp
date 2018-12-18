@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 
   json setting_json = parseArg(argc,argv);
 
-  Setting * setting = Setting::getInstance();
+  auto setting = Setting::getInstance();
   if(!setting->setJson(setting_json)) {
     cout << "Setting file is not a valid json " << endl;
     return 1;
@@ -79,11 +79,6 @@ int main(int argc, char *argv[]) {
   Application::app().start(move(module_vector));
   Application::app().exec();
   Application::app().quit();
-
-  Setting::destroyInstance();
-  Storage::destroyInstance();
-  InputQueueAlt::destroyInstance();
-  OutputQueueAlt::destroyInstance();
 
   return 0;
 }

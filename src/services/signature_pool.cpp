@@ -46,7 +46,7 @@ bool SignaturePool::verifySignature(signer_id_type &receiver_id,
                                     json &message_body_json) {
   auto pk_cert = Application::app().getSignerPool().getPkCert(receiver_id);
   if (pk_cert.empty()) {
-    Storage *storage = Storage::getInstance();
+    auto storage = Storage::getInstance();
     pk_cert = storage->findCertificate(receiver_id);
   }
 
