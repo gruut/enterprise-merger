@@ -1,0 +1,15 @@
+version: '3'
+services:
+  enterprise-merger:
+    image: doscode/merger-build-env:1.1
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT}:${PORT}"
+    command: >
+      bash -c "mkdir -p workspace && cd workspace
+      && git clone --depth=50 --branch=$BRANCH https://github.com/gruut/enterprise-merger.git
+      && cd enterprise-merger
+      && mkdir -p build && cd build
+      && cmake -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release ..
+      && cmake --build .

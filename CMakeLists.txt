@@ -79,11 +79,13 @@ target_link_libraries(gruut_enterprise_merger
         ${GRPC_LIBS}
         )
 
-enable_testing()
-add_subdirectory(tests/chain)
-add_subdirectory(tests/modules)
-add_subdirectory(tests/utils)
-add_subdirectory(tests/services)
+IF (${CMAKE_BUILD_TYPE} MATCHES Debug)
+    enable_testing()
+    add_subdirectory(tests/chain)
+    add_subdirectory(tests/modules)
+    add_subdirectory(tests/utils)
+    add_subdirectory(tests/services)
+ENDIF()
 
 IF (NOT $ENV{TRAVIS_BUILD})
     add_custom_command(TARGET gruut_enterprise_merger
