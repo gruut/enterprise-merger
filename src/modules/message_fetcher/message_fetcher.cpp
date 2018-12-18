@@ -11,6 +11,7 @@ namespace gruut {
 MessageFetcher::MessageFetcher() {
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
+  m_input_queue = InputQueueAlt::getInstance();
 }
 
 void MessageFetcher::start() { fetch(); }
@@ -18,10 +19,9 @@ void MessageFetcher::start() { fetch(); }
 void MessageFetcher::fetch() {
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
-    auto &input_queue = Application::app().getInputQueue();
-    if (!input_queue->empty()) {
-      auto input_message = input_queue->front();
-      input_queue->pop();
+
+    if (!m_input_queue->empty()) {
+      auto input_message = m_input_queue->fetch();
 
       MessageProxy message_proxy;
       message_proxy.deliverInputMessage(input_message);
