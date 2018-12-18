@@ -1,8 +1,14 @@
 #include "message_handler.hpp"
 #include "../../utils/compressor.hpp"
+#include "../../utils/type_converter.hpp"
 #include "merger_client.hpp"
 
 namespace gruut {
+
+MessageHandler::MessageHandler() {
+  m_input_queue = InputQueueAlt::getInstance();
+}
+
 void MessageHandler::unpackMsg(std::string &packed_msg,
                                grpc::Status &rpc_status, id_type &recv_id) {
   using namespace grpc;
@@ -13,6 +19,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
     return;
   }
   int body_size = getMsgBodySize(header);
+  recv_id = id_type(std::begin(header.sender_id), std::end(header.sender_id));
 
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
     std::string msg = packed_msg.substr(0, HEADER_LENGTH + body_size);
@@ -44,10 +51,10 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
   rpc_status = Status::OK;
 }
 
-void MessageHandler::packMsg(OutputMessage &output_msg) {
-  MessageType msg_type = get<0>(output_msg);
+void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
+  MessageType msg_type = output_msg.type;
 
-  nlohmann::json body = get<2>(output_msg);
+  nlohmann::json body = output_msg.body;
   MessageHeader header;
   header.message_type = msg_type;
   // TODO : Compression type에 따라 수정 될 수 있습니다.
@@ -59,7 +66,7 @@ void MessageHandler::packMsg(OutputMessage &output_msg) {
       msg_type == MessageType::MSG_REQ_SSIG) {
     auto &signer_pool = Application::app().getSignerPool();
 
-    for (auto &recv_id : get<1>(output_msg)) {
+    for (auto &recv_id : output_msg.receivers) {
       Botan::secure_vector<uint8_t> secure_vector_key =
           signer_pool.getHmacKey(recv_id);
       std::vector<uint8_t> key(secure_vector_key.begin(),
@@ -74,7 +81,7 @@ void MessageHandler::packMsg(OutputMessage &output_msg) {
   }
 
   MergerClient merger_client;
-  merger_client.sendMessage(msg_type, get<1>(output_msg), packed_msg_list);
+  merger_client.sendMessage(msg_type, output_msg.receivers, packed_msg_list);
 }
 
 bool MessageHandler::validateMessage(MessageHeader &header) {

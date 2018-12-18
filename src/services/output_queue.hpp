@@ -13,11 +13,11 @@ namespace gruut {
 struct OutputMsgEntry {
   MessageType type;
   nlohmann::json body;
-  std::vector<std::string> receivers;
+  std::vector<id_type> receivers;
   OutputMsgEntry()
       : type(MessageType::MSG_NULL), body(nullptr), receivers({}) {}
   OutputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_,
-                 std::vector<std::string> &msg_receivers_)
+                 std::vector<id_type> &msg_receivers_)
       : type(msg_type_), body(msg_body_), receivers(msg_receivers_) {}
 };
 
@@ -27,7 +27,7 @@ private:
   std::mutex m_queue_mutex;
 
 public:
-  void push(std::tuple<MessageType, nlohmann::json, std::vector<std::string>>
+  void push(std::tuple<MessageType, nlohmann::json, std::vector<id_type>>
                 &msg_entry_tuple) {
     OutputMsgEntry tmp_msg_entry(std::get<0>(msg_entry_tuple),
                                  std::get<1>(msg_entry_tuple),
@@ -37,13 +37,13 @@ public:
   }
 
   void push(MessageType msg_type, nlohmann::json &msg_body) {
-    std::vector<std::string> msg_receivers;
+    std::vector<id_type> msg_receivers;
     OutputMsgEntry tmp_msg_entry(msg_type, msg_body, msg_receivers);
     push(tmp_msg_entry);
   }
 
   void push(MessageType msg_type, nlohmann::json &msg_body,
-            std::vector<std::string> &msg_receivers) {
+            std::vector<id_type> &msg_receivers) {
     OutputMsgEntry tmp_msg_entry(msg_type, msg_body, msg_receivers);
     push(tmp_msg_entry);
   }

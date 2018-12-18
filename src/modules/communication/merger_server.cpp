@@ -120,10 +120,8 @@ void OpenChannel::proceed() {
   case RpcCallStatus::PROCESS: {
     id_type receiver_id;
 
-    // TODO :: 고칩시다!
-    std::string id(sizeof(uint64_t) - m_request.sender().length(), 0x00);
-    id += m_request.sender();
-    std::memcpy(&receiver_id, &id[0], sizeof(uint64_t));
+    std::string id_b64_str = m_request.sender();
+    receiver_id = TypeConverter::decodeBase64(id_b64_str);
 
     m_rpc_receiver_list->setReqSsig(receiver_id, &m_stream, this);
     m_receive_status = RpcCallStatus::WAIT;
