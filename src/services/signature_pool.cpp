@@ -10,8 +10,9 @@ using namespace std;
 
 namespace gruut {
 void SignaturePool::handleMessage(json &message_body_json) {
-  string recv_id_b64 = message_body_json["sender"].get<string>();
+  string recv_id_b64 = message_body_json["sID"].get<string>();
   signer_id_type receiver_id = TypeConverter::decodeBase64(recv_id_b64);
+
 
   if (verifySignature(receiver_id, message_body_json)) {
     Signature s;
