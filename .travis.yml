@@ -17,16 +17,7 @@ install:
 script:
   - docker exec build-env sh -c "
     mkdir -p workspace && cd workspace;
-    git clone --depth=50 --branch=$TRAVIS_BRANCH https://github.com/gruut/enterprise-merger.git
-    "
-  - docker exec build-env sh -c "
-    cd workspace/enterprise-merger/lib/leveldb;
-    mkdir -p build && cd build;
-    cmake -DCMAKE_BUILD_TYPE=Release ..;
-    cmake --build . -j 4
-    "
-  - docker exec build-env sh -c "
-    cd workspace/enterprise-merger/;
+    git clone --depth=50 --branch=$TRAVIS_BRANCH https://github.com/gruut/enterprise-merger.git && cd enterprise-merger;
     mkdir -p build && cd build;
     cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_COMPILER="clang++" ..
     "
