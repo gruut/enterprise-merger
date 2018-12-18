@@ -24,6 +24,11 @@ public:
 
   Signatures fetchN(size_t n);
 
+  inline void clear() {
+    std::lock_guard<std::mutex> guard(m_mutex);
+    m_signature_pool.clear();
+  }
+
 private:
   bool verifySignature(signer_id_type &, json &);
 

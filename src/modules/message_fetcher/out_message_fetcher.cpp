@@ -1,6 +1,7 @@
 #include "out_message_fetcher.hpp"
 #include "../../application.hpp"
 #include "../../chain/types.hpp"
+#include "../../config/config.hpp"
 #include "../communication/message_handler.hpp"
 #include <chrono>
 #include <iostream>
@@ -28,7 +29,8 @@ void OutMessageFetcher::fetch() {
     }
   });
 
-  m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
+  m_timer->expires_from_now(
+      boost::posix_time::milliseconds(config::OUTQUEUE_MSG_FETCHER_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       std::cout << "Out MessageFetcher: Timer was cancelled or retriggered."

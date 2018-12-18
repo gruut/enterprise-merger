@@ -42,7 +42,7 @@ json parseArg(int argc, char *argv[]){
     string setting_json_str = FileIo::file2str(result["in"].as<string>());
 
     if(setting_json_str.empty()) {
-      cout << "error opening setting files" << endl;
+      cout << "error opening setting files " << result["in"].as<string>() << endl;
       exit(1);
     }
 

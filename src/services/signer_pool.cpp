@@ -153,10 +153,14 @@ Signer SignerPool::getSigner(int index) {
 void SignerPool::createTransactions() {
   TransactionGenerator generator;
 
+  vector<Signer> signers;
   for (auto &signer : m_signer_pool) {
     if (signer.status == SignerStatus::GOOD && signer.isNew()) {
-      generator.generate(signer);
+      signers.emplace_back(signer);
     }
   }
+
+  if (!signers.empty())
+    generator.generate(signers);
 }
 } // namespace gruut
