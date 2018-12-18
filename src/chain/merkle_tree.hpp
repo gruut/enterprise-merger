@@ -67,11 +67,7 @@ public:
     }
   }
 
-  void generate(vector<Transaction> &transactions) {
-    vector<sha256> tx_digests;
-
-    generateTxDigests(tx_digests, transactions);
-
+  void generate(vector<sha256> &tx_digests) {
     const bytes dummy_leaf(32, 0); // for SHA-256
 
     auto min_addable_size = min(MAX_MERKLE_LEAVES, tx_digests.size());
@@ -88,6 +84,12 @@ public:
           makeParent(m_merkle_tree[i], m_merkle_tree[i + 1]);
       ++parent_pos;
     }
+  }
+
+  void generate(vector<Transaction> &transactions) {
+    vector<sha256> tx_digests;
+    generateTxDigests(tx_digests, transactions);
+    generate(tx_digests);
   }
 
   vector<sha256> getMerkleTree() { return m_merkle_tree; }
