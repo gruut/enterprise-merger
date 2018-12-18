@@ -8,9 +8,7 @@ using namespace nlohmann;
 
 namespace gruut {
 
-MessageProxy::MessageProxy() {
-  m_output_queue = OutputQueueAlt::getInstance();
-}
+MessageProxy::MessageProxy() { m_output_queue = OutputQueueAlt::getInstance(); }
 
 void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
   auto message_type = input_message.type;
@@ -20,8 +18,8 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
   case MessageType::MSG_JOIN:
   case MessageType::MSG_RESPONSE_1:
   case MessageType::MSG_SUCCESS: {
-    Application::app().getSignerPoolManager().handleMessage(
-        message_type, message_body_json);
+    Application::app().getSignerPoolManager().handleMessage(message_type,
+                                                            message_body_json);
   } break;
   case MessageType::MSG_TX: {
     Application::app().getTransactionCollector().handleMessage(

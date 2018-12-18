@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../module.hpp"
 #include "../../services/output_queue.hpp"
+#include "../module.hpp"
 #include <boost/asio.hpp>
 
 namespace gruut {

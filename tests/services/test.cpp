@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_SUITE(Test_MessageIOQueues)
 
   BOOST_AUTO_TEST_CASE(pushMessages) {
     nlohmann::json msg_body = "{}"_json;
-    std::vector<std::string> msg_receiver = {};
+    std::vector<id_type> msg_receiver = {};
 
     InputQueueAlt * input_queue = InputQueueAlt::getInstance();
     InputMsgEntry test_input_msg(MessageType::MSG_ACCEPT, msg_body);

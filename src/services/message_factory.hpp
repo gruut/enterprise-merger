@@ -6,9 +6,9 @@
 #include "../chain/message.hpp"
 #include "../chain/signer.hpp"
 #include "../chain/types.hpp"
+#include "../services/output_queue.hpp"
 #include "../utils/time.hpp"
 #include "../utils/type_converter.hpp"
-#include "../services/output_queue.hpp"
 
 using namespace nlohmann;
 
@@ -18,7 +18,7 @@ using Signers = std::vector<Signer>;
 class MessageFactory {
 public:
   static OutputMsgEntry createSigRequestMessage(PartialBlock &block,
-                                               Signers &signers) {
+                                                Signers &signers) {
     json j_partial_block;
 
     j_partial_block["time"] = Time::now();

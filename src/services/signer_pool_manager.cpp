@@ -64,8 +64,6 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
           RandomNumGenerator::toString(RandomNumGenerator::randomize(32));
       message_body["mN"] = m_join_temporary_table[recv_id_b64]->merger_nonce;
 
-          make_tuple(MessageType::MSG_CHALLENGE, receiver_list, message_body);
-
       OutputMsgEntry output_message;
       output_message.type = MessageType::MSG_CHALLENGE;
       output_message.body = message_body;

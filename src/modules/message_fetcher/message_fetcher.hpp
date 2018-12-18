@@ -1,7 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_MESSAGE_FETCHER_HPP
 #define GRUUT_ENTERPRISE_MERGER_MESSAGE_FETCHER_HPP
-#include "../module.hpp"
 #include "../../services/input_queue.hpp"
+#include "../module.hpp"
 #include <boost/asio.hpp>
 
 namespace gruut {
