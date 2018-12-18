@@ -54,7 +54,7 @@ public:
     m_queue_mutex.unlock();
   }
 
-  OutputMsgEntry fetch(OutputMsgEntry &msg) {
+  OutputMsgEntry fetch() {
     OutputMsgEntry ret_msg;
     std::lock_guard<std::mutex> lock(m_queue_mutex);
     if (!m_output_msg_pool.empty()) {

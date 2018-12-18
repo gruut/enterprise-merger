@@ -14,7 +14,7 @@ using Signatures = std::vector<Signature>;
 
 class SignaturePool {
 public:
-  void handleMessage(signer_id_type &receiver_id, nlohmann::json &);
+  void handleMessage(nlohmann::json &);
 
   void push(Signature &signature);
 

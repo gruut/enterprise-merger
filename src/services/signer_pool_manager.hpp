@@ -17,7 +17,7 @@ namespace gruut {
 class SignerPoolManager {
 public:
   SignerPoolManager();
-  void handleMessage(MessageType &message_type, signer_id_type &recv_id,
+  void handleMessage(MessageType &message_type,
                      nlohmann::json &message_body_json);
 
 private:

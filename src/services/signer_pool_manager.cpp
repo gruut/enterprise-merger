@@ -35,10 +35,10 @@ SignerPoolManager::SignerPoolManager() {
   m_my_id = setting->getMyId();
 }
 void SignerPoolManager::handleMessage(MessageType &message_type,
-                                      signer_id_type &recv_id,
                                       json &message_body_json) {
 
-  string recv_id_b64 = TypeConverter::toBase64Str(recv_id);
+  string recv_id_b64 = message_body_json["sender"].get<string>();
+  signer_id_type recv_id = TypeConverter::decodeBase64(recv_id_b64);
 
   MessageProxy proxy;
   vector<signer_id_type> receiver_list{recv_id};
@@ -62,8 +62,11 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
           RandomNumGenerator::toString(RandomNumGenerator::randomize(32));
       message_body["mN"] = m_join_temporary_table[recv_id_b64]->merger_nonce;
 
-      OutputMessage output_message =
-          make_tuple(MessageType::MSG_CHALLENGE, receiver_list, message_body);
+      OutputMsgEntry output_message;
+      output_message.type = MessageType::MSG_CHALLENGE;
+      output_message.body = message_body;
+      output_message.receivers = receiver_list;
+
       proxy.deliverOutputMessage(output_message);
     }
   } break;
@@ -74,7 +77,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       return;
     }
 
-    OutputMessage output_message;
+    OutputMsgEntry output_message;
     if (verifySignature(recv_id, message_body_json)) {
       std::cout << "Validation success!" << std::endl;
 
@@ -116,12 +119,15 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
                              m_join_temporary_table[recv_id_b64]->signer_cert,
                              secret_key_vector, SignerStatus::TEMPORARY);
 
-      output_message =
-          make_tuple(MessageType::MSG_RESPONSE_2, receiver_list, message_body);
+      output_message.type = MessageType::MSG_RESPONSE_2;
+      output_message.body = message_body;
+      output_message.receivers = receiver_list;
+
     } else {
       m_join_temporary_table[recv_id_b64].release();
-      output_message =
-          make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
+      output_message.type = MessageType::MSG_ERROR;
+      output_message.body = json({});
+      output_message.receivers = receiver_list;
     }
     //    message_body[]
     proxy.deliverOutputMessage(output_message);
@@ -143,9 +149,10 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     message_body["time"] = timestamp;
     message_body["val"] = true;
 
-    OutputMessage output_message;
-    output_message =
-        make_tuple(MessageType::MSG_ACCEPT, receiver_list, message_body);
+    OutputMsgEntry output_message;
+    output_message.type = MessageType::MSG_ACCEPT;
+    output_message.body = message_body;
+    output_message.receivers = receiver_list;
 
     proxy.deliverOutputMessage(output_message);
   } break;
@@ -223,8 +230,12 @@ bool SignerPoolManager::isTimeout(string &signer_id_b64) {
 void SignerPoolManager::deliverErrorMessage(
     vector<signer_id_type> &receiver_list) {
   MessageProxy proxy;
-  OutputMessage output_message =
-      make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
+
+  OutputMsgEntry output_message;
+  output_message.type = MessageType::MSG_ERROR;
+  output_message.body = json({});
+  output_message.receivers = receiver_list;
+
   proxy.deliverOutputMessage(output_message);
 }
 } // namespace gruut
