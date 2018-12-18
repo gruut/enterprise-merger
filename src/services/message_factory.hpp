@@ -8,6 +8,7 @@
 #include "../chain/types.hpp"
 #include "../utils/time.hpp"
 #include "../utils/type_converter.hpp"
+#include "../services/output_queue.hpp"
 
 using namespace nlohmann;
 
@@ -16,7 +17,7 @@ using Signers = std::vector<Signer>;
 
 class MessageFactory {
 public:
-  static OutputMessage createSigRequestMessage(PartialBlock &block,
+  static OutputMsgEntry createSigRequestMessage(PartialBlock &block,
                                                Signers &signers) {
     json j_partial_block;
 
@@ -32,8 +33,11 @@ public:
       receivers_list.emplace_back(signer.user_id);
     });
 
-    auto output_message = std::make_tuple(MessageType::MSG_REQ_SSIG,
-                                          receivers_list, j_partial_block);
+    OutputMsgEntry output_message;
+    output_message.type = MessageType::MSG_REQ_SSIG;
+    output_message.body = j_partial_block;
+    output_message.receivers = receivers_list;
+
     return output_message;
   }
 };

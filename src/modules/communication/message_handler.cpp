@@ -12,7 +12,7 @@ MessageHandler::MessageHandler() {
 void MessageHandler::unpackMsg(std::string &packed_msg,
                                grpc::Status &rpc_status, id_type &recv_id) {
   using namespace grpc;
-  auto &input_queue = Application::app().getInputQueue();
+
   MessageHeader header = HeaderController::parseHeader(packed_msg);
   if (!validateMessage(header)) {
     rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message");
@@ -47,7 +47,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
     return;
   }
 
-  input_queue->emplace(make_tuple(header.message_type, recv_id, json_data));
+  m_input_queue->push(header.message_type, json_data);
   rpc_status = Status::OK;
 }
 

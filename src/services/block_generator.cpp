@@ -162,12 +162,15 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   msg_block["blockraw"] = block_raw_b64;
   msg_block["tx"] = block_body["tx"];
 
-  // TODO : change to use OutputQueueAlt
+  OutputMsgEntry msg_header_msg;
+  msg_header_msg.type = MessageType::MSG_HEADER;
+  msg_header_msg.body = msg_header;
+  msg_header_msg.receivers = vector<id_type>{};
 
-  auto msg_header_msg =
-      std::make_tuple(MessageType::MSG_HEADER, vector<id_type>{}, msg_header);
-  auto msg_block_msg =
-      std::make_tuple(MessageType::MSG_BLOCK, vector<id_type>{}, msg_block);
+  OutputMsgEntry msg_block_msg;
+  msg_block_msg.type = MessageType::MSG_BLOCK;
+  msg_block_msg.body = msg_block;
+  msg_block_msg.receivers = vector<id_type>{};
 
   MessageProxy proxy;
   proxy.deliverOutputMessage(msg_header_msg);
