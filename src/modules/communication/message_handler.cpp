@@ -1,4 +1,5 @@
 #include "message_handler.hpp"
+#include "../../config/config.hpp"
 #include "../../utils/compressor.hpp"
 #include "../../utils/type_converter.hpp"
 #include "merger_client.hpp"
@@ -19,7 +20,9 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
     return;
   }
   int body_size = getMsgBodySize(header);
-  recv_id = id_type(std::begin(header.sender_id), std::end(header.sender_id));
+  recv_id = header.sender_id;
+  std::string recv_str_id = TypeConverter::toBase64Str(recv_id);
+  std::cout << "signer id " << recv_str_id << std::endl;
 
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
     std::string msg = packed_msg.substr(0, HEADER_LENGTH + body_size);
@@ -57,8 +60,8 @@ void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
   nlohmann::json body = output_msg.body;
   MessageHeader header;
   header.message_type = msg_type;
-  // TODO : Compression type에 따라 수정 될 수 있습니다.
-  header.compression_algo_type = CompressionAlgorithmType::NONE;
+
+  header.compression_algo_type = config::COMPRESSION_ALGO_TYPE;
   std::string packed_msg = genPackedMsg(header, body);
   std::vector<std::string> packed_msg_list;
 
