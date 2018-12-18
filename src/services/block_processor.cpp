@@ -25,180 +25,59 @@ bool BlockProcessor::messageProcess(InputMsgEntry &entry) {
       }
     }
 
-    auto msg_blk = m_storage->readBlock(entry.body["hgt"]);
+    auto saved_block =
+        m_storage->readBlock(stoi(entry.body["hgt"].get<std::string>()));
 
-    if (std::get<0>(msg_blk) < 0) {
+    if (std::get<0>(saved_block) < 0) {
       return false;
     }
 
+    std::string recv_id_b64 = entry.body["mID"].get<std::string>();
+    id_type recv_id = TypeConverter::decodeBase64(recv_id_b64);
+
     OutputMsgEntry msg_block;
     msg_block.type = MessageType::MSG_BLOCK;
-    msg_block.body["blockraw"] = std::get<1>(msg_blk);
-    msg_block.body["tx"] = std::get<2>(msg_blk);
-    msg_block.receivers.emplace_back(entry.body["mID"].get<std::string>());
+    msg_block.body["blockraw"] = std::get<1>(saved_block);
+    msg_block.body["tx"] = std::get<2>(saved_block);
+    msg_block.receivers.emplace_back(recv_id);
 
     m_output_queue->push(msg_block);
 
   } else if (entry.type == MessageType::MSG_BLOCK) {
-    BytesBuilder block_raw_builder;
-    block_raw_builder.appendB64(entry.body["blockraw"].get<std::string>());
-    std::vector<uint8_t> block_raw = block_raw_builder.getBytes();
 
-    union ByteToInt {
-      uint8_t b[4];
-      uint32_t t;
-    };
+    std::string blockraw_str = entry.body["blockraw"].get<std::string>();
+    bytes block_raw = TypeConverter::decodeBase64(blockraw_str);
 
-    ByteToInt len_parse{};
-    len_parse.b[0] = block_raw[1];
-    len_parse.b[1] = block_raw[2];
-    len_parse.b[2] = block_raw[3];
-    len_parse.b[3] = block_raw[4];
+    nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
 
-    size_t header_end = len_parse.t;
-    std::string block_header_comp(block_raw.begin() + 5,
-                                  block_raw.begin() + header_end);
-
-    std::string block_json_str;
-    if (block_raw[0] == (uint8_t)CompressionAlgorithmType::LZ4) {
-      Compressor::decompressData(block_header_comp, block_json_str,
-                                 (int)header_end - 5);
-    } else if (block_raw[0] == (uint8_t)CompressionAlgorithmType::NONE) {
-      block_json_str.assign(block_header_comp);
-    } else {
-      std::cout << "unknown compress type" << std::endl;
+    if (block_json.empty())
       return false;
-    }
 
-    nlohmann::json block_json = nlohmann::json::parse(block_json_str);
+    std::vector<sha256> mtree_nodes;
 
-    std::vector<std::vector<uint8_t>> tx_digests;
-
-    if (!entry.body["tx"].is_array() || entry.body["tx"].empty() == 0) {
-      std::cout << "tx is not array" << std::endl;
+    if (!BlockValidator::validate(block_json, entry.body["tx"], mtree_nodes))
       return false;
-    }
 
-    std::unordered_map<std::string, std::string> user_cert_map;
+    std::vector<std::string> mtree_nodes_b64;
 
-    for (size_t i = 0; i < entry.body["tx"].size(); ++i) {
-
-      BytesBuilder tx_digest_builder;
-      tx_digest_builder.appendB64(
-          entry.body["tx"][i]["txid"].get<std::string>());
-      tx_digest_builder.append(entry.body["tx"][i]["time"].get<int64_t>());
-      tx_digest_builder.appendB64(
-          entry.body["tx"][i]["rID"].get<std::string>());
-      tx_digest_builder.append(entry.body["tx"][i]["type"].get<std::string>());
-
-      for (size_t j : entry.body["tx"][i]["content"]) {
-        tx_digest_builder.append(
-            entry.body["tx"][i]["content"][j].get<std::string>());
-      }
-
-      if (entry.body["tx"][i]["type"].get<std::string>() == "certificates") {
-        for (size_t j = 0; j < entry.body["tx"][i]["content"].size(); j += 2) {
-          user_cert_map[entry.body["tx"][i]["content"][j]] =
-              entry.body["tx"][i]["content"][j + 1];
-        }
-      }
-
-      BytesBuilder rsig_builder;
-      rsig_builder.appendB64(entry.body["tx"][i]["rSig"].get<std::string>());
-
-      auto it_merger_cert =
-          KNOWN_CERT_MAP.find(entry.body["tx"][i]["rID"].get<std::string>());
-
-      if (it_merger_cert == KNOWN_CERT_MAP.end()) {
-        std::cout << "no certificate for sender" << std::endl;
-        return false;
-      }
-
-      if (!RSA::doVerify(it_merger_cert->second, tx_digest_builder.getString(),
-                         rsig_builder.getBytes(), true)) {
-        std::cout << "invalid rSig" << std::endl;
-        return false;
-      }
-
-      tx_digest_builder.appendB64(
-          entry.body["tx"][i]["rSig"].get<std::string>());
-      tx_digests.emplace_back(Sha256::hash(tx_digest_builder.getString()));
-    }
-
-    MerkleTree merkle_tree;
-    merkle_tree.generate(tx_digests);
-    std::vector<sha256> mtree_nodes = merkle_tree.getMerkleTree();
-
-    BytesBuilder txrt_builder;
-    txrt_builder.appendB64(block_json["txrt"].get<std::string>());
-
-    if (txrt_builder.getBytes() != mtree_nodes.back()) {
-      std::cout << "invalid merkle tree root" << std::endl;
-      return false;
-    }
-
-    BytesBuilder ssig_msg_wo_sid_builder;
-    ssig_msg_wo_sid_builder.append(block_json["time"].get<int64_t>());
-    ssig_msg_wo_sid_builder.appendB64(block_json["mID"].get<std::string>());
-    ssig_msg_wo_sid_builder.appendB64(block_json["cID"].get<std::string>());
-    ssig_msg_wo_sid_builder.appendDec(block_json["hgt"].get<std::string>());
-    ssig_msg_wo_sid_builder.appendB64(block_json["txrt"].get<std::string>());
-    std::vector<uint8_t> ssig_msg_wo_sid = ssig_msg_wo_sid_builder.getBytes();
-
-    for (size_t k = 0; k < block_json["SSig"]["sID"].size(); ++k) {
-
-      BytesBuilder ssig_msg_builder;
-      ssig_msg_builder.appendB64(
-          block_json["SSig"][k]["sID"].get<std::string>());
-      ssig_msg_builder.append(ssig_msg_wo_sid);
-
-      BytesBuilder ssig_sig_builder;
-      ssig_sig_builder.appendB64(
-          block_json["SSig"][k]["sig"].get<std::string>());
-
-      std::string user_pk_pem;
-
-      if (user_cert_map.empty()) {
-        user_pk_pem = m_storage->findCertificate(
-            block_json["SSig"][k]["sID"].get<std::string>());
-      } else {
-        auto it_map =
-            user_cert_map.find(block_json["SSig"][k]["sID"].get<std::string>());
-        if (it_map != user_cert_map.end())
-          user_pk_pem = it_map->second;
-        else
-          user_pk_pem = m_storage->findCertificate(
-              block_json["SSig"][k]["sID"].get<std::string>());
-      }
-
-      if (user_pk_pem.empty()) {
-        return false;
-      }
-
-      if (!RSA::doVerify(user_pk_pem, ssig_msg_builder.getString(),
-                         ssig_sig_builder.getBytes(), true)) {
-        return false;
-      }
+    for (size_t i = 0; i < mtree_nodes.size(); ++i) {
+      mtree_nodes_b64[i] = TypeConverter::toBase64Str(mtree_nodes[i]);
     }
 
     nlohmann::json block_secret;
     block_secret["tx"] = entry.body["tx"];
     block_secret["txCnt"] = entry.body["tx"].size();
-
-    nlohmann::json mtree(mtree_nodes.size(), "");
-    for (size_t i = 0; i < mtree_nodes.size(); ++i) {
-      mtree[i] = mtree_nodes[i];
-    }
-
-    block_secret["mtree"] = mtree;
+    block_secret["mtree"] = mtree_nodes_b64;
 
     m_storage->saveBlock(entry.body["blockraw"].get<std::string>(), block_json,
                          block_secret);
+
+    // TODO :: delete duplicated TXs from tx_pool
   }
+  return true;
 }
 
 BlockProcessor::BlockProcessor() {
-  m_input_queue = InputQueueAlt::getInstance();
   m_output_queue = OutputQueueAlt::getInstance();
   m_storage = Storage::getInstance();
 }
