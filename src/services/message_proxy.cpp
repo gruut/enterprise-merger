@@ -4,6 +4,8 @@
 #include "../chain/message.hpp"
 #include "../chain/types.hpp"
 
+#include <iostream>
+
 using namespace nlohmann;
 
 namespace gruut {
@@ -13,6 +15,8 @@ MessageProxy::MessageProxy() { m_output_queue = OutputQueueAlt::getInstance(); }
 void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
   auto message_type = input_message.type;
   auto message_body_json = input_message.body;
+
+  cout << "message in : " << (int) message_type << "," <<  endl;
 
   switch (message_type) {
   case MessageType::MSG_JOIN:
@@ -34,6 +38,7 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
 }
 
 void MessageProxy::deliverOutputMessage(OutputMsgEntry &output_message) {
+  cout << "message out : " <<  (int)output_message.type << endl;
   m_output_queue->push(output_message);
 }
 } // namespace gruut
