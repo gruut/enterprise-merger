@@ -60,3 +60,5 @@ lib/leveldb/libleveldb\.a
 CTestTestfile\.cmake
 
 lib/leveldb/leveldbConfigVersion\.cmake
+
+.env
