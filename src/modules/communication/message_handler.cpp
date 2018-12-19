@@ -63,9 +63,7 @@ void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
   MessageHeader header;
   header.message_type = msg_type;
 
-  // TODO: 현재 압축해서 메시지를 보내려고 시도할때, 메시지가 전송되지 않습니다.
-  //문제 수정후 압축타입 지정 할 것입니다. 현재는 NONE 입니다.
-  header.compression_algo_type = CompressionAlgorithmType::NONE;
+  header.compression_algo_type = config::COMPRESSION_ALGO_TYPE;
   std::string packed_msg = genPackedMsg(header, body);
   std::vector<std::string> packed_msg_list;
 
@@ -117,8 +115,7 @@ MessageHandler::getJson(CompressionAlgorithmType compression_type,
   nlohmann::json unpacked_body;
   switch (compression_type) {
   case CompressionAlgorithmType::LZ4: {
-    std::string origin_data;
-    Compressor::decompressData(body, origin_data, body.size());
+    std::string origin_data = Compressor::decompressData(body);
     unpacked_body = nlohmann::json::parse(origin_data);
   } break;
   case CompressionAlgorithmType::NONE: {
@@ -136,8 +133,7 @@ std::string MessageHandler::genPackedMsg(MessageHeader &header,
 
   switch (header.compression_algo_type) {
   case CompressionAlgorithmType::LZ4: {
-    std::string compressed_body;
-    Compressor::compressData(body_dump, compressed_body);
+    std::string compressed_body = Compressor::compressData(body_dump);
     body_dump = compressed_body;
   } break;
   case CompressionAlgorithmType ::NONE:
