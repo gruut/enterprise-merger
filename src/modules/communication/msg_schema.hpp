@@ -177,7 +177,7 @@ const json SCHEMA_JOIN = R"({
   "description": "Signer의 네트워크 참여 요청",
   "type": "object",
   "properties": {
-    "sender": {
+    "sID": {
       "description": "송신자",
       "type": "string"
     },
@@ -195,7 +195,7 @@ const json SCHEMA_JOIN = R"({
     }
   },
   "required": [
-    "sender",
+    "sID",
     "time",
     "ver",
     "cID"
@@ -206,7 +206,7 @@ const json SCHEMA_RESPONSE_FIRST = R"({
   "description": "Signer가 Merger에게 보내는 신원 검증 요청에 대한 응답",
   "type": "object",
   "properties": {
-    "sender": {
+    "sID": {
       "description": "송신자",
       "type": "string"
     },
@@ -236,7 +236,7 @@ const json SCHEMA_RESPONSE_FIRST = R"({
     }
   },
   "required": [
-    "sender",
+    "sID",
     "time",
     "cert",
     "sN",
@@ -250,7 +250,7 @@ const json SCHEMA_SUCCESS = R"({
   "description": "Diffie–Hellman 키 교환의 성공을 알림",
   "type": "object",
   "properties": {
-    "sender": {
+    "sID": {
       "description": "송신자",
       "type": "string"
     },
@@ -264,7 +264,7 @@ const json SCHEMA_SUCCESS = R"({
     }
   },
   "required": [
-    "sender",
+    "sID",
     "time",
     "val"
   ]

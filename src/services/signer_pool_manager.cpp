@@ -36,7 +36,7 @@ SignerPoolManager::SignerPoolManager() {
 void SignerPoolManager::handleMessage(MessageType &message_type,
                                       json &message_body_json) {
 
-  string recv_id_b64 = message_body_json["sender"].get<string>();
+  string recv_id_b64 = message_body_json["sID"].get<string>();
   signer_id_type recv_id = TypeConverter::decodeBase64(recv_id_b64);
 
   MessageProxy proxy;
@@ -54,7 +54,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
           Time::from_now(config::JOIN_TIMEOUT_SEC);
 
       json message_body;
-      message_body["sender"] = TypeConverter::toBase64Str(m_my_id);
+      message_body["mID"] = TypeConverter::toBase64Str(m_my_id);
       message_body["time"] = timestamp;
 
       m_join_temporary_table[recv_id_b64]->merger_nonce =
@@ -84,7 +84,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
           message_body_json["cert"].get<string>();
 
       json message_body;
-      message_body["sender"] = TypeConverter::toBase64Str(m_my_id);
+      message_body["mID"] = TypeConverter::toBase64Str(m_my_id);
       message_body["time"] = timestamp;
       message_body["cert"] = m_my_cert;
 
@@ -142,7 +142,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     signer_pool.updateStatus(recv_id, SignerStatus::GOOD);
 
     json message_body;
-    message_body["sender"] = TypeConverter::toBase64Str(m_my_id);
+    message_body["mID"] = TypeConverter::toBase64Str(m_my_id);
     message_body["time"] = timestamp;
     message_body["val"] = true;
 
