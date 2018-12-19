@@ -6,6 +6,7 @@
 #include "../../src/modules/module.hpp"
 #include "../../src/application.hpp"
 #include "../../src/modules/communication/grpc_util.hpp"
+#include "../../src/modules/communication/http_client.hpp"
 #include "../../src/chain/transaction.hpp"
 #include "../../src/modules/message_fetcher/message_fetcher.hpp"
 #include "../../src/config/config.hpp"
@@ -88,4 +89,13 @@ BOOST_AUTO_TEST_SUITE(Test_JsonValidator)
         BOOST_TEST(!false_sample);
     }
 
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_HttpClient)
+  BOOST_AUTO_TEST_CASE(post) {
+    HttpClient client("10.10.10.108:3000/api/blocks");
+
+    CURLcode status = client.post("Hello world");
+    BOOST_TEST(true);
+  }
 BOOST_AUTO_TEST_SUITE_END()

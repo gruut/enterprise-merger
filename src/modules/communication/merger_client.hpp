@@ -24,8 +24,8 @@ public:
 private:
   RpcReceiverList *m_rpc_receiver_list;
 
-  void sendToSE(MessageType msg_type, std::vector<id_type> &receiver_list,
-                std::string &packed_msg);
+  void sendToSE(std::string &packed_msg);
+
   void sendToMerger(MessageType msg_type, std::vector<id_type> &receiver_list,
                     std::string &packed_msg);
   void sendToSigner(MessageType msg_type, std::vector<id_type> &receiver_list,
