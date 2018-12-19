@@ -62,7 +62,7 @@ public:
   void quit();
 
 private:
-  void runNextStage(int exit_code);
+  void runNextStage(ExitCode exit_code);
 
   shared_ptr<BpScheduler> m_bp_scheduler;
   shared_ptr<boost::asio::io_service> m_io_serv;

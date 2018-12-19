@@ -159,9 +159,9 @@ void BlockSynchronizer::blockSyncControl() {
       m_timer_sync_control->cancel();
 
       if (m_sync_alone)
-        m_finish_callback(-2);
+        m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
       else
-        m_finish_callback(-1);
+        m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
     }
 
     if (m_recv_block_list.empty()) { // not over, but empty
@@ -243,11 +243,11 @@ void BlockSynchronizer::blockSyncControl() {
 
       if (m_sync_fail) {
         if (m_sync_alone)
-          m_finish_callback(-2);
+          m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
         else
-          m_finish_callback(-1);
+          m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
       } else
-        m_finish_callback(1);
+        m_finish_callback(ExitCode::NORMAL);
 
       return;
     }
@@ -305,12 +305,12 @@ BlockSynchronizer::BlockSynchronizer() {
   m_storage = Storage::getInstance();
   m_inputQueue = InputQueueAlt::getInstance();
   m_outputQueue = OutputQueueAlt::getInstance();
-  m_setting = Setting::getInstance();
+  auto setting = Setting::getInstance();
 
-  m_my_id = m_setting->getMyId();
+  m_my_id = setting->getMyId();
 }
 
-void BlockSynchronizer::startBlockSync(std::function<void(int)> callback) {
+void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 
   cout << "BSYNC: startBlockSync()" << endl;
 

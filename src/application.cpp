@@ -47,7 +47,7 @@ void Application::start() {
   cout << "APP: start() - stage " << m_running_stage << endl << flush;
 
   if (m_modules[m_running_stage].empty()) {
-    runNextStage(-3);
+    runNextStage(ExitCode::ERROR_SKIP_STAGE);
     return;
   }
 
@@ -74,14 +74,15 @@ void Application::exec() {
   }
 }
 
-void Application::runNextStage(int exit_code) {
+void Application::runNextStage(ExitCode exit_code) {
 
   if (m_running_stage < m_modules.size()) {
-    cout << "APP: runNextStage(" << exit_code << ")" << endl << flush;
+    cout << "APP: runNextStage(" << (int)exit_code << ")" << endl << flush;
     ++m_running_stage;
     start();
   } else {
-    cout << "APP: runNextStage(" << exit_code << ") - No more stage" << endl
+    cout << "APP: runNextStage(" << (int)exit_code << ") - No more stage"
+         << endl
          << flush;
   }
 }

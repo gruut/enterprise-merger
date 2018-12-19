@@ -57,11 +57,12 @@ public:
         std::bind(&BootStraper::endSync, this, std::placeholders::_1));
   }
 
-  void endSync(int exit_code) {
+  void endSync(ExitCode exit_code) {
 
-    cout << "BST: endSync(" << exit_code << ")" << endl;
+    cout << "BST: endSync(" << (int)exit_code << ")" << endl;
 
-    if (exit_code == 1 || exit_code == -2) { // complete done or alone
+    if (exit_code == ExitCode::NORMAL ||
+        exit_code == ExitCode::ERROR_SYNC_ALONE) { // complete done or alone
       sendMsgUp();
 
       // TODO : BPscheduler, MessageFetcher 구동

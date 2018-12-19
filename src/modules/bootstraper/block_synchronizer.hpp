@@ -43,7 +43,6 @@ private:
   InputQueueAlt *m_inputQueue;
   OutputQueueAlt *m_outputQueue;
   Storage *m_storage;
-  Setting *m_setting;
 
   std::unique_ptr<boost::asio::deadline_timer> m_timer_msg_fetching;
   std::unique_ptr<boost::asio::deadline_timer> m_timer_sync_control;
@@ -54,7 +53,7 @@ private:
   merger_id_type m_my_id;
   int m_first_recv_block_height{-1};
 
-  std::function<void(int)> m_finish_callback;
+  std::function<void(ExitCode)> m_finish_callback;
   std::map<size_t, RcvBlock> m_recv_block_list;
   std::mutex m_block_list_mutex;
 
@@ -68,7 +67,7 @@ private:
 public:
   BlockSynchronizer();
 
-  void startBlockSync(std::function<void(int)> callback);
+  void startBlockSync(std::function<void(ExitCode)> callback);
 
 private:
   bool pushMsgToBlockList(InputMsgEntry &input_msg_entry);
