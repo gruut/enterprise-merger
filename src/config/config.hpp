@@ -39,10 +39,10 @@ constexpr uint8_t G = 'G';
 constexpr uint8_t VERSION = '1';
 constexpr uint8_t NOT_USED = 0x00;
 constexpr uint8_t RESERVED[6] = {0x00};
-constexpr size_t HEADER_LENGTH = 32;
-constexpr size_t SENDER_ID_LENGTH = 8;
-constexpr size_t RESERVED_LENGTH = 6;
-constexpr size_t MSG_LENGTH_SIZE = 4;
+constexpr int HEADER_LENGTH = 32;
+constexpr int SENDER_ID_LENGTH = 8;
+constexpr int RESERVED_LENGTH = 6;
+constexpr int MSG_LENGTH_SIZE = 4;
 
 const std::string PORT_NUM = "50051";
 } // namespace config

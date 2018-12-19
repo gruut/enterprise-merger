@@ -39,10 +39,14 @@ HeaderController::attachHeader(std::string &compressed_json,
   id_type sender_id = setting->getMyId();
   local_chain_id_type chain_id = setting->getLocalChainId();
 
+  memcpy(&header[10], &chain_id[0], CHAIN_ID_TYPE_SIZE);
+
   if (sender_id.size() >= config::SENDER_ID_LENGTH)
-    memcpy(&header[10], &sender_id[0], config::SENDER_ID_LENGTH);
-  memcpy(&header[18], &chain_id[0], CHAIN_ID_TYPE_SIZE);
-  memcpy(&header[26], &config::RESERVED[0], config::RESERVED_LENGTH);
+    memcpy(&header[10 + CHAIN_ID_TYPE_SIZE], &sender_id[0],
+           config::SENDER_ID_LENGTH);
+
+  memcpy(&header[10 + CHAIN_ID_TYPE_SIZE + config::SENDER_ID_LENGTH],
+         &config::RESERVED[0], config::RESERVED_LENGTH);
 
   return header + compressed_json;
 }
@@ -59,8 +63,11 @@ MessageHeader HeaderController::parseHeader(std::string &raw_data) {
   msg_header.dummy = static_cast<uint8_t>(raw_data[5]);
   memcpy(&msg_header.total_length[0], &raw_data[6], config::MSG_LENGTH_SIZE);
   memcpy(&msg_header.local_chain_id[0], &raw_data[10], CHAIN_ID_TYPE_SIZE);
-  memcpy(&msg_header.sender_id[0], &raw_data[18], config::SENDER_ID_LENGTH);
-  memcpy(&msg_header.reserved_space[0], &raw_data[26], config::RESERVED_LENGTH);
+  memcpy(&msg_header.sender_id[0], &raw_data[10 + CHAIN_ID_TYPE_SIZE],
+         config::SENDER_ID_LENGTH);
+  memcpy(&msg_header.reserved_space[0],
+         &raw_data[10 + CHAIN_ID_TYPE_SIZE + config::SENDER_ID_LENGTH],
+         config::RESERVED_LENGTH);
 
   return msg_header;
 }
