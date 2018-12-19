@@ -12,7 +12,7 @@ OutputQueue &Application::getOutputQueue() { return m_output_queue; }
 
 SignerPool &Application::getSignerPool() { return *m_signer_pool; }
 
-BpScheduler &Application::getBpScheduler() { return *m_bp_scheduler;}
+BpScheduler &Application::getBpScheduler() { return *m_bp_scheduler; }
 
 SignerPoolManager &Application::getSignerPoolManager() {
   return *m_signer_pool_manager;

@@ -12,11 +12,7 @@
 
 namespace gruut {
 
-enum class BpJobStatus {
-  DO,
-  DONT,
-  UNKNOWN
-};
+enum class BpJobStatus { DO, DONT, UNKNOWN };
 
 class TransactionCollector {
 public:
@@ -30,13 +26,13 @@ private:
   void updateStatus();
   void postJob();
 
-  BpStatus m_current_tx_status { BpStatus::IN_BOOT_WAIT };
-  BpStatus m_next_tx_status { BpStatus::UNKNOWN };
+  BpStatus m_current_tx_status{BpStatus::IN_BOOT_WAIT};
+  BpStatus m_next_tx_status{BpStatus::UNKNOWN};
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   SignatureRequester m_signature_requester;
   std::deque<BpJobStatus> m_bpjob_sequence;
 
-  bool m_timer_running { false };
+  bool m_timer_running{false};
 };
 } // namespace gruut
 #endif

@@ -1,10 +1,10 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 #define GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 
+#include <array>
 #include <botan-2/botan/secmem.h>
 #include <string>
 #include <vector>
-#include <array>
 
 namespace gruut {
 

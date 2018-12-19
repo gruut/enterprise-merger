@@ -10,9 +10,9 @@ BpScheduler::BpScheduler() {
 
 void BpScheduler::start() {
   m_timer.reset(
-	  new boost::asio::deadline_timer(Application::app().getIoService()));
+      new boost::asio::deadline_timer(Application::app().getIoService()));
   m_lock_timer.reset(
-	  new boost::asio::deadline_timer(Application::app().getIoService()));
+      new boost::asio::deadline_timer(Application::app().getIoService()));
   setMyIds();
   size_t timeslot = Time::now_int() / BP_INTERVAL;
   updateRecvStatus(m_my_mid_b64, timeslot, BpStatus::IN_BOOT_WAIT);
@@ -23,7 +23,7 @@ void BpScheduler::start() {
 }
 
 void BpScheduler::setMyIds() {
-  id_type  my_mid = m_setting->getMyId();
+  id_type my_mid = m_setting->getMyId();
   local_chain_id_type my_cid = m_setting->getLocalChainId();
 
   m_my_mid_b64 = TypeConverter::toBase64Str(my_mid);
@@ -120,7 +120,6 @@ void BpScheduler::reschedule() {
 
 void BpScheduler::lockStatus() {
 
-
   size_t current_slot = Time::now_int() / BP_INTERVAL;
   time_t next_slot_begin = (current_slot + 1) * BP_INTERVAL;
   boost::posix_time::ptime lock_time =
@@ -130,7 +129,7 @@ void BpScheduler::lockStatus() {
   m_lock_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
     } else if (ec.value() == 0) {
-	  postLockJob();
+      postLockJob();
       lockStatus();
     } else {
       throw;
@@ -138,11 +137,12 @@ void BpScheduler::lockStatus() {
   });
 }
 
-void BpScheduler::postLockJob(){
+void BpScheduler::postLockJob() {
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
-	Application::app().getTransactionCollector().setTxCollectStatus(m_current_status);
-	m_is_lock = true;
+    Application::app().getTransactionCollector().setTxCollectStatus(
+        m_current_status);
+    m_is_lock = true;
   });
 }
 
