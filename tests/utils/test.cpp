@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_SUITE(Test_Compressor)
         string original = "2013-01-07 00:00:04,0.98644,0.98676 2013-01-07 00:01:19,0.98654,0.98676 2013-01-07 00:01:38,0.98644,0.98696";
         string compressed_data, decompressed_data;
 
-        int compressed_size = Compressor::compressData(original, compressed_data);
-        Compressor::decompressData(compressed_data, decompressed_data, compressed_size);
+        compressed_data = Compressor::compressData(original);
+        decompressed_data = Compressor::decompressData(compressed_data);
 
         BOOST_TEST(decompressed_data == original);
     }

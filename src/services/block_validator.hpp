@@ -39,8 +39,7 @@ public:
                                   block_raw.begin() + header_end);
     std::string block_json_str;
     if (block_raw[0] == static_cast<uint8_t>(CompressionAlgorithmType::LZ4)) {
-      Compressor::decompressData(block_header_comp, block_json_str,
-                                 (int)header_end - 5);
+      block_json_str = Compressor::decompressData(block_header_comp);
     } else if (block_raw[0] ==
                static_cast<uint8_t>(CompressionAlgorithmType::NONE)) {
       block_json_str.assign(block_header_comp);
