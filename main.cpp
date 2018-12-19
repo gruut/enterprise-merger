@@ -21,9 +21,10 @@ json parseArg(int argc, char *argv[]){
   cxxopts::Options options(argv[0],
                            "Merger for Gruut Enterprise Networks (C++)\n");
   options.add_options("basic")("help", "Print help description")(
-    "in", "Setting file",
-    cxxopts::value<string>()->default_value("./setting.json"))
-    ("pass","Password to decrypt secret key",cxxopts::value<string>()->default_value(""));
+    "in", "Setting file", cxxopts::value<string>()->default_value("./setting.json"))
+    ("pass","Password to decrypt secret key",cxxopts::value<string>()->default_value(""))
+    ("port", "Port number", cxxopts::value<string>()->default_value(""));
+
 
   if (argc == 1) {
     cout << options.help({"basic"}) << endl;
@@ -49,6 +50,9 @@ json parseArg(int argc, char *argv[]){
     json setting_json = json::parse(setting_json_str);
 
     setting_json["pass"] = result["pass"].as<string>();
+    auto parsed_port_num = result["port"].as<string>();
+    if(!parsed_port_num.empty())
+      setting_json["Self"]["port"] = parsed_port_num;
 
     return setting_json;
 
