@@ -61,6 +61,7 @@ json parseArg(int argc, char *argv[]){
   }
 };
 
+
 int main(int argc, char *argv[]) {
 
   json setting_json = parseArg(argc,argv);
@@ -71,18 +72,19 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  // stage 0  modules
   shared_ptr<BootStraper> bootstraper = make_shared<BootStraper>();
-
-  // modules
   shared_ptr<Communication> moudle_communication = make_shared<Communication>();
-  shared_ptr<MessageFetcher> module_message_fetcher = make_shared<MessageFetcher>();
   shared_ptr<OutMessageFetcher> module_out_message_fetcher = make_shared<OutMessageFetcher>();
 
-  Application::app().regModule(moudle_communication);
-  //Application::app().regModule(module_message_fetcher);
-  Application::app().regModule(module_out_message_fetcher);
-  Application::app().regBootstraper(bootstraper);
-  Application::app().regMessageFetcher(module_message_fetcher);
+  // stage 1 modules
+  shared_ptr<MessageFetcher> module_message_fetcher = make_shared<MessageFetcher>();
+
+  Application::app().regModule(moudle_communication, 0);
+  Application::app().regModule(module_out_message_fetcher, 0);
+  Application::app().regModule(bootstraper, 0, true);
+
+  Application::app().regModule(module_message_fetcher, 1);
 
   Application::app().start();
   Application::app().exec();

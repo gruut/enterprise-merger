@@ -310,14 +310,17 @@ bool Storage::errorOn(const leveldb::Status &status) {
   return false;
 }
 
-pair<string, string> Storage::findLatestHashAndHeight() {
+pair<string, size_t> Storage::findLatestHashAndHeight() {
   auto block_id = getDataByKey(DBType::BLOCK_LATEST, "bID");
   if (block_id.empty())
-    return make_pair("", "");
+    return make_pair("", 0);
 
   auto hash = getDataByKey(DBType::BLOCK_RAW, block_id + "_hash");
   auto height = getDataByKey(DBType::BLOCK_LATEST, "hgt");
-  return make_pair(hash, height);
+  if (height.empty())
+    return make_pair(hash, 0);
+  else
+    return make_pair(hash, static_cast<size_t>(stoll(height)));
 }
 
 tuple<string, string, size_t> Storage::findLatestBlockBasicInfo() {
@@ -328,7 +331,11 @@ tuple<string, string, size_t> Storage::findLatestBlockBasicInfo() {
     std::get<0>(ret_tuple) = block_id;
     std::get<1>(ret_tuple) =
         getDataByKey(DBType::BLOCK_RAW, block_id + "_hash");
-    std::get<2>(ret_tuple) = stoll(getDataByKey(DBType::BLOCK_LATEST, "hgt"));
+    auto height = getDataByKey(DBType::BLOCK_LATEST, "hgt");
+    if (height.empty())
+      std::get<2>(ret_tuple) = 0;
+    else
+      std::get<2>(ret_tuple) = static_cast<size_t>(stoll(height));
   }
   return ret_tuple;
 }

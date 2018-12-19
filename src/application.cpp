@@ -1,8 +1,8 @@
 #include "application.hpp"
 #include "chain/transaction.hpp"
 #include "config/config.hpp"
-#include "modules/module.hpp"
 #include "modules/message_fetcher/message_fetcher.hpp"
+#include "modules/module.hpp"
 
 namespace gruut {
 boost::asio::io_service &Application::getIoService() { return *m_io_serv; }
@@ -23,52 +23,47 @@ TransactionCollector &Application::getTransactionCollector() {
 
 SignaturePool &Application::getSignaturePool() { return *m_signature_pool; }
 
-//void Application::start(){
-//
-//  cout << "APP: start()" << endl << flush;
-//
-//  //regModule(m_moudle_communication);
-//  //regModule(m_module_message_fetcher);
-//  //regModule(m_module_out_message_fetcher);
-//}
-
-void Application::regModule(shared_ptr<Module> module){
-  cout << "APP: regModule()" << endl << flush;
-  m_modules.emplace_back(module);
+PartialBlock &Application::getTemporaryPartialBlock() {
+  return temporary_partial_block;
 }
 
-void Application::regBootstraper(shared_ptr<BootStraper> bootstraper){
-  cout << "APP: regBootstraper()" << endl << flush;
-  m_bootstraper = bootstraper;
+void Application::regModule(shared_ptr<Module> module, int stage,
+                            bool runover_flag) {
+  if (runover_flag)
+    module->registCallBack(
+        std::bind(&Application::runNextStage, this, std::placeholders::_1));
+
+  while (stage + 1 > m_modules.size()) {
+    m_modules.emplace_back();
+  }
+
+  m_modules[stage].emplace_back(module);
 }
 
-void Application::regMessageFetcher(shared_ptr<MessageFetcher> message_fetcher) {
-  cout << "APP: regMessageFetcher()" << endl << flush;
-  m_message_fetcher = message_fetcher;
-}
+void Application::start() {
 
-void Application::start(){
+  cout << "APP: start() - stage " << m_running_stage << endl << flush;
+
+  if (m_modules[m_running_stage].empty()) {
+    runNextStage(-3);
+    return;
+  }
+
   try {
-    for(auto &module : m_modules) {
+    for (auto &module : m_modules[m_running_stage]) {
       module->start();
     }
-    m_modules.clear();
-  }
-  catch (...){
+  } catch (...) {
     quit();
-    throw ;
+    throw;
   }
 }
 
 void Application::exec() {
 
-  cout << "APP: exec()" << endl << flush;
-
   for (auto i = 0; i < config::MAX_THREAD; i++) {
     m_thread_group->emplace_back([this]() { m_io_serv->run(); });
   }
-
-  m_bootstraper->startSync(std::bind(&Application::runScheduler, this, std::placeholders::_1));
 
   for (auto &th : *m_thread_group) {
     if (th.joinable())
@@ -76,19 +71,21 @@ void Application::exec() {
   }
 }
 
-void Application::runScheduler(int exit_code){
+void Application::runNextStage(int exit_code) {
 
-  cout << "APP: runScheduler()" << endl << flush;
-
-  // TODO :: running BP scheduler and Message Fetcher
-  m_message_fetcher->start();
+  if (m_running_stage < m_modules.size()) {
+    cout << "APP: runNextStage(" << exit_code << ")" << endl << flush;
+    ++m_running_stage;
+    start();
+  } else {
+    cout << "APP: runNextStage(" << exit_code << ") - No more stage" << endl
+         << flush;
+  }
 }
 
 void Application::quit() { m_io_serv->stop(); }
 
 Application::Application() {
-
-  cout << "APP: Application()" << endl << flush;
 
   m_io_serv = make_shared<boost::asio::io_service>();
   m_signer_pool = make_shared<SignerPool>();
@@ -97,10 +94,6 @@ Application::Application() {
   m_transaction_collector = make_shared<TransactionCollector>();
   m_signature_pool = make_shared<SignaturePool>();
   m_thread_group = make_shared<std::vector<std::thread>>();
-
 }
 
-PartialBlock &Application::getTemporaryPartialBlock() {
-  return temporary_partial_block;
-}
 } // namespace gruut

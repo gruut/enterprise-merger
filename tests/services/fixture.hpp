@@ -45,7 +45,6 @@ public:
   }
   ~StorageFixture(){
     m_storage->deleteAllDirectory();
-    Storage::destroyInstance();
   }
 };
 #endif

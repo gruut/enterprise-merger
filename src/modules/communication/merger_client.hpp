@@ -22,7 +22,7 @@ public:
                    std::vector<std::string> &packed_msg_list);
 
 private:
-  RpcReceiverList* m_rpc_receiver_list;
+  RpcReceiverList *m_rpc_receiver_list;
 
   void sendToSE(MessageType msg_type, std::vector<id_type> &receiver_list,
                 std::string &packed_msg);

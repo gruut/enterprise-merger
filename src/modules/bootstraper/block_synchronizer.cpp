@@ -7,7 +7,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
   cout << "BSYNC: pushMsgToBlockList()" << endl;
 
   std::string block_raw_str =
-    input_msg_entry.body["blockraw"].get<std::string>();
+      input_msg_entry.body["blockraw"].get<std::string>();
   bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
 
   nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
@@ -30,7 +30,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
     temp.block_raw = std::move(block_raw);
     temp.block_json = std::move(block_json);
     temp.txs =
-      nlohmann::json::parse(input_msg_entry.body["tx"].get<std::string>());
+        nlohmann::json::parse(input_msg_entry.body["tx"].get<std::string>());
 
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
 
@@ -45,7 +45,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
     it_map->second.block_raw = std::move(block_raw);
     it_map->second.block_json = std::move(block_json);
     it_map->second.txs =
-      nlohmann::json::parse(input_msg_entry.body["tx"].get<std::string>());
+        nlohmann::json::parse(input_msg_entry.body["tx"].get<std::string>());
     it_map->second.mtree = {};
 
     m_block_list_mutex.unlock();
@@ -77,8 +77,11 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
       ans_merger_list.emplace_back(blk_item.second.merger_id_b64);
     }
 
-    std::string ans_merger_id_b64 = ans_merger_list[RandomNumGenerator::getRandRange(0,(int) (ans_merger_list.size() - 1))];
-    merger_id_type ans_merger_id = TypeConverter::decodeBase64(ans_merger_id_b64);
+    std::string ans_merger_id_b64 =
+        ans_merger_list[RandomNumGenerator::getRandRange(
+            0, (int)(ans_merger_list.size() - 1))];
+    merger_id_type ans_merger_id =
+        TypeConverter::decodeBase64(ans_merger_id_b64);
     receivers.emplace_back(ans_merger_id);
   }
 
@@ -147,7 +150,21 @@ void BlockSynchronizer::blockSyncControl() {
 
   auto &io_service = Application::app().getIoService();
   io_service.post(m_block_sync_strand->wrap([this]() {
-    if (m_recv_block_list.empty()) {
+    // step 0 - check whether this is done
+    if (Time::now_int() - m_last_task_time > config::MAX_WAIT_TIME) {
+      m_sync_done = true;
+      m_sync_fail = true;
+
+      m_timer_msg_fetching->cancel();
+      m_timer_sync_control->cancel();
+
+      if (m_sync_alone)
+        m_finish_callback(-2);
+      else
+        m_finish_callback(-1);
+    }
+
+    if (m_recv_block_list.empty()) { // not over, but empty
       return;
     }
 
@@ -155,14 +172,15 @@ void BlockSynchronizer::blockSyncControl() {
     for (auto &blk_item : m_recv_block_list) {
       if (blk_item.first == m_my_last_height + 1) {
         if (blk_item.second.block_json["prevH"].get<std::string>() ==
-          m_my_last_bhash) {
+            m_my_last_blk_hash_b64) {
           if (validateBlock(blk_item.first)) {
 
             std::lock_guard<std::mutex> lock(m_block_list_mutex);
             blk_item.second.state = BlockState::TOSAVE;
             m_block_list_mutex.unlock();
 
-            m_my_last_bhash = TypeConverter::toBase64Str(blk_item.second.hash);
+            m_my_last_blk_hash_b64 =
+                TypeConverter::toBase64Str(blk_item.second.hash);
             m_my_last_height = blk_item.first;
 
             m_last_task_time = Time::now_int();
@@ -185,7 +203,8 @@ void BlockSynchronizer::blockSyncControl() {
     }
 
     // step 3 - delete block list
-    for (auto it_map = m_recv_block_list.begin(); it_map != m_recv_block_list.end();) {
+    for (auto it_map = m_recv_block_list.begin();
+         it_map != m_recv_block_list.end();) {
       if (it_map->second.state == BlockState::TODELETE) {
         std::lock_guard<std::mutex> lock(m_block_list_mutex);
         m_recv_block_list.erase(it_map++);
@@ -213,39 +232,38 @@ void BlockSynchronizer::blockSyncControl() {
     }
 
     // step 5 - finishing
-    if (Time::now_int() - m_last_task_time > config::MAX_WAIT_TIME) {
-      m_sync_done = true;
-      m_sync_fail = true;
-    }
-
     if (m_first_recv_block_height <= m_my_last_height &&
-      m_recv_block_list.empty()) {
+        m_recv_block_list.empty()) {
       m_sync_done = true;
     }
 
-    if (m_sync_done) {
+    if (m_sync_done) { // ok! block sync was done
       m_timer_msg_fetching->cancel();
       m_timer_sync_control->cancel();
 
-      if (m_sync_fail)
-        m_finish_callback(-1);
-      else
+      if (m_sync_fail) {
+        if (m_sync_alone)
+          m_finish_callback(-2);
+        else
+          m_finish_callback(-1);
+      } else
         m_finish_callback(1);
+
+      return;
     }
   }));
 
   m_timer_sync_control->expires_from_now(
-    boost::posix_time::milliseconds(1000));
-  m_timer_sync_control->async_wait(
-    [this](const boost::system::error_code &ec) {
-      if (ec == boost::asio::error::operation_aborted) {
-      } else if (ec.value() == 0) {
-        blockSyncControl();
-      } else {
-        std::cout << "ERROR: " << ec.message() << std::endl;
-        throw;
-      }
-    });
+      boost::posix_time::milliseconds(config::SYNC_CONTROL_INTERVAL));
+  m_timer_sync_control->async_wait([this](const boost::system::error_code &ec) {
+    if (ec == boost::asio::error::operation_aborted) {
+    } else if (ec.value() == 0) {
+      blockSyncControl();
+    } else {
+      std::cout << "ERROR: " << ec.message() << std::endl;
+      throw;
+    }
+  });
 }
 
 void BlockSynchronizer::messageFetch() {
@@ -255,23 +273,25 @@ void BlockSynchronizer::messageFetch() {
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
     InputMsgEntry input_msg_entry = m_inputQueue->fetch();
+    if (input_msg_entry.type != MessageType::MSG_NULL) {
+      m_sync_alone = false; // Wow! I am not alone!
+    }
     if (input_msg_entry.type == MessageType::MSG_BLOCK) {
       pushMsgToBlockList(input_msg_entry);
     }
   });
 
   m_timer_msg_fetching->expires_from_now(
-    boost::posix_time::milliseconds(1000));
-  m_timer_msg_fetching->async_wait(
-    [this](const boost::system::error_code &ec) {
-      if (ec == boost::asio::error::operation_aborted) {
-      } else if (ec.value() == 0) {
-        messageFetch();
-      } else {
-        std::cout << "ERROR: " << ec.message() << std::endl;
-        throw;
-      }
-    });
+      boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTERVAL));
+  m_timer_msg_fetching->async_wait([this](const boost::system::error_code &ec) {
+    if (ec == boost::asio::error::operation_aborted) {
+    } else if (ec.value() == 0) {
+      messageFetch();
+    } else {
+      std::cout << "ERROR: " << ec.message() << std::endl;
+      throw;
+    }
+  });
 }
 
 BlockSynchronizer::BlockSynchronizer() {
@@ -285,12 +305,10 @@ BlockSynchronizer::BlockSynchronizer() {
   m_storage = Storage::getInstance();
   m_inputQueue = InputQueueAlt::getInstance();
   m_outputQueue = OutputQueueAlt::getInstance();
-}
+  m_setting = Setting::getInstance();
 
-void BlockSynchronizer::setMyID(const merger_id_type &my_ID) {
-  m_my_id = my_ID;
+  m_my_id = m_setting->getMyId();
 }
-
 
 void BlockSynchronizer::startBlockSync(std::function<void(int)> callback) {
 
@@ -298,10 +316,10 @@ void BlockSynchronizer::startBlockSync(std::function<void(int)> callback) {
 
   m_finish_callback = std::move(callback);
 
-  std::pair<std::string, std::string> hash_and_height =
-    m_storage->findLatestHashAndHeight();
-  m_my_last_height = stoi(hash_and_height.second);
-  m_my_last_bhash = hash_and_height.first;
+  std::pair<std::string, size_t> hash_and_height =
+      m_storage->findLatestHashAndHeight();
+  m_my_last_height = hash_and_height.second;
+  m_my_last_blk_hash_b64 = hash_and_height.first;
 
   m_recv_block_list.clear();
 
@@ -309,6 +327,5 @@ void BlockSynchronizer::startBlockSync(std::function<void(int)> callback) {
 
   messageFetch();
   blockSyncControl();
-
 }
-};
+}; // namespace gruut

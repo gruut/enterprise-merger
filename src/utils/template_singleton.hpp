@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <memory>
 #include <mutex>
 
 template <typename T> class TemplateSingleton {

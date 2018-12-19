@@ -1,15 +1,15 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 #define GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 
-#include "modules/module.hpp"
+#include "modules/bootstraper/boot_straper.hpp"
 #include "modules/communication/communication.hpp"
 #include "modules/message_fetcher/message_fetcher.hpp"
 #include "modules/message_fetcher/out_message_fetcher.hpp"
+#include "modules/module.hpp"
 #include "services/setting.hpp"
 #include "services/signer_pool_manager.hpp"
 #include "services/transaction_collector.hpp"
 #include "services/transaction_pool.hpp"
-#include "services/boot_straper.hpp"
 
 #include <boost/asio.hpp>
 #include <list>
@@ -51,16 +51,14 @@ public:
 
   PartialBlock &getTemporaryPartialBlock();
 
-  void regModule(shared_ptr<Module> module);
-  void regBootstraper(shared_ptr<BootStraper> bootstraper);
-  void regMessageFetcher(shared_ptr<MessageFetcher> message_fetcher);
+  void regModule(shared_ptr<Module> module, int stage,
+                 bool runover_flag = false);
   void start();
   void exec();
   void quit();
 
 private:
-
-  void runScheduler(int exit_code);
+  void runNextStage(int exit_code);
 
   shared_ptr<boost::asio::io_service> m_io_serv;
   PartialBlock temporary_partial_block;
@@ -72,11 +70,9 @@ private:
 
   shared_ptr<std::vector<std::thread>> m_thread_group;
 
-  std::vector<shared_ptr<Module>> m_modules;
+  std::vector<std::vector<shared_ptr<Module>>> m_modules;
 
-  shared_ptr<BootStraper> m_bootstraper;
-  shared_ptr<MessageFetcher> m_message_fetcher;
-
+  int m_running_stage{0};
 
   Application();
 

@@ -11,7 +11,7 @@
 namespace gruut {
 class Transaction {
 public:
-  Transaction(){}
+  Transaction() {}
   transaction_id_type transaction_id;
   timestamp_type sent_time;
   requestor_id_type requestor_id;

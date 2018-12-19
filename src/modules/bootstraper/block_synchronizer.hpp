@@ -40,32 +40,33 @@ struct RcvBlock {
 
 class BlockSynchronizer {
 private:
-  InputQueueAlt* m_inputQueue;
-  OutputQueueAlt* m_outputQueue;
-  Storage* m_storage;
+  InputQueueAlt *m_inputQueue;
+  OutputQueueAlt *m_outputQueue;
+  Storage *m_storage;
+  Setting *m_setting;
 
   std::unique_ptr<boost::asio::deadline_timer> m_timer_msg_fetching;
   std::unique_ptr<boost::asio::deadline_timer> m_timer_sync_control;
   std::unique_ptr<boost::asio::io_service::strand> m_block_sync_strand;
 
-  int m_my_last_height;
-  std::string m_my_last_bhash;
+  size_t m_my_last_height;
+  std::string m_my_last_blk_hash_b64;
   merger_id_type m_my_id;
   int m_first_recv_block_height{-1};
 
   std::function<void(int)> m_finish_callback;
-  std::map<int, RcvBlock> m_recv_block_list;
+  std::map<size_t, RcvBlock> m_recv_block_list;
   std::mutex m_block_list_mutex;
 
   timestamp_type m_last_task_time{0};
+
+  bool m_sync_alone{true};
 
   bool m_sync_done{false};
   bool m_sync_fail{false};
 
 public:
   BlockSynchronizer();
-
-  void setMyID(const merger_id_type &my_ID);
 
   void startBlockSync(std::function<void(int)> callback);
 

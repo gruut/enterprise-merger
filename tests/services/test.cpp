@@ -176,10 +176,10 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
 
   BOOST_AUTO_TEST_CASE(find_latest_hash_and_height) {
     StorageFixture storage_fixture;
-    pair<string, string> hash_and_height = storage_fixture.m_storage->findLatestHashAndHeight();
+    pair<string, int> hash_and_height = storage_fixture.m_storage->findLatestHashAndHeight();
 
     BOOST_TEST(hash_and_height.first == Sha256::toString(hash_sample));
-    BOOST_TEST(hash_and_height.second == "2");
+    BOOST_TEST(hash_and_height.second == 2);
   }
 
   BOOST_AUTO_TEST_CASE(find_latest_txid_list) {
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
     auto storage = Storage::getInstance();
 
     auto hash_and_height = storage->findLatestHashAndHeight();
-    BOOST_CHECK_EQUAL(hash_and_height.second, "1");
+    BOOST_CHECK_EQUAL(hash_and_height.second, 1);
 
     auto latest_list = storage->findLatestTxIdList();
     auto tx_id = latest_list[0];
