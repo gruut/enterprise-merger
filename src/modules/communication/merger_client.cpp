@@ -1,4 +1,5 @@
 #include "merger_client.hpp"
+#include "http_client.hpp"
 #include "merger_server.hpp"
 
 namespace gruut {
@@ -11,31 +12,22 @@ void MergerClient::sendMessage(MessageType msg_type,
   } else if (checkSignerMsgType(msg_type)) {
     sendToSigner(msg_type, receiver_list, packed_msg_list);
   } else if (checkSEMsgType(msg_type)) {
-    sendToSE(msg_type, receiver_list, packed_msg_list[0]);
+    sendToSE(packed_msg_list[0]);
   }
 }
 
-void MergerClient::sendToSE(MessageType msg_type,
-                            std::vector<id_type> &receiver_list,
-                            std::string &packed_msg) {
-  for (servend_id_type &se_id : receiver_list) {
-    // TODO: SE ID에 따른 ip와 port를 저장해 놓을 곳 필요.
-    std::unique_ptr<GruutSeService::Stub> stub = GruutSeService::NewStub(
-        CreateChannel("SE ip and port", InsecureChannelCredentials()));
+void MergerClient::sendToSE(std::string &packed_msg) {
+  auto setting = Setting::getInstance();
+  auto service_endpoints_list = setting->getServiceEndpointInfo();
 
-    ClientContext context;
-    // TODO: SE protobuf 수정작업 후 주석 해제.
+  auto service_endpoint = service_endpoints_list[0];
+  const string address = service_endpoint.address +
+                         "api/blocks"
+                         ":" +
+                         service_endpoint.port;
 
-    /*  DataRequest request;
-      DataReply reply;
-
-      request.set_data(msg);
-      Status status = stub->sendData(&context, request, &reply);
-      if(!status.ok())
-        std::cout<<status.error_code() << ":
-    "<<status.error_message()<<std::endl;
-    }*/
-  }
+  HttpClient http_client(address);
+  http_client.post(packed_msg);
 }
 
 void MergerClient::sendToMerger(MessageType msg_type,
@@ -132,7 +124,9 @@ bool MergerClient::checkSignerMsgType(MessageType msg_type) {
 }
 
 bool MergerClient::checkSEMsgType(MessageType msg_type) {
-  return (msg_type == MessageType::MSG_UP || msg_type == MessageType::MSG_PING);
+  return (msg_type == MessageType::MSG_UP ||
+          msg_type == MessageType::MSG_PING ||
+          msg_type == MessageType::MSG_HEADER);
   // TODO: 다른 MSG TYPE은 차 후 추가
 }
 }; // namespace gruut

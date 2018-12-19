@@ -23,6 +23,7 @@ struct GruutAuthorityInfo {
 struct ServiceEndpointInfo {
   id_type id;
   std::string address;
+  std::string port;
   std::string cert;
 };
 
