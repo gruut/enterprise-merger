@@ -26,10 +26,12 @@ private:
 
   void sendToSE(std::string &packed_msg);
 
-  void sendToMerger(MessageType msg_type, std::vector<id_type> &receiver_list,
+  void sendToMerger(std::vector<id_type> &receiver_list,
                     std::string &packed_msg);
   void sendToSigner(MessageType msg_type, std::vector<id_type> &receiver_list,
                     std::vector<std::string> &packed_msg_list);
+
+  void sendMsgToMerger(MergerInfo &merger_id, MergerDataRequest &request);
 
   bool checkMergerMsgType(MessageType msg_tpye);
   bool checkSignerMsgType(MessageType msg_tpye);
