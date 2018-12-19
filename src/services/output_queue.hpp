@@ -19,6 +19,8 @@ struct OutputMsgEntry {
   OutputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_,
                  std::vector<id_type> &msg_receivers_)
       : type(msg_type_), body(msg_body_), receivers(msg_receivers_) {}
+  OutputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_)
+      : type(msg_type_), body(msg_body_), receivers({}) {}
 };
 
 class OutputQueueAlt : public TemplateSingleton<OutputQueueAlt> {

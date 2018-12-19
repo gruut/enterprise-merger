@@ -252,15 +252,13 @@ private:
     return ret_str;
   }
 
-  bool validateSchema(json tmp) {
+  bool validateSchema(json &tmp) {
     json_validator schema_validator;
     schema_validator.set_root_schema(SCHEMA_SETTING);
     try {
       schema_validator.validate(tmp);
-      std::cout << "Validation succeeded" << std::endl;
       return true;
     } catch (const std::exception &e) {
-      std::cout << "Validation failed : " << e.what() << std::endl;
       return false;
     }
   }

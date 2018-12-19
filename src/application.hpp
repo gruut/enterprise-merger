@@ -64,7 +64,6 @@ public:
 private:
   void runNextStage(ExitCode exit_code);
 
-  shared_ptr<BpScheduler> m_bp_scheduler;
   shared_ptr<boost::asio::io_service> m_io_serv;
   PartialBlock temporary_partial_block;
   shared_ptr<SignerPool> m_signer_pool;
@@ -76,6 +75,8 @@ private:
   shared_ptr<std::vector<std::thread>> m_thread_group;
 
   std::vector<std::vector<shared_ptr<Module>>> m_modules;
+
+  shared_ptr<BpScheduler> m_bp_scheduler;
 
   int m_running_stage{0};
 

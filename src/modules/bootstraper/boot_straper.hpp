@@ -2,7 +2,7 @@
 
 #include "../../chain/types.hpp"
 #include "../../config/config.hpp"
-#include "../../services/output_queue.hpp"
+#include "../../services/message_proxy.hpp"
 #include "../../services/setting.hpp"
 #include "../../utils/time.hpp"
 #include "../module.hpp"
@@ -24,6 +24,7 @@ private:
   BlockSynchronizer m_block_synchronizer;
   merger_id_type m_my_id;
   local_chain_id_type m_my_localchain_id;
+  MessageProxy m_msg_proxy;
 
 public:
   BootStraper() {
@@ -45,8 +46,9 @@ public:
     msg_up["ver"] = to_string(1);
     msg_up["cID"] = TypeConverter::toBase64Str(m_my_localchain_id);
 
-    auto outputQueue = OutputQueueAlt::getInstance();
-    outputQueue->push(MessageType::MSG_UP, msg_up);
+    OutputMsgEntry output_msg(MessageType::MSG_UP, msg_up);
+
+    m_msg_proxy.deliverOutputMessage(output_msg);
   }
 
   void startSync() {

@@ -4,7 +4,7 @@
 #include "../../config/config.hpp"
 #include "../../services/block_validator.hpp"
 #include "../../services/input_queue.hpp"
-#include "../../services/output_queue.hpp"
+#include "../../services/message_proxy.hpp"
 #include "../../services/storage.hpp"
 #include "../../utils/bytes_builder.hpp"
 #include "../../utils/compressor.hpp"
@@ -41,8 +41,8 @@ struct RcvBlock {
 class BlockSynchronizer {
 private:
   InputQueueAlt *m_inputQueue;
-  OutputQueueAlt *m_outputQueue;
   Storage *m_storage;
+  MessageProxy m_msg_proxy;
 
   std::unique_ptr<boost::asio::deadline_timer> m_timer_msg_fetching;
   std::unique_ptr<boost::asio::deadline_timer> m_timer_sync_control;

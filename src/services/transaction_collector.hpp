@@ -8,6 +8,7 @@
 
 #include "../chain/types.hpp"
 #include "../modules/module.hpp"
+#include "setting.hpp"
 #include "signature_requester.hpp"
 
 namespace gruut {
@@ -16,8 +17,8 @@ enum class BpJobStatus { DO, DONT, UNKNOWN };
 
 class TransactionCollector {
 public:
-  TransactionCollector() = default;
-  void handleMessage(nlohmann::json message_body_json);
+  TransactionCollector();
+  void handleMessage(nlohmann::json msg_body_json);
   void setTxCollectStatus(BpStatus status);
 
 private:
@@ -31,6 +32,8 @@ private:
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   SignatureRequester m_signature_requester;
   std::deque<BpJobStatus> m_bpjob_sequence;
+
+  std::vector<ServiceEndpointInfo> m_service_endpoints;
 
   bool m_timer_running{false};
 };
