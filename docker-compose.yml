@@ -1,7 +1,7 @@
 version: '3'
 services:
   enterprise-merger:
-    image: doscode/merger-build-env:1.1
+    image: doscode/merger-build-env:latest
     env_file:
       - ./.env
     ports:
