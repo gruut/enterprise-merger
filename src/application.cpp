@@ -12,6 +12,8 @@ OutputQueue &Application::getOutputQueue() { return m_output_queue; }
 
 SignerPool &Application::getSignerPool() { return *m_signer_pool; }
 
+BpScheduler &Application::getBpScheduler() { return *m_bp_scheduler;}
+
 SignerPoolManager &Application::getSignerPoolManager() {
   return *m_signer_pool_manager;
 }
@@ -31,6 +33,7 @@ void Application::start(const vector<shared_ptr<Module>> &modules) {
     for (auto module : modules) {
       module->start();
     }
+
   } catch (...) {
     quit();
     throw;
@@ -51,6 +54,7 @@ void Application::exec() {
 void Application::quit() { m_io_serv->stop(); }
 
 Application::Application() {
+  m_bp_scheduler = make_shared<BpScheduler>();
   m_io_serv = make_shared<boost::asio::io_service>();
   m_input_queue = make_shared<queue<InputMessage>>();
   m_output_queue = make_shared<queue<OutputMessage>>();
@@ -59,7 +63,6 @@ Application::Application() {
   m_transaction_pool = make_shared<TransactionPool>();
   m_transaction_collector = make_shared<TransactionCollector>();
   m_signature_pool = make_shared<SignaturePool>();
-
   m_thread_group = make_shared<std::vector<std::thread>>();
 }
 
