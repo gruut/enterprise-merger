@@ -1,4 +1,5 @@
 #include "message_handler.hpp"
+#include "../../config/config.hpp"
 #include "../../utils/compressor.hpp"
 #include "../../utils/type_converter.hpp"
 #include "merger_client.hpp"
@@ -12,14 +13,18 @@ MessageHandler::MessageHandler() {
 void MessageHandler::unpackMsg(std::string &packed_msg,
                                grpc::Status &rpc_status, id_type &recv_id) {
   using namespace grpc;
-
+  if (packed_msg.size() < config::HEADER_LENGTH) {
+    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message");
+    return;
+  }
   MessageHeader header = HeaderController::parseHeader(packed_msg);
   if (!validateMessage(header)) {
     rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message");
     return;
   }
   int body_size = getMsgBodySize(header);
-  recv_id = id_type(std::begin(header.sender_id), std::end(header.sender_id));
+  recv_id = header.sender_id;
+  std::string recv_str_id = TypeConverter::toBase64Str(recv_id);
 
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
     std::string msg = packed_msg.substr(0, HEADER_LENGTH + body_size);
@@ -57,7 +62,9 @@ void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
   nlohmann::json body = output_msg.body;
   MessageHeader header;
   header.message_type = msg_type;
-  // TODO : Compression type에 따라 수정 될 수 있습니다.
+
+  // TODO: 현재 압축해서 메시지를 보내려고 시도할때, 메시지가 전송되지 않습니다.
+  //문제 수정후 압축타입 지정 할 것입니다. 현재는 NONE 입니다.
   header.compression_algo_type = CompressionAlgorithmType::NONE;
   std::string packed_msg = genPackedMsg(header, body);
   std::vector<std::string> packed_msg_list;
