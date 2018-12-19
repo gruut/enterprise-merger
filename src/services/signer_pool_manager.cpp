@@ -82,9 +82,10 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       std::cout << "Validation success!" << std::endl;
 
       auto signer_pk_cert = message_body_json["cert"].get<string>();
-      auto cert_vector = TypeConverter::decodeBase64(signer_pk_cert);
-      string decoded_cert_str(cert_vector.begin(), cert_vector.end());
-      m_join_temporary_table[recv_id_b64]->signer_cert = decoded_cert_str;
+      cout << " signer_pk_cert original is  " << signer_pk_cert << endl;
+//      auto cert_vector = TypeConverter::decodeBase64(signer_pk_cert);
+//      string decoded_cert_str(cert_vector.begin(), cert_vector.end());
+      m_join_temporary_table[recv_id_b64]->signer_cert = signer_pk_cert;
 
       json message_body;
       message_body["sender"] = TypeConverter::toBase64Str(m_my_id);
