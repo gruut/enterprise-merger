@@ -1,42 +1,43 @@
 #pragma once
 
-#include "../../../include/nlohmann/json.hpp"
 #include "../../chain/types.hpp"
 #include "../../config/config.hpp"
 #include "../../services/output_queue.hpp"
 #include "../../services/setting.hpp"
 #include "../../utils/time.hpp"
+#include "../module.hpp"
 #include "block_synchronizer.hpp"
+#include "nlohmann/json.hpp"
 
 #include <boost/asio.hpp>
 #include <chrono>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <thread>
 
 namespace gruut {
 
-class BootStraper {
+class BootStraper : public Module {
 private:
-  OutputQueueAlt *m_outputQueue;
   BlockSynchronizer m_block_synchronizer;
-  Setting *m_setting;
-
   merger_id_type m_my_id;
   local_chain_id_type m_my_localchain_id;
 
 public:
   BootStraper() {
-    m_outputQueue = OutputQueueAlt::getInstance();
-    m_setting = Setting::getInstance();
-
-    m_my_id = m_setting->getMyId();
-    m_my_localchain_id = m_setting->getLocalChainId();
+    auto setting = Setting::getInstance();
+    m_my_id = setting->getMyId();
+    m_my_localchain_id = setting->getLocalChainId();
   }
-  ~BootStraper() {}
+  ~BootStraper() = default;
+
+  void start() override { startSync(); }
 
   void sendMsgUp() {
+
+    cout << "BST: sendMsgUp()" << endl;
 
     nlohmann::json msg_up;
     msg_up["mID"] = TypeConverter::toBase64Str(m_my_id);
@@ -44,20 +45,29 @@ public:
     msg_up["ver"] = to_string(1);
     msg_up["cID"] = TypeConverter::toBase64Str(m_my_localchain_id);
 
-    m_outputQueue->push(MessageType::MSG_UP, msg_up);
+    auto outputQueue = OutputQueueAlt::getInstance();
+    outputQueue->push(MessageType::MSG_UP, msg_up);
   }
 
   void startSync() {
-    m_block_synchronizer.setMyID(m_my_id);
+
+    cout << "BST: startSync()" << endl;
+
     m_block_synchronizer.startBlockSync(
         std::bind(&BootStraper::endSync, this, std::placeholders::_1));
   }
 
-  void endSync(int exit_code) {
-    if (exit_code == 1) {
+  void endSync(ExitCode exit_code) {
+
+    cout << "BST: endSync(" << (int)exit_code << ")" << endl;
+
+    if (exit_code == ExitCode::NORMAL ||
+        exit_code == ExitCode::ERROR_SYNC_ALONE) { // complete done or alone
       sendMsgUp();
 
       // TODO : BPscheduler, MessageFetcher 구동
+
+      stageOver(exit_code);
 
     } else {
       std::this_thread::sleep_for(

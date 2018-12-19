@@ -21,7 +21,6 @@ public:
   ~MergerServer() {
     m_server->Shutdown();
     m_completion_queue->Shutdown();
-    m_rpc_receivers->destroyInstance();
   }
   void runServer(const std::string &port_num);
 

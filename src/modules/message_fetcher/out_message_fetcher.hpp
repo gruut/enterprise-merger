@@ -3,6 +3,7 @@
 #include "../../services/output_queue.hpp"
 #include "../module.hpp"
 #include <boost/asio.hpp>
+#include <memory>
 
 namespace gruut {
 class OutMessageFetcher : public Module {

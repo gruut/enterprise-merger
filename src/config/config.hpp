@@ -37,6 +37,8 @@ constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 20;
 constexpr size_t MAX_REQ_BLOCK_RETRY = 5;
 constexpr size_t MAX_WAIT_TIME = 5;
 
+constexpr int SYNC_CONTROL_INTERVAL = 500;
+
 const std::string DEFAULT_PORT_NUM = "50051";
 
 constexpr uint8_t G = 'G';

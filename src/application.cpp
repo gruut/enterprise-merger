@@ -1,14 +1,11 @@
 #include "application.hpp"
 #include "chain/transaction.hpp"
 #include "config/config.hpp"
+#include "modules/message_fetcher/message_fetcher.hpp"
 #include "modules/module.hpp"
 
 namespace gruut {
 boost::asio::io_service &Application::getIoService() { return *m_io_serv; }
-
-InputQueue &Application::getInputQueue() { return m_input_queue; }
-
-OutputQueue &Application::getOutputQueue() { return m_output_queue; }
 
 SignerPool &Application::getSignerPool() { return *m_signer_pool; }
 
@@ -28,9 +25,34 @@ TransactionCollector &Application::getTransactionCollector() {
 
 SignaturePool &Application::getSignaturePool() { return *m_signature_pool; }
 
-void Application::start(const vector<shared_ptr<Module>> &modules) {
+PartialBlock &Application::getTemporaryPartialBlock() {
+  return temporary_partial_block;
+}
+
+void Application::regModule(shared_ptr<Module> module, int stage,
+                            bool runover_flag) {
+  if (runover_flag)
+    module->registCallBack(
+        std::bind(&Application::runNextStage, this, std::placeholders::_1));
+
+  while (stage + 1 > m_modules.size()) {
+    m_modules.emplace_back();
+  }
+
+  m_modules[stage].emplace_back(module);
+}
+
+void Application::start() {
+
+  cout << "APP: start() - stage " << m_running_stage << endl << flush;
+
+  if (m_modules[m_running_stage].empty()) {
+    runNextStage(ExitCode::ERROR_SKIP_STAGE);
+    return;
+  }
+
   try {
-    for (auto module : modules) {
+    for (auto &module : m_modules[m_running_stage]) {
       module->start();
     }
 
@@ -41,6 +63,7 @@ void Application::start(const vector<shared_ptr<Module>> &modules) {
 }
 
 void Application::exec() {
+
   for (auto i = 0; i < config::MAX_THREAD; i++) {
     m_thread_group->emplace_back([this]() { m_io_serv->run(); });
   }
@@ -51,13 +74,26 @@ void Application::exec() {
   }
 }
 
+void Application::runNextStage(ExitCode exit_code) {
+
+  if (m_running_stage < m_modules.size()) {
+    cout << "APP: runNextStage(" << (int)exit_code << ")" << endl << flush;
+    ++m_running_stage;
+    start();
+  } else {
+    cout << "APP: runNextStage(" << (int)exit_code << ") - No more stage"
+         << endl
+         << flush;
+  }
+}
+
 void Application::quit() { m_io_serv->stop(); }
 
 Application::Application() {
+
   m_bp_scheduler = make_shared<BpScheduler>();
+
   m_io_serv = make_shared<boost::asio::io_service>();
-  m_input_queue = make_shared<queue<InputMessage>>();
-  m_output_queue = make_shared<queue<OutputMessage>>();
   m_signer_pool = make_shared<SignerPool>();
   m_signer_pool_manager = make_shared<SignerPoolManager>();
   m_transaction_pool = make_shared<TransactionPool>();
@@ -66,7 +102,4 @@ Application::Application() {
   m_thread_group = make_shared<std::vector<std::thread>>();
 }
 
-PartialBlock &Application::getTemporaryPartialBlock() {
-  return temporary_partial_block;
-}
 } // namespace gruut

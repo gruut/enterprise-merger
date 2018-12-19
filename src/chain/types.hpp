@@ -72,6 +72,14 @@ enum class DBType : int {
 
 enum class BlockState { RECEIVED, TOSAVE, TODELETE, RETRIED };
 
+enum class ExitCode {
+  NORMAL,
+  ERROR_COMMON,
+  ERROR_SYNC_ALONE,
+  ERROR_SYNC_FAIL,
+  ERROR_SKIP_STAGE
+};
+
 using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
 using timestamp_type = uint64_t;

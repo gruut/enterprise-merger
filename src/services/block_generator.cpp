@@ -17,9 +17,9 @@ PartialBlock
 BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest,
                                      vector<Transaction> &transactions) {
 
-  Setting *setting = Setting::getInstance();
+  auto setting = Setting::getInstance();
 
-  Storage *storage = Storage::getInstance();
+  auto storage = Storage::getInstance();
   tuple<string, string, size_t> latest_block_info =
       storage->findLatestBlockBasicInfo();
 
@@ -45,8 +45,8 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
 
   // step 1) preparing basic data
 
-  Setting *setting = Setting::getInstance();
-  Storage *storage = Storage::getInstance();
+  auto setting = Setting::getInstance();
+  auto storage = Storage::getInstance();
 
   block_version_type version = 1;
   tuple<string, string, size_t> latest_block_info =

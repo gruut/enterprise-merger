@@ -77,7 +77,7 @@ public:
   static bool validate(nlohmann::json &block_json, nlohmann::json &txs,
                        std::vector<sha256> &mtree_nodes) {
 
-    Setting *setting = Setting::getInstance();
+    auto setting = Setting::getInstance();
     std::vector<MergerInfo> mergers = setting->getMergerInfo();
 
     std::vector<sha256> tx_digests;
@@ -148,7 +148,7 @@ public:
     ssig_msg_wo_sid_builder.appendB64(block_json["txrt"].get<std::string>());
     bytes ssig_msg_wo_sid = ssig_msg_wo_sid_builder.getBytes();
 
-    Storage *storage_manager = Storage::getInstance();
+    auto storage_manager = Storage::getInstance();
 
     for (size_t k = 0; k < block_json["SSig"]["sID"].size(); ++k) {
       BytesBuilder ssig_msg_builder;

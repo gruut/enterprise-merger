@@ -57,7 +57,7 @@ public:
   ~Storage();
 
   bool saveBlock(const string &block_raw, json &block_header, json &block_body);
-  pair<string, string> findLatestHashAndHeight();
+  pair<string, size_t> findLatestHashAndHeight();
   tuple<string, string, size_t> findLatestBlockBasicInfo();
   vector<string> findLatestTxIdList();
   string findCertificate(const string &user_id,

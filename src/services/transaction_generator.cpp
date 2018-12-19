@@ -18,7 +18,7 @@ void TransactionGenerator::generate(vector<Signer> &signers) {
   bytes signature_message;
   BytesBuilder msg_builder;
 
-  Setting *setting = Setting::getInstance();
+  auto setting = Setting::getInstance();
   string rsa_sk_pem = setting->getMySK();
   string rsa_sk_pass = setting->getMyPass();
 
