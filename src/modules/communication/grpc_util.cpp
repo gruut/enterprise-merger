@@ -33,9 +33,18 @@ HeaderController::attachHeader(std::string &compressed_json,
   }
   header[6] |= total_length;
 
-  memcpy(&header[10], &LOCAL_CHAIN_ID[0], 8);
-  memcpy(&header[18], &SENDER_ID[0], 8);
-  memcpy(&header[26], &RESERVED[0], 6);
+  Setting *setting = Setting::getInstance();
+  id_type sender_id = setting->getMyId();
+  local_chain_id_type chain_id = setting->getLocalChainId();
+
+  memcpy(&header[10], &chain_id[0], CHAIN_ID_TYPE_SIZE);
+
+  if (sender_id.size() >= config::SENDER_ID_LENGTH)
+    memcpy(&header[10 + CHAIN_ID_TYPE_SIZE], &sender_id[0],
+           config::SENDER_ID_LENGTH);
+
+  memcpy(&header[10 + CHAIN_ID_TYPE_SIZE + config::SENDER_ID_LENGTH],
+         &config::RESERVED[0], config::RESERVED_LENGTH);
 
   return header + compressed_json;
 }

@@ -31,6 +31,16 @@ constexpr size_t SIGNATURE_COLLECTION_INTERVAL = 3000;
 constexpr size_t SIGNATURE_COLLECTION_CHECK_INTERVAL = 500;
 
 const std::string PORT_NUM = "50051";
+
+constexpr uint8_t G = 'G';
+constexpr uint8_t VERSION = '1';
+constexpr uint8_t NOT_USED = 0x00;
+constexpr uint8_t RESERVED[6] = {0x00};
+constexpr int HEADER_LENGTH = 32;
+constexpr int SENDER_ID_LENGTH = 8;
+constexpr int RESERVED_LENGTH = 6;
+constexpr int MSG_LENGTH_SIZE = 4;
+
 } // namespace config
 } // namespace gruut
 #endif
