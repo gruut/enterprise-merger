@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "../../include/json-schema.hpp"
 #include "../../include/nlohmann/json.hpp"
 #include "../chain/types.hpp"
 #include "../utils/template_singleton.hpp"
@@ -12,7 +11,6 @@
 
 namespace gruut {
 using namespace nlohmann;
-using namespace nlohmann::json_schema_draft4;
 
 struct GruutAuthorityInfo {
   id_type id;
@@ -32,101 +30,6 @@ struct MergerInfo {
   std::string port;
   std::string cert;
 };
-
-const json SCHEMA_SETTING = R"(
-{
-  "title": "Setting",
-  "description": "Self, LocalChain, GA, SE, MG의 기본 Setting",
-  "type": "object",
-  "properties": {
-    "Self": {
-      "description": "Self의 id, address, port, sk",
-      "type":"object",
-      "properties" : {
-        "id" : {"type":"string"},
-        "address" : {"type":"string"},
-        "port" : {"type":"string"},
-        "sk" : {"type":"array"}
-      },
-      "required": [
-        "id",
-        "address",
-        "port",
-        "sk"
-      ]
-    },
-    "LocalChain": {
-      "description": "LocalChain의 id, name",
-      "type":"object",
-      "properties" : {
-        "id" : {"type":"string"},
-        "name" : {"type":"string"}
-      },
-      "required": [
-        "id",
-        "name"
-      ]
-    },
-    "GA": {
-      "description": "Gruut Authority의 id, address, cert",
-      "type":"object",
-      "properties" : {
-        "id" : {"type":"string"},
-        "address" : {"type":"string"},
-        "cert" : {"type":"array"}
-      },
-      "required": [
-        "id",
-        "address",
-        "cert"
-      ]
-    },
-    "SE": {
-      "description": "Service Endpoint의 id, address, cert",
-      "type":"array",
-      "items":{
-        "type":"object",
-        "properties" : {
-          "id" : {"type":"string"},
-          "address" : {"type":"string"},
-          "cert" : {"type":"array"}
-        },
-        "required": [
-          "id",
-          "address",
-          "cert"
-        ]
-      }
-    },
-    "MG": {
-      "description": "Merger의 id, address, port, cert",
-      "type":"array",
-      "items":{
-        "type":"object",
-        "properties" : {
-          "id" : {"type":"string"},
-          "address" : {"type":"string"},
-          "port" : {"type":"string"},
-          "cert" : {"type":"array"}
-        },
-        "required": [
-          "id",
-          "address",
-          "port",
-          "cert"
-        ]
-      }
-    }
-  },
-  "required": [
-    "Self",
-    "LocalChain",
-    "GA",
-    "SE",
-    "MG"
-  ]
-}
-)"_json;
 
 class Setting : public TemplateSingleton<Setting> {
 private:
@@ -158,8 +61,7 @@ public:
 
   bool setJson(json &setting_json) {
 
-    if (!validateSchema(setting_json))
-      return false;
+    // TODO :: schema check here
 
     m_id = getIdFromJson(setting_json["Self"]["id"]);
     m_address = setting_json["Self"]["address"].get<std::string>();
@@ -249,19 +151,6 @@ private:
       }
     }
     return ret_str;
-  }
-
-  bool validateSchema(json tmp) {
-    json_validator schema_validator;
-    schema_validator.set_root_schema(SCHEMA_SETTING);
-    try {
-      schema_validator.validate(tmp);
-      std::cout << "Validation succeeded" << std::endl;
-      return true;
-    } catch (const std::exception &e) {
-      std::cout << "Validation failed : " << e.what() << std::endl;
-      return false;
-    }
   }
 };
 } // namespace gruut
