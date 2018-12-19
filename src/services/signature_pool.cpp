@@ -70,6 +70,7 @@ bool SignaturePool::verifySignature(signer_id_type &receiver_id,
   PartialBlock &partial_block = Application::app().getTemporaryPartialBlock();
 
   bytes_builder.append(partial_block.merger_id);
+  bytes_builder.append(partial_block.chain_id);
   bytes_builder.append(partial_block.height);
   bytes_builder.append(partial_block.transaction_root);
 
@@ -81,8 +82,9 @@ bool SignaturePool::verifySignature(signer_id_type &receiver_id,
   bool verify_result = RSA::doVerify(pk_cert, signature_message_bytes,
                                      signer_signature_bytes, true);
 
-  cout << "sig verify result is "  << verify_result;
-  cout << "pkcert is "  << pk_cert;
+  string msg_b64 = TypeConverter::toBase64Str(signature_message_bytes);
+  cout << "msg to sig = " << msg_b64 << endl;
+  cout << "sig verify result is "  << verify_result << endl;
 
   return verify_result;
 }
