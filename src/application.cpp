@@ -9,6 +9,8 @@ boost::asio::io_service &Application::getIoService() { return *m_io_serv; }
 
 SignerPool &Application::getSignerPool() { return *m_signer_pool; }
 
+BpScheduler &Application::getBpScheduler() { return *m_bp_scheduler;}
+
 SignerPoolManager &Application::getSignerPoolManager() {
   return *m_signer_pool_manager;
 }
@@ -53,6 +55,7 @@ void Application::start() {
     for (auto &module : m_modules[m_running_stage]) {
       module->start();
     }
+
   } catch (...) {
     quit();
     throw;
@@ -86,6 +89,8 @@ void Application::runNextStage(int exit_code) {
 void Application::quit() { m_io_serv->stop(); }
 
 Application::Application() {
+
+  m_bp_scheduler = make_shared<BpScheduler>();
 
   m_io_serv = make_shared<boost::asio::io_service>();
   m_signer_pool = make_shared<SignerPool>();

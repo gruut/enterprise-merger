@@ -5,6 +5,7 @@
 #include "modules/communication/communication.hpp"
 #include "modules/message_fetcher/message_fetcher.hpp"
 #include "modules/message_fetcher/out_message_fetcher.hpp"
+#include "modules/bp_scheduler/bp_scheduler.hpp"
 #include "modules/module.hpp"
 #include "services/setting.hpp"
 #include "services/signer_pool_manager.hpp"
@@ -54,12 +55,18 @@ public:
   void regModule(shared_ptr<Module> module, int stage,
                  bool runover_flag = false);
   void start();
+
+  BpScheduler &getBpScheduler();
+
+  
   void exec();
   void quit();
 
 private:
+
   void runNextStage(int exit_code);
 
+  shared_ptr<BpScheduler> m_bp_scheduler;
   shared_ptr<boost::asio::io_service> m_io_serv;
   PartialBlock temporary_partial_block;
   shared_ptr<SignerPool> m_signer_pool;

@@ -28,6 +28,10 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
   case MessageType::MSG_SSIG: {
     Application::app().getSignaturePool().handleMessage(message_body_json);
   } break;
+  case MessageType::MSG_PING:
+  case MessageType::MSG_UP: {
+    Application::app().getBpScheduler().handleMessage(input_message);
+  } break;
   default:
     break;
   }
