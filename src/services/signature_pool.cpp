@@ -67,6 +67,7 @@ bool SignaturePool::verifySignature(signer_id_type &receiver_id,
   PartialBlock &partial_block = Application::app().getTemporaryPartialBlock();
 
   bytes_builder.append(partial_block.merger_id);
+  bytes_builder.append(partial_block.chain_id);
   bytes_builder.append(partial_block.height);
   bytes_builder.append(partial_block.transaction_root);
 

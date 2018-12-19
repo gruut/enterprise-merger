@@ -70,8 +70,6 @@ void SignatureRequester::timerStopAndCreateBlock() {
   auto &signature_pool = Application::app().getSignaturePool();
   if (signature_pool.size() >= config::MIN_SIGNATURE_COLLECT_SIZE &&
       signature_pool.size() <= config::MAX_SIGNATURE_COLLECT_SIZE) {
-    cout << "SIG POOL SIZE: " << signature_pool.size() << endl;
-    std::cout << "CREATE BLOCK!" << std::endl;
 
     auto temp_partial_block = Application::app().getTemporaryPartialBlock();
 
