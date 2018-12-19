@@ -1,5 +1,5 @@
 #include "grpc_util.hpp"
-#include "../../../include/json_schema.hpp"
+#include "../../../include/json-schema.hpp"
 #include "../../utils/compressor.hpp"
 #include "msg_schema.hpp"
 #include <botan/hex.h>
