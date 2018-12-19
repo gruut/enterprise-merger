@@ -35,6 +35,8 @@ constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 20;
 constexpr size_t MAX_REQ_BLOCK_RETRY = 5;
 constexpr size_t MAX_WAIT_TIME = 5;
 
+const std::string DEFAULT_PORT_NUM = "50051";
+
 constexpr uint8_t G = 'G';
 constexpr uint8_t VERSION = '1';
 constexpr uint8_t NOT_USED = 0x00;
@@ -44,7 +46,6 @@ constexpr int SENDER_ID_LENGTH = 8;
 constexpr int RESERVED_LENGTH = 6;
 constexpr int MSG_LENGTH_SIZE = 4;
 
-const std::string PORT_NUM = "50051";
 } // namespace config
 } // namespace gruut
 #endif
