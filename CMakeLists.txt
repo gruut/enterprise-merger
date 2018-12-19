@@ -16,6 +16,7 @@ file(GLOB SOURCE_FILES
         "src/application.cpp"
         "src/chain/*.cpp"
         "src/modules/communication/protos/*.cc"
+        "include/*.cpp"
         )
 
 file(GLOB HEADER_FILES
@@ -27,6 +28,7 @@ file(GLOB HEADER_FILES
         "src/chain/*.hpp"
         "src/config/config.hpp"
         "src/modules/communication/protos/*.h"
+        "include/*.hpp"
         )
 
 target_sources(gruut_enterprise_merger
