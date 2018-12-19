@@ -26,7 +26,6 @@ file(GLOB SOURCE_FILES
         "../../src/modules/*.cpp"
         "../../src/services/*.cpp"
         "../../src/modules/communication/grpc_util.cpp"
-        "../../include/*.cpp"
         )
 
 set(LIB_PREFIX "/usr/local/lib")
