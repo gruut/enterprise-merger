@@ -1,15 +1,15 @@
 #pragma once
-#include "../module.hpp"
 #include "../../chain/types.hpp"
 #include "../../services/input_queue.hpp"
 #include "../../services/output_queue.hpp"
+#include "../../services/setting.hpp"
 #include "../../utils/time.hpp"
 #include "../../utils/type_converter.hpp"
-#include "../../services/setting.hpp"
+#include "../module.hpp"
 
 #include "boost/date_time/local_time/local_time.hpp"
-#include <boost/asio.hpp>
 #include <algorithm>
+#include <boost/asio.hpp>
 #include <chrono>
 #include <memory>
 #include <random>

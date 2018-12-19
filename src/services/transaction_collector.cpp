@@ -63,7 +63,6 @@ void TransactionCollector::handleMessage(json message_body_json) {
   transaction.signature =
       vector<uint8_t>(rsig_vector.cbegin(), rsig_vector.cend());
 
-
   auto setting = Setting::getInstance();
 
   std::vector<ServiceEndpointInfo> servend_info =
@@ -91,42 +90,38 @@ void TransactionCollector::handleMessage(json message_body_json) {
 }
 
 bool TransactionCollector::isRunnable() {
-  return (m_current_tx_status == BpStatus::PRIMARY || m_current_tx_status == BpStatus::SECONDARY);
+  return (m_current_tx_status == BpStatus::PRIMARY ||
+          m_current_tx_status == BpStatus::SECONDARY);
 }
 
-void TransactionCollector::setTxCollectStatus(BpStatus stat){
+void TransactionCollector::setTxCollectStatus(BpStatus stat) {
   m_next_tx_status = stat;
-  if(!m_timer_running) {
+  if (!m_timer_running) {
     turnOnTimer();
   }
 
-  if(m_current_tx_status == BpStatus::PRIMARY) {
-    if(m_next_tx_status == BpStatus::PRIMARY) {
+  if (m_current_tx_status == BpStatus::PRIMARY) {
+    if (m_next_tx_status == BpStatus::PRIMARY) {
       m_bpjob_sequence[1] = BpJobStatus::DO;
-    }
-    else if(m_next_tx_status == BpStatus::SECONDARY){
+    } else if (m_next_tx_status == BpStatus::SECONDARY) {
       m_bpjob_sequence[1] = BpJobStatus::DONT;
       m_bpjob_sequence[2] = BpJobStatus::DO;
-    }
-    else {
+    } else {
       m_bpjob_sequence[1] = BpJobStatus::DONT;
     }
-  }
-  else if(m_current_tx_status == BpStatus::SECONDARY) {
-    if(m_next_tx_status == BpStatus::PRIMARY) {
+  } else if (m_current_tx_status == BpStatus::SECONDARY) {
+    if (m_next_tx_status == BpStatus::PRIMARY) {
       m_bpjob_sequence[1] = BpJobStatus::DO;
     }
-  }
-  else {
-    if(m_next_tx_status == BpStatus::PRIMARY) { // the case when only 1 merger exists in network
+  } else {
+    if (m_next_tx_status ==
+        BpStatus::PRIMARY) { // the case when only 1 merger exists in network
       m_bpjob_sequence[1] = BpJobStatus::DO;
-    }
-    else if(m_next_tx_status == BpStatus::SECONDARY) {
+    } else if (m_next_tx_status == BpStatus::SECONDARY) {
       m_bpjob_sequence[1] = BpJobStatus::DONT;
       m_bpjob_sequence[2] = BpJobStatus::DO;
     }
   }
-
 }
 
 void TransactionCollector::turnOnTimer() {
@@ -165,17 +160,16 @@ void TransactionCollector::updateStatus() {
   });
 }
 
-void TransactionCollector::postJob(){
+void TransactionCollector::postJob() {
   auto &io_service = Application::app().getIoService();
 
-  io_service.post([&](){
-
+  io_service.post([&]() {
     m_current_tx_status = m_next_tx_status;
 
     BpJobStatus this_job = m_bpjob_sequence.front();
     m_bpjob_sequence.pop_front();
     m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
-    if(this_job == BpJobStatus::DO) {
+    if (this_job == BpJobStatus::DO) {
       cout << "Transaction POOL SIZE: "
            << Application::app().getTransactionPool().size() << endl;
 
