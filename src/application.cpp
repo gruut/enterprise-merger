@@ -29,6 +29,8 @@ PartialBlock &Application::getTemporaryPartialBlock() {
   return temporary_partial_block;
 }
 
+BlockProcessor &Application::getBlockProcessor() { return *m_block_processor; }
+
 void Application::regModule(shared_ptr<Module> module, int stage,
                             bool runover_flag) {
   if (runover_flag)
@@ -99,6 +101,8 @@ Application::Application() {
   m_thread_group = make_shared<std::vector<std::thread>>();
 
   m_bp_scheduler = make_shared<BpScheduler>();
+
+  m_block_processor = make_shared<BlockProcessor>();
 
   regModule(m_bp_scheduler, 1);
 }

@@ -14,7 +14,6 @@ void BpScheduler::start() {
   m_up_slot = Time::now_int() / config::BP_INTERVAL;
   updateRecvStatus(m_my_mid_b64, m_up_slot, BpStatus::IN_BOOT_WAIT);
 
-
   lockStatus();
   sendPing();
 }

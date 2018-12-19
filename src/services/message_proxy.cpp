@@ -34,6 +34,10 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
   case MessageType::MSG_UP: {
     Application::app().getBpScheduler().handleMessage(input_message);
   } break;
+  case MessageType::MSG_BLOCK:
+  case MessageType::MSG_REQ_BLOCK: {
+    Application::app().getBlockProcessor().handleMessage(input_message);
+  } break;
   default:
     break;
   }
