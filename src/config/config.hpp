@@ -35,7 +35,7 @@ constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 20;
 constexpr size_t MAX_REQ_BLOCK_RETRY = 5;
 constexpr size_t MAX_WAIT_TIME = 5;
 
-const std::string PORT_NUM = "50051";
+const std::string DEFAULT_PORT_NUM = "50051";
 } // namespace config
 } // namespace gruut
 #endif
