@@ -170,10 +170,11 @@ bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
                                         json &message_body_json) {
   const auto decoded_signer_signature =
       Botan::base64_decode(message_body_json["sig"].get<string>());
-  const auto cert_vector =
-      Botan::base64_decode(message_body_json["cert"].get<string>());
+  //const auto cert_vector =
+  //    Botan::base64_decode(message_body_json["cert"].get<string>());
 
-  const string cert_in(cert_vector.begin(), cert_vector.end());
+  //const string cert_in(cert_vector.begin(), cert_vector.end());
+  std::string cert_in = message_body_json["cert"].get<string>();
   const vector<uint8_t> signer_signature(decoded_signer_signature.begin(),
                                          decoded_signer_signature.end());
 
