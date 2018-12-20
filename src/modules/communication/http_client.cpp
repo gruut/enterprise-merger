@@ -8,7 +8,7 @@ HttpClient::HttpClient(const string &m_address) : m_address(m_address) {}
 
 CURLcode HttpClient::post(const string &packed_msg) {
   try {
-    const string post_field = getPostField("blockraw", packed_msg);
+    const string post_field = getPostField("message", packed_msg);
 
     m_curl.setOpt(CURLOPT_URL, m_address.data());
     m_curl.setOpt(CURLOPT_POST, 1L);
