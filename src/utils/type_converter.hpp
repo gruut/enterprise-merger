@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <botan-2/botan/base64.h>
+#include <botan-2/botan/exceptn.h>
 #include <botan-2/botan/secmem.h>
 
 #include "../chain/types.hpp"
@@ -102,9 +103,14 @@ public:
 
   template <typename T>
   inline static std::vector<uint8_t> decodeBase64(T &input) {
-    auto s_vector = Botan::base64_decode(input);
+    try {
+      auto s_vector = Botan::base64_decode(input);
+      return std::vector<uint8_t>(s_vector.begin(), s_vector.end());
+    } catch (Botan::Exception &e) {
+      cout << e.what() << endl;
+    }
 
-    return std::vector<uint8_t>(s_vector.begin(), s_vector.end());
+    return std::vector<uint8_t>();
   }
   template <class Container>
   static inline std::string toString(const Container &bytes) {
