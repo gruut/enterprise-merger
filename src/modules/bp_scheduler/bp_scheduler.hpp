@@ -1,7 +1,7 @@
 #pragma once
 #include "../../chain/types.hpp"
 #include "../../services/input_queue.hpp"
-#include "../../services/output_queue.hpp"
+#include "../../services/message_proxy.hpp"
 #include "../../services/setting.hpp"
 #include "../../utils/time.hpp"
 #include "../../utils/type_converter.hpp"
@@ -36,7 +36,7 @@ public:
 
 private:
   void setMyIds();
-  void sendPingMsg();
+  void sendPing();
   void lockStatus();
   void updateRecvStatus(const std::string &id_b64, size_t timeslot,
                         BpStatus stat);
@@ -52,8 +52,8 @@ private:
   local_chain_id_type m_my_cid;
   std::string m_my_cid_b64;
 
-  timestamp_type m_up_time{0};
-  BpStatus m_current_status;
+  size_t m_up_slot{0};
+  BpStatus m_current_status{BpStatus::IN_BOOT_WAIT};
   bool m_is_lock{true};
   std::vector<BpRecvStatusInfo> m_recv_status;
 
@@ -61,7 +61,8 @@ private:
 
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_lock_timer;
-  OutputQueueAlt *m_output_queue;
+
+  MessageProxy m_msg_proxy;
   Setting *m_setting;
 };
 

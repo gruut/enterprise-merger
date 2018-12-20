@@ -2,7 +2,7 @@
 
 namespace gruut {
 
-bool BlockProcessor::messageProcess(InputMsgEntry &entry) {
+bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
   if (entry.type == MessageType::MSG_REQ_BLOCK) {
 
     if (entry.body["mCert"].get<std::string>().empty() ||
@@ -41,7 +41,7 @@ bool BlockProcessor::messageProcess(InputMsgEntry &entry) {
     msg_block.body["tx"] = std::get<2>(saved_block);
     msg_block.receivers.emplace_back(recv_id);
 
-    m_output_queue->push(msg_block);
+    m_msg_proxy.deliverOutputMessage(msg_block);
 
   } else if (entry.type == MessageType::MSG_BLOCK) {
 
@@ -77,8 +77,5 @@ bool BlockProcessor::messageProcess(InputMsgEntry &entry) {
   return true;
 }
 
-BlockProcessor::BlockProcessor() {
-  m_output_queue = OutputQueueAlt::getInstance();
-  m_storage = Storage::getInstance();
-}
+BlockProcessor::BlockProcessor() { m_storage = Storage::getInstance(); }
 } // namespace gruut

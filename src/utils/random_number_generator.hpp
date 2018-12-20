@@ -27,12 +27,14 @@ public:
     return Botan::base64_encode(random_number_list);
   }
 
-  static int getRandRange(int low, int max) {
+  static int getRange(int min, int max) {
     std::random_device rd;
     std::mt19937 prng(rd());
-    std::uniform_int_distribution<> dist(low, max);
+    std::uniform_int_distribution<> dist(min, max);
     return dist(prng);
   }
 };
+
+using PRNG = RandomNumGenerator;
 
 #endif

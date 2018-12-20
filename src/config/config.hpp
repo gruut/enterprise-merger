@@ -13,6 +13,7 @@ constexpr CompressionAlgorithmType COMPRESSION_ALGO_TYPE =
     CompressionAlgorithmType::LZ4;
 
 constexpr size_t BP_INTERVAL = 10;
+constexpr size_t BP_PING_PERIOD = 4;
 
 constexpr size_t MAX_MERKLE_LEAVES = 4096;
 

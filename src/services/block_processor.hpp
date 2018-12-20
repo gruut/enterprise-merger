@@ -13,6 +13,7 @@
 #include "botan-2/botan/base64.h"
 #include "botan-2/botan/buf_comp.h"
 #include "input_queue.hpp"
+#include "message_proxy.hpp"
 #include "output_queue.hpp"
 #include "setting.hpp"
 #include "storage.hpp"
@@ -26,14 +27,14 @@ namespace gruut {
 
 class BlockProcessor {
 private:
-  OutputQueueAlt *m_output_queue;
+  MessageProxy m_msg_proxy;
   Storage *m_storage;
 
 public:
   BlockProcessor();
   ~BlockProcessor() {}
 
-  bool messageProcess(InputMsgEntry &entry);
+  bool handleMessage(InputMsgEntry &entry);
 };
 } // namespace gruut
 

@@ -1,5 +1,6 @@
 #include "block_synchronizer.hpp"
 #include "../../application.hpp"
+#include "../../services/message_proxy.hpp"
 
 namespace gruut {
 bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
@@ -78,7 +79,7 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
     }
 
     std::string ans_merger_id_b64 =
-        ans_merger_list[RandomNumGenerator::getRandRange(
+        ans_merger_list[RandomNumGenerator::getRange(
             0, (int)(ans_merger_list.size() - 1))];
     merger_id_type ans_merger_id =
         TypeConverter::decodeBase64(ans_merger_id_b64);
@@ -97,7 +98,7 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
   msg_req_block.body["mSig"] = {};
   msg_req_block.receivers = receivers;
 
-  m_outputQueue->push(msg_req_block);
+  m_msg_proxy.deliverOutputMessage(msg_req_block);
 
   return true;
 }
@@ -143,8 +144,6 @@ void BlockSynchronizer::saveBlock(int height) {
 
 void BlockSynchronizer::blockSyncControl() {
 
-  cout << "BSYNC: blockSyncControl()" << endl;
-
   if (m_sync_done)
     return;
 
@@ -173,7 +172,7 @@ void BlockSynchronizer::blockSyncControl() {
       if (blk_item.first == m_my_last_height + 1) {
         if (blk_item.second.block_json["prevH"].get<std::string>() ==
             m_my_last_blk_hash_b64) {
-          if (validateBlock(blk_item.first)) {
+          if (validateBlock((int)blk_item.first)) {
 
             std::lock_guard<std::mutex> lock(m_block_list_mutex);
             blk_item.second.state = BlockState::TOSAVE;
@@ -197,7 +196,7 @@ void BlockSynchronizer::blockSyncControl() {
     // step 2 - save block
     for (auto &blk_item : m_recv_block_list) {
       if (blk_item.second.state == BlockState::TOSAVE) {
-        saveBlock(blk_item.first);
+        saveBlock((int)blk_item.first);
         blk_item.second.state = BlockState::TODELETE;
       }
     }
@@ -227,7 +226,7 @@ void BlockSynchronizer::blockSyncControl() {
         std::lock_guard<std::mutex> lock(m_block_list_mutex);
         blk_item.second.num_retry += 1;
         m_block_list_mutex.unlock();
-        sendBlockRequest(blk_item.first);
+        sendBlockRequest((int)blk_item.first);
       }
     }
 
@@ -304,7 +303,6 @@ BlockSynchronizer::BlockSynchronizer() {
 
   m_storage = Storage::getInstance();
   m_inputQueue = InputQueueAlt::getInstance();
-  m_outputQueue = OutputQueueAlt::getInstance();
   auto setting = Setting::getInstance();
 
   m_my_id = setting->getMyId();

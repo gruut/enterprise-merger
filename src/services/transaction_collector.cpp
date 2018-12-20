@@ -14,79 +14,70 @@ using namespace std;
 using namespace nlohmann;
 
 namespace gruut {
-void TransactionCollector::handleMessage(json message_body_json) {
+TransactionCollector::TransactionCollector() {
+  m_service_endpoints = Setting::getInstance()->getServiceEndpointInfo();
+}
+
+void TransactionCollector::handleMessage(json msg_body_json) {
   if (!isRunnable())
     return;
 
   Transaction transaction;
-  BytesBuilder bytes_builder;
+  BytesBuilder sig_msg_builder;
 
-  string txid_str = message_body_json["txid"].get<string>();
-  auto txid_bytes = TypeConverter::decodeBase64(txid_str);
+  string txid_b64 = msg_body_json["txid"].get<string>();
+  auto txid_bytes = TypeConverter::decodeBase64(txid_b64);
   BOOST_ASSERT_MSG(txid_bytes.size() == 32,
                    "The size of the transaction is not 32 bytes");
   transaction.transaction_id =
       TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(txid_bytes);
-  bytes_builder.append(txid_bytes);
+  sig_msg_builder.append(txid_bytes);
 
-  string t_str = message_body_json["time"].get<string>();
-  auto sent_time = static_cast<timestamp_type>(stoll(t_str));
+  string time_str = msg_body_json["time"].get<string>();
+  auto sent_time = static_cast<timestamp_type>(stoll(time_str));
   transaction.sent_time = sent_time;
-  bytes_builder.append(sent_time);
+  sig_msg_builder.append(sent_time);
 
-  string r_id_str = message_body_json["rID"].get<string>();
-  auto requestor_id_vector = TypeConverter::decodeBase64(r_id_str);
-  transaction.requestor_id = requestor_id_vector;
-  bytes_builder.append(requestor_id_vector);
+  string rid_b64 = msg_body_json["rID"].get<string>();
+  auto rid_bytes = TypeConverter::decodeBase64(rid_b64);
+  transaction.requestor_id = static_cast<id_type>(rid_bytes);
+  sig_msg_builder.append(rid_bytes);
 
-  string transaction_type_string = message_body_json["type"].get<string>();
-  if (transaction_type_string == TXTYPE_DIGESTS)
+  string tx_type_str = msg_body_json["type"].get<string>();
+  if (tx_type_str == TXTYPE_DIGESTS)
     transaction.transaction_type = TransactionType::DIGESTS;
   else
     transaction.transaction_type = TransactionType::CERTIFICATE;
-  auto transaction_type_bytes =
-      TypeConverter::stringToBytes(transaction_type_string);
-  bytes_builder.append(transaction_type_bytes);
+  sig_msg_builder.append(tx_type_str);
 
-  json content_array_json = message_body_json["content"];
-  for (auto it = content_array_json.cbegin(); it != content_array_json.cend();
-       ++it) {
-    string elem = (*it).get<string>();
-    auto elem_bytes = TypeConverter::stringToBytes(elem);
-    bytes_builder.append(elem_bytes);
-
-    transaction.content_list.emplace_back(elem);
+  if (msg_body_json["content"].is_array()) {
+    for (auto &cont_item : msg_body_json["content"]) {
+      string cont_str = cont_item.get<string>();
+      transaction.content_list.emplace_back(cont_str);
+      sig_msg_builder.append(cont_str);
+    }
   }
 
-  auto rsig_vector =
-      Botan::base64_decode(message_body_json["rSig"].get<string>());
-  transaction.signature =
-      vector<uint8_t>(rsig_vector.cbegin(), rsig_vector.cend());
-
-  auto setting = Setting::getInstance();
-
-  std::vector<ServiceEndpointInfo> servend_info =
-      setting->getServiceEndpointInfo();
+  auto rsig_b64 = msg_body_json["rSig"].get<string>();
+  auto rsig_bytes = TypeConverter::decodeBase64(rsig_b64);
+  transaction.signature = rsig_bytes;
 
   string endpoint_cert;
 
-  for (auto &item : servend_info) {
-    if (item.id == requestor_id_vector) {
-      endpoint_cert = item.cert;
+  for (auto &srv_point : m_service_endpoints) {
+    if (srv_point.id == rid_bytes) {
+      endpoint_cert = srv_point.cert;
     }
   }
 
   if (endpoint_cert.empty())
     return;
 
-  auto signature_message_bytes = bytes_builder.getBytes();
-  bool is_verified = RSA::doVerify(endpoint_cert, signature_message_bytes,
-                                   transaction.signature, true);
+  if (!RSA::doVerify(endpoint_cert, sig_msg_builder.getBytes(), rsig_bytes,
+                     true))
+    return;
 
-  if (is_verified) {
-    auto &transaction_pool = Application::app().getTransactionPool();
-    transaction_pool.push(transaction);
-  }
+  Application::app().getTransactionPool().push(transaction);
 }
 
 bool TransactionCollector::isRunnable() {
@@ -99,6 +90,8 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
   if (!m_timer_running) {
     turnOnTimer();
   }
+
+  cout << "TXC: setTxCollectStatus(" << (int)stat << ")" << endl << flush;
 
   if (m_current_tx_status == BpStatus::PRIMARY) {
     if (m_next_tx_status == BpStatus::PRIMARY) {
@@ -126,6 +119,8 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
 
 void TransactionCollector::turnOnTimer() {
 
+  cout << "TXC: turnOnTimer()" << endl;
+
   m_timer_running = true;
 
   m_timer.reset(
@@ -139,6 +134,8 @@ void TransactionCollector::turnOnTimer() {
 }
 
 void TransactionCollector::updateStatus() {
+
+  cout << "TXC: updateStatus()" << endl;
 
   size_t current_slot = Time::now_int() / BP_INTERVAL;
   time_t next_slot_begin = (current_slot + 1) * BP_INTERVAL;
@@ -163,16 +160,14 @@ void TransactionCollector::updateStatus() {
 void TransactionCollector::postJob() {
   auto &io_service = Application::app().getIoService();
 
-  io_service.post([&]() {
+  io_service.post([this]() {
     m_current_tx_status = m_next_tx_status;
 
     BpJobStatus this_job = m_bpjob_sequence.front();
     m_bpjob_sequence.pop_front();
     m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
-    if (this_job == BpJobStatus::DO) {
-      cout << "Transaction POOL SIZE: "
-           << Application::app().getTransactionPool().size() << endl;
-
+    if (this_job == BpJobStatus::DO &&
+        Application::app().getTransactionPool().size() > 0) {
       Application::app().getSignerPool().createTransactions();
       m_signature_requester.requestSignatures();
     }

@@ -3,10 +3,7 @@
 
 namespace gruut {
 
-BpScheduler::BpScheduler() {
-  m_output_queue = OutputQueueAlt::getInstance();
-  m_setting = Setting::getInstance();
-}
+BpScheduler::BpScheduler() { m_setting = Setting::getInstance(); }
 
 void BpScheduler::start() {
   m_timer.reset(
@@ -14,12 +11,11 @@ void BpScheduler::start() {
   m_lock_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
   setMyIds();
-  size_t timeslot = Time::now_int() / BP_INTERVAL;
-  updateRecvStatus(m_my_mid_b64, timeslot, BpStatus::IN_BOOT_WAIT);
+  m_up_slot = Time::now_int() / config::BP_INTERVAL;
+  updateRecvStatus(m_my_mid_b64, m_up_slot, BpStatus::IN_BOOT_WAIT);
 
-  m_up_time = Time::now_int();
   lockStatus();
-  sendPingMsg();
+  sendPing();
 }
 
 void BpScheduler::setMyIds() {
@@ -115,15 +111,21 @@ void BpScheduler::reschedule() {
       }
     }
   }
-  // TODO : enable or disable tx_collector according to my status
 }
 
 void BpScheduler::lockStatus() {
 
-  size_t current_slot = Time::now_int() / BP_INTERVAL;
-  time_t next_slot_begin = (current_slot + 1) * BP_INTERVAL;
+  timestamp_type current_time = Time::now_int();
+
+  size_t current_slot = current_time / config::BP_INTERVAL;
+  time_t next_slot_begin = (current_slot + 1) * config::BP_INTERVAL;
+  time_t next_lock_time = (current_time >= next_slot_begin - 1)
+                              ? (next_slot_begin - 1 + config::BP_INTERVAL)
+                              : (next_slot_begin - 1);
   boost::posix_time::ptime lock_time =
-      boost::posix_time::from_time_t(next_slot_begin - 1);
+      boost::posix_time::from_time_t(next_lock_time);
+
+  cout << "BPS: lockStatus(" << next_lock_time << ")" << endl << flush;
 
   m_lock_timer->expires_at(lock_time);
   m_lock_timer->async_wait([this](const boost::system::error_code &ec) {
@@ -146,59 +148,53 @@ void BpScheduler::postLockJob() {
   });
 }
 
-void BpScheduler::sendPingMsg() {
+void BpScheduler::sendPing() {
   auto &io_service = Application::app().getIoService();
 
   io_service.post([this]() {
     timestamp_type current_time = Time::now_int();
-    size_t up_slot = m_up_time / BP_INTERVAL;
-    size_t current_slot = current_time / BP_INTERVAL;
+    size_t current_slot = current_time / config::BP_INTERVAL;
 
-    if (up_slot == current_slot) {
+    if (m_up_slot == current_slot) {
       return;
     }
 
     auto &signer_pool = Application::app().getSignerPool();
 
     size_t num_signers = signer_pool.size();
-    if (num_signers < MIN_SIGNATURE_COLLECT_SIZE) {
+    if (num_signers < config::MIN_SIGNATURE_COLLECT_SIZE) {
       m_current_status = BpStatus::ERROR_ON_SIGNERS;
     }
 
-    OutputMsgEntry output_msg;
+    cout << "BPS: sendPing(" << m_my_mid_b64 << "," << num_signers << ","
+         << statusToString(m_current_status) << ")" << endl;
+
     nlohmann::json ping_msg;
     ping_msg["mID"] = m_my_mid_b64;
     ping_msg["time"] = to_string(current_time);
     ping_msg["sCnt"] = to_string(num_signers);
     ping_msg["stat"] = statusToString(m_current_status);
 
-    output_msg.body = ping_msg;
-    output_msg.type = MessageType::MSG_PING;
-
-    m_output_queue->push(output_msg);
+    OutputMsgEntry output_msg(MessageType::MSG_PING, ping_msg);
+    m_msg_proxy.deliverOutputMessage(output_msg);
 
     m_is_lock = false;
     updateRecvStatus(m_my_mid_b64, current_slot, m_current_status);
   });
 
-  size_t current_slot = Time::now_int() / BP_INTERVAL;
-  time_t next_slot_begin = (current_slot + 1) * BP_INTERVAL;
+  size_t current_slot = Time::now_int() / config::BP_INTERVAL;
+  time_t next_slot_begin = (current_slot + 1) * config::BP_INTERVAL;
   // time_t next_slot_end = (current_slot + 2) * BP_INTERVAL - 1;
 
-  std::random_device rd;
-  std::mt19937 prng(rd());
-  std::uniform_int_distribution<int> ping_dist_main(0, BP_INTERVAL / 2);
-  std::uniform_int_distribution<int> ping_dist_sub(0, 1000);
-
-  boost::posix_time::ptime ping_time =
-      boost::posix_time::from_time_t(ping_dist_main(prng) + next_slot_begin);
-  ping_time += boost::posix_time::milliseconds(ping_dist_sub(prng));
+  boost::posix_time::ptime ping_time = boost::posix_time::from_time_t(
+      PRNG::getRange(0, config::BP_PING_PERIOD) + next_slot_begin);
+  ping_time += boost::posix_time::milliseconds(PRNG::getRange(0, 999));
 
   m_timer->expires_at(ping_time);
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
     } else if (ec.value() == 0) {
-      sendPingMsg();
+      sendPing();
     } else {
       throw;
     }
@@ -239,9 +235,10 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
   std::string merger_id_b64 = msg.body["mID"].get<std::string>();
   timestamp_type merger_time =
       (timestamp_type)std::stoll(msg.body["time"].get<std::string>());
-  size_t timeslot = merger_time / BP_INTERVAL;
+  size_t timeslot = merger_time / config::BP_INTERVAL;
 
-  if (abs((int64_t)merger_time - (int64_t)Time::now_int()) > BP_INTERVAL / 2) {
+  if (abs((int64_t)merger_time - (int64_t)Time::now_int()) >
+      config::BP_INTERVAL / 2) {
     return;
   }
 
@@ -252,7 +249,7 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
     auto num_singers = static_cast<size_t>(std::stoll(num_signers_str));
 
     BpStatus status = stringToStatus(msg.body["stat"].get<std::string>());
-    if (num_singers < MIN_SIGNATURE_COLLECT_SIZE)
+    if (num_singers < config::MIN_SIGNATURE_COLLECT_SIZE)
       status = BpStatus::ERROR_ON_SIGNERS;
     updateRecvStatus(merger_id_b64, timeslot, status);
 

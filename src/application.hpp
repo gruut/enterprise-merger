@@ -7,7 +7,10 @@
 #include "modules/message_fetcher/message_fetcher.hpp"
 #include "modules/message_fetcher/out_message_fetcher.hpp"
 #include "modules/module.hpp"
+
+#include "services/block_processor.hpp"
 #include "services/setting.hpp"
+#include "services/signature_pool.hpp"
 #include "services/signer_pool_manager.hpp"
 #include "services/transaction_collector.hpp"
 #include "services/transaction_pool.hpp"
@@ -22,7 +25,6 @@
 #include "chain/message.hpp"
 #include "chain/signature.hpp"
 #include "chain/transaction.hpp"
-#include "services/signature_pool.hpp"
 
 using namespace std;
 
@@ -52,19 +54,19 @@ public:
 
   PartialBlock &getTemporaryPartialBlock();
 
-  void regModule(shared_ptr<Module> module, int stage,
-                 bool runover_flag = false);
-  void start();
+  BlockProcessor &getBlockProcessor();
 
   BpScheduler &getBpScheduler();
 
+  void regModule(shared_ptr<Module> module, int stage,
+                 bool runover_flag = false);
+  void start();
   void exec();
   void quit();
 
 private:
   void runNextStage(ExitCode exit_code);
 
-  shared_ptr<BpScheduler> m_bp_scheduler;
   shared_ptr<boost::asio::io_service> m_io_serv;
   PartialBlock temporary_partial_block;
   shared_ptr<SignerPool> m_signer_pool;
@@ -76,6 +78,10 @@ private:
   shared_ptr<std::vector<std::thread>> m_thread_group;
 
   std::vector<std::vector<shared_ptr<Module>>> m_modules;
+
+  shared_ptr<BpScheduler> m_bp_scheduler;
+
+  shared_ptr<BlockProcessor> m_block_processor;
 
   int m_running_stage{0};
 

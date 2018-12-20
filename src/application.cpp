@@ -29,6 +29,8 @@ PartialBlock &Application::getTemporaryPartialBlock() {
   return temporary_partial_block;
 }
 
+BlockProcessor &Application::getBlockProcessor() { return *m_block_processor; }
+
 void Application::regModule(shared_ptr<Module> module, int stage,
                             bool runover_flag) {
   if (runover_flag)
@@ -90,9 +92,6 @@ void Application::runNextStage(ExitCode exit_code) {
 void Application::quit() { m_io_serv->stop(); }
 
 Application::Application() {
-
-  m_bp_scheduler = make_shared<BpScheduler>();
-
   m_io_serv = make_shared<boost::asio::io_service>();
   m_signer_pool = make_shared<SignerPool>();
   m_signer_pool_manager = make_shared<SignerPoolManager>();
@@ -100,6 +99,12 @@ Application::Application() {
   m_transaction_collector = make_shared<TransactionCollector>();
   m_signature_pool = make_shared<SignaturePool>();
   m_thread_group = make_shared<std::vector<std::thread>>();
+
+  m_bp_scheduler = make_shared<BpScheduler>();
+
+  m_block_processor = make_shared<BlockProcessor>();
+
+  regModule(m_bp_scheduler, 1);
 }
 
 } // namespace gruut
