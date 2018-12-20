@@ -73,6 +73,23 @@ bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
                          block_secret);
 
     // TODO :: delete duplicated TXs from tx_pool
+
+  } else if (entry.type == MessageType::MSG_REQ_CHECK) {
+
+    OutputMsgEntry output_msg;
+    nlohmann::json msg_res_check;
+    auto setting = Setting::getInstance();
+    id_type my_mid = setting->getMyId();
+    msg_res_check["sender"] = TypeConverter::toBase64Str(my_mid);
+    timestamp_type current_time = Time::now_int();
+    msg_res_check["time"] = to_string(current_time);
+    msg_res_check["proof"] =
+        m_storage->findSibling(entry.body["txid"].get<std::string>());
+
+    output_msg.body = msg_res_check;
+    output_msg.type = MessageType::MSG_RES_CHECK;
+
+    m_output_queue->push(output_msg);
   }
   return true;
 }
