@@ -3,7 +3,6 @@
 #include <chrono>
 #include <iostream>
 
-#include <botan-2/botan/base64.h>
 #include <botan-2/botan/pem.h>
 #include <botan-2/botan/pubkey.h>
 #include <botan-2/botan/rsa.h>
@@ -202,7 +201,7 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
   auto message_bytes = builder.getBytes();
   auto signature = RSA::doSign(rsa_sk_pem, message_bytes, true, rsa_sk_pass);
 
-  return Botan::base64_encode(signature);
+  return TypeConverter::toBase64Str(signature);
 }
 
 bool SignerPoolManager::isJoinable() {

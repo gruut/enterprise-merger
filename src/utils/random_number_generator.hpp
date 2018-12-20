@@ -1,8 +1,9 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_RANDOM_NUM_GENERATOR_HPP
 #define GRUUT_ENTERPRISE_MERGER_RANDOM_NUM_GENERATOR_HPP
 
+#include "../utils/type_converter.hpp"
+
 #include <botan-2/botan/auto_rng.h>
-#include <botan-2/botan/base64.h>
 #include <botan-2/botan/rng.h>
 #include <random>
 #include <vector>
@@ -23,8 +24,8 @@ public:
     return random_number;
   }
 
-  static string toString(vector<uint8_t> random_number_list) {
-    return Botan::base64_encode(random_number_list);
+  static string toString(vector<uint8_t> &&random_number_list) {
+    return TypeConverter::toBase64Str(random_number_list);
   }
 
   static int getRange(int min, int max) {
