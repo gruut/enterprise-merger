@@ -83,8 +83,8 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
       auto signer_pk_cert = message_body_json["cert"].get<string>();
       cout << " signer_pk_cert original is  " << signer_pk_cert << endl;
-//      auto cert_vector = TypeConverter::decodeBase64(signer_pk_cert);
-//      string decoded_cert_str(cert_vector.begin(), cert_vector.end());
+      //      auto cert_vector = TypeConverter::decodeBase64(signer_pk_cert);
+      //      string decoded_cert_str(cert_vector.begin(), cert_vector.end());
       m_join_temporary_table[recv_id_b64]->signer_cert = signer_pk_cert;
 
       json message_body;
@@ -170,10 +170,10 @@ bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
                                         json &message_body_json) {
   const auto decoded_signer_signature =
       Botan::base64_decode(message_body_json["sig"].get<string>());
-  //const auto cert_vector =
+  // const auto cert_vector =
   //    Botan::base64_decode(message_body_json["cert"].get<string>());
 
-  //const string cert_in(cert_vector.begin(), cert_vector.end());
+  // const string cert_in(cert_vector.begin(), cert_vector.end());
   std::string cert_in = message_body_json["cert"].get<string>();
   const vector<uint8_t> signer_signature(decoded_signer_signature.begin(),
                                          decoded_signer_signature.end());

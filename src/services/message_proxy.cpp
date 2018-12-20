@@ -16,7 +16,7 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
   auto message_type = input_message.type;
   auto message_body_json = input_message.body;
 
-  cout << "MSG IN : " << (int) message_type << "," <<  endl;
+  cout << "MSG IN : " << (int)message_type << "," << endl;
 
   switch (message_type) {
   case MessageType::MSG_JOIN:
@@ -38,7 +38,7 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
 }
 
 void MessageProxy::deliverOutputMessage(OutputMsgEntry &output_message) {
-  cout << "MSG OUT : " <<  (int)output_message.type << endl;
+  cout << "MSG OUT : " << (int)output_message.type << endl;
   m_output_queue->push(output_message);
 }
 } // namespace gruut

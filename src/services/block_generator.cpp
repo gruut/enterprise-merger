@@ -43,7 +43,8 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
                                    vector<Signature> &support_sigs,
                                    MerkleTree &merkle_tree) {
 
-  cout << "generateBlock...mtrt = " <<  TypeConverter::toBase64Str(partial_block.transaction_root)  << endl;
+  cout << "generateBlock...mtrt = "
+       << TypeConverter::toBase64Str(partial_block.transaction_root) << endl;
 
   // step 1) preparing basic data
   Setting *setting = Setting::getInstance();

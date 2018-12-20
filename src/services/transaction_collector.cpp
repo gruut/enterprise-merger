@@ -90,7 +90,6 @@ void TransactionCollector::handleMessage(json message_body_json) {
       auto &transaction_pool = Application::app().getTransactionPool();
       transaction_pool.push(transaction);
       cout << " txid 저장합니다.. " << txid_str << endl;
-
     }
   }
 }

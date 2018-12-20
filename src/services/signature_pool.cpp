@@ -24,7 +24,7 @@ void SignaturePool::handleMessage(json &message_body_json) {
     s.signer_signature = decoded_signer_sig;
 
     push(s);
-    cout << " 서명풀에 저장합니다.. "<< endl;
+    cout << " 서명풀에 저장합니다.. " << endl;
   }
 }
 
@@ -48,7 +48,7 @@ bool SignaturePool::verifySignature(signer_id_type &receiver_id,
                                     json &message_body_json) {
   auto pk_cert = Application::app().getSignerPool().getPkCert(receiver_id);
   if (pk_cert.empty()) {
-    cout << "pk_cert가 비어있네.   "<<  endl;
+    cout << "pk_cert가 비어있네.   " << endl;
     Storage *storage = Storage::getInstance();
     pk_cert = storage->findCertificate(receiver_id);
   }
@@ -84,7 +84,7 @@ bool SignaturePool::verifySignature(signer_id_type &receiver_id,
 
   string msg_b64 = TypeConverter::toBase64Str(signature_message_bytes);
   cout << "msg to sig = " << msg_b64 << endl;
-  cout << "sig verify result is "  << verify_result << endl;
+  cout << "sig verify result is " << verify_result << endl;
 
   return verify_result;
 }

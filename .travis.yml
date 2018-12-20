@@ -11,8 +11,8 @@ compiler:
 - clang
 cache: ccache
 before_install:
-  - docker pull doscode/merger-build-env:1.1
-  - docker run -d --name build-env --rm -i -t doscode/merger-build-env:1.1 bash
+  - docker pull doscode/merger-build-env:latest
+  - docker run -d --name build-env --rm -i -t doscode/merger-build-env:latest bash
 install:
 script:
   - docker exec build-env sh -c "
