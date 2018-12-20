@@ -179,6 +179,7 @@ public:
       ServiceEndpointInfo tmp_info;
       tmp_info.id = getIdFromJson(setting_json["SE"][i]["id"]);
       tmp_info.address = setting_json["SE"][i]["address"].get<std::string>();
+      tmp_info.port = setting_json["SE"][i]["port"].get<std::string>();
       tmp_info.cert = joinMultiLine(setting_json["SE"][i]["cert"]);
       m_service_endpoints.emplace_back(tmp_info);
     }
