@@ -29,13 +29,13 @@ HeaderController::attachHeader(std::string &compressed_json,
   }
   header[4] = static_cast<uint8_t>(compression_algo_type);
   header[5] = NOT_USED;
-  for (int i = 9; i > 6; i--) {
+  for (int i = 9; i > 6; --i) {
     header[i] |= total_length;
     total_length = (total_length >> 8);
   }
   header[6] |= total_length;
 
-  Setting *setting = Setting::getInstance();
+  auto setting = Setting::getInstance();
   id_type sender_id = setting->getMyId();
   local_chain_id_type chain_id = setting->getLocalChainId();
 
@@ -86,7 +86,6 @@ bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {
 
   try {
     schema_validator.validate(json_object);
-    // std::cout << "Validation succeeded" << std::endl;
     return true;
   } catch (const std::exception &e) {
     std::cout << "JsonValidator: validateSchema() - Validation failed : "

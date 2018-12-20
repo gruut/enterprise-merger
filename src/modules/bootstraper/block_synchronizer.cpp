@@ -154,8 +154,8 @@ void BlockSynchronizer::blockSyncControl() {
       m_sync_done = true;
       m_sync_fail = true;
 
-      m_timer_msg_fetching->cancel();
-      m_timer_sync_control->cancel();
+      m_msg_fetching_timer->cancel();
+      m_sync_ctrl_timer->cancel();
 
       if (m_sync_alone)
         m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
@@ -237,8 +237,8 @@ void BlockSynchronizer::blockSyncControl() {
     }
 
     if (m_sync_done) { // ok! block sync was done
-      m_timer_msg_fetching->cancel();
-      m_timer_sync_control->cancel();
+      m_msg_fetching_timer->cancel();
+      m_sync_ctrl_timer->cancel();
 
       if (m_sync_fail) {
         if (m_sync_alone)
@@ -252,9 +252,10 @@ void BlockSynchronizer::blockSyncControl() {
     }
   }));
 
-  m_timer_sync_control->expires_from_now(
+  m_sync_ctrl_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_sync_ctrl_timer->expires_from_now(
       boost::posix_time::milliseconds(config::SYNC_CONTROL_INTERVAL));
-  m_timer_sync_control->async_wait([this](const boost::system::error_code &ec) {
+  m_sync_ctrl_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
     } else if (ec.value() == 0) {
       blockSyncControl();
@@ -280,9 +281,10 @@ void BlockSynchronizer::messageFetch() {
     }
   });
 
-  m_timer_msg_fetching->expires_from_now(
+  m_msg_fetching_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_msg_fetching_timer->expires_from_now(
       boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTERVAL));
-  m_timer_msg_fetching->async_wait([this](const boost::system::error_code &ec) {
+  m_msg_fetching_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
     } else if (ec.value() == 0) {
       messageFetch();
@@ -298,8 +300,8 @@ BlockSynchronizer::BlockSynchronizer() {
   auto &io_service = Application::app().getIoService();
 
   m_block_sync_strand.reset(new boost::asio::io_service::strand(io_service));
-  m_timer_msg_fetching.reset(new boost::asio::deadline_timer(io_service));
-  m_timer_sync_control.reset(new boost::asio::deadline_timer(io_service));
+  m_msg_fetching_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_sync_ctrl_timer.reset(new boost::asio::deadline_timer(io_service));
 
   m_storage = Storage::getInstance();
   m_inputQueue = InputQueueAlt::getInstance();

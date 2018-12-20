@@ -78,7 +78,6 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     OutputMsgEntry output_message;
     if (verifySignature(recv_id, message_body_json)) {
-      std::cout << "Validation success!" << std::endl;
 
       m_join_temporary_table[recv_id_b64]->signer_cert =
           message_body_json["cert"].get<string>();
@@ -171,16 +170,14 @@ bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
 
   string signer_id_b64 = TypeConverter::toBase64Str(signer_id);
 
-  BytesBuilder sig_builder;
-  sig_builder.appendB64(m_join_temporary_table[signer_id_b64]->merger_nonce);
-  sig_builder.appendB64(message_body_json["sN"].get<string>());
-  sig_builder.appendHex(message_body_json["dhx"].get<string>());
-  sig_builder.appendHex(message_body_json["dhy"].get<string>());
-  sig_builder.appendDec(message_body_json["time"].get<string>());
+  BytesBuilder msg_builder;
+  msg_builder.appendB64(m_join_temporary_table[signer_id_b64]->merger_nonce);
+  msg_builder.appendB64(message_body_json["sN"].get<string>());
+  msg_builder.appendHex(message_body_json["dhx"].get<string>());
+  msg_builder.appendHex(message_body_json["dhy"].get<string>());
+  msg_builder.appendDec(message_body_json["time"].get<string>());
 
-  const bytes message_bytes = sig_builder.getBytes();
-
-  return RSA::doVerify(cert_in, message_bytes, sig_bytes, true);
+  return RSA::doVerify(cert_in, msg_builder.getBytes(), sig_bytes, true);
 }
 
 string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,

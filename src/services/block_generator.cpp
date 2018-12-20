@@ -156,7 +156,8 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   // setp-6) send blocks to others
 
   json msg_header; // MSG_HEADER = 0xB5
-  msg_header["blockraw"] = block_raw_b64;
+  // msg_header["blockraw"] = block_raw_b64;
+  msg_header["blockraw"] = block_header;
 
   json msg_block; // MSG_BLOCK = 0xB4
   msg_block["blockraw"] = block_raw_b64;

@@ -44,8 +44,8 @@ private:
   Storage *m_storage;
   MessageProxy m_msg_proxy;
 
-  std::unique_ptr<boost::asio::deadline_timer> m_timer_msg_fetching;
-  std::unique_ptr<boost::asio::deadline_timer> m_timer_sync_control;
+  std::unique_ptr<boost::asio::deadline_timer> m_msg_fetching_timer;
+  std::unique_ptr<boost::asio::deadline_timer> m_sync_ctrl_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_block_sync_strand;
 
   size_t m_my_last_height;

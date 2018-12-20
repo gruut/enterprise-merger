@@ -7,6 +7,7 @@ namespace gruut {
 HttpClient::HttpClient(const string &m_address) : m_address(m_address) {}
 
 CURLcode HttpClient::post(const string &packed_msg) {
+  cout << "HTTP: POST(" << m_address << ")" << endl;
   try {
     const string post_field = getPostField("message", packed_msg);
 
@@ -17,8 +18,7 @@ CURLcode HttpClient::post(const string &packed_msg) {
 
     m_curl.perform();
   } catch (curlpp::EasyException &err) {
-    cout << "HttpClient post error: " << err.what() << endl;
-    cout << "HttpClient Code: " << err.getErrorId() << endl;
+    cout << "HTTP: ERROR " << err.what() << endl;
     return err.getErrorId();
   }
 
