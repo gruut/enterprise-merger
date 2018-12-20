@@ -62,3 +62,6 @@ CTestTestfile\.cmake
 lib/leveldb/leveldbConfigVersion\.cmake
 
 .env
+
+my_setting.json
+!/src/config/my_setting.json
