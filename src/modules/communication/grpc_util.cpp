@@ -178,10 +178,10 @@ bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {
 
   try {
     schema_validator.validate(json_object);
-    std::cout << "Validation succeeded" << std::endl;
     return true;
   } catch (const std::exception &e) {
     std::cout << "Validation failed : " << e.what() << std::endl;
+    std::cout << "Validation failed : " << json_object << std::endl;
     return false;
   }
 }

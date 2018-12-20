@@ -33,11 +33,14 @@ void MergerServer::recvMessage() {
   void *tag;
   bool ok;
   while (true) {
-    std::this_thread::sleep_for(chrono::milliseconds(200));
-    GPR_ASSERT(m_completion_queue->Next(&tag, &ok));
-    if (!ok)
-      continue;
-    static_cast<CallData *>(tag)->proceed();
+    std::this_thread::sleep_for(chrono::milliseconds(1));
+
+    //for (int i=0; i< 10; i++) {
+      GPR_ASSERT(m_completion_queue->Next(&tag, &ok));
+      if (!ok)
+        continue;
+      static_cast<CallData *>(tag)->proceed();
+    //}
   }
 }
 

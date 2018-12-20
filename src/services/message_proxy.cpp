@@ -16,8 +16,6 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
   auto message_type = input_message.type;
   auto message_body_json = input_message.body;
 
-  cout << "MSG IN : " << (int)message_type << "," << endl;
-
   switch (message_type) {
   case MessageType::MSG_JOIN:
   case MessageType::MSG_RESPONSE_1:

@@ -62,28 +62,29 @@ void SignatureRequester::requestSignatures() {
 
 void SignatureRequester::timerStopAndCreateBlock() {
 
-  cout << "블록좀 만들게요.." << endl;
+  cout << "START MAKING BLOCK" << endl;
   m_is_timer_running = false;
 
   m_timer->cancel();
   m_check_timer->cancel();
 
   auto &signature_pool = Application::app().getSignaturePool();
-  cout << "signature pool이 있나? " << (int)signature_pool.size() << endl;
+
   if (signature_pool.size() >= config::MIN_SIGNATURE_COLLECT_SIZE &&
       signature_pool.size() <= config::MAX_SIGNATURE_COLLECT_SIZE) {
-    cout << "SIG POOL SIZE: " << signature_pool.size() << endl;
-    std::cout << "CREATE BLOCK!" << std::endl;
+
+    cout << ">> SIG POOL SIZE: " << signature_pool.size() << endl;
 
     auto temp_partial_block = Application::app().getTemporaryPartialBlock();
 
     auto signatures_size =
         min(signature_pool.size(), config::MAX_SIGNATURE_COLLECT_SIZE);
     auto signatures = signature_pool.fetchN(signatures_size);
-    cout << "signatures 모두 가져옵니다. 갯수 = " << signatures.size() << endl;
 
     BlockGenerator generator;
     generator.generateBlock(temp_partial_block, signatures, m_merkle_tree);
+
+    std::cout << ">> NEW BLOCK CREATED" << std::endl;
   }
 
   signature_pool.clear();

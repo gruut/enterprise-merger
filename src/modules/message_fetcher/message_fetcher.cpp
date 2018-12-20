@@ -22,7 +22,7 @@ void MessageFetcher::fetch() {
   io_service.post([this]() {
     if (!m_input_queue->empty()) {
       auto input_message = m_input_queue->fetch();
-
+      //cout << "inputQ size = " << m_input_queue->size() << endl;
       MessageProxy message_proxy;
       message_proxy.deliverInputMessage(input_message);
     }

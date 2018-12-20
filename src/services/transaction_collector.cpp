@@ -25,7 +25,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
     BytesBuilder bytes_builder;
 
     string txid_str = message_body_json["txid"].get<string>();
-    auto txid_bytes = TypeConverter::decodeBase64(txid_str);
+    auto txid_bytes = TypeConverter::decodeBase64(txid_str); // ok
     BOOST_ASSERT_MSG(txid_bytes.size() == 32,
                      "The size of the transaction is not 32 bytes");
     transaction.transaction_id =
@@ -47,9 +47,7 @@ void TransactionCollector::handleMessage(json message_body_json) {
       transaction.transaction_type = TransactionType::DIGESTS;
     else
       transaction.transaction_type = TransactionType::CERTIFICATE;
-    auto transaction_type_bytes =
-        TypeConverter::stringToBytes(transaction_type_string);
-    bytes_builder.append(transaction_type_bytes);
+    bytes_builder.append(transaction_type_string);
 
     json content_array_json = message_body_json["content"];
     for (auto it = content_array_json.cbegin(); it != content_array_json.cend();
@@ -83,13 +81,16 @@ void TransactionCollector::handleMessage(json message_body_json) {
       return;
 
     auto signature_message_bytes = bytes_builder.getBytes();
+
     bool is_verified = RSA::doVerify(endpoint_cert, signature_message_bytes,
                                      transaction.signature, true);
 
     if (is_verified) {
       auto &transaction_pool = Application::app().getTransactionPool();
       transaction_pool.push(transaction);
-      cout << " txid 저장합니다.. " << txid_str << endl;
+    } else {
+      cout << "failed to verify the tx signature. cert(0, 8) is: "
+           << endpoint_cert.substr(0, 8) << endl;
     }
   }
 }

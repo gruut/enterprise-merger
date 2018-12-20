@@ -8,7 +8,7 @@
 namespace gruut {
 namespace config {
 
-constexpr size_t MAX_THREAD = 10;
+constexpr size_t MAX_THREAD = 100;
 constexpr CompressionAlgorithmType COMPRESSION_ALGO_TYPE =
     CompressionAlgorithmType::LZ4;
 
@@ -24,7 +24,7 @@ constexpr size_t JOIN_TIMEOUT_SEC = 10;
 constexpr size_t MAX_SIGNER_NUM = 200;
 constexpr size_t REQ_SSIG_SIGNERS_NUM = 10;
 
-constexpr size_t INQUEUE_MSG_FETCHER_INTERVAL = 100;
+constexpr size_t INQUEUE_MSG_FETCHER_INTERVAL = 5;
 constexpr size_t OUTQUEUE_MSG_FETCHER_INTERVAL = 100;
 
 constexpr size_t SIGNATURE_COLLECTION_INTERVAL = 3000;
