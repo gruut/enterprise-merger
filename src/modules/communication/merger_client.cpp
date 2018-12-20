@@ -8,7 +8,7 @@ void MergerClient::sendMessage(MessageType msg_type,
                                std::vector<std::string> &packed_msg_list) {
 
   if (checkMergerMsgType(msg_type)) {
-    sendToMerger(msg_type, receiver_list, packed_msg_list[0]);
+    sendToMerger(receiver_list, packed_msg_list[0]);
   } else if (checkSignerMsgType(msg_type)) {
     sendToSigner(msg_type, receiver_list, packed_msg_list);
   } else if (checkSEMsgType(msg_type)) {
@@ -30,26 +30,48 @@ void MergerClient::sendToSE(std::string &packed_msg) {
   http_client.post(packed_msg);
 }
 
-void MergerClient::sendToMerger(MessageType msg_type,
-                                std::vector<id_type> &receiver_list,
+void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
                                 std::string &packed_msg) {
-  for (merger_id_type &merger_id : receiver_list) {
-    // TODO: Merger ID에 따른 ip와 port를 저장해 놓을 곳 필요.
-    std::unique_ptr<MergerCommunication::Stub> stub =
-        MergerCommunication::NewStub(
-            CreateChannel("Merger ip and port", InsecureChannelCredentials()));
 
-    ClientContext context;
+  Setting *setting = Setting::getInstance();
+  MergerDataRequest request;
+  request.set_data(packed_msg);
 
-    MergerDataRequest request;
-    MergerDataReply reply;
-
-    request.set_data(packed_msg);
-    Status status = stub->pushData(&context, request, &reply);
-    if (!status.ok())
-      std::cout << status.error_code() << ": " << status.error_message()
-                << std::endl;
+  if (receiver_list.empty()) {
+    merger_id_type my_id = setting->getMyId();
+    for (auto &merger_info : setting->getMergerInfo()) {
+      if (my_id == merger_info.id)
+        continue;
+      sendMsgToMerger(merger_info, request);
+    }
+  } else {
+    for (auto &receiver_id : receiver_list) {
+      for (auto &merger_info : setting->getMergerInfo()) {
+        if (merger_info.id == receiver_id) {
+          sendMsgToMerger(merger_info, request);
+          break;
+        }
+      }
+    }
   }
+}
+
+void MergerClient::sendMsgToMerger(MergerInfo &merger_info,
+                                   MergerDataRequest &request) {
+
+  std::shared_ptr<ChannelCredentials> credential = InsecureChannelCredentials();
+  std::shared_ptr<Channel> channel =
+      CreateChannel(merger_info.address + ":" + merger_info.port, credential);
+  std::unique_ptr<MergerCommunication::Stub> stub =
+      MergerCommunication::NewStub(channel);
+
+  ClientContext context;
+  MergerDataReply reply;
+
+  Status status = stub->pushData(&context, request, &reply);
+  if (!status.ok())
+    std::cout << status.error_code() << ": " << status.error_message()
+              << std::endl;
 }
 
 void MergerClient::sendToSigner(MessageType msg_type,
