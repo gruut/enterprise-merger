@@ -21,10 +21,8 @@ void MergerClient::sendToSE(std::string &packed_msg) {
   auto service_endpoints_list = setting->getServiceEndpointInfo();
 
   auto service_endpoint = service_endpoints_list[0];
-  const string address = service_endpoint.address +
-                         "api/blocks"
-                         ":" +
-                         service_endpoint.port;
+  const string address =
+      service_endpoint.address + ":" + service_endpoint.port + "/api/blocks";
 
   HttpClient http_client(address);
   http_client.post(packed_msg);
