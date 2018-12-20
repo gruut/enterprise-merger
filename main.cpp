@@ -76,22 +76,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // stage 0  modules
-  shared_ptr<BootStraper> module_bootstraper = make_shared<BootStraper>();
-  shared_ptr<Communication> moudle_communication = make_shared<Communication>();
-  shared_ptr<OutMessageFetcher> module_out_message_fetcher = make_shared<OutMessageFetcher>();
-
-  // stage 1 modules
-  shared_ptr<MessageFetcher> module_message_fetcher = make_shared<MessageFetcher>();
-  //shared_ptr<BpScheduler> module_bp_scheduler = make_shared<BpScheduler>();
-
-  Application::app().regModule(moudle_communication, 0);
-  Application::app().regModule(module_out_message_fetcher, 0);
-  Application::app().regModule(module_bootstraper, 0, true);
-
-  Application::app().regModule(module_message_fetcher, 1);
-  //Application::app().regModule(module_bp_scheduler, 1);
-
+  Application::app().setup();
   Application::app().start();
   Application::app().exec();
   Application::app().quit();

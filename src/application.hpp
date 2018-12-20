@@ -58,13 +58,14 @@ public:
 
   BpScheduler &getBpScheduler();
 
-  void regModule(shared_ptr<Module> module, int stage,
-                 bool runover_flag = false);
+  void setup();
   void start();
   void exec();
   void quit();
 
 private:
+  void registerModule(shared_ptr<Module> module, int stage,
+                      bool runover_flag = false);
   void runNextStage(ExitCode exit_code);
 
   shared_ptr<boost::asio::io_service> m_io_serv;
@@ -80,8 +81,11 @@ private:
   std::vector<std::vector<shared_ptr<Module>>> m_modules;
 
   shared_ptr<BpScheduler> m_bp_scheduler;
-
   shared_ptr<BlockProcessor> m_block_processor;
+  shared_ptr<Communication> m_communication;
+  shared_ptr<OutMessageFetcher> m_out_message_fetcher;
+  shared_ptr<BootStraper> m_bootstraper;
+  shared_ptr<MessageFetcher> m_message_fetcher;
 
   int m_running_stage{0};
 

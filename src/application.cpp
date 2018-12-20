@@ -31,8 +31,8 @@ PartialBlock &Application::getTemporaryPartialBlock() {
 
 BlockProcessor &Application::getBlockProcessor() { return *m_block_processor; }
 
-void Application::regModule(shared_ptr<Module> module, int stage,
-                            bool runover_flag) {
+void Application::registerModule(shared_ptr<Module> module, int stage,
+                                 bool runover_flag) {
   if (runover_flag)
     module->registCallBack(
         std::bind(&Application::runNextStage, this, std::placeholders::_1));
@@ -91,8 +91,9 @@ void Application::runNextStage(ExitCode exit_code) {
 
 void Application::quit() { m_io_serv->stop(); }
 
-Application::Application() {
-  m_io_serv = make_shared<boost::asio::io_service>();
+void Application::setup() {
+
+  // step 1 - making objects
   m_signer_pool = make_shared<SignerPool>();
   m_signer_pool_manager = make_shared<SignerPoolManager>();
   m_transaction_pool = make_shared<TransactionPool>();
@@ -101,10 +102,22 @@ Application::Application() {
   m_thread_group = make_shared<std::vector<std::thread>>();
 
   m_bp_scheduler = make_shared<BpScheduler>();
-
   m_block_processor = make_shared<BlockProcessor>();
+  m_bootstraper = make_shared<BootStraper>();
+  m_communication = make_shared<Communication>();
+  m_out_message_fetcher = make_shared<OutMessageFetcher>();
+  m_message_fetcher = make_shared<MessageFetcher>();
 
-  regModule(m_bp_scheduler, 1);
+  // step 2 - running scenario
+  registerModule(m_communication, 0);
+  registerModule(m_out_message_fetcher, 0);
+  registerModule(m_bootstraper, 0, true);
+  registerModule(m_message_fetcher, 1);
+  registerModule(m_bp_scheduler, 1);
+}
+
+Application::Application() {
+  m_io_serv = make_shared<boost::asio::io_service>();
 }
 
 } // namespace gruut
