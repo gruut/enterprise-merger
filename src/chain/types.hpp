@@ -42,7 +42,9 @@ enum class MessageType : uint8_t {
   MSG_SSIG = 0xB3,
   MSG_BLOCK = 0xB4,
   MSG_HEADER = 0xB5,
-  MSG_ERROR = 0xFF
+  MSG_ERROR = 0xFF,
+  MSG_REQ_CHECK = 0xC0,
+  MSG_RES_CHECK = 0xC1
 };
 
 enum class MACAlgorithmType : uint8_t {
