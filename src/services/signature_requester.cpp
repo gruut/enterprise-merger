@@ -16,6 +16,12 @@ using namespace gruut::config;
 
 namespace gruut {
 
+SignatureRequester::SignatureRequester() {
+  auto &io_service = Application::app().getIoService();
+  m_check_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_collect_timer.reset(new boost::asio::deadline_timer(io_service));
+}
+
 void SignatureRequester::checkProcess() {
   if (!m_is_timer_running)
     return;
@@ -28,15 +34,11 @@ void SignatureRequester::checkProcess() {
     }
   });
 
-  m_check_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
   m_check_timer->expires_from_now(boost::posix_time::milliseconds(
       config::SIGNATURE_COLLECTION_CHECK_INTERVAL));
-  m_check_timer->async_wait([&](const boost::system::error_code &ec) {
+  m_check_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
-      std::cout << "startSignatureCollectTimer: CheckTimer was cancelled or "
-                   "retriggered."
-                << std::endl;
+      cout << "SGR: CheckTimer aborted" << endl;
     } else if (ec.value() == 0) {
       checkProcess();
     } else {
@@ -62,14 +64,18 @@ void SignatureRequester::requestSignatures() {
 
 void SignatureRequester::timerStopAndCreateBlock() {
 
+  cout << "SGR: START MAKING BLOCK" << endl;
+
   m_is_timer_running = false;
 
-  m_timer->cancel();
+  m_collect_timer->cancel();
   m_check_timer->cancel();
 
   auto &signature_pool = Application::app().getSignaturePool();
   if (signature_pool.size() >= config::MIN_SIGNATURE_COLLECT_SIZE &&
       signature_pool.size() <= config::MAX_SIGNATURE_COLLECT_SIZE) {
+
+    cout << ">> SIG POOL SIZE = " << signature_pool.size() << endl;
 
     auto temp_partial_block = Application::app().getTemporaryPartialBlock();
 
@@ -87,20 +93,16 @@ void SignatureRequester::timerStopAndCreateBlock() {
 void SignatureRequester::startSignatureCollectTimer() {
   m_is_timer_running = true;
 
-  m_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
-  m_timer->expires_from_now(
+  m_collect_timer->expires_from_now(
       boost::posix_time::milliseconds(config::SIGNATURE_COLLECTION_INTERVAL));
-  m_timer->async_wait([&](const boost::system::error_code &ec) {
+  m_collect_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
-      std::cout
-          << "startSignatureCollectTimer: Timer was cancelled or retriggered."
-          << std::endl;
+      cout << "SGR: SigCollectTimer aborted" << endl;
     } else if (ec.value() == 0) {
       if (m_is_timer_running)
         timerStopAndCreateBlock();
     } else {
-      std::cout << "ERROR: " << ec.message() << std::endl;
+      cout << "ERROR: " << ec.message() << endl;
       throw;
     }
   });

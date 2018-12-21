@@ -3,13 +3,16 @@
 
 namespace gruut {
 
-BpScheduler::BpScheduler() { m_setting = Setting::getInstance(); }
+BpScheduler::BpScheduler() {
+  m_setting = Setting::getInstance();
+
+  auto &io_service = Application::app().getIoService();
+  m_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_lock_timer.reset(new boost::asio::deadline_timer(io_service));
+}
 
 void BpScheduler::start() {
-  m_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
-  m_lock_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
+
   setMyIds();
   m_up_slot = Time::now_int() / config::BP_INTERVAL;
   updateRecvStatus(m_my_mid_b64, m_up_slot, BpStatus::IN_BOOT_WAIT);

@@ -23,7 +23,7 @@ using Signers = std::vector<Signer>;
 
 class SignatureRequester {
 public:
-  SignatureRequester() = default;
+  SignatureRequester();
 
   void requestSignatures();
 
@@ -42,7 +42,7 @@ private:
 
   Signers selectSigners();
 
-  std::unique_ptr<boost::asio::deadline_timer> m_timer;
+  std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
   MerkleTree m_merkle_tree;
 

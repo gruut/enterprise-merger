@@ -16,6 +16,8 @@ using namespace nlohmann;
 namespace gruut {
 TransactionCollector::TransactionCollector() {
   m_service_endpoints = Setting::getInstance()->getServiceEndpointInfo();
+  m_timer.reset(
+      new boost::asio::deadline_timer(Application::app().getIoService()));
 }
 
 void TransactionCollector::handleMessage(json msg_body_json) {
@@ -122,9 +124,6 @@ void TransactionCollector::turnOnTimer() {
   cout << "TXC: turnOnTimer()" << endl;
 
   m_timer_running = true;
-
-  m_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
 
   m_bpjob_sequence.push_back(BpJobStatus::DONT);
   m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
