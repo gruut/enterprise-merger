@@ -56,8 +56,6 @@ public:
 
   inline bool empty() { return m_input_msg_pool.empty(); }
 
-  inline size_t size() { return m_input_msg_pool.size(); }
-
   inline void clearInputQueue() { m_input_msg_pool.clear(); }
 };
 } // namespace gruut
