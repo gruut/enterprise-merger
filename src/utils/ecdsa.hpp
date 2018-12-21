@@ -13,8 +13,6 @@
 #include <string>
 #include <vector>
 
-namespace gruut {
-
 class ECDSA {
 public:
   static std::vector<uint8_t> doSign(std::string &ecdsa_sk_pem,
@@ -116,4 +114,3 @@ private:
     }
   }
 };
-} // namespace gruut

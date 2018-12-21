@@ -18,7 +18,6 @@
 #include <chrono>
 #include <iostream>
 
-namespace gruut {
 class CertValidator {
 public:
   CertValidator() {}
@@ -141,5 +140,3 @@ private:
     return true;
   }
 };
-
-} // namespace gruut
