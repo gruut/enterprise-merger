@@ -23,8 +23,9 @@ json parseArg(int argc, char *argv[]){
   options.add_options("basic")("help", "Print help description")(
     "in", "Setting file", cxxopts::value<string>()->default_value("./setting.json"))
     ("pass","Password to decrypt secret key",cxxopts::value<string>()->default_value(""))
-    ("port", "Port number", cxxopts::value<string>()->default_value(""));
-
+    ("port", "Port number", cxxopts::value<string>()->default_value(""))
+    ("dbpath", "DB path", cxxopts::value<string>()->default_value("./db")
+    );
 
   if (argc == 1) {
     cout << options.help({"basic"}) << endl;
@@ -53,6 +54,10 @@ json parseArg(int argc, char *argv[]){
     auto parsed_port_num = result["port"].as<string>();
     if(!parsed_port_num.empty())
       setting_json["Self"]["port"] = parsed_port_num;
+
+    auto parsed_db_path = result["dbpath"].as<string>();
+    setting_json["dbpath"] = parsed_db_path;
+    boost::filesystem::create_directories(parsed_db_path);
 
     return setting_json;
 

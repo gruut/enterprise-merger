@@ -139,6 +139,7 @@ private:
   std::string m_port;
   local_chain_id_type m_localchain_id;
   std::string m_localchain_name;
+  std::string m_db_path;
 
   GruutAuthorityInfo m_gruut_authority;
   std::vector<ServiceEndpointInfo> m_service_endpoints;
@@ -158,6 +159,8 @@ public:
   }
 
   bool setJson(json &setting_json) {
+    m_db_path = setting_json["dbpath"].get<string>();
+    setting_json.erase("dbpath");
 
     if (!validateSchema(setting_json))
       return false;
@@ -219,6 +222,8 @@ public:
   inline std::string getMyPass() { return m_sk_pass; }
 
   inline local_chain_id_type getLocalChainId() { return m_localchain_id; }
+
+  inline std::string getMyDbPath() { return m_db_path; }
 
   inline GruutAuthorityInfo getGruutAuthorityInfo() {
     return m_gruut_authority;

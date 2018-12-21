@@ -1,25 +1,30 @@
 #include "storage.hpp"
-
+#include "setting.hpp"
 namespace gruut {
 using namespace std;
 using namespace nlohmann;
 using namespace macaron;
 
 Storage::Storage() {
+  auto setting = Setting::getInstance();
+  m_db_path = setting->getMyDbPath();
+
   m_options.create_if_missing = true;
   m_write_options.sync = true;
 
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/block_header",
+                                    &m_db_block_header));
   errorOnCritical(
-      leveldb::DB::Open(m_options, "./block_header", &m_db_block_header));
-  errorOnCritical(leveldb::DB::Open(m_options, "./block_raw", &m_db_block_raw));
-  errorOnCritical(leveldb::DB::Open(m_options, "./latest_block_header",
+      leveldb::DB::Open(m_options, m_db_path + "/block_raw", &m_db_block_raw));
+  errorOnCritical(leveldb::DB::Open(m_options,
+                                    m_db_path + "/latest_block_header",
                                     &m_db_latest_block_header));
-  errorOnCritical(
-      leveldb::DB::Open(m_options, "./block_body", &m_db_block_body));
-  errorOnCritical(
-      leveldb::DB::Open(m_options, "./certificate", &m_db_certificate));
-  errorOnCritical(
-      leveldb::DB::Open(m_options, "./blockid_height", &m_db_blockid_height));
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/block_body",
+                                    &m_db_block_body));
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/certificate",
+                                    &m_db_certificate));
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/blockid_height",
+                                    &m_db_blockid_height));
 }
 
 Storage::~Storage() {
@@ -396,12 +401,12 @@ string Storage::findCertificate(const string &user_id,
 }
 
 void Storage::deleteAllDirectory() {
-  boost::filesystem::remove_all("./block_header");
-  boost::filesystem::remove_all("./block_raw");
-  boost::filesystem::remove_all("./certificate");
-  boost::filesystem::remove_all("./latest_block_header");
-  boost::filesystem::remove_all("./block_body");
-  boost::filesystem::remove_all("./blockid_height");
+  boost::filesystem::remove_all(m_db_path + "/block_header");
+  boost::filesystem::remove_all(m_db_path + "/block_raw");
+  boost::filesystem::remove_all(m_db_path + "/certificate");
+  boost::filesystem::remove_all(m_db_path + "/latest_block_header");
+  boost::filesystem::remove_all(m_db_path + "/block_body");
+  boost::filesystem::remove_all(m_db_path + "/blockid_height");
 }
 
 tuple<int, string, json> Storage::readBlock(int height) {
