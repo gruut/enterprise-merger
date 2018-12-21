@@ -12,6 +12,8 @@ Storage::Storage() {
   m_options.create_if_missing = true;
   m_write_options.sync = true;
 
+  boost::filesystem::create_directories(m_db_path);
+
   errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/block_header",
                                     &m_db_block_header));
   errorOnCritical(
