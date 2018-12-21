@@ -81,6 +81,7 @@ private:
   string getPrefix(DBType what);
 
 private:
+  string m_db_path;
   leveldb::Options m_options;
   leveldb::WriteOptions m_write_options;
   leveldb::ReadOptions m_read_options;
