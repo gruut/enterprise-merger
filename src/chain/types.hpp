@@ -56,6 +56,10 @@ enum class MACAlgorithmType : uint8_t {
   NONE = 0xFF
 };
 
+enum class ErrorMsgType : int {
+  MERGER_BOOTSTRAP = 3
+};
+
 enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
 
 enum class SignerStatus { UNKNOWN, TEMPORARY, ERROR, GOOD };
