@@ -74,6 +74,8 @@ private:
 
   bool sendBlockRequest(int height);
 
+  void sendErrorToSigner(InputMsgEntry &input_msg_entry);
+
   bool validateBlock(int height);
 
   void saveBlock(int height);
@@ -81,5 +83,9 @@ private:
   void blockSyncControl();
 
   void messageFetch();
+
+  bool checkMsgFromOtherMerger(MessageType msg_type);
+
+  bool checkMsgFromSigner(MessageType msg_type);
 };
 } // namespace gruut
