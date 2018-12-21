@@ -65,3 +65,10 @@ lib/leveldb/leveldbConfigVersion\.cmake
 
 my_setting.json
 !/src/config/my_setting.json
+
+src/config/block_header/*
+src/config/block_body/*
+src/config/block_raw/*
+src/config/blockid_height/*
+src/config/certificate/*
+src/config/latest_block_header/*
