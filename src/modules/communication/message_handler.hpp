@@ -22,7 +22,7 @@ public:
 
 private:
   InputQueueAlt *m_input_queue;
-  bool validateMessage(MessageHeader &header);
+  bool validateMsgFormat(MessageHeader &header);
   int getMsgBodySize(MessageHeader &header);
   std::string getMsgBody(std::string &packed_msg, int body_size);
   nlohmann::json getJson(CompressionAlgorithmType compression_type,
