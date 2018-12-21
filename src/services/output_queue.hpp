@@ -69,6 +69,8 @@ public:
 
   inline bool empty() { return m_output_msg_pool.empty(); }
 
+  inline size_t size() { return m_output_msg_pool.size(); }
+
   inline void clearOutputQueue() { m_output_msg_pool.clear(); }
 };
 } // namespace gruut

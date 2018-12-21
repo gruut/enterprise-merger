@@ -33,8 +33,7 @@ void MergerServer::recvMessage() {
   void *tag;
   bool ok;
   while (true) {
-    std::this_thread::sleep_for(chrono::milliseconds(2));
-    for (int i = 0; i < 100; ++i) {
+    if (m_input_queue->size() < config::AVAILABLE_INPUT_SIZE) {
       GPR_ASSERT(m_completion_queue->Next(&tag, &ok));
       if (!ok)
         continue;
@@ -54,16 +53,19 @@ void RecvFromMerger::proceed() {
   case RpcCallStatus::PROCESS: {
     new RecvFromMerger(m_service, m_completion_queue);
 
-    std::string packed_msg = m_request.data();
-    Status rpc_status;
-    id_type recv_id;
+    auto &io_service = Application::app().getIoService();
+    io_service.post([this]() {
+      std::string packed_msg = m_request.data();
+      Status rpc_status;
+      id_type recv_id;
 
-    MessageHandler message_handler;
-    message_handler.unpackMsg(packed_msg, rpc_status, recv_id);
+      MessageHandler message_handler;
+      message_handler.unpackMsg(packed_msg, rpc_status, recv_id);
 
-    MergerDataReply m_reply;
-    m_receive_status = RpcCallStatus::FINISH;
-    m_responder.Finish(m_reply, rpc_status, this);
+      MergerDataReply m_reply;
+      m_receive_status = RpcCallStatus::FINISH;
+      m_responder.Finish(m_reply, rpc_status, this);
+    });
   } break;
 
   default: {
@@ -84,17 +86,20 @@ void RecvFromSE::proceed() {
   case RpcCallStatus::PROCESS: {
     new RecvFromSE(m_service, m_completion_queue);
 
-    std::string packed_msg = m_request.message();
+    auto &io_service = Application::app().getIoService();
+    io_service.post([this]() {
+      std::string packed_msg = m_request.message();
 
-    Status rpc_status;
-    servend_id_type receiver_id;
+      Status rpc_status;
+      servend_id_type receiver_id;
 
-    MessageHandler message_handler;
-    message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
+      MessageHandler message_handler;
+      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
 
-    Nothing m_reply;
-    m_receive_status = RpcCallStatus::FINISH;
-    m_responder.Finish(m_reply, rpc_status, this);
+      Nothing m_reply;
+      m_receive_status = RpcCallStatus::FINISH;
+      m_responder.Finish(m_reply, rpc_status, this);
+    });
   } break;
 
   default: {
@@ -154,22 +159,25 @@ void Join::proceed() {
   case RpcCallStatus::PROCESS: {
     new Join(m_service, m_completion_queue);
 
-    std::string packed_msg = m_request.message();
+    auto &io_service = Application::app().getIoService();
+    io_service.post([this]() {
+      std::string packed_msg = m_request.message();
 
-    Status rpc_status;
-    id_type receiver_id;
+      Status rpc_status;
+      id_type receiver_id;
 
-    MessageHandler message_handler;
-    message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
+      MessageHandler message_handler;
+      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
 
-    if (!rpc_status.ok()) {
-      GrpcMsgChallenge m_reply;
-      m_responder.Finish(m_reply, rpc_status, this);
-      m_receive_status = RpcCallStatus::FINISH;
-    } else {
-      m_rpc_receiver_list->setChanllenge(receiver_id, &m_responder, this,
-                                         &m_receive_status);
-    }
+      if (!rpc_status.ok()) {
+        GrpcMsgChallenge m_reply;
+        m_responder.Finish(m_reply, rpc_status, this);
+        m_receive_status = RpcCallStatus::FINISH;
+      } else {
+        m_rpc_receiver_list->setChanllenge(receiver_id, &m_responder, this,
+                                           &m_receive_status);
+      }
+    });
   } break;
 
   default: {
@@ -190,21 +198,24 @@ void DHKeyEx::proceed() {
   case RpcCallStatus::PROCESS: {
     new DHKeyEx(m_service, m_completion_queue);
 
-    std::string packed_msg = m_request.message();
-    Status rpc_status;
-    id_type receiver_id;
+    auto &io_service = Application::app().getIoService();
+    io_service.post([this]() {
+      std::string packed_msg = m_request.message();
+      Status rpc_status;
+      id_type receiver_id;
 
-    MessageHandler message_handler;
-    message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
+      MessageHandler message_handler;
+      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
 
-    if (!rpc_status.ok()) {
-      GrpcMsgResponse2 m_reply;
-      m_responder.Finish(m_reply, rpc_status, this);
-    } else {
-      m_rpc_receiver_list->setResponse2(receiver_id, &m_responder, this,
-                                        &m_receive_status);
-    }
-    m_receive_status = RpcCallStatus::FINISH;
+      if (!rpc_status.ok()) {
+        GrpcMsgResponse2 m_reply;
+        m_responder.Finish(m_reply, rpc_status, this);
+      } else {
+        m_rpc_receiver_list->setResponse2(receiver_id, &m_responder, this,
+                                          &m_receive_status);
+      }
+      m_receive_status = RpcCallStatus::FINISH;
+    });
   } break;
 
   default: {
@@ -226,20 +237,23 @@ void KeyExFinished::proceed() {
   case RpcCallStatus::PROCESS: {
     new KeyExFinished(m_service, m_completion_queue);
 
-    std::string packed_msg = m_request.message();
-    Status rpc_status;
-    id_type receiver_id;
+    auto &io_service = Application::app().getIoService();
+    io_service.post([this]() {
+      std::string packed_msg = m_request.message();
+      Status rpc_status;
+      id_type receiver_id;
 
-    MessageHandler message_handler;
-    message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
-    if (!rpc_status.ok()) {
-      GrpcMsgAccept m_reply;
-      m_responder.Finish(m_reply, rpc_status, this);
-    } else {
-      m_rpc_receiver_list->setAccept(receiver_id, &m_responder, this,
-                                     &m_receive_status);
-    }
-    m_receive_status = RpcCallStatus::FINISH;
+      MessageHandler message_handler;
+      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
+      if (!rpc_status.ok()) {
+        GrpcMsgAccept m_reply;
+        m_responder.Finish(m_reply, rpc_status, this);
+      } else {
+        m_rpc_receiver_list->setAccept(receiver_id, &m_responder, this,
+                                       &m_receive_status);
+      }
+      m_receive_status = RpcCallStatus::FINISH;
+    });
   } break;
 
   default: {
@@ -260,15 +274,18 @@ void SigSend::proceed() {
   case RpcCallStatus::PROCESS: {
     new SigSend(m_service, m_completion_queue);
 
-    std::string packed_msg = m_request.message();
-    Status rpc_status;
-    id_type receiver_id;
+    auto &io_service = Application::app().getIoService();
+    io_service.post([this]() {
+      std::string packed_msg = m_request.message();
+      Status rpc_status;
+      id_type receiver_id;
 
-    MessageHandler message_handler;
-    message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
-    NoReply m_reply;
-    m_responder.Finish(m_reply, rpc_status, this);
-    m_receive_status = RpcCallStatus::FINISH;
+      MessageHandler message_handler;
+      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
+      NoReply m_reply;
+      m_responder.Finish(m_reply, rpc_status, this);
+      m_receive_status = RpcCallStatus::FINISH;
+    });
   } break;
 
   default: {
