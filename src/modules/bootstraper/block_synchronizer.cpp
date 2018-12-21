@@ -3,6 +3,22 @@
 #include "../../services/message_proxy.hpp"
 
 namespace gruut {
+
+BlockSynchronizer::BlockSynchronizer() {
+
+  auto &io_service = Application::app().getIoService();
+
+  m_block_sync_strand.reset(new boost::asio::io_service::strand(io_service));
+  m_msg_fetching_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_sync_ctrl_timer.reset(new boost::asio::deadline_timer(io_service));
+
+  m_storage = Storage::getInstance();
+  m_inputQueue = InputQueueAlt::getInstance();
+  auto setting = Setting::getInstance();
+
+  m_my_id = setting->getMyId();
+}
+
 bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
   cout << "BSYNC: pushMsgToBlockList()" << endl;
@@ -252,7 +268,6 @@ void BlockSynchronizer::blockSyncControl() {
     }
   }));
 
-  m_sync_ctrl_timer.reset(new boost::asio::deadline_timer(io_service));
   m_sync_ctrl_timer->expires_from_now(
       boost::posix_time::milliseconds(config::SYNC_CONTROL_INTERVAL));
   m_sync_ctrl_timer->async_wait([this](const boost::system::error_code &ec) {
@@ -281,7 +296,6 @@ void BlockSynchronizer::messageFetch() {
     }
   });
 
-  m_msg_fetching_timer.reset(new boost::asio::deadline_timer(io_service));
   m_msg_fetching_timer->expires_from_now(
       boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTERVAL));
   m_msg_fetching_timer->async_wait([this](const boost::system::error_code &ec) {
@@ -293,21 +307,6 @@ void BlockSynchronizer::messageFetch() {
       throw;
     }
   });
-}
-
-BlockSynchronizer::BlockSynchronizer() {
-
-  auto &io_service = Application::app().getIoService();
-
-  m_block_sync_strand.reset(new boost::asio::io_service::strand(io_service));
-  m_msg_fetching_timer.reset(new boost::asio::deadline_timer(io_service));
-  m_sync_ctrl_timer.reset(new boost::asio::deadline_timer(io_service));
-
-  m_storage = Storage::getInstance();
-  m_inputQueue = InputQueueAlt::getInstance();
-  auto setting = Setting::getInstance();
-
-  m_my_id = setting->getMyId();
 }
 
 void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {

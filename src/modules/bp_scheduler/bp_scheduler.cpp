@@ -3,12 +3,16 @@
 
 namespace gruut {
 
-BpScheduler::BpScheduler() { m_setting = Setting::getInstance(); }
+BpScheduler::BpScheduler() {
+  m_setting = Setting::getInstance();
 
-void BpScheduler::start() {
   auto &io_service = Application::app().getIoService();
   m_timer.reset(new boost::asio::deadline_timer(io_service));
   m_lock_timer.reset(new boost::asio::deadline_timer(io_service));
+}
+
+void BpScheduler::start() {
+
   setMyIds();
   m_up_slot = Time::now_int() / config::BP_INTERVAL;
   updateRecvStatus(m_my_mid_b64, m_up_slot, BpStatus::IN_BOOT_WAIT);
@@ -126,8 +130,6 @@ void BpScheduler::lockStatus() {
 
   cout << "BPS: lockStatus(" << next_lock_time << ")" << endl << flush;
 
-  m_lock_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
   m_lock_timer->expires_at(lock_time);
   m_lock_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
@@ -191,7 +193,6 @@ void BpScheduler::sendPing() {
       PRNG::getRange(0, config::BP_PING_PERIOD) + next_slot_begin);
   ping_time += boost::posix_time::milliseconds(PRNG::getRange(0, 999));
 
-  m_timer.reset(new boost::asio::deadline_timer(io_service));
   m_timer->expires_at(ping_time);
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {

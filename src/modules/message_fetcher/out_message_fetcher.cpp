@@ -28,7 +28,6 @@ void OutMessageFetcher::fetch() {
     }
   });
 
-  m_timer.reset(new boost::asio::deadline_timer(io_service));
   m_timer->expires_from_now(
       boost::posix_time::milliseconds(config::OUTQUEUE_MSG_FETCHER_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
