@@ -47,8 +47,24 @@ public:
   inline static std::array<uint8_t, S> bytesToArray(std::vector<uint8_t> b) {
     using Array = std::array<uint8_t, S>;
 
+    size_t len = (b.size() >= S) ? S : b.size();
+
     Array arr;
-    std::copy(b.begin(), b.end(), arr.begin());
+    std::copy(b.begin(), b.begin() + len, arr.begin());
+
+    return arr;
+  }
+
+  template <size_t S>
+  inline static std::array<uint8_t, S> base64ToArray(std::string &b64_str) {
+    using Array = std::array<uint8_t, S>;
+
+    std::vector<uint8_t> decoded_bytes = decodeBase64(b64_str);
+
+    size_t len = (decoded_bytes.size() >= S) ? S : decoded_bytes.size();
+
+    Array arr;
+    std::copy(decoded_bytes.begin(), decoded_bytes.begin() + len, arr.begin());
 
     return arr;
   }

@@ -74,7 +74,8 @@ public:
   }
 
   static bool validate(nlohmann::json &block_json, nlohmann::json &txs,
-                       std::vector<sha256> &mtree_nodes) {
+                       std::vector<sha256> &mtree_nodes,
+                       std::vector<transaction_id_type> &tx_ids) {
 
     auto setting = Setting::getInstance();
     std::vector<MergerInfo> mergers = setting->getMergerInfo();
@@ -85,30 +86,38 @@ public:
       return false;
     }
 
+    tx_ids.clear();
+
     std::map<std::string, std::string> user_cert_map;
 
-    for (size_t i = 0; i < txs.size(); ++i) {
+    for (auto &tx_one : txs) {
       BytesBuilder tx_digest_builder;
-      tx_digest_builder.appendB64(txs[i]["txid"].get<std::string>());
-      tx_digest_builder.appendDec(txs[i]["time"].get<std::string>());
-      tx_digest_builder.appendB64(txs[i]["rID"].get<std::string>());
-      tx_digest_builder.append(txs[i]["type"].get<std::string>());
+      tx_digest_builder.appendB64(tx_one["txid"].get<std::string>());
+      tx_digest_builder.appendDec(tx_one["time"].get<std::string>());
+      tx_digest_builder.appendB64(tx_one["rID"].get<std::string>());
+      tx_digest_builder.append(tx_one["type"].get<std::string>());
 
-      for (size_t j = 0; j < txs[i]["content"].size(); ++j) {
-        tx_digest_builder.append(txs[i]["content"][j].get<std::string>());
+      for (auto &content_one : tx_one["content"]) {
+        tx_digest_builder.append(content_one.get<std::string>());
       }
 
-      if (txs[i]["type"].get<std::string>() == TXTYPE_CERTIFICATES) {
-        for (size_t j = 0; j < txs[i]["content"].size(); j += 2) {
-          user_cert_map[txs[i]["content"][j]] = txs[i]["content"][j + 1];
+      if (tx_one["type"].get<std::string>() == TXTYPE_CERTIFICATES) {
+        for (size_t j = 0; j < tx_one["content"].size(); j += 2) {
+          user_cert_map[tx_one["content"][j]] = tx_one["content"][j + 1];
         }
+      } else { // except certificates
+        std::string this_tx_id_b64 = tx_one["txid"].get<std::string>();
+        transaction_id_type this_tx_id =
+            TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
+                this_tx_id_b64);
+        tx_ids.emplace_back(this_tx_id);
       }
 
-      std::string rsig_b64 = txs[i]["rSig"].get<std::string>();
+      std::string rsig_b64 = tx_one["rSig"].get<std::string>();
       bytes rsig_byte = TypeConverter::decodeBase64(rsig_b64);
 
       std::string cert =
-          getMergerCert(mergers, txs[i]["rID"].get<std::string>());
+          getMergerCert(mergers, tx_one["rID"].get<std::string>());
 
       if (cert.empty()) {
         std::cout << "no certificate for sender" << std::endl;
@@ -120,7 +129,7 @@ public:
         std::cout << "invalid rSig" << std::endl;
         return false;
       }
-      tx_digest_builder.appendB64(txs[i]["rSig"].get<std::string>());
+      tx_digest_builder.appendB64(tx_one["rSig"].get<std::string>());
       tx_digests.emplace_back(Sha256::hash(tx_digest_builder.getString()));
     }
 

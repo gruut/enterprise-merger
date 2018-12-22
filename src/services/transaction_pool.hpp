@@ -12,6 +12,7 @@ public:
   void push(Transaction &transaction);
   Transaction pop();
   size_t size();
+  void removeDuplicatedTransactions(std::vector<transaction_id_type> &tx_ids);
 
 private:
   std::list<Transaction> m_transaction_pool;

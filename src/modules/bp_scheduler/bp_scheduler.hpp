@@ -35,14 +35,14 @@ public:
   void start() override;
 
 private:
-  void setMyIds();
-  void sendPing();
-  void lockStatus();
+  void sendPingloop();
+  void postSendPingJob();
+  void lockStatusloop();
+  void postLockJob();
+
   void updateRecvStatus(const std::string &id_b64, size_t timeslot,
                         BpStatus stat);
   void reschedule();
-
-  void postLockJob();
 
   std::string statusToString(BpStatus status);
   BpStatus stringToStatus(const std::string &str);
