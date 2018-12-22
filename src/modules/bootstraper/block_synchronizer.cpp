@@ -289,16 +289,16 @@ void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry) {
   std::string signer_id_b64 = input_msg_entry.body["sID"];
   signer_id_type signer_id = TypeConverter::decodeBase64(signer_id_b64);
 
-  OutputMsgEntry msg_req_block;
-  msg_req_block.type = MessageType::MSG_ERROR;
-  msg_req_block.body["sender"] = TypeConverter::toBase64Str(m_my_id); // my_id
-  msg_req_block.body["time"] = Time::now();
-  msg_req_block.body["type"] =
+  OutputMsgEntry output_msg;
+  output_msg.type = MessageType::MSG_ERROR;
+  output_msg.body["sender"] = TypeConverter::toBase64Str(m_my_id); // my_id
+  output_msg.body["time"] = Time::now();
+  output_msg.body["type"] =
       std::to_string(static_cast<int>(ErrorMsgType::MERGER_BOOTSTRAP));
-  msg_req_block.body["info"] = "Merger is in bootstrapping. Please, wait.";
-  msg_req_block.receivers = {signer_id};
+  output_msg.body["info"] = "Merger is in bootstrapping. Please, wait.";
+  output_msg.receivers = {signer_id};
 
-  m_msg_proxy.deliverOutputMessage(msg_req_block);
+  m_msg_proxy.deliverOutputMessage(output_msg);
 }
 
 void BlockSynchronizer::messageFetch() {

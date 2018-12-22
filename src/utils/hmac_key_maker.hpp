@@ -1,13 +1,16 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_HMAC_KEY_MAKER_HPP
 #define GRUUT_ENTERPRISE_MERGER_HMAC_KEY_MAKER_HPP
 
-#include <botan/auto_rng.h>
-#include <botan/bigint.h>
-#include <botan/curve_gfp.h>
-#include <botan/ec_group.h>
-#include <botan/ecdh.h>
-#include <botan/hex.h>
-#include <botan/pubkey.h>
+#include <iostream>
+
+#include <botan-2/botan/auto_rng.h>
+#include <botan-2/botan/bigint.h>
+#include <botan-2/botan/curve_gfp.h>
+#include <botan-2/botan/ec_group.h>
+#include <botan-2/botan/ecdh.h>
+#include <botan-2/botan/exceptn.h>
+#include <botan-2/botan/hex.h>
+#include <botan-2/botan/pubkey.h>
 
 class HmacKeyMaker {
 private:
@@ -70,6 +73,8 @@ public:
   getSharedSecretKey(std::string &your_public_key_x,
                      std::string &your_public_key_y, int ssk_len = 32) {
 
+    Botan::secure_vector<uint8_t> ssk;
+
     // my_secret_key
     Botan::ECDH_PrivateKey my_secret_key(m_rng, m_group_domain, m_secret_key);
 
@@ -77,18 +82,22 @@ public:
     auto decoded_public_key_y = Botan::hex_decode(your_public_key_y);
 
     // your_pk
-    Botan::PointGFp your_public_key_point(m_curve,
-                                          Botan::BigInt(decoded_public_key_x),
-                                          Botan::BigInt(decoded_public_key_y));
-    Botan::ECDH_PublicKey your_public_key(m_group_domain,
-                                          your_public_key_point);
+    try {
+      Botan::PointGFp your_public_key_point(
+          m_curve, Botan::BigInt(decoded_public_key_x),
+          Botan::BigInt(decoded_public_key_y));
+      Botan::ECDH_PublicKey your_public_key(m_group_domain,
+                                            your_public_key_point);
 
-    // ECDH object
-    Botan::PK_Key_Agreement new_ecdh(my_secret_key, m_rng, m_kdf);
+      // ECDH object
+      Botan::PK_Key_Agreement new_ecdh(my_secret_key, m_rng, m_kdf);
 
-    // make shared secret
-    Botan::secure_vector<uint8_t> ssk =
-        new_ecdh.derive_key(ssk_len, your_public_key.public_value()).bits_of();
+      // make shared secret
+      ssk = new_ecdh.derive_key(ssk_len, your_public_key.public_value())
+                .bits_of();
+    } catch (Botan::Exception &e) {
+      std::cout << "ECDH: exception - " << e.what() << std::endl;
+    }
 
     return ssk;
   }
