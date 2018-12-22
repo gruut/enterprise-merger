@@ -159,9 +159,6 @@ public:
   }
 
   bool setJson(json &setting_json) {
-    m_db_path = setting_json["dbpath"].get<string>();
-    setting_json.erase("dbpath");
-
     if (!validateSchema(setting_json))
       return false;
 
@@ -171,6 +168,7 @@ public:
     m_sk = joinMultiLine(setting_json["Self"]["sk"]);
     m_localchain_id = getChainIdFromJson(setting_json["LocalChain"]["id"]);
     m_localchain_name = setting_json["LocalChain"]["name"].get<std::string>();
+    m_db_path = setting_json["dbpath"].get<string>();
 
     m_gruut_authority.id = getIdFromJson(setting_json["GA"]["id"]);
     m_gruut_authority.address =
@@ -239,13 +237,13 @@ private:
   local_chain_id_type getChainIdFromJson(json &t_json) {
     std::string id_b64 = t_json.get<std::string>();
     bytes id_bytes = TypeConverter::decodeBase64(id_b64);
-    return (local_chain_id_type)TypeConverter::bytesToArray<CHAIN_ID_TYPE_SIZE>(
-        id_bytes);
+    return static_cast<local_chain_id_type>(
+        TypeConverter::bytesToArray<CHAIN_ID_TYPE_SIZE>(id_bytes));
   }
 
   id_type getIdFromJson(json &t_json) {
     std::string id_b64 = t_json.get<std::string>();
-    return (id_type)TypeConverter::decodeBase64(id_b64);
+    return static_cast<id_type>(TypeConverter::decodeBase64(id_b64));
   }
   std::string joinMultiLine(json &mline_json) {
     std::string ret_str;
