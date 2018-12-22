@@ -59,7 +59,12 @@ enum class MACAlgorithmType : uint8_t {
 };
 
 enum class ErrorMsgType : int {
-  MERGER_BOOTSTRAP = 3
+  MERGER_BOOTSTRAP = 3,
+  ECDH_ILLEGAL_ACCESS,
+  ECDH_MAX_SIGNER_POOL,
+  ECDH_TIMEOUT,
+  ECDH_INVALID_SIG,
+  ECDH_INVALID_PK
 };
 
 enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };

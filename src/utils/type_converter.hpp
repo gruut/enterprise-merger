@@ -44,7 +44,7 @@ public:
   }
 
   template <size_t S>
-  inline static std::array<uint8_t, S> bytesToArray(std::vector<uint8_t> b) {
+  inline static std::array<uint8_t, S> bytesToArray(std::vector<uint8_t> &b) {
     using Array = std::array<uint8_t, S>;
 
     Array arr;
@@ -54,7 +54,7 @@ public:
   }
 
   template <size_t S>
-  inline static std::vector<uint8_t> arrayToVector(std::array<uint8_t, S> arr) {
+  inline static std::vector<uint8_t> arrayToVector(std::array<uint8_t, S> &arr) {
     vector<uint8_t> vec(arr.begin(), arr.end());
 
     return vec;
@@ -97,12 +97,12 @@ public:
     return to_string(num);
   }
 
-  template <typename T> inline static std::string toBase64Str(T &t) {
+  template <typename T> inline static std::string toBase64Str(T &&t) {
     return Botan::base64_encode(vector<uint8_t>(begin(t), end(t)));
   }
 
   template <typename T>
-  inline static std::vector<uint8_t> decodeBase64(T &input) {
+  inline static std::vector<uint8_t> decodeBase64(T &&input) {
     try {
       auto s_vector = Botan::base64_decode(input);
       return std::vector<uint8_t>(s_vector.begin(), s_vector.end());
@@ -113,7 +113,7 @@ public:
     return std::vector<uint8_t>();
   }
   template <class Container>
-  static inline std::string toString(const Container &bytes) {
+  static inline std::string toString(const Container &&bytes) {
     return std::string(bytes.cbegin(), bytes.cend());
   }
 };

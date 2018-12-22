@@ -281,23 +281,24 @@ void BlockSynchronizer::blockSyncControl() {
   });
 }
 
-void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry){
+void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry) {
 
-  if(input_msg_entry.body["sID"].empty())
+  if (input_msg_entry.body["sID"].empty())
     return;
 
   std::string signer_id_b64 = input_msg_entry.body["sID"];
   signer_id_type signer_id = TypeConverter::decodeBase64(signer_id_b64);
 
-  OutputMsgEntry msg_req_block;
-  msg_req_block.type = MessageType::MSG_ERROR ;
-  msg_req_block.body["sender"] = TypeConverter::toBase64Str(m_my_id); // my_id
-  msg_req_block.body["time"] = Time::now();
-  msg_req_block.body["type"] = std::to_string(static_cast<int>(ErrorMsgType::MERGER_BOOTSTRAP));
-  msg_req_block.body["info"] = "Merger is in bootstrapping. Please, wait.";
-  msg_req_block.receivers = { signer_id };
+  OutputMsgEntry output_msg;
+  output_msg.type = MessageType::MSG_ERROR;
+  output_msg.body["sender"] = TypeConverter::toBase64Str(m_my_id); // my_id
+  output_msg.body["time"] = Time::now();
+  output_msg.body["type"] =
+      std::to_string(static_cast<int>(ErrorMsgType::MERGER_BOOTSTRAP));
+  output_msg.body["info"] = "Merger is in bootstrapping. Please, wait.";
+  output_msg.receivers = {signer_id};
 
-  m_msg_proxy.deliverOutputMessage(msg_req_block);
+  m_msg_proxy.deliverOutputMessage(output_msg);
 }
 
 void BlockSynchronizer::messageFetch() {
@@ -309,8 +310,7 @@ void BlockSynchronizer::messageFetch() {
     InputMsgEntry input_msg_entry = m_inputQueue->fetch();
     if (checkMsgFromOtherMerger(input_msg_entry.type)) {
       m_sync_alone = false; // Wow! I am not alone!
-    }
-    else if(checkMsgFromSigner(input_msg_entry.type)) {
+    } else if (checkMsgFromSigner(input_msg_entry.type)) {
       sendErrorToSigner(input_msg_entry);
     }
 
@@ -352,19 +352,15 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 }
 
 bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
-  return (
-      msg_type == MessageType::MSG_UP ||
-      msg_type == MessageType::MSG_PING ||
-      msg_type == MessageType::MSG_REQ_BLOCK
-  );
+  return (msg_type == MessageType::MSG_UP ||
+          msg_type == MessageType::MSG_PING ||
+          msg_type == MessageType::MSG_REQ_BLOCK);
 }
 
-bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type){
-  return (
-      msg_type == MessageType::MSG_JOIN ||
+bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type) {
+  return (msg_type == MessageType::MSG_JOIN ||
           msg_type == MessageType::MSG_RESPONSE_1 ||
           msg_type == MessageType::MSG_ECHO ||
-          msg_type == MessageType::MSG_LEAVE
-  );
+          msg_type == MessageType::MSG_LEAVE);
 }
 }; // namespace gruut
