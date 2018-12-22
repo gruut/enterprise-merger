@@ -54,7 +54,8 @@ public:
   }
 
   template <size_t S>
-  inline static std::vector<uint8_t> arrayToVector(std::array<uint8_t, S> &arr) {
+  inline static std::vector<uint8_t>
+  arrayToVector(std::array<uint8_t, S> &arr) {
     vector<uint8_t> vec(arr.begin(), arr.end());
 
     return vec;

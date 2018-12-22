@@ -36,7 +36,8 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
                                       json &message_body_json) {
 
   string recv_id_b64 = message_body_json["sID"].get<string>();
-  signer_id_type recv_id = TypeConverter::decodeBase64(recv_id_b64);
+  signer_id_type recv_id =
+      TypeConverter::decodeBase64(message_body_json["sID"].get<string>());
 
   vector<signer_id_type> receiver_list{recv_id};
 
@@ -144,13 +145,16 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     // OK! This signer has passed HMAC on MesssageHandler.
     // If the merger is ok, it does not need check m_join_temp_table.
 
-    m_join_temp_table[recv_id_b64].release();
-
     if (isTimeout(recv_id_b64)) {
+      std::cout << "SPM: ERROR DH - Join procedure for " << recv_id_b64
+                << " is timeout." << std::endl;
+      m_join_temp_table[recv_id_b64].release();
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_TIMEOUT,
                        "too late MSG_SUCCESS");
       return;
     }
+
+    m_join_temp_table[recv_id_b64].release();
 
     auto &signer_pool = Application::app().getSignerPool();
     signer_pool.updateStatus(recv_id, SignerStatus::GOOD);
