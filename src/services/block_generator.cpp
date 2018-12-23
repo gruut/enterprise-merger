@@ -150,6 +150,9 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
 
   storage->saveBlock(block_raw_b64, block_header, block_body);
 
+  cout << "BGT: BLOCK GENERATED (size=" << partial_block.transactions.size()
+       << ")" << endl;
+
   // setp-6) send blocks to others
 
   json msg_header; // MSG_HEADER = 0xB5
