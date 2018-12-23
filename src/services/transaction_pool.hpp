@@ -11,6 +11,7 @@ namespace gruut {
 class TransactionPool {
 public:
   bool push(Transaction &transaction);
+  bool isDuplicated(transaction_id_type &&tx_id);
   bool isDuplicated(transaction_id_type &tx_id);
   Transaction pop();
   size_t size();

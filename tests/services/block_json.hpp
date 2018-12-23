@@ -3,7 +3,6 @@
 
 #include "../../include/nlohmann/json.hpp"
 #include "../../src/utils/sha256.hpp"
-#include "../../include/base64.hpp"
 #include "../../src/chain/types.hpp"
 namespace gruut {
 using nlohmann::json;

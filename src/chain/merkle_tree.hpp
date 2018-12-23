@@ -3,7 +3,6 @@
 #include <map>
 #include <vector>
 
-#include "../../include/base64.hpp"
 #include "../chain/transaction.hpp"
 #include "../config/config.hpp"
 #include "../utils/bytes_builder.hpp"
@@ -56,14 +55,10 @@ class MerkleTree {
 public:
   MerkleTree() {
     m_merkle_tree.resize(MAX_MERKLE_LEAVES * 2 - 1);
-
-    for (auto it_map = HASH_LOOKUP.begin(); it_map != HASH_LOOKUP.end();
-         ++it_map) {
-
-      std::string sha256_str = macaron::Base64::Decode(
-          std::string(it_map->second.begin(), it_map->second.end()));
-      m_hash_lookup.emplace(it_map->first,
-                            sha256(sha256_str.begin(), sha256_str.end()));
+    for (auto &hash_entry : HASH_LOOKUP) {
+      sha256 hash_val =
+          static_cast<sha256>(TypeConverter::decodeBase64(hash_entry.second));
+      m_hash_lookup.emplace(hash_entry.first, hash_val);
     }
   }
 
@@ -97,8 +92,7 @@ public:
 private:
   sha256 makeParent(sha256 left, sha256 &right) {
     left.insert(left.cend(), right.cbegin(), right.cend());
-    std::string lookup_key =
-        macaron::Base64::Encode(std::string(left.begin(), left.end()));
+    std::string lookup_key = TypeConverter::toBase64Str(left);
 
     auto it_map = m_hash_lookup.find(lookup_key);
     if (it_map != m_hash_lookup.end()) {
@@ -111,30 +105,8 @@ private:
   void generateTxDigests(vector<sha256> &tx_digests,
                          vector<Transaction> &transactions) {
     transform(transactions.begin(), transactions.end(),
-              back_inserter(tx_digests), [](Transaction &t) {
-                BytesBuilder tx_digest_builder;
-
-                tx_digest_builder.append(t.transaction_id);
-                tx_digest_builder.append(t.sent_time);
-                tx_digest_builder.append(t.requestor_id);
-
-                string transaction_type_str;
-                if (t.transaction_type == TransactionType::CERTIFICATE)
-                  transaction_type_str = "CERTIFICATE";
-                else
-                  transaction_type_str = "DIGESTS";
-                tx_digest_builder.append(transaction_type_str);
-
-                for_each(t.content_list.begin(), t.content_list.end(),
-                         [&tx_digest_builder](content_type &content) {
-                           tx_digest_builder.append(content);
-                         });
-
-                tx_digest_builder.append(t.signature);
-
-                auto tx_digest_bytes = tx_digest_builder.getBytes();
-                return Sha256::hash(tx_digest_bytes);
-              });
+              back_inserter(tx_digests),
+              [](Transaction &t) { return t.getDigest(); });
   }
 
   vector<sha256> m_merkle_tree;

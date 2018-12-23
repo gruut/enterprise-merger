@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <iostream>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -44,6 +45,11 @@ public:
   }
 
   template <size_t S>
+  inline static std::array<uint8_t, S> bytesToArray(std::vector<uint8_t> &&b) {
+    return bytesToArray<S>(b);
+  }
+
+  template <size_t S>
   inline static std::array<uint8_t, S> bytesToArray(std::vector<uint8_t> &b) {
     using Array = std::array<uint8_t, S>;
 
@@ -53,6 +59,11 @@ public:
     std::copy(b.begin(), b.begin() + len, arr.begin());
 
     return arr;
+  }
+
+  template <size_t S>
+  inline static std::array<uint8_t, S> base64ToArray(std::string &&b64_str) {
+    return base64ToArray<S>(b64_str);
   }
 
   template <size_t S>
@@ -67,6 +78,12 @@ public:
     std::copy(decoded_bytes.begin(), decoded_bytes.begin() + len, arr.begin());
 
     return arr;
+  }
+
+  template <size_t S>
+  inline static std::vector<uint8_t>
+  arrayToVector(std::array<uint8_t, S> &&arr) {
+    return arrayToVector(arr);
   }
 
   template <size_t S>
@@ -86,6 +103,10 @@ public:
     return Botan::secure_vector<uint8_t>(vec.begin(), vec.end());
   }
 
+  static std::vector<uint8_t> digitStringToBytes(std::string &&str) {
+    return digitStringToBytes(str);
+  }
+
   static std::vector<uint8_t> digitStringToBytes(std::string &str) {
     uint64_t target_integer = static_cast<uint64_t>(stoll(str));
     std::vector<uint8_t> bytes = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -100,6 +121,10 @@ public:
     }
 
     return bytes;
+  }
+
+  inline static std::string digitBytesToIntegerStr(vector<uint8_t> &&bytes) {
+    return digitBytesToIntegerStr(bytes);
   }
 
   inline static std::string digitBytesToIntegerStr(vector<uint8_t> &bytes) {
@@ -120,11 +145,16 @@ public:
 
   template <typename T>
   inline static std::vector<uint8_t> decodeBase64(T &&input) {
+    return decodeBase64(input);
+  }
+
+  template <typename T>
+  inline static std::vector<uint8_t> decodeBase64(T &input) {
     try {
       auto s_vector = Botan::base64_decode(input);
       return std::vector<uint8_t>(s_vector.begin(), s_vector.end());
     } catch (Botan::Exception &e) {
-      cout << e.what() << endl;
+      std::cout << e.what() << std::endl;
     }
 
     return std::vector<uint8_t>();

@@ -15,39 +15,26 @@ void TransactionGenerator::generate(vector<Signer> &signers) {
   }
 
   Transaction new_transaction;
-  bytes signature_message;
-  BytesBuilder msg_builder;
 
   auto setting = Setting::getInstance();
-  string rsa_sk_pem = setting->getMySK();
-  string rsa_sk_pass = setting->getMyPass();
 
-  new_transaction.transaction_id = generateTransactionId();
+  new_transaction.setId(generateTransactionId());
+  new_transaction.setTime(static_cast<timestamp_type>(Time::now_int()));
+  new_transaction.setRequestorId(setting->getMyId());
+  new_transaction.setTransactionType(TransactionType::CERTIFICATE);
 
-  auto timestamp = Time::now_int();
-  new_transaction.sent_time = static_cast<timestamp_type>(timestamp);
-  new_transaction.requestor_id = setting->getMyId();
-  new_transaction.transaction_type = TransactionType::CERTIFICATE;
-
-  msg_builder.append(new_transaction.transaction_id);
-  msg_builder.append(timestamp);
-  msg_builder.append(new_transaction.requestor_id);
-  msg_builder.append(TXTYPE_CERTIFICATES);
-
+  std::vector<content_type> content_list;
   for (auto &signer : signers) {
     if (signer.isNew()) {
-
       auto user_id_str = TypeConverter::toBase64Str(signer.user_id);
-      new_transaction.content_list.emplace_back(user_id_str);
-      new_transaction.content_list.emplace_back(signer.pk_cert);
-
-      msg_builder.append(user_id_str);
-      msg_builder.append(signer.pk_cert);
+      content_list.emplace_back(user_id_str);
+      content_list.emplace_back(signer.pk_cert);
     }
   }
 
-  new_transaction.signature =
-      RSA::doSign(rsa_sk_pem, msg_builder.getBytes(), true, rsa_sk_pass);
+  new_transaction.SetContents(content_list);
+
+  new_transaction.refreshSignature();
 
   Application::app().getTransactionPool().push(new_transaction);
 }

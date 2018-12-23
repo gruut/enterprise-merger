@@ -3,7 +3,6 @@
 namespace gruut {
 using namespace std;
 using namespace nlohmann;
-using namespace macaron;
 
 Storage::Storage() {
   auto setting = Setting::getInstance();

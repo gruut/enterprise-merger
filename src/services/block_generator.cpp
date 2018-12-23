@@ -68,7 +68,7 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   vector<transaction_id_type> transaction_ids;
   transform(partial_block.transactions.begin(),
             partial_block.transactions.end(), back_inserter(transaction_ids),
-            [](Transaction &t) { return t.transaction_id; });
+            [](Transaction &t) { return t.getId(); });
 
   BytesBuilder b_id_builder;
   b_id_builder.append(partial_block.chain_id);
@@ -142,11 +142,8 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   vector<json> transactions_arr;
   std::transform(partial_block.transactions.begin(),
                  partial_block.transactions.end(),
-                 back_inserter(transactions_arr), [this](Transaction &tx) {
-                   json transaction_json;
-                   this->toJson(transaction_json, tx);
-                   return transaction_json;
-                 });
+                 back_inserter(transactions_arr),
+                 [this](Transaction &tx) { return tx.getJson(); });
   block_body["tx"] = transactions_arr;
 
   // step-5) save block
@@ -176,21 +173,5 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   MessageProxy proxy;
   proxy.deliverOutputMessage(msg_header_msg);
   proxy.deliverOutputMessage(msg_block_msg);
-}
-
-void BlockGenerator::toJson(json &j, const Transaction &tx) {
-  auto tx_id = TypeConverter::toBase64Str(tx.transaction_id);
-  auto tx_time = to_string(tx.sent_time);
-  auto requester_id = TypeConverter::toBase64Str(tx.requestor_id);
-  string transaction_type;
-  if (tx.transaction_type == TransactionType::CERTIFICATE)
-    transaction_type = TXTYPE_CERTIFICATES;
-  else
-    transaction_type = TXTYPE_DIGESTS;
-  auto signature = TypeConverter::toBase64Str(tx.signature);
-
-  j = json{{"txID", tx_id},       {"time", tx_time},
-           {"rID", requester_id}, {"type", transaction_type},
-           {"rSig", signature},   {"content", tx.content_list}};
 }
 } // namespace gruut
