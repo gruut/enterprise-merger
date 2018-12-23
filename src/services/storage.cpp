@@ -433,7 +433,7 @@ tuple<int, string, json> Storage::readBlock(int height) {
 
       for (size_t tx_ids_idx = 0; tx_ids_idx < tx_ids_json.size();
            ++tx_ids_idx) {
-        string tx_id = tx_ids_json[tx_ids_idx];
+        string tx_id = tx_ids_json[tx_ids_idx].get<std::string>();
         transaction_json["tx"][tx_pos]["txid"] = tx_id;
         transaction_json["tx"][tx_pos]["time"] =
             getDataByKey(DBType::BLOCK_BODY, tx_id + "_time");

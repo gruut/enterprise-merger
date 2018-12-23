@@ -1,9 +1,9 @@
 #include "merger_server.hpp"
 #include "message_handler.hpp"
 #include "rpc_receiver_list.hpp"
-#include <iostream>
 #include <chrono>
 #include <cstring>
+#include <iostream>
 #include <thread>
 namespace gruut {
 
@@ -40,7 +40,9 @@ void MergerServer::recvMessage() {
         continue;
       static_cast<CallData *>(tag)->proceed();
     } else {
-      std::cout << "MGS: INPUTQUEUE (" << m_input_queue->size() << ")" << std::endl;
+      std::cout << "MGS: INPUTQUEUE (" << m_input_queue->size() << ")"
+                << std::endl;
+      std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
   }
 }

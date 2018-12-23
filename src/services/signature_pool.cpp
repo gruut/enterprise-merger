@@ -9,9 +9,16 @@ using namespace nlohmann;
 using namespace std;
 
 namespace gruut {
+
+SignaturePool::SignaturePool() {
+  auto setting = Setting::getInstance();
+  m_my_id = setting->getMyId();
+  m_my_chain_id = setting->getLocalChainId();
+}
+
 void SignaturePool::handleMessage(json &message_body_json) {
-  string recv_id_b64 = message_body_json["sID"].get<string>();
-  signer_id_type receiver_id = TypeConverter::decodeBase64(recv_id_b64);
+  signer_id_type receiver_id =
+      TypeConverter::decodeBase64(message_body_json["sID"].get<string>());
 
   if (verifySignature(receiver_id, message_body_json)) {
     Signature s;
@@ -24,6 +31,12 @@ void SignaturePool::handleMessage(json &message_body_json) {
 
     push(s);
   }
+}
+
+void SignaturePool::setupSigPool(block_height_type chain_height,
+                                 sha256 &tx_root) {
+  m_chain_height = chain_height;
+  m_tx_root = tx_root;
 }
 
 void SignaturePool::push(Signature &signature) {
@@ -60,15 +73,13 @@ bool SignaturePool::verifySignature(signer_id_type &receiver_id,
   auto timestamp = static_cast<timestamp_type>(
       stoll(message_body_json["time"].get<string>()));
 
-  PartialBlock &partial_block = Application::app().getTemporaryPartialBlock();
-
   BytesBuilder msg_builder;
   msg_builder.append(signer_id);
   msg_builder.append(timestamp);
-  msg_builder.append(partial_block.merger_id);
-  msg_builder.append(partial_block.chain_id);
-  msg_builder.append(partial_block.height);
-  msg_builder.append(partial_block.transaction_root);
+  msg_builder.append(m_my_id);
+  msg_builder.append(m_my_chain_id);
+  msg_builder.append(m_chain_height);
+  msg_builder.append(m_tx_root);
 
   auto sig_b64 = message_body_json["sig"].get<string>();
   auto sig_bytes = TypeConverter::decodeBase64(sig_b64);

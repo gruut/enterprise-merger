@@ -39,7 +39,7 @@ BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest,
   return block;
 }
 
-void BlockGenerator::generateBlock(PartialBlock &partial_block,
+void BlockGenerator::generateBlock(PartialBlock partial_block,
                                    vector<Signature> &support_sigs,
                                    MerkleTree &merkle_tree) {
 
@@ -125,8 +125,8 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
       RSA::doSign(rsa_sk, block_raw_builder.getBytes(), true, rsa_sk_pass);
   block_raw_builder.append(signature); // == mSig
 
-  bytes block_raw_bytes = block_raw_builder.getBytes();
-  std::string block_raw_b64 = TypeConverter::toBase64Str(block_raw_bytes);
+  std::string block_raw_b64 =
+      TypeConverter::toBase64Str(block_raw_builder.getBytes());
 
   // step-4) making block_body (JSON)
   json block_body;
@@ -150,27 +150,21 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
 
   storage->saveBlock(block_raw_b64, block_header, block_body);
 
-  cout << "=========================== BGT: BLOCK GENERATED (size="
-       << partial_block.transactions.size() << ")" << endl;
+  cout << "=========================== BGT: BLOCK GENERATED (height="
+       << partial_block.height << ",size=" << partial_block.transactions.size()
+       << ")" << endl;
 
   // setp-6) send blocks to others
 
-  json msg_header; // MSG_HEADER = 0xB5
-  // msg_header["blockraw"] = block_raw_b64;
-  msg_header["blockraw"] = block_header;
-
-  json msg_block; // MSG_BLOCK = 0xB4
-  msg_block["blockraw"] = block_raw_b64;
-  msg_block["tx"] = block_body["tx"];
-
   OutputMsgEntry msg_header_msg;
-  msg_header_msg.type = MessageType::MSG_HEADER;
-  msg_header_msg.body = msg_header;
+  msg_header_msg.type = MessageType::MSG_HEADER;  // MSG_HEADER = 0xB5
+  msg_header_msg.body["blockraw"] = block_header; // original = block_raw_b64
   msg_header_msg.receivers = vector<id_type>{};
 
   OutputMsgEntry msg_block_msg;
-  msg_block_msg.type = MessageType::MSG_BLOCK;
-  msg_block_msg.body = msg_block;
+  msg_block_msg.type = MessageType::MSG_BLOCK; // MSG_BLOCK = 0xB4
+  msg_block_msg.body["blockraw"] = block_raw_b64;
+  msg_block_msg.body["tx"] = block_body["tx"];
   msg_block_msg.receivers = vector<id_type>{};
 
   MessageProxy proxy;

@@ -54,11 +54,15 @@ void SignatureRequester::requestSignatures() {
 
   auto transactions = std::move(fetchTransactions());
 
-  auto partial_block = makePartialBlock(transactions);
-  Application::app().getTemporaryPartialBlock() =
-      partial_block; // overwrite all
+  m_partial_block = makePartialBlock(transactions);
+  //  Application::app().getTemporaryPartialBlock() =
+  //      partial_block; // overwrite all
 
-  requestSignature(partial_block, signers);
+  auto &signature_pool = Application::app().getSignaturePool();
+
+  signature_pool.setupSigPool(m_partial_block.height,
+                              m_partial_block.transaction_root);
+  requestSignature(signers);
   startSignatureCollectTimer();
   checkProcess();
 }
@@ -73,10 +77,11 @@ void SignatureRequester::stopCollectTimerAndCreateBlock() {
   m_check_timer->cancel();
 
   auto &signature_pool = Application::app().getSignaturePool();
+
   if (signature_pool.size() >= config::MIN_SIGNATURE_COLLECT_SIZE &&
       signature_pool.size() <= config::MAX_SIGNATURE_COLLECT_SIZE) {
 
-    auto temp_partial_block = Application::app().getTemporaryPartialBlock();
+    // auto temp_partial_block = Application::app().getTemporaryPartialBlock();
 
     auto signatures_size =
         min(signature_pool.size(), config::MAX_SIGNATURE_COLLECT_SIZE);
@@ -84,7 +89,7 @@ void SignatureRequester::stopCollectTimerAndCreateBlock() {
     signature_pool.clear(); // last signatures are useless.
 
     BlockGenerator generator;
-    generator.generateBlock(temp_partial_block, signatures, m_merkle_tree);
+    generator.generateBlock(m_partial_block, signatures, m_merkle_tree);
   } else {
     cout << "=========================== SGR: CANCEL MAKING BLOCK" << endl;
     signature_pool.clear();
@@ -133,10 +138,10 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
   ;
 }
 
-void SignatureRequester::requestSignature(PartialBlock &block,
-                                          Signers &signers) {
+void SignatureRequester::requestSignature(Signers &signers) {
   if (!signers.empty()) {
-    auto message = MessageFactory::createSigRequestMessage(block, signers);
+    auto message =
+        MessageFactory::createSigRequestMessage(m_partial_block, signers);
     MessageProxy proxy;
     proxy.deliverOutputMessage(message);
   }

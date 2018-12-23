@@ -38,13 +38,14 @@ private:
 
   PartialBlock makePartialBlock(Transactions &transactions);
 
-  void requestSignature(PartialBlock &block, Signers &signers);
+  void requestSignature(Signers &signers);
 
   Signers selectSigners();
 
   std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
   MerkleTree m_merkle_tree;
+  PartialBlock m_partial_block;
 
   bool m_is_collect_timer_running{false};
   size_t m_max_signers;

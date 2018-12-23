@@ -14,9 +14,10 @@ bool TransactionPool::isDuplicated(transaction_id_type &&tx_id) {
   return isDuplicated(tx_id);
 }
 bool TransactionPool::isDuplicated(transaction_id_type &tx_id) {
-//  return (m_transaction_pool.end() !=
-//          std::find_if(m_transaction_pool.begin(), m_transaction_pool.end(),
-//                       [&](Transaction &tx) { return tx.getId() == tx_id; }));
+  //  return (m_transaction_pool.end() !=
+  //          std::find_if(m_transaction_pool.begin(), m_transaction_pool.end(),
+  //                       [&](Transaction &tx) { return tx.getId() == tx_id;
+  //                       }));
 
   return false;
 }
