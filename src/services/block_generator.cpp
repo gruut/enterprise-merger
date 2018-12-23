@@ -89,13 +89,13 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   block_header["txrt"] =
       TypeConverter::toBase64Str(partial_block.transaction_root);
 
-  vector<string> tx_ids;
+  vector<string> tx_ids_b64;
   std::transform(transaction_ids.begin(), transaction_ids.end(),
-                 back_inserter(tx_ids),
+                 back_inserter(tx_ids_b64),
                  [](const transaction_id_type &transaction_id) {
                    return TypeConverter::toBase64Str(transaction_id);
                  });
-  block_header["txids"] = tx_ids;
+  block_header["txids"] = tx_ids_b64;
 
   for (size_t i = 0; i < support_sigs.size(); ++i) {
 
@@ -116,7 +116,7 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
   BytesBuilder block_raw_builder;
   block_raw_builder.append(
       static_cast<uint8_t>(config::COMPRESSION_ALGO_TYPE)); // 1-byte
-  block_raw_builder.append(header_length);                  // 4-bytes
+  block_raw_builder.append(header_length, 4);               // 4-bytes
   block_raw_builder.append(compressed_json);
 
   string rsa_sk = setting->getMySK();
@@ -150,8 +150,8 @@ void BlockGenerator::generateBlock(PartialBlock &partial_block,
 
   storage->saveBlock(block_raw_b64, block_header, block_body);
 
-  cout << "BGT: BLOCK GENERATED (size=" << partial_block.transactions.size()
-       << ")" << endl;
+  cout << "=========================== BGT: BLOCK GENERATED (size="
+       << partial_block.transactions.size() << ")" << endl;
 
   // setp-6) send blocks to others
 

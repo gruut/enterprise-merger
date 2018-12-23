@@ -19,13 +19,29 @@ bool TransactionPool::isDuplicated(transaction_id_type &tx_id) {
                        [&](Transaction &tx) { return tx.getId() == tx_id; }));
 }
 
-Transaction TransactionPool::pop() {
+bool TransactionPool::pop(Transaction &transaction) {
   std::lock_guard<std::mutex> guard(m_mutex);
-  auto transaction = m_transaction_pool.front();
-  m_transaction_pool.pop_front();
+  if (m_transaction_pool.empty())
+    return false;
+
+  transaction = m_transaction_pool.back();
+  m_transaction_pool.pop_back();
   m_mutex.unlock();
 
-  return transaction;
+  return true;
+}
+
+std::vector<Transaction> TransactionPool::fetchLastN(size_t n) {
+  std::vector<Transaction> transactions;
+  std::lock_guard<std::mutex> guard(m_mutex);
+  size_t len = std::min(n, m_transaction_pool.size());
+  for (size_t i = 0; i < len; ++i) {
+    transactions.emplace_back(m_transaction_pool.back());
+    m_transaction_pool.pop_back();
+  }
+  m_mutex.unlock();
+
+  return transactions;
 }
 
 void TransactionPool::removeDuplicatedTransactions(

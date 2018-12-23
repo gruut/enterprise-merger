@@ -32,7 +32,7 @@ public:
 private:
   void startSignatureCollectTimer();
 
-  void timerStopAndCreateBlock();
+  void stopCollectTimerAndCreateBlock();
 
   Transactions fetchTransactions();
 
@@ -46,7 +46,7 @@ private:
   std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
   MerkleTree m_merkle_tree;
 
-  bool m_is_timer_running{false};
+  bool m_is_collect_timer_running{false};
   size_t m_max_signers;
 };
 } // namespace gruut

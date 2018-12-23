@@ -23,14 +23,14 @@ SignatureRequester::SignatureRequester() {
 }
 
 void SignatureRequester::checkProcess() {
-  if (!m_is_timer_running)
+  if (!m_is_collect_timer_running)
     return;
 
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
     auto &signature_pool = Application::app().getSignaturePool();
     if (signature_pool.size() >= m_max_signers) {
-      timerStopAndCreateBlock();
+      stopCollectTimerAndCreateBlock();
     }
   });
 
@@ -55,18 +55,19 @@ void SignatureRequester::requestSignatures() {
   auto transactions = std::move(fetchTransactions());
 
   auto partial_block = makePartialBlock(transactions);
-  Application::app().getTemporaryPartialBlock() = partial_block;
+  Application::app().getTemporaryPartialBlock() =
+      partial_block; // overwrite all
 
   requestSignature(partial_block, signers);
   startSignatureCollectTimer();
   checkProcess();
 }
 
-void SignatureRequester::timerStopAndCreateBlock() {
+void SignatureRequester::stopCollectTimerAndCreateBlock() {
 
-  cout << "SGR: START MAKING BLOCK" << endl;
+  cout << "=========================== SGR: START MAKING BLOCK" << endl;
 
-  m_is_timer_running = false;
+  m_is_collect_timer_running = false;
 
   m_collect_timer->cancel();
   m_check_timer->cancel();
@@ -75,23 +76,23 @@ void SignatureRequester::timerStopAndCreateBlock() {
   if (signature_pool.size() >= config::MIN_SIGNATURE_COLLECT_SIZE &&
       signature_pool.size() <= config::MAX_SIGNATURE_COLLECT_SIZE) {
 
-    cout << ">> SIG POOL SIZE = " << signature_pool.size() << endl;
-
     auto temp_partial_block = Application::app().getTemporaryPartialBlock();
 
     auto signatures_size =
         min(signature_pool.size(), config::MAX_SIGNATURE_COLLECT_SIZE);
     auto signatures = signature_pool.fetchN(signatures_size);
+    signature_pool.clear(); // last signatures are useless.
 
     BlockGenerator generator;
     generator.generateBlock(temp_partial_block, signatures, m_merkle_tree);
+  } else {
+    cout << "=========================== SGR: CANCEL MAKING BLOCK" << endl;
+    signature_pool.clear();
   }
-
-  signature_pool.clear();
 }
 
 void SignatureRequester::startSignatureCollectTimer() {
-  m_is_timer_running = true;
+  m_is_collect_timer_running = true;
 
   m_collect_timer->expires_from_now(
       boost::posix_time::milliseconds(config::SIGNATURE_COLLECTION_INTERVAL));
@@ -99,8 +100,8 @@ void SignatureRequester::startSignatureCollectTimer() {
     if (ec == boost::asio::error::operation_aborted) {
       cout << "SGR: SigCollectTimer aborted" << endl;
     } else if (ec.value() == 0) {
-      if (m_is_timer_running)
-        timerStopAndCreateBlock();
+      if (m_is_collect_timer_running)
+        stopCollectTimerAndCreateBlock();
     } else {
       cout << "ERROR: " << ec.message() << endl;
       throw;
@@ -115,11 +116,9 @@ Transactions SignatureRequester::fetchTransactions() {
   auto t_size =
       std::min(transactions_size, config::MAX_COLLECT_TRANSACTION_SIZE);
 
-  Transactions transactions_list;
-  for (unsigned int i = 0; i < t_size; i++) {
-    auto transaction = transaction_pool.pop();
-    transactions_list.emplace_back(transaction);
-  }
+  Transactions transactions_list = transaction_pool.fetchLastN(t_size);
+
+  transaction_pool.clear();
 
   return transactions_list;
 }
@@ -129,10 +128,9 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
 
   m_merkle_tree.generate(transactions);
   vector<sha256> merkle_tree_vector = m_merkle_tree.getMerkleTree();
-  auto block =
-      block_generator.generatePartialBlock(merkle_tree_vector, transactions);
 
-  return block;
+  return block_generator.generatePartialBlock(merkle_tree_vector, transactions);
+  ;
 }
 
 void SignatureRequester::requestSignature(PartialBlock &block,
