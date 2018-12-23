@@ -1,6 +1,7 @@
 #include "merger_server.hpp"
 #include "message_handler.hpp"
 #include "rpc_receiver_list.hpp"
+#include <iostream>
 #include <chrono>
 #include <cstring>
 #include <thread>
@@ -16,7 +17,7 @@ void MergerServer::runServer(const std::string &port_num) {
   builder.RegisterService(&m_signer_service);
   m_completion_queue = builder.AddCompletionQueue();
   m_server = builder.BuildAndStart();
-  std::cout << "Server listening on " << server_address << std::endl;
+  std::cout << "MGS: Server listening on " << server_address << std::endl;
 
   new RecvFromMerger(&m_merger_service, m_completion_queue.get());
   new RecvFromSE(&m_se_service, m_completion_queue.get());
@@ -38,6 +39,8 @@ void MergerServer::recvMessage() {
       if (!ok)
         continue;
       static_cast<CallData *>(tag)->proceed();
+    } else {
+      std::cout << "MGS: INPUTQUEUE (" << m_input_queue->size() << ")" << std::endl;
     }
   }
 }
