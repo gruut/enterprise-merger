@@ -13,9 +13,11 @@ public:
   bool push(Transaction &transaction);
   bool isDuplicated(transaction_id_type &&tx_id);
   bool isDuplicated(transaction_id_type &tx_id);
-  Transaction pop();
+  bool pop(Transaction &transaction);
   size_t size();
   void removeDuplicatedTransactions(std::vector<transaction_id_type> &tx_ids);
+  std::vector<Transaction> fetchLastN(size_t n);
+  inline void clear() { m_transaction_pool.clear(); }
 
 private:
   std::list<Transaction> m_transaction_pool;

@@ -25,10 +25,6 @@ TransactionCollector &Application::getTransactionCollector() {
 
 SignaturePool &Application::getSignaturePool() { return *m_signature_pool; }
 
-PartialBlock &Application::getTemporaryPartialBlock() {
-  return temporary_partial_block;
-}
-
 BlockProcessor &Application::getBlockProcessor() { return *m_block_processor; }
 
 void Application::registerModule(shared_ptr<Module> module, int stage,

@@ -20,8 +20,10 @@ TransactionCollector::TransactionCollector() {
 }
 
 void TransactionCollector::handleMessage(json &msg_body_json) {
-  if (!isRunnable())
+  if (!isRunnable()) {
+    cout << "TXC: TX drop (not timing)" << endl << flush;
     return;
+  }
 
   auto new_txid = TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
       msg_body_json["txid"].get<string>());
@@ -29,14 +31,18 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
   auto &transaction_pool = Application::app().getTransactionPool();
 
   if (transaction_pool.isDuplicated(new_txid)) {
+    cout << "TXC: TX drop (duplicated)" << endl << flush;
     return;
   }
 
   Transaction new_tx;
   new_tx.setJson(msg_body_json);
 
-  if (new_tx.isValid())
+  if (new_tx.isValid()) {
     transaction_pool.push(new_tx);
+  } else {
+    cout << "TXC: TX drop (invalid)" << endl << flush;
+  }
 }
 
 bool TransactionCollector::isRunnable() {

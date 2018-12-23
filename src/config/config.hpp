@@ -8,7 +8,7 @@
 namespace gruut {
 namespace config {
 
-constexpr size_t MAX_THREAD = 20;
+constexpr size_t MAX_THREAD = 40;
 constexpr CompressionAlgorithmType COMPRESSION_ALGO_TYPE =
     CompressionAlgorithmType::LZ4;
 
@@ -27,7 +27,7 @@ constexpr size_t JOIN_TIMEOUT_SEC = 10;
 constexpr size_t MAX_SIGNER_NUM = 200;
 constexpr size_t REQ_SSIG_SIGNERS_NUM = 10;
 
-constexpr size_t INQUEUE_MSG_FETCHER_INTERVAL = 5;
+constexpr size_t INQUEUE_MSG_FETCHER_INTERVAL = 2;
 constexpr size_t OUTQUEUE_MSG_FETCHER_INTERVAL = 100;
 
 constexpr size_t SIGNATURE_COLLECTION_INTERVAL = 3000;
@@ -40,7 +40,7 @@ constexpr size_t MAX_WAIT_TIME = 5;
 
 constexpr int SYNC_CONTROL_INTERVAL = 500;
 
-constexpr int AVAILABLE_INPUT_SIZE = 20;
+constexpr int AVAILABLE_INPUT_SIZE = 100;
 
 const std::string DEFAULT_PORT_NUM = "50051";
 const std::string DEFAULT_DB_PATH = "./db";

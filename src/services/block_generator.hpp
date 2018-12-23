@@ -15,7 +15,8 @@ class BlockGenerator {
 public:
   PartialBlock generatePartialBlock(vector<sha256> &transactions_digest,
                                     vector<Transaction> &);
-  void generateBlock(PartialBlock &partial_block,
+  // partial_block must be call-by-value due to multi-thread
+  void generateBlock(PartialBlock partial_block,
                      vector<Signature> &support_sigs, MerkleTree &merkle_tree);
 };
 } // namespace gruut
