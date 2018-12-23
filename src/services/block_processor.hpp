@@ -35,6 +35,8 @@ public:
   ~BlockProcessor() {}
 
   bool handleMessage(InputMsgEntry &entry);
+
+private:
   bool handleMsgReqBlock(InputMsgEntry &entry);
   bool handleMsgBlock(InputMsgEntry &entry);
   bool handleMsgReqCheck(InputMsgEntry &entry);
