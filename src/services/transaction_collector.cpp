@@ -20,37 +20,48 @@ TransactionCollector::TransactionCollector() {
       new boost::asio::deadline_timer(Application::app().getIoService()));
 }
 
-void TransactionCollector::handleMessage(json msg_body_json) {
+void TransactionCollector::handleMessage(json &msg_body_json) {
   if (!isRunnable())
     return;
 
-  Transaction transaction;
-  BytesBuilder sig_msg_builder;
-
-  string txid_b64 = msg_body_json["txid"].get<string>();
-  auto txid_bytes = TypeConverter::decodeBase64(txid_b64);
-  BOOST_ASSERT_MSG(txid_bytes.size() == 32,
+  string new_txid_b64 = msg_body_json["txid"].get<string>();
+  auto new_txid_bytes = TypeConverter::decodeBase64(new_txid_b64);
+  BOOST_ASSERT_MSG(new_txid_bytes.size() == 32,
                    "The size of the transaction is not 32 bytes");
-  transaction.transaction_id =
-      TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(txid_bytes);
-  sig_msg_builder.append(txid_bytes);
+  auto new_txid =
+      TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(new_txid_bytes);
 
-  string time_str = msg_body_json["time"].get<string>();
-  auto sent_time = static_cast<timestamp_type>(stoll(time_str));
-  transaction.sent_time = sent_time;
-  sig_msg_builder.append(sent_time);
+  auto &transaction_pool = Application::app().getTransactionPool();
+
+  if (transaction_pool.isDuplicated(new_txid)) {
+    return;
+  }
+
+  Transaction transaction;
+
+  transaction.transaction_id = new_txid;
+
+  string time_dec = msg_body_json["time"].get<string>();
+  transaction.sent_time = static_cast<timestamp_type>(stoll(time_dec));
 
   string rid_b64 = msg_body_json["rID"].get<string>();
-  auto rid_bytes = TypeConverter::decodeBase64(rid_b64);
-  transaction.requestor_id = static_cast<id_type>(rid_bytes);
-  sig_msg_builder.append(rid_bytes);
+  transaction.requestor_id =
+      static_cast<id_type>(TypeConverter::decodeBase64(rid_b64));
 
-  string tx_type_str = msg_body_json["type"].get<string>();
-  if (tx_type_str == TXTYPE_DIGESTS)
+  string new_tx_type = msg_body_json["type"].get<string>();
+
+  if (new_tx_type == TXTYPE_DIGESTS)
     transaction.transaction_type = TransactionType::DIGESTS;
-  else
+  else if (new_tx_type == TXTYPE_CERTIFICATES)
     transaction.transaction_type = TransactionType::CERTIFICATE;
-  sig_msg_builder.append(tx_type_str);
+  else
+    transaction.transaction_type = TransactionType::UNKNOWN;
+
+  BytesBuilder sig_msg_builder;
+  sig_msg_builder.append(new_txid_bytes);
+  sig_msg_builder.append(transaction.sent_time);
+  sig_msg_builder.append(transaction.requestor_id);
+  sig_msg_builder.append(new_tx_type);
 
   if (msg_body_json["content"].is_array()) {
     for (auto &cont_item : msg_body_json["content"]) {
@@ -67,7 +78,7 @@ void TransactionCollector::handleMessage(json msg_body_json) {
   string endpoint_cert;
 
   for (auto &srv_point : m_service_endpoints) {
-    if (srv_point.id == rid_bytes) {
+    if (srv_point.id == transaction.requestor_id) {
       endpoint_cert = srv_point.cert;
     }
   }
@@ -79,7 +90,7 @@ void TransactionCollector::handleMessage(json msg_body_json) {
                      true))
     return;
 
-  Application::app().getTransactionPool().push(transaction);
+  transaction_pool.push(transaction);
 }
 
 bool TransactionCollector::isRunnable() {

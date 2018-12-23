@@ -18,7 +18,7 @@ enum class BpJobStatus { DO, DONT, UNKNOWN };
 class TransactionCollector {
 public:
   TransactionCollector();
-  void handleMessage(nlohmann::json msg_body_json);
+  void handleMessage(nlohmann::json &msg_body_json);
   void setTxCollectStatus(BpStatus status);
 
 private:

@@ -1,9 +1,20 @@
 #include "transaction_pool.hpp"
 
 namespace gruut {
-void TransactionPool::push(Transaction &transaction) {
+bool TransactionPool::push(Transaction &transaction) {
   std::lock_guard<std::mutex> guard(m_mutex);
-  m_transaction_pool.emplace_back(transaction);
+  if (!isDuplicated(transaction.transaction_id)) {
+    m_transaction_pool.emplace_back(transaction);
+    return true;
+  }
+  return false;
+}
+
+bool TransactionPool::isDuplicated(transaction_id_type &tx_id) {
+  return (m_transaction_pool.end() !=
+          std::find_if(
+              m_transaction_pool.begin(), m_transaction_pool.end(),
+              [&](Transaction &tx) { return tx.transaction_id == tx_id; }));
 }
 
 Transaction TransactionPool::pop() {

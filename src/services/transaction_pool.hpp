@@ -1,6 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TRANSACTION_POOL_HPP
 #define GRUUT_ENTERPRISE_MERGER_TRANSACTION_POOL_HPP
 
+#include <algorithm>
 #include <list>
 #include <mutex>
 
@@ -9,7 +10,8 @@
 namespace gruut {
 class TransactionPool {
 public:
-  void push(Transaction &transaction);
+  bool push(Transaction &transaction);
+  bool isDuplicated(transaction_id_type &tx_id);
   Transaction pop();
   size_t size();
   void removeDuplicatedTransactions(std::vector<transaction_id_type> &tx_ids);
