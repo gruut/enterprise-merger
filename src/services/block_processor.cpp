@@ -1,21 +1,24 @@
 #include "block_processor.hpp"
+#include "../application.hpp"
 
 namespace gruut {
 
 BlockProcessor::BlockProcessor() { m_storage = Storage::getInstance(); }
 
 bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
-  if (entry.type == MessageType::MSG_REQ_BLOCK)
-    return msgReqBlock(entry);
-  else if (entry.type == MessageType::MSG_BLOCK)
-    return msgBlock(entry);
-  else if (entry.type == MessageType::MSG_REQ_CHECK)
-    return msgReqCheck(entry);
-
-  return true;
+  switch (entry.type) {
+  case MessageType::MSG_REQ_BLOCK:
+    return handleMsgReqBlock(entry);
+  case MessageType::MSG_BLOCK:
+    return handleMsgBlock(entry);
+  case MessageType::MSG_REQ_CHECK:
+    return handleMsgReqCheck(entry);
+  default:
+    return false;
+  }
 }
 
-bool BlockProcessor::msgReqBlock(InputMsgEntry &entry) {
+bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   if (entry.body["mCert"].get<std::string>().empty() ||
       entry.body["mSig"].get<std::string>().empty()) {
     // TODO : check whether the requester is trustworthy or not
@@ -49,14 +52,14 @@ bool BlockProcessor::msgReqBlock(InputMsgEntry &entry) {
   msg_block.type = MessageType::MSG_BLOCK;
   msg_block.body["blockraw"] = std::get<1>(saved_block);
   msg_block.body["tx"] = std::get<2>(saved_block);
-  msg_block.receivers.emplace_back(recv_id);
+  msg_block.receivers = {recv_id};
 
   m_msg_proxy.deliverOutputMessage(msg_block);
 
   return true;
 }
 
-bool BlockProcessor::msgBlock(InputMsgEntry &entry) {
+bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   std::string block_raw_str = entry.body["blockraw"].get<std::string>();
   bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
 
@@ -66,8 +69,10 @@ bool BlockProcessor::msgBlock(InputMsgEntry &entry) {
     return false;
 
   std::vector<sha256> mtree_nodes;
+  std::vector<transaction_id_type> tx_ids;
 
-  if (!BlockValidator::validate(block_json, entry.body["tx"], mtree_nodes))
+  if (!BlockValidator::validate(block_json, entry.body["tx"], mtree_nodes,
+                                tx_ids))
     return false;
 
   std::vector<std::string> mtree_nodes_b64;
@@ -84,11 +89,13 @@ bool BlockProcessor::msgBlock(InputMsgEntry &entry) {
   m_storage->saveBlock(entry.body["blockraw"].get<std::string>(), block_json,
                        block_secret);
 
-  // TODO :: delete duplicated TXs from tx_pool
+  auto &tx_pool = Application::app().getTransactionPool();
+  tx_pool.removeDuplicatedTransactions(tx_ids);
+
   return true;
 }
 
-bool BlockProcessor::msgReqCheck(InputMsgEntry &entry) {
+bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   OutputMsgEntry msg_res_check;
 
   auto setting = Setting::getInstance();
@@ -98,8 +105,9 @@ bool BlockProcessor::msgReqCheck(InputMsgEntry &entry) {
   msg_res_check.type = MessageType::MSG_RES_CHECK;
   msg_res_check.body["mID"] = TypeConverter::toBase64Str(my_mid);
   msg_res_check.body["time"] = to_string(timestamp);
-  msg_res_check.body["proof"] =
-      m_storage->findSibling(entry.body["txid"].get<std::string>());
+  msg_res_check.body["proof"] = m_storage->findSibling(
+      entry.body["txid"].get<std::string>()); // even if sibilings is empty, do
+                                              // not send error message
 
   m_msg_proxy.deliverOutputMessage(msg_res_check);
 

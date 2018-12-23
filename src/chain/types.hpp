@@ -17,7 +17,7 @@ enum class BpStatus {
   UNKNOWN
 };
 
-enum class TransactionType { DIGESTS, CERTIFICATE };
+enum class TransactionType { DIGESTS, CERTIFICATE, UNKNOWN };
 
 const std::string TXTYPE_CERTIFICATES = "CERTIFICATES";
 const std::string TXTYPE_DIGESTS = "DIGESTS";

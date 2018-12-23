@@ -35,9 +35,11 @@ public:
   ~BlockProcessor() {}
 
   bool handleMessage(InputMsgEntry &entry);
-  bool msgReqBlock(InputMsgEntry &entry);
-  bool msgBlock(InputMsgEntry &entry);
-  bool msgReqCheck(InputMsgEntry &entry);
+
+private:
+  bool handleMsgReqBlock(InputMsgEntry &entry);
+  bool handleMsgBlock(InputMsgEntry &entry);
+  bool handleMsgReqCheck(InputMsgEntry &entry);
 };
 } // namespace gruut
 

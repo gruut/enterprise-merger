@@ -125,9 +125,10 @@ bool BlockSynchronizer::validateBlock(int height) {
     return false;
 
   std::vector<sha256> mtree;
+  std::vector<transaction_id_type> dummy_tx_ids;
 
   if (BlockValidator::validate(it_map->second.block_json, it_map->second.txs,
-                               mtree)) {
+                               mtree, dummy_tx_ids)) {
     it_map->second.mtree = mtree;
   }
 

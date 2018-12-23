@@ -53,7 +53,7 @@ public:
   template <size_t S>
   void append(std::array<uint8_t, S> &bytes_val, int len = -1) {
     auto vec = TypeConverter::arrayToVector<S>(bytes_val);
-    append(vec);
+    append(vec, len);
   }
 
   void append(time_t time_val, size_t len = 8) {
