@@ -180,8 +180,9 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
 bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
                                         json &message_body_json) {
-  string sig_b64 = message_body_json["sig"].get<string>();
-  bytes sig_bytes = TypeConverter::decodeBase64(sig_b64);
+
+  bytes sig_bytes =
+      TypeConverter::decodeBase64(message_body_json["sig"].get<string>());
 
   string cert_in = message_body_json["cert"].get<string>();
 
@@ -212,10 +213,8 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
   msg_builder.appendHex(dhy);
   msg_builder.append(timestamp);
 
-  auto signature =
-      RSA::doSign(rsa_sk_pem, msg_builder.getBytes(), true, rsa_sk_pass);
-
-  return TypeConverter::toBase64Str(signature);
+  return TypeConverter::toBase64Str(
+      RSA::doSign(rsa_sk_pem, msg_builder.getBytes(), true, rsa_sk_pass));
 }
 
 bool SignerPoolManager::isJoinable() {

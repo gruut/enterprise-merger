@@ -11,7 +11,9 @@ namespace gruut {
 MessageProxy::MessageProxy() { m_output_queue = OutputQueueAlt::getInstance(); }
 
 void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
-  cout << "MSG IN: " << (int)input_message.type << endl;
+
+  if (input_message.type != MessageType::MSG_TX)
+    cout << "MSG IN: " << (int)input_message.type << endl;
 
   auto message_type = input_message.type;
   auto message_body_json = input_message.body;

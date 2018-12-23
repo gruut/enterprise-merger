@@ -33,8 +33,6 @@ private:
   SignatureRequester m_signature_requester;
   std::deque<BpJobStatus> m_bpjob_sequence;
 
-  std::vector<ServiceEndpointInfo> m_service_endpoints;
-
   bool m_timer_running{false};
 };
 } // namespace gruut

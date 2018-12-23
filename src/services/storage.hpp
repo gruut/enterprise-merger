@@ -8,7 +8,6 @@
 #include "../utils/sha256.hpp"
 #include "../utils/template_singleton.hpp"
 #include "../utils/time.hpp"
-#include "base64.hpp"
 #include "leveldb/db.h"
 #include "leveldb/options.h"
 #include "leveldb/write_batch.h"

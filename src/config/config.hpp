@@ -43,6 +43,7 @@ constexpr int SYNC_CONTROL_INTERVAL = 500;
 constexpr int AVAILABLE_INPUT_SIZE = 20;
 
 const std::string DEFAULT_PORT_NUM = "50051";
+const std::string DEFAULT_DB_PATH = "./db";
 
 constexpr uint8_t G = 'G';
 constexpr uint8_t VERSION = '1';

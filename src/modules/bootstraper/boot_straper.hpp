@@ -36,6 +36,7 @@ public:
 
   void start() override { startSync(); }
 
+private:
   void sendMsgUp() {
 
     cout << "BST: sendMsgUp()" << endl;

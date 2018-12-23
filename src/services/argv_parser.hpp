@@ -5,6 +5,7 @@
 #include "cxxopts.hpp"
 #include "nlohmann/json.hpp"
 
+#include "../config/config.hpp"
 #include "../utils/file_io.hpp"
 
 using namespace nlohmann;
@@ -25,8 +26,10 @@ public:
         cxxopts::value<string>()->default_value("./setting.json"))(
         "pass", "Password to decrypt secret key",
         cxxopts::value<string>()->default_value(""))(
-        "port", "Port number", cxxopts::value<string>()->default_value(""))(
-        "dbpath", "DB path", cxxopts::value<string>()->default_value("./db"));
+        "port", "Port number",
+        cxxopts::value<string>()->default_value(config::DEFAULT_PORT_NUM))(
+        "dbpath", "DB path",
+        cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH));
 
     if (argc == 1) {
       cout << options.help({"basic"}) << endl;
@@ -55,10 +58,11 @@ public:
       setting_json["pass"] = result["pass"].as<string>();
 
       auto parsed_port_num = result["port"].as<string>();
-      if (!parsed_port_num.empty())
-        setting_json["Self"]["port"] = parsed_port_num; // overwrite
+      if (parsed_port_num != setting_json["Self"]["port"].get<std::string>())
+        setting_json["Self"]["port"] = parsed_port_num; // override
 
-      setting_json["dbpath"] = result["dbpath"].as<string>();
+      setting_json["dbpath"] = result["dbpath"].as<std::string>(); // override
+
       // boost::filesystem::create_directories(parsed_db_path);
 
     } catch (json::parse_error &e) {

@@ -17,7 +17,6 @@ public:
                                     vector<Transaction> &);
   void generateBlock(PartialBlock &partial_block,
                      vector<Signature> &support_sigs, MerkleTree &merkle_tree);
-  void toJson(json &j, const Transaction &tx);
 };
 } // namespace gruut
 

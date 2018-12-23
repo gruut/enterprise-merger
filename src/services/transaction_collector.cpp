@@ -15,7 +15,6 @@ using namespace nlohmann;
 
 namespace gruut {
 TransactionCollector::TransactionCollector() {
-  m_service_endpoints = Setting::getInstance()->getServiceEndpointInfo();
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
 }
@@ -24,12 +23,8 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
   if (!isRunnable())
     return;
 
-  string new_txid_b64 = msg_body_json["txid"].get<string>();
-  auto new_txid_bytes = TypeConverter::decodeBase64(new_txid_b64);
-  BOOST_ASSERT_MSG(new_txid_bytes.size() == 32,
-                   "The size of the transaction is not 32 bytes");
-  auto new_txid =
-      TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(new_txid_bytes);
+  auto new_txid = TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
+      msg_body_json["txid"].get<string>());
 
   auto &transaction_pool = Application::app().getTransactionPool();
 
@@ -37,60 +32,11 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
     return;
   }
 
-  Transaction transaction;
+  Transaction new_tx;
+  new_tx.setJson(msg_body_json);
 
-  transaction.transaction_id = new_txid;
-
-  string time_dec = msg_body_json["time"].get<string>();
-  transaction.sent_time = static_cast<timestamp_type>(stoll(time_dec));
-
-  string rid_b64 = msg_body_json["rID"].get<string>();
-  transaction.requestor_id =
-      static_cast<id_type>(TypeConverter::decodeBase64(rid_b64));
-
-  string new_tx_type = msg_body_json["type"].get<string>();
-
-  if (new_tx_type == TXTYPE_DIGESTS)
-    transaction.transaction_type = TransactionType::DIGESTS;
-  else if (new_tx_type == TXTYPE_CERTIFICATES)
-    transaction.transaction_type = TransactionType::CERTIFICATE;
-  else
-    transaction.transaction_type = TransactionType::UNKNOWN;
-
-  BytesBuilder sig_msg_builder;
-  sig_msg_builder.append(new_txid_bytes);
-  sig_msg_builder.append(transaction.sent_time);
-  sig_msg_builder.append(transaction.requestor_id);
-  sig_msg_builder.append(new_tx_type);
-
-  if (msg_body_json["content"].is_array()) {
-    for (auto &cont_item : msg_body_json["content"]) {
-      string cont_str = cont_item.get<string>();
-      transaction.content_list.emplace_back(cont_str);
-      sig_msg_builder.append(cont_str);
-    }
-  }
-
-  auto rsig_b64 = msg_body_json["rSig"].get<string>();
-  auto rsig_bytes = TypeConverter::decodeBase64(rsig_b64);
-  transaction.signature = rsig_bytes;
-
-  string endpoint_cert;
-
-  for (auto &srv_point : m_service_endpoints) {
-    if (srv_point.id == transaction.requestor_id) {
-      endpoint_cert = srv_point.cert;
-    }
-  }
-
-  if (endpoint_cert.empty())
-    return;
-
-  if (!RSA::doVerify(endpoint_cert, sig_msg_builder.getBytes(), rsig_bytes,
-                     true))
-    return;
-
-  transaction_pool.push(transaction);
+  if (new_tx.isValid())
+    transaction_pool.push(new_tx);
 }
 
 bool TransactionCollector::isRunnable() {

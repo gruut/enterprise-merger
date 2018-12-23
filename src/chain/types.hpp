@@ -3,6 +3,7 @@
 
 #include <array>
 #include <botan-2/botan/secmem.h>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -21,6 +22,11 @@ enum class TransactionType { DIGESTS, CERTIFICATE, UNKNOWN };
 
 const std::string TXTYPE_CERTIFICATES = "CERTIFICATES";
 const std::string TXTYPE_DIGESTS = "DIGESTS";
+
+const std::map<TransactionType, std::string> TX_TYPE_TO_STRING = {
+    {TransactionType::DIGESTS, TXTYPE_DIGESTS},
+    {TransactionType::CERTIFICATE, TXTYPE_CERTIFICATES},
+    {TransactionType::UNKNOWN, "UNKNOWN"}};
 
 enum class BlockType { PARTIAL, NORMAL };
 

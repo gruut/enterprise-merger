@@ -99,9 +99,11 @@ void BpScheduler::reschedule() {
       } else
         m_current_status = BpStatus::PRIMARY;
     } else {
-      if (list_size == 1)
+      if (list_size == 0) {
+        /* do nothing */
+      } else if (list_size == 1) {
         m_current_status = BpStatus::PRIMARY;
-      else {
+      } else {
         size_t prev_pos = (list_size + my_pos - 1) % list_size;
         BpStatus others_status = get<2>(possible_bp_list[prev_pos]);
         if (others_status == BpStatus::SECONDARY ||
@@ -126,7 +128,7 @@ void BpScheduler::lockStatusloop() {
   boost::posix_time::ptime lock_time =
       boost::posix_time::from_time_t(next_lock_time);
 
-  cout << "BPS: lockStatusloop(" << next_lock_time << ")" << endl << flush;
+  cout << "BPS: lockStatus(" << next_lock_time << ")" << endl << flush;
 
   m_lock_timer->expires_at(lock_time);
   m_lock_timer->async_wait([this](const boost::system::error_code &ec) {
@@ -179,11 +181,18 @@ void BpScheduler::postSendPingJob() {
     auto &signer_pool = Application::app().getSignerPool();
 
     size_t num_signers = signer_pool.size();
-    if (num_signers < config::MIN_SIGNATURE_COLLECT_SIZE) {
+    if (m_current_status != BpStatus::IN_BOOT_WAIT &&
+        num_signers < config::MIN_SIGNATURE_COLLECT_SIZE) {
       m_current_status = BpStatus::ERROR_ON_SIGNERS;
     }
 
-    cout << "BPS: sendPingloop(" << m_my_mid_b64 << "," << num_signers << ","
+    if (m_current_status == BpStatus::ERROR_ON_SIGNERS &&
+        num_signers >= config::MIN_SIGNATURE_COLLECT_SIZE) {
+      m_current_status =
+          BpStatus::IDLE; // It was IDLE, even I said ERROR_ON_SIGNERS.
+    }
+
+    cout << "BPS: sendPing(" << m_my_mid_b64 << "," << num_signers << ","
          << statusToString(m_current_status) << ")" << endl;
 
     OutputMsgEntry output_msg;

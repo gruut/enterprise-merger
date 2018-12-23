@@ -9,7 +9,6 @@
 
 #include <iostream>
 
-#include "../../include/base64.hpp"
 #include "../../src/utils/type_converter.hpp"
 
 class BytesBuilder {
@@ -129,8 +128,8 @@ public:
   }
 
   void appendB64(const std::string &b64_str_val, int len = -1) {
-    std::string str_val = macaron::Base64::Decode(b64_str_val);
-    append(str_val, len);
+    std::vector<uint8_t> bytes_val = TypeConverter::decodeBase64(b64_str_val);
+    append(bytes_val, len);
   }
 
   std::vector<uint8_t> getBytes() {
