@@ -132,9 +132,10 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
   BlockGenerator block_generator;
 
   m_merkle_tree.generate(transactions);
-  vector<sha256> merkle_tree_vector = m_merkle_tree.getMerkleTree();
+  vector<sha256> merkle_tree_nodes = m_merkle_tree.getMerkleTree();
 
-  return block_generator.generatePartialBlock(merkle_tree_vector, transactions);
+  return block_generator.generatePartialBlock(merkle_tree_nodes.back(),
+                                              transactions);
   ;
 }
 

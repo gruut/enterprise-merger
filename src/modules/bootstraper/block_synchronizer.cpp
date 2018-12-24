@@ -142,16 +142,17 @@ void BlockSynchronizer::saveBlock(int height) {
     return;
   }
 
-  nlohmann::json block_body;
-  block_body["tx"] = it_map->second.txs;
-  block_body["txCnt"] = it_map->second.txs.size();
+  size_t num_txs = it_map->second.txs.size();
 
-  std::vector<std::string> mtree_nodes_b64;
+  std::vector<std::string> mtree_nodes_b64(num_txs);
 
-  for (size_t i = 0; i < it_map->second.mtree.size(); ++i) {
+  for (size_t i = 0; i < num_txs; ++i) { // to save data, we need only digests
     mtree_nodes_b64[i] = TypeConverter::toBase64Str(it_map->second.mtree[i]);
   }
 
+  nlohmann::json block_body;
+  block_body["tx"] = it_map->second.txs;
+  block_body["txCnt"] = to_string(num_txs);
   block_body["mtree"] = mtree_nodes_b64;
 
   m_storage->saveBlock(std::string(it_map->second.block_raw.begin(),

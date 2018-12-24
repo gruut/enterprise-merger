@@ -38,7 +38,7 @@
 #    define JSON_SCHEMA_VALIDATOR_API
 #endif
 
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 
 // make yourself a home - welcome to nlohmann's namespace
 namespace nlohmann

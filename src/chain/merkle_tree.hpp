@@ -53,13 +53,11 @@ const std::map<std::string, std::string> HASH_LOOKUP = {
 
 class MerkleTree {
 public:
-  MerkleTree() {
-    m_merkle_tree.resize(MAX_MERKLE_LEAVES * 2 - 1);
-    for (auto &hash_entry : HASH_LOOKUP) {
-      sha256 hash_val =
-          static_cast<sha256>(TypeConverter::decodeBase64(hash_entry.second));
-      m_hash_lookup.emplace(hash_entry.first, hash_val);
-    }
+  MerkleTree() { prepareLookUpTable(); }
+
+  MerkleTree(vector<sha256> &tx_digests) {
+    prepareLookUpTable();
+    generate(tx_digests);
   }
 
   void generate(vector<sha256> &tx_digests) {
@@ -90,6 +88,15 @@ public:
   vector<sha256> getMerkleTree() { return m_merkle_tree; }
 
 private:
+  void prepareLookUpTable() {
+    m_merkle_tree.resize(MAX_MERKLE_LEAVES * 2 - 1);
+    for (auto &hash_entry : HASH_LOOKUP) {
+      sha256 hash_val =
+          static_cast<sha256>(TypeConverter::decodeBase64(hash_entry.second));
+      m_hash_lookup.emplace(hash_entry.first, hash_val);
+    }
+  }
+
   sha256 makeParent(sha256 left, sha256 &right) {
     left.insert(left.cend(), right.cbegin(), right.cend());
     std::string lookup_key = TypeConverter::toBase64Str(left);

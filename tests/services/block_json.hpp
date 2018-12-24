@@ -7,7 +7,6 @@
 namespace gruut {
 using nlohmann::json;
 using namespace std;
-using namespace macaron;
 json block_header_sample1 = {
     {"bID", "bbbbbbbbbID1"},
     {"ver", "4"},
@@ -1437,9 +1436,9 @@ json block_body_sample2 = {
       "h8167", "h8168", "h8169", "h8170", "h8171", "h8172", "h8173", "h8174", "h8175", "h8176", "h8177", "h8178", "h8179",
       "h8180", "h8181", "h8182", "h8183", "h8184", "h8185", "h8186", "h8187", "h8188", "h8189", "h8190"}},
     {"txCnt", "3"}};
-string block_raw_sample1 = macaron::Base64::Encode(block_header_sample1.dump());
-string block_raw_sample2 = macaron::Base64::Encode(block_header_sample2.dump());
-sha256 hash_sample = Sha256::hash(Base64().Encode(block_header_sample2.dump()));
+string block_raw_sample1 = TypeConverter::toBase64Str(block_header_sample1.dump());
+string block_raw_sample2 = TypeConverter::toBase64Str(block_header_sample2.dump());
+sha256 hash_sample = Sha256::hash(TypeConverter::toBase64Str(block_header_sample2.dump()));
 } // namespace gruut
 
 #endif

@@ -32,7 +32,7 @@ void TransactionGenerator::generate(vector<Signer> &signers) {
     }
   }
 
-  new_transaction.SetContents(content_list);
+  new_transaction.setContents(content_list);
 
   new_transaction.refreshSignature();
 
