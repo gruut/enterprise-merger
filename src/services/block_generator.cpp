@@ -40,8 +40,8 @@ BlockGenerator::generatePartialBlock(vector<sha256> &transactions_digest,
 }
 
 void BlockGenerator::generateBlock(PartialBlock partial_block,
-                                   vector<Signature> &support_sigs,
-                                   MerkleTree &merkle_tree) {
+                                   vector<Signature> support_sigs,
+                                   MerkleTree merkle_tree) {
 
   // step 1) preparing basic data
 

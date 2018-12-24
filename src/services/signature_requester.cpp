@@ -20,19 +20,17 @@ SignatureRequester::SignatureRequester() {
   auto &io_service = Application::app().getIoService();
   m_check_timer.reset(new boost::asio::deadline_timer(io_service));
   m_collect_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_block_gen_strand.reset(new boost::asio::io_service::strand(io_service));
 }
 
 void SignatureRequester::checkProcess() {
   if (!m_is_collect_timer_running)
     return;
 
-  auto &io_service = Application::app().getIoService();
-  io_service.post([this]() {
-    auto &signature_pool = Application::app().getSignaturePool();
-    if (signature_pool.size() >= m_max_signers) {
-      stopCollectTimerAndCreateBlock();
-    }
-  });
+  auto &signature_pool = Application::app().getSignaturePool();
+  if (signature_pool.size() >= m_max_signers) {
+    stopCollectTimerAndCreateBlock();
+  }
 
   m_check_timer->expires_from_now(boost::posix_time::milliseconds(
       config::SIGNATURE_COLLECTION_CHECK_INTERVAL));
@@ -76,24 +74,26 @@ void SignatureRequester::stopCollectTimerAndCreateBlock() {
   m_collect_timer->cancel();
   m_check_timer->cancel();
 
-  auto &signature_pool = Application::app().getSignaturePool();
+  auto &io_service = Application::app().getIoService();
 
-  if (signature_pool.size() >= config::MIN_SIGNATURE_COLLECT_SIZE &&
-      signature_pool.size() <= config::MAX_SIGNATURE_COLLECT_SIZE) {
+  io_service.post(m_block_gen_strand->wrap([this]() { // should work one-by-one
+    auto &signature_pool = Application::app().getSignaturePool();
 
-    // auto temp_partial_block = Application::app().getTemporaryPartialBlock();
+    if (signature_pool.size() >= config::MIN_SIGNATURE_COLLECT_SIZE &&
+        signature_pool.size() <= config::MAX_SIGNATURE_COLLECT_SIZE) {
 
-    auto signatures_size =
-        min(signature_pool.size(), config::MAX_SIGNATURE_COLLECT_SIZE);
-    auto signatures = signature_pool.fetchN(signatures_size);
-    signature_pool.clear(); // last signatures are useless.
+      auto signatures_size =
+          min(signature_pool.size(), config::MAX_SIGNATURE_COLLECT_SIZE);
+      auto signatures = signature_pool.fetchN(signatures_size);
+      signature_pool.clear(); // last signatures are useless.
 
-    BlockGenerator generator;
-    generator.generateBlock(m_partial_block, signatures, m_merkle_tree);
-  } else {
-    cout << "=========================== SGR: CANCEL MAKING BLOCK" << endl;
-    signature_pool.clear();
-  }
+      BlockGenerator generator;
+      generator.generateBlock(m_partial_block, signatures, m_merkle_tree);
+    } else {
+      cout << "=========================== SGR: CANCEL MAKING BLOCK" << endl;
+      signature_pool.clear();
+    }
+  }));
 }
 
 void SignatureRequester::startSignatureCollectTimer() {
