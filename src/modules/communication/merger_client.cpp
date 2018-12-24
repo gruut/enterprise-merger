@@ -5,7 +5,7 @@
 namespace gruut {
 void MergerClient::sendMessage(MessageType msg_type,
                                std::vector<id_type> &receiver_list,
-                               std::vector<std::string> &packed_msg_list) {
+                               std::vector<std::string> &packed_msg_list, OutputMsgEntry &outputMsgEntry) {
 
   if (checkMergerMsgType(msg_type)) {
     sendToMerger(receiver_list, packed_msg_list[0]);
@@ -16,8 +16,12 @@ void MergerClient::sendMessage(MessageType msg_type,
   if (checkSEMsgType(msg_type)) {
 
     // TODO : packed msg => stringified json
-    sendToSE(packed_msg_list[0]);
+    sendToSE(outputMsgEntry.body.dump());
   }
+}
+
+void MergerClient::sendToSE(std::string &&packed_msg) {
+  sendToSE(packed_msg);
 }
 
 void MergerClient::sendToSE(std::string &packed_msg) {

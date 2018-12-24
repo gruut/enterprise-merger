@@ -16,6 +16,8 @@ CURLcode HttpClient::post(const string &packed_msg) {
     m_curl.setOpt(CURLOPT_POSTFIELDS, post_field.data());
     m_curl.setOpt(CURLOPT_POSTFIELDSIZE, post_field.size());
 
+
+
     m_curl.perform();
   } catch (curlpp::EasyException &err) {
     cout << "HTTP: ERROR " << err.what() << endl;

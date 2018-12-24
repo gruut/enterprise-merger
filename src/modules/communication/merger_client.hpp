@@ -19,11 +19,12 @@ class MergerClient {
 public:
   MergerClient() { m_rpc_receiver_list = RpcReceiverList::getInstance(); }
   void sendMessage(MessageType msg_type, std::vector<id_type> &receiver_list,
-                   std::vector<std::string> &packed_msg_list);
+                   std::vector<std::string> &packed_msg_list, OutputMsgEntry &outputMsgEntry);
 
 private:
   RpcReceiverList *m_rpc_receiver_list;
 
+  void sendToSE(std::string &&packed_msg);
   void sendToSE(std::string &packed_msg);
 
   void sendToMerger(std::vector<id_type> &receiver_list,

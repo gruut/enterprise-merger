@@ -77,8 +77,8 @@
   "SE" : [
     {
       "id": "R0VOVFNFLTE=",
-      "address" : "10.10.10.108",
-      "port": "3000",
+      "address" : "13.209.161.44",
+      "port": "49090",
       "cert" : [
         "-----BEGIN CERTIFICATE-----",
         "MIID+zCCAmOgAwIBAgIRAPUuiEOLwpSCAxKaoHit29QwDQYJKoZIhvcNAQELBQAw",
