@@ -6,7 +6,7 @@
 namespace gruut {
 class TransactionGenerator {
 public:
-  void generate(Signer &signer);
+  void generate(vector<Signer> &signers);
 
 private:
   transaction_id_type generateTransactionId();

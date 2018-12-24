@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../application.hpp"
+#include "../../services/input_queue.hpp"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_se.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
@@ -18,10 +19,10 @@ namespace gruut {
 
 class MergerServer {
 public:
+  MergerServer() { m_input_queue = InputQueueAlt::getInstance(); }
   ~MergerServer() {
     m_server->Shutdown();
     m_completion_queue->Shutdown();
-    m_rpc_receivers->destroyInstance();
   }
   void runServer(const std::string &port_num);
 
@@ -33,7 +34,7 @@ private:
   GruutSeService::AsyncService m_se_service;
   GruutNetworkService::AsyncService m_signer_service;
   RpcReceiverList *m_rpc_receivers;
-
+  InputQueueAlt *m_input_queue;
   void recvMessage();
 };
 

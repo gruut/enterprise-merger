@@ -1,20 +1,33 @@
+#include <iostream>
+
 #include "src/application.hpp"
-#include "src/modules/message_fetcher/message_fetcher.hpp"
-#include "src/modules/message_fetcher/out_message_fetcher.hpp"
-#include "src/modules/communication/communication.hpp"
+#include "src/services/setting.hpp"
+#include "src/services/argv_parser.hpp"
 
-using namespace gruut;
 using namespace std;
+using namespace gruut;
+using namespace nlohmann;
 
-int main() {
-    vector<shared_ptr<Module>> module_vector;
-    module_vector.push_back(make_shared<Communication>());
-    module_vector.push_back(make_shared<MessageFetcher>());
-    module_vector.push_back(make_shared<OutMessageFetcher>());
+int main(int argc, char *argv[]) {
 
-    Application::app().start(move(module_vector));
-    Application::app().exec();
-    Application::app().quit();
+  ArgvParser argv_parser;
+  json setting_json = argv_parser.parse(argc,argv);
+  if(setting_json.empty()) {
+    cout << "Setting file is empty or invalid path was given." << endl;
+    return -1;
+  }
 
-    return 0;
+  auto setting = Setting::getInstance();
+
+  if(!setting->setJson(setting_json)) {
+    cout << "Setting file is not a valid json " << endl;
+    return -2;
+  }
+
+  Application::app().setup();
+  Application::app().start();
+  Application::app().exec();
+  Application::app().quit();
+
+  return 0;
 }

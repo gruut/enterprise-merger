@@ -3,7 +3,6 @@
 
 #include "../../include/nlohmann/json.hpp"
 #include "../../src/utils/sha256.hpp"
-#include "../../include/base64.hpp"
 #include "../../src/chain/types.hpp"
 namespace gruut {
 using nlohmann::json;
@@ -23,8 +22,6 @@ json block_header_sample1 = {
        {"sig", "6+5ads564asd89asd1564see"}},
       {{"sID", "xcfsdfijk90sisdiof"}, {"sig", "wre78wer8ewr4568eqq3q123"}}}},
     {"mID", "76a914641ad5051edd97029a003fe9efb29359fcee409d88ac"},
-    {"mSig",
-     "e6452a2cb71aa864aaa959e647e7a4726a22e640560f199f79b56b5502114c37"},
     {"prevbID",
      "b6f6991d03df0e2e04dafffcd6bc418aac66049e2cd74b80f14ac86db1e3f0da"},
     {"prevH",
@@ -40,7 +37,7 @@ json block_body_sample1 = {
           {"time", "a"},
           {"rID", "a"},
           {"rSig", "a"},
-          {"type", "certificates"},
+          {"type", "CERTIFICATES"},
           {"content",
               // a1 : 20171210~20181210, a2 : 20160303~20170303
            {"a1",
@@ -91,7 +88,7 @@ json block_body_sample1 = {
           {"time", "b"},
           {"rID", "b"},
           {"rSig", "b"},
-          {"type", "digests"},
+          {"type", "DIGESTS"},
           {"content",
            {"dig01", "dig02", "dig03", "dig04", "dig11", "dig12", "dig13",
             "dig14"}}},
@@ -99,7 +96,7 @@ json block_body_sample1 = {
           {"time", "c"},
           {"rID", "c"},
           {"rSig", "c"},
-          {"type", "digests"},
+          {"type", "DIGESTS"},
           {"content",
            {"dig01", "dig02", "dig03", "dig04", "dig11", "dig12", "dig13",
             "dig14"}}},
@@ -740,8 +737,6 @@ json block_header_sample2 = {
        {"sig", "6+5ads564asd89asd1564see"}},
       {{"sID", "xcfsdfijk90sisdiof"}, {"sig", "wre78wer8ewr4568eqq3q123"}}}},
     {"mID", "76a914641ad5051edd97029a003fe9efb29359fcee409d88ac"},
-    {"mSig",
-     "e6452a2cb71aa864aaa959e647e7a4726a22e640560f199f79b56b5502114c37"},
     {"prevbID",
      "b6f6991d03df0e2e04dafffcd6bc418aac66049e2cd74b80f14ac86db1e3f0da"},
     {"prevH",
@@ -757,7 +752,7 @@ json block_body_sample2 = {
           {"time", "Qa"},
           {"rID", "Qa"},
           {"rSig", "Qa"},
-          {"type", "certificates"},
+          {"type", "CERTIFICATES"},
           {"content",
               // a1 : 20180201~20190201, a2 : 20170505~20180505
            {"a1",
@@ -808,7 +803,7 @@ json block_body_sample2 = {
           {"time", "Qb"},
           {"rID", "Qb"},
           {"rSig", "Qb"},
-          {"type", "digests"},
+          {"type", "DIGESTS"},
           {"content",
            {"dig01", "dig02", "dig03", "dig04", "dig11", "dig12", "dig13",
             "dig14"}}},
@@ -816,7 +811,7 @@ json block_body_sample2 = {
           {"time", "Qc"},
           {"rID", "Qc"},
           {"rSig", "Qc"},
-          {"type", "digests"},
+          {"type", "DIGESTS"},
           {"content",
            {"dig01", "dig02", "dig03", "dig04", "dig11", "dig12", "dig13",
             "dig14"}}},

@@ -8,11 +8,19 @@
 #include "../utils/sha256.hpp"
 #include "../utils/template_singleton.hpp"
 #include "../utils/time.hpp"
-#include "base64.hpp"
 #include "leveldb/db.h"
 #include "leveldb/options.h"
 #include "leveldb/write_batch.h"
 #include "nlohmann/json.hpp"
+
+#include <botan-2/botan/auto_rng.h>
+#include <botan-2/botan/data_src.h>
+#include <botan-2/botan/exceptn.h>
+#include <botan-2/botan/pkcs8.h>
+#include <botan-2/botan/pubkey.h>
+#include <botan-2/botan/rsa.h>
+#include <botan-2/botan/x509cert.h>
+
 #include <boost/filesystem/operations.hpp>
 #include <cmath>
 #include <iostream>
@@ -32,10 +40,10 @@ const map<DBType, string> DB_PREFIX = {
     {DBType::BLOCK_CERT, "certificate_"}};
 
 const vector<pair<string, string>> DB_BLOCK_HEADER_SUFFIX = {
-    {"bID", "_bID"},     {"ver", "_ver"},   {"cID", "_cID"},
-    {"time", "_time"},   {"hgt", "_hgt"},   {"SSig", "_SSig"},
-    {"mID", "_mID"},     {"mSig", "_mSig"}, {"prevbID", "_prevbID"},
-    {"prevH", "_prevH"}, {"txrt", "_txrt"}, {"txids", "_txids"}};
+    {"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
+    {"time", "_time"}, {"hgt", "_hgt"},         {"SSig", "_SSig"},
+    {"mID", "_mID"},   {"prevbID", "_prevbID"}, {"prevH", "_prevH"},
+    {"txrt", "_txrt"}, {"txids", "_txids"}};
 
 const vector<pair<string, string>> DB_BLOCK_TX_SUFFIX = {
     {"time", "_time"}, {"rID", "_rID"},         {"rSig", "_rSig"},
@@ -48,11 +56,12 @@ public:
   ~Storage();
 
   bool saveBlock(const string &block_raw, json &block_header, json &block_body);
-  pair<string, string> findLatestHashAndHeight();
+  pair<string, size_t> findLatestHashAndHeight();
+  tuple<string, string, size_t> findLatestBlockBasicInfo();
   vector<string> findLatestTxIdList();
   string findCertificate(const string &user_id,
                          const timestamp_type &at_this_time = 0);
-  string findCertificate(const uint64_t user_id,
+  string findCertificate(const signer_id_type &user_id,
                          const timestamp_type &at_this_time = 0);
   void deleteAllDirectory();
   tuple<int, string, json> readBlock(int height);
@@ -61,7 +70,7 @@ public:
 private:
   bool errorOnCritical(const leveldb::Status &status);
   bool errorOn(const leveldb::Status &status);
-  bool put(DBType what, const string &key, const string &value);
+  bool putBatch(DBType what, const string &key, const string &value);
   bool putBlockHeader(json &data, const string &block_id);
   bool putBlockHeight(json &data, const string &block_id);
   bool putBlockRaw(json &data, const string &block_id);
@@ -69,8 +78,13 @@ private:
   bool putBlockBody(json &data, const string &block_id);
   string getDataByKey(DBType what, const string &keys = "");
   string getPrefix(DBType what);
+  string parseCert(string& pem);
+  void rollbackBatchAll();
+  void commitBatchAll();
+  void clearBatchAll();
 
 private:
+  string m_db_path;
   leveldb::Options m_options;
   leveldb::WriteOptions m_write_options;
   leveldb::ReadOptions m_read_options;
@@ -81,6 +95,13 @@ private:
   leveldb::DB *m_db_block_body;
   leveldb::DB *m_db_certificate;
   leveldb::DB *m_db_blockid_height;
+
+  leveldb::WriteBatch m_batch_block_header;
+  leveldb::WriteBatch m_batch_block_raw;
+  leveldb::WriteBatch m_batch_latest_block_header;
+  leveldb::WriteBatch m_batch_block_body;
+  leveldb::WriteBatch m_batch_certificate;
+  leveldb::WriteBatch m_batch_blockid_height;
 };
 } // namespace gruut
 #endif

@@ -1,5 +1,7 @@
+#pragma once
+
 #include "sha256.hpp"
-#include <botan/mac.h>
+#include <botan-2/botan/mac.h>
 #include <string>
 #include <vector>
 class Hmac {

@@ -1,6 +1,7 @@
 #include "out_message_fetcher.hpp"
 #include "../../application.hpp"
 #include "../../chain/types.hpp"
+#include "../../config/config.hpp"
 #include "../communication/message_handler.hpp"
 #include <chrono>
 #include <iostream>
@@ -11,6 +12,7 @@ namespace gruut {
 OutMessageFetcher::OutMessageFetcher() {
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
+  m_output_queue = OutputQueueAlt::getInstance();
 }
 
 void OutMessageFetcher::start() { fetch(); }
@@ -18,17 +20,16 @@ void OutMessageFetcher::start() { fetch(); }
 void OutMessageFetcher::fetch() {
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
-    auto &output_queue = Application::app().getOutputQueue();
-    while (!output_queue->empty()) {
-      OutputMessage output_msg = output_queue->front();
-      output_queue->pop();
+    while (!m_output_queue->empty()) {
+      auto output_msg = m_output_queue->fetch();
 
       MessageHandler msg_handler;
       msg_handler.packMsg(output_msg);
     }
   });
 
-  m_timer->expires_from_now(boost::posix_time::milliseconds(1000));
+  m_timer->expires_from_now(
+      boost::posix_time::milliseconds(config::OUTQUEUE_MSG_FETCHER_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       std::cout << "Out MessageFetcher: Timer was cancelled or retriggered."

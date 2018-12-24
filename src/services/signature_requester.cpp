@@ -15,48 +15,100 @@
 using namespace gruut::config;
 
 namespace gruut {
+
+SignatureRequester::SignatureRequester() {
+  auto &io_service = Application::app().getIoService();
+  m_check_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_collect_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_block_gen_strand.reset(new boost::asio::io_service::strand(io_service));
+}
+
+void SignatureRequester::checkProcess() {
+  if (!m_is_collect_timer_running)
+    return;
+
+  auto &signature_pool = Application::app().getSignaturePool();
+  if (signature_pool.size() >= m_max_signers) {
+    stopCollectTimerAndCreateBlock();
+  }
+
+  m_check_timer->expires_from_now(boost::posix_time::milliseconds(
+      config::SIGNATURE_COLLECTION_CHECK_INTERVAL));
+  m_check_timer->async_wait([this](const boost::system::error_code &ec) {
+    if (ec == boost::asio::error::operation_aborted) {
+      cout << "SGR: CheckTimer aborted" << endl;
+    } else if (ec.value() == 0) {
+      checkProcess();
+    } else {
+      std::cout << "ERROR: " << ec.message() << std::endl;
+      throw;
+    }
+  });
+}
 void SignatureRequester::requestSignatures() {
   auto signers = selectSigners();
 
+  m_max_signers = signers.size();
+
   auto transactions = std::move(fetchTransactions());
 
-  auto partial_block = makePartialBlock(transactions);
-  Application::app().getTemporaryPartialBlock() = partial_block;
+  m_partial_block = makePartialBlock(transactions);
+  //  Application::app().getTemporaryPartialBlock() =
+  //      partial_block; // overwrite all
 
-  requestSignature(partial_block, signers);
-  startSignatureCollectTimer(transactions);
+  auto &signature_pool = Application::app().getSignaturePool();
+
+  signature_pool.setupSigPool(m_partial_block.height,
+                              m_partial_block.transaction_root);
+  requestSignature(signers);
+  startSignatureCollectTimer();
+  checkProcess();
 }
 
-void SignatureRequester::startSignatureCollectTimer(
-    Transactions &transactions) {
-  m_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
-  m_timer->expires_from_now(
-      boost::posix_time::milliseconds(SIGNATURE_COLLECTION_INTERVAL));
-  m_timer->async_wait([&](const boost::system::error_code &ec) {
-    if (ec == boost::asio::error::operation_aborted) {
-      std::cout
-          << "startSignatureCollectTimer: Timer was cancelled or retriggered."
-          << std::endl;
-    } else if (ec.value() == 0) {
-      auto &signature_pool = Application::app().getSignaturePool();
-      if (signature_pool.size() >= MIN_SIGNATURE_COLLECT_SIZE &&
-          signature_pool.size() <= MAX_SIGNATURE_COLLECT_SIZE) {
-        cout << "SIG POOL SIZE: " << signature_pool.size() << endl;
-        std::cout << "CREATE BLOCK!" << std::endl;
+void SignatureRequester::stopCollectTimerAndCreateBlock() {
 
-        auto temp_partial_block = Application::app().getTemporaryPartialBlock();
+  cout << "=========================== SGR: START MAKING BLOCK" << endl;
 
-        auto signatures_size =
-            min(signature_pool.size(), MAX_SIGNATURE_COLLECT_SIZE);
-        auto signatures = signature_pool.fetchN(signatures_size);
+  m_is_collect_timer_running = false;
 
-        BlockGenerator generator;
-        Block block = generator.generateBlock(temp_partial_block, signatures,
-                                              m_merkle_tree);
-      }
+  m_collect_timer->cancel();
+  m_check_timer->cancel();
+
+  auto &io_service = Application::app().getIoService();
+
+  io_service.post(m_block_gen_strand->wrap([this]() { // should work one-by-one
+    auto &signature_pool = Application::app().getSignaturePool();
+
+    if (signature_pool.size() >= config::MIN_SIGNATURE_COLLECT_SIZE &&
+        signature_pool.size() <= config::MAX_SIGNATURE_COLLECT_SIZE) {
+
+      auto signatures_size =
+          min(signature_pool.size(), config::MAX_SIGNATURE_COLLECT_SIZE);
+      auto signatures = signature_pool.fetchN(signatures_size);
+      signature_pool.clear(); // last signatures are useless.
+
+      BlockGenerator generator;
+      generator.generateBlock(m_partial_block, signatures, m_merkle_tree);
     } else {
-      std::cout << "ERROR: " << ec.message() << std::endl;
+      cout << "=========================== SGR: CANCEL MAKING BLOCK" << endl;
+      signature_pool.clear();
+    }
+  }));
+}
+
+void SignatureRequester::startSignatureCollectTimer() {
+  m_is_collect_timer_running = true;
+
+  m_collect_timer->expires_from_now(
+      boost::posix_time::milliseconds(config::SIGNATURE_COLLECTION_INTERVAL));
+  m_collect_timer->async_wait([this](const boost::system::error_code &ec) {
+    if (ec == boost::asio::error::operation_aborted) {
+      cout << "SGR: SigCollectTimer aborted" << endl;
+    } else if (ec.value() == 0) {
+      if (m_is_collect_timer_running)
+        stopCollectTimerAndCreateBlock();
+    } else {
+      cout << "ERROR: " << ec.message() << endl;
       throw;
     }
   });
@@ -66,13 +118,12 @@ Transactions SignatureRequester::fetchTransactions() {
   auto &transaction_pool = Application::app().getTransactionPool();
 
   const size_t transactions_size = transaction_pool.size();
-  auto t_size = std::min(transactions_size, MAX_COLLECT_TRANSACTION_SIZE);
+  auto t_size =
+      std::min(transactions_size, config::MAX_COLLECT_TRANSACTION_SIZE);
 
-  Transactions transactions_list;
-  for (unsigned int i = 0; i < t_size; i++) {
-    auto transaction = transaction_pool.pop();
-    transactions_list.emplace_back(transaction);
-  }
+  Transactions transactions_list = transaction_pool.fetchLastN(t_size);
+
+  transaction_pool.clear();
 
   return transactions_list;
 }
@@ -82,16 +133,15 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
 
   m_merkle_tree.generate(transactions);
   vector<sha256> merkle_tree_vector = m_merkle_tree.getMerkleTree();
-  auto &&block =
-      block_generator.generatePartialBlock(merkle_tree_vector, transactions);
 
-  return block;
+  return block_generator.generatePartialBlock(merkle_tree_vector, transactions);
+  ;
 }
 
-void SignatureRequester::requestSignature(PartialBlock &block,
-                                          Signers &signers) {
-  if (signers.size() > 0) {
-    auto message = MessageFactory::createSigRequestMessage(block, signers);
+void SignatureRequester::requestSignature(Signers &signers) {
+  if (!signers.empty()) {
+    auto message =
+        MessageFactory::createSigRequestMessage(m_partial_block, signers);
     MessageProxy proxy;
     proxy.deliverOutputMessage(message);
   }

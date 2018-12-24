@@ -9,8 +9,17 @@ using namespace nlohmann;
 using namespace std;
 
 namespace gruut {
-void SignaturePool::handleMessage(signer_id_type receiver_id,
-                                  json message_body_json) {
+
+SignaturePool::SignaturePool() {
+  auto setting = Setting::getInstance();
+  m_my_id = setting->getMyId();
+  m_my_chain_id = setting->getLocalChainId();
+}
+
+void SignaturePool::handleMessage(json &message_body_json) {
+  signer_id_type receiver_id =
+      TypeConverter::decodeBase64(message_body_json["sID"].get<string>());
+
   if (verifySignature(receiver_id, message_body_json)) {
     Signature s;
 
@@ -22,6 +31,12 @@ void SignaturePool::handleMessage(signer_id_type receiver_id,
 
     push(s);
   }
+}
+
+void SignaturePool::setupSigPool(block_height_type chain_height,
+                                 sha256 &tx_root) {
+  m_chain_height = chain_height;
+  m_tx_root = tx_root;
 }
 
 void SignaturePool::push(Signature &signature) {
@@ -40,41 +55,35 @@ size_t SignaturePool::size() { return m_signature_pool.size(); }
 
 bool SignaturePool::empty() { return size() == 0; }
 
-bool SignaturePool::verifySignature(signer_id_type receiver_id,
-                                    json message_body_json) {
+bool SignaturePool::verifySignature(signer_id_type &receiver_id,
+                                    json &message_body_json) {
   auto pk_cert = Application::app().getSignerPool().getPkCert(receiver_id);
-  if (pk_cert != "") {
-    BytesBuilder bytes_builder;
-
-    auto not_decoded_id = message_body_json["sID"].get<string>();
-    auto signer_id_str =
-        TypeConverter::toString(TypeConverter::decodeBase64(not_decoded_id));
-    auto signer_id_vector = TypeConverter::digitStringToBytes(signer_id_str);
-    bytes_builder.append(signer_id_vector);
-
-    auto timestamp = message_body_json["time"].get<string>();
-    auto timestamp_bytes = TypeConverter::digitStringToBytes(timestamp);
-    bytes_builder.append(timestamp_bytes);
-
-    PartialBlock &partial_block = Application::app().getTemporaryPartialBlock();
-    bytes_builder.append(partial_block.merger_id);
-
-    bytes_builder.append(partial_block.height);
-
-    auto tx_root = partial_block.transaction_root;
-    bytes_builder.append(tx_root);
-
-    auto signer_signature_str = message_body_json["sig"].get<string>();
-    auto signer_signature_bytes =
-        TypeConverter::decodeBase64(signer_signature_str);
-    auto signature_message_bytes = bytes_builder.getBytes();
-
-    bool verify_result = RSA::doVerify(pk_cert, signature_message_bytes,
-                                       signer_signature_bytes, true);
-
-    return verify_result;
+  if (pk_cert.empty()) {
+    auto storage = Storage::getInstance();
+    pk_cert = storage->findCertificate(receiver_id);
   }
 
-  return false;
+  if (pk_cert.empty()) {
+    return false;
+  }
+
+  auto signer_id_b64 = message_body_json["sID"].get<string>();
+  signer_id_type signer_id = TypeConverter::decodeBase64(signer_id_b64);
+
+  auto timestamp = static_cast<timestamp_type>(
+      stoll(message_body_json["time"].get<string>()));
+
+  BytesBuilder msg_builder;
+  msg_builder.append(signer_id);
+  msg_builder.append(timestamp);
+  msg_builder.append(m_my_id);
+  msg_builder.append(m_my_chain_id);
+  msg_builder.append(m_chain_height);
+  msg_builder.append(m_tx_root);
+
+  auto sig_b64 = message_body_json["sig"].get<string>();
+  auto sig_bytes = TypeConverter::decodeBase64(sig_b64);
+
+  return RSA::doVerify(pk_cert, msg_builder.getBytes(), sig_bytes, true);
 }
 } // namespace gruut

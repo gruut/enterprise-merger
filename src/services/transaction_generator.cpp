@@ -9,50 +9,34 @@
 #include <random>
 
 namespace gruut {
-void TransactionGenerator::generate(Signer &signer) {
-  if (signer.isNew()) {
-    Transaction new_transaction;
-    bytes signature_message;
-
-    new_transaction.transaction_id = generateTransactionId();
-    signature_message.insert(signature_message.cend(),
-                             new_transaction.transaction_id.cbegin(),
-                             new_transaction.transaction_id.cend());
-
-    string timestamp = Time::now();
-    new_transaction.sent_time = TypeConverter::digitStringToBytes(timestamp);
-    signature_message.insert(signature_message.cend(),
-                             new_transaction.sent_time.cbegin(),
-                             new_transaction.sent_time.cend());
-
-    // TODO: requestor_id <- Merger Id, 임시로 txID
-    new_transaction.requestor_id = requestor_id_type();
-    signature_message.insert(signature_message.cend(),
-                             new_transaction.requestor_id.cbegin(),
-                             new_transaction.requestor_id.cend());
-
-    new_transaction.transaction_type = TransactionType::CERTIFICATE;
-    string transaction_type_str = "certificate";
-    signature_message.insert(signature_message.cend(),
-                             transaction_type_str.cbegin(),
-                             transaction_type_str.cend());
-
-    auto user_id_str = to_string(signer.user_id);
-    new_transaction.content_list.emplace_back(user_id_str);
-    signature_message.insert(signature_message.cend(), user_id_str.cbegin(),
-                             user_id_str.cend());
-
-    new_transaction.content_list.emplace_back(signer.pk_cert);
-    signature_message.insert(signature_message.cend(), signer.pk_cert.cbegin(),
-                             signer.pk_cert.cend());
-
-    // TODO: private_key 하드코딩 되어있음. 설정파일 생성되면 제거할 것
-    string private_key = "";
-    new_transaction.signature =
-        RSA::doSign(private_key, signature_message, true);
-
-    Application::app().getTransactionPool().push(new_transaction);
+void TransactionGenerator::generate(vector<Signer> &signers) {
+  if (signers.empty()) {
+    return;
   }
+
+  Transaction new_transaction;
+
+  auto setting = Setting::getInstance();
+
+  new_transaction.setId(generateTransactionId());
+  new_transaction.setTime(static_cast<timestamp_type>(Time::now_int()));
+  new_transaction.setRequestorId(setting->getMyId());
+  new_transaction.setTransactionType(TransactionType::CERTIFICATE);
+
+  std::vector<content_type> content_list;
+  for (auto &signer : signers) {
+    if (signer.isNew()) {
+      auto user_id_str = TypeConverter::toBase64Str(signer.user_id);
+      content_list.emplace_back(user_id_str);
+      content_list.emplace_back(signer.pk_cert);
+    }
+  }
+
+  new_transaction.SetContents(content_list);
+
+  new_transaction.refreshSignature();
+
+  Application::app().getTransactionPool().push(new_transaction);
 }
 
 transaction_id_type TransactionGenerator::generateTransactionId() {

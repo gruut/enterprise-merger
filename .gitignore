@@ -60,3 +60,15 @@ lib/leveldb/libleveldb\.a
 CTestTestfile\.cmake
 
 lib/leveldb/leveldbConfigVersion\.cmake
+
+.env
+
+my_setting.json
+!/src/config/my_setting.json
+
+db/block_header/*
+db/block_body/*
+db/block_raw/*
+db/blockid_height/*
+db/certificate/*
+db/latest_block_header/*

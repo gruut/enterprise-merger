@@ -2,6 +2,8 @@
 
 #include "../../../include/nlohmann/json.hpp"
 #include "../../application.hpp"
+#include "../../services/input_queue.hpp"
+#include "../../services/output_queue.hpp"
 #include "grpc_util.hpp"
 #include <cstring>
 #include <future>
@@ -13,12 +15,14 @@ namespace gruut {
 
 class MessageHandler {
 public:
+  MessageHandler();
   void unpackMsg(std::string &packed_msg, grpc::Status &rpc_status,
-                 uint64_t &receiver_id);
-  void packMsg(OutputMessage &output_msg);
+                 id_type &receiver_id);
+  void packMsg(OutputMsgEntry &output_msg);
 
 private:
-  bool validateMessage(MessageHeader &header);
+  InputQueueAlt *m_input_queue;
+  bool validateMsgFormat(MessageHeader &header);
   int getMsgBodySize(MessageHeader &header);
   std::string getMsgBody(std::string &packed_msg, int body_size);
   nlohmann::json getJson(CompressionAlgorithmType compression_type,

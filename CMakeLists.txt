@@ -4,10 +4,10 @@ set(CMAKE_CXX_STANDARD 11)
 project(gruut_enterprise_merger LANGUAGES CXX)
 
 add_definitions(-DBOOST_LOG_DYN_LINK)
-add_definitions(-DBOOST_ASIO_ENABLE_HANDLER_TRACKING)
 
 include(cmake/clang-cxx-dev-tools.cmake)
 find_package(Boost REQUIRED COMPONENTS system thread filesystem)
+find_package(CURL REQUIRED)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(gruut_enterprise_merger main.cpp)
 
@@ -17,6 +17,7 @@ file(GLOB SOURCE_FILES
         "src/application.cpp"
         "src/chain/*.cpp"
         "src/modules/communication/protos/*.cc"
+        "include/*.cpp"
         )
 
 file(GLOB HEADER_FILES
@@ -28,6 +29,7 @@ file(GLOB HEADER_FILES
         "src/chain/*.hpp"
         "src/config/config.hpp"
         "src/modules/communication/protos/*.h"
+        "include/*.hpp"
         )
 
 target_sources(gruut_enterprise_merger
@@ -67,12 +69,17 @@ IF (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
 ENDIF (Boost_FOUND)
 
+IF (CURL_FOUND)
+    include_directories(${CURL_INCLUDE_DIR})
+ENDIF (CURL_FOUND)
+
 add_subdirectory(lib/leveldb)
 
 target_include_directories(gruut_enterprise_merger PRIVATE include/ /usr/local/include)
 target_link_libraries(gruut_enterprise_merger
         PRIVATE
         ${Boost_LIBRARIES}
+        ${CURL_LIBRARIES}
         leveldb
         ${LZ4_LIBS}
         ${BOTAN_LIBS}
@@ -80,11 +87,13 @@ target_link_libraries(gruut_enterprise_merger
         ${GRPC_LIBS}
         )
 
-enable_testing()
-add_subdirectory(tests/chain)
-add_subdirectory(tests/modules)
-add_subdirectory(tests/utils)
-add_subdirectory(tests/services)
+IF (${CMAKE_BUILD_TYPE} MATCHES Debug)
+    enable_testing()
+    add_subdirectory(tests/chain)
+    add_subdirectory(tests/modules)
+    add_subdirectory(tests/utils)
+    add_subdirectory(tests/services)
+ENDIF()
 
 IF (NOT $ENV{TRAVIS_BUILD})
     add_custom_command(TARGET gruut_enterprise_merger

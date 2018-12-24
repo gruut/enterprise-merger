@@ -12,10 +12,10 @@
 #include "../chain/message.hpp"
 #include "../chain/signer.hpp"
 
+#include "../config/config.hpp"
+
 namespace gruut {
 class Transaction;
-
-const int SIGNATURE_COLLECTION_INTERVAL = 10000;
 
 using RandomSignerIndices = std::set<int>;
 using Transactions = std::vector<Transaction>;
@@ -23,23 +23,34 @@ using Signers = std::vector<Signer>;
 
 class SignatureRequester {
 public:
-  SignatureRequester() = default;
+  SignatureRequester();
 
   void requestSignatures();
 
+  void checkProcess();
+
 private:
-  void startSignatureCollectTimer(Transactions &transactions);
+  void startSignatureCollectTimer();
+
+  void stopCollectTimerAndCreateBlock();
 
   Transactions fetchTransactions();
 
   PartialBlock makePartialBlock(Transactions &transactions);
 
-  void requestSignature(PartialBlock &block, Signers &signers);
+  void requestSignature(Signers &signers);
 
   Signers selectSigners();
 
-  std::unique_ptr<boost::asio::deadline_timer> m_timer;
+  std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
+  std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
+  std::unique_ptr<boost::asio::io_service::strand> m_block_gen_strand;
+
   MerkleTree m_merkle_tree;
+  PartialBlock m_partial_block;
+
+  bool m_is_collect_timer_running{false};
+  size_t m_max_signers;
 };
 } // namespace gruut
 #endif

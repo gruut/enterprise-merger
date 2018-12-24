@@ -1,72 +1,96 @@
 #include "merger_client.hpp"
+#include "http_client.hpp"
 #include "merger_server.hpp"
 
 namespace gruut {
 void MergerClient::sendMessage(MessageType msg_type,
-                               std::vector<uint64_t> &receiver_list,
-                               std::vector<std::string> &packed_msg_list) {
+                               std::vector<id_type> &receiver_list,
+                               std::vector<std::string> &packed_msg_list, OutputMsgEntry &outputMsgEntry) {
 
   if (checkMergerMsgType(msg_type)) {
-    sendToMerger(msg_type, receiver_list, packed_msg_list[0]);
+    sendToMerger(receiver_list, packed_msg_list[0]);
   } else if (checkSignerMsgType(msg_type)) {
     sendToSigner(msg_type, receiver_list, packed_msg_list);
-  } else if (checkSEMsgType(msg_type)) {
-    sendToSE(msg_type, receiver_list, packed_msg_list[0]);
+  }
+
+  if (checkSEMsgType(msg_type)) {
+
+    // TODO : packed msg => stringified json
+    sendToSE(outputMsgEntry.body.dump());
   }
 }
 
-void MergerClient::sendToSE(MessageType msg_type,
-                            std::vector<uint64_t> &receiver_list,
-                            std::string &packed_msg) {
-  for (uint64_t se_id : receiver_list) {
-    // TODO: SE ID에 따른 ip와 port를 저장해 놓을 곳 필요.
-    std::unique_ptr<GruutSeService::Stub> stub = GruutSeService::NewStub(
-        CreateChannel("SE ip and port", InsecureChannelCredentials()));
-
-    ClientContext context;
-    // TODO: SE protobuf 수정작업 후 주석 해제.
-
-    /*  DataRequest request;
-      DataReply reply;
-
-      request.set_data(msg);
-      Status status = stub->sendData(&context, request, &reply);
-      if(!status.ok())
-        std::cout<<status.error_code() << ":
-    "<<status.error_message()<<std::endl;
-    }*/
-  }
+void MergerClient::sendToSE(std::string &&packed_msg) {
+  sendToSE(packed_msg);
 }
 
-void MergerClient::sendToMerger(MessageType msg_type,
-                                std::vector<uint64_t> &receiver_list,
+void MergerClient::sendToSE(std::string &packed_msg) {
+  auto setting = Setting::getInstance();
+  auto service_endpoints_list = setting->getServiceEndpointInfo();
+
+  auto service_endpoint = service_endpoints_list[0];
+  const string address =
+      service_endpoint.address + ":" + service_endpoint.port + "/api/blocks";
+
+  HttpClient http_client(address);
+  http_client.post(packed_msg);
+}
+
+void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
                                 std::string &packed_msg) {
-  for (uint64_t merger_id : receiver_list) {
-    // TODO: Merger ID에 따른 ip와 port를 저장해 놓을 곳 필요.
-    std::unique_ptr<MergerCommunication::Stub> stub =
-        MergerCommunication::NewStub(
-            CreateChannel("Merger ip and port", InsecureChannelCredentials()));
 
-    ClientContext context;
+  Setting *setting = Setting::getInstance();
+  MergerDataRequest request;
+  request.set_data(packed_msg);
 
-    MergerDataRequest request;
-    MergerDataReply reply;
-
-    request.set_data(packed_msg);
-    Status status = stub->pushData(&context, request, &reply);
-    if (!status.ok())
-      std::cout << status.error_code() << ": " << status.error_message()
-                << std::endl;
+  if (receiver_list.empty()) {
+    merger_id_type my_id = setting->getMyId();
+    auto merger_info_list = setting->getMergerInfo();
+    for (auto &merger_info : merger_info_list) {
+      if (my_id == merger_info.id)
+        continue;
+      sendMsgToMerger(merger_info, request);
+    }
+  } else {
+    for (auto &receiver_id : receiver_list) {
+      for (auto &merger_info : setting->getMergerInfo()) {
+        if (merger_info.id == receiver_id) {
+          sendMsgToMerger(merger_info, request);
+          break;
+        }
+      }
+    }
   }
+}
+
+void MergerClient::sendMsgToMerger(MergerInfo &merger_info,
+                                   MergerDataRequest &request) {
+
+  std::cout << "MGC: sendToMerger("
+            << merger_info.address + ":" + merger_info.port << ") "
+            << std::endl;
+
+  std::shared_ptr<ChannelCredentials> credential = InsecureChannelCredentials();
+  std::shared_ptr<Channel> channel =
+      CreateChannel(merger_info.address + ":" + merger_info.port, credential);
+  std::unique_ptr<MergerCommunication::Stub> stub =
+      MergerCommunication::NewStub(channel);
+
+  ClientContext context;
+  MergerDataReply reply;
+
+  Status status = stub->pushData(&context, request, &reply);
+  if (!status.ok())
+    std::cout << "MGC: ERROR " << status.error_message() << std::endl;
 }
 
 void MergerClient::sendToSigner(MessageType msg_type,
-                                std::vector<uint64_t> &receiver_list,
+                                std::vector<id_type> &receiver_list,
                                 std::vector<std::string> &packed_msg_list) {
 
-  int num_of_signer = receiver_list.size();
+  size_t num_of_signer = receiver_list.size();
 
-  for (int i = 0; i < num_of_signer; i++) {
+  for (size_t i = 0; i < num_of_signer; ++i) {
     SignerRpcInfo signer_rpc_info =
         m_rpc_receiver_list->getSignerRpcInfo(receiver_list[i]);
     switch (msg_type) {
@@ -132,7 +156,9 @@ bool MergerClient::checkSignerMsgType(MessageType msg_type) {
 }
 
 bool MergerClient::checkSEMsgType(MessageType msg_type) {
-  return (msg_type == MessageType::MSG_UP || msg_type == MessageType::MSG_PING);
+  return (msg_type == MessageType::MSG_UP ||
+          msg_type == MessageType::MSG_PING ||
+          msg_type == MessageType::MSG_HEADER);
   // TODO: 다른 MSG TYPE은 차 후 추가
 }
 }; // namespace gruut

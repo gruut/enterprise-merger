@@ -52,6 +52,8 @@ public:
     return ret_msg;
   }
 
+  inline size_t size() { return m_input_msg_pool.size(); }
+
   inline bool empty() { return m_input_msg_pool.empty(); }
 
   inline void clearInputQueue() { m_input_msg_pool.clear(); }

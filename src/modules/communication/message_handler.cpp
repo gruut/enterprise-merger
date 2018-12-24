@@ -1,31 +1,40 @@
 #include "message_handler.hpp"
+#include "../../config/config.hpp"
 #include "../../utils/compressor.hpp"
+#include "../../utils/type_converter.hpp"
 #include "merger_client.hpp"
 
 namespace gruut {
+
+MessageHandler::MessageHandler() {
+  m_input_queue = InputQueueAlt::getInstance();
+}
+
 void MessageHandler::unpackMsg(std::string &packed_msg,
-                               grpc::Status &rpc_status,
-                               uint64_t &receiver_id) {
+                               grpc::Status &rpc_status, id_type &recv_id) {
   using namespace grpc;
-  auto &input_queue = Application::app().getInputQueue();
+  if (packed_msg.size() < config::HEADER_LENGTH) {
+    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message");
+    return;
+  }
   MessageHeader header = HeaderController::parseHeader(packed_msg);
-  if (!validateMessage(header)) {
+  if (!validateMsgFormat(header)) {
     rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message");
     return;
   }
   int body_size = getMsgBodySize(header);
-  uint64_t id;
-  memcpy(&id, &header.sender_id[0], sizeof(uint64_t));
-  receiver_id = id;
+  recv_id = header.sender_id;
+  std::string recv_str_id = TypeConverter::toBase64Str(recv_id);
 
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
-    std::string msg = packed_msg.substr(0, HEADER_LENGTH + body_size);
-    std::vector<uint8_t> hmac(packed_msg.begin() + HEADER_LENGTH + body_size,
+    std::string msg = packed_msg.substr(0, config::HEADER_LENGTH + body_size);
+    std::vector<uint8_t> hmac(packed_msg.begin() + config::HEADER_LENGTH +
+                                  body_size,
                               packed_msg.end());
 
     auto &signer_pool = Application::app().getSignerPool();
     Botan::secure_vector<uint8_t> secure_vector_key =
-        signer_pool.getHmacKey(id);
+        signer_pool.getHmacKey(recv_id);
     std::vector<uint8_t> key = std::vector<uint8_t>(secure_vector_key.begin(),
                                                     secure_vector_key.end());
 
@@ -44,18 +53,18 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
     return;
   }
 
-  input_queue->emplace(make_tuple(header.message_type, id, json_data));
+  m_input_queue->push(header.message_type, json_data);
   rpc_status = Status::OK;
 }
 
-void MessageHandler::packMsg(OutputMessage &output_msg) {
-  MessageType msg_type = get<0>(output_msg);
+void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
+  MessageType msg_type = output_msg.type;
 
-  nlohmann::json body = get<2>(output_msg);
+  nlohmann::json body = output_msg.body;
   MessageHeader header;
   header.message_type = msg_type;
-  // TODO : Compression type에 따라 수정 될 수 있습니다.
-  header.compression_algo_type = CompressionAlgorithmType::NONE;
+
+  header.compression_algo_type = config::COMPRESSION_ALGO_TYPE;
   std::string packed_msg = genPackedMsg(header, body);
   std::vector<std::string> packed_msg_list;
 
@@ -63,9 +72,9 @@ void MessageHandler::packMsg(OutputMessage &output_msg) {
       msg_type == MessageType::MSG_REQ_SSIG) {
     auto &signer_pool = Application::app().getSignerPool();
 
-    for (auto receiver_id : get<1>(output_msg)) {
+    for (auto &recv_id : output_msg.receivers) {
       Botan::secure_vector<uint8_t> secure_vector_key =
-          signer_pool.getHmacKey(receiver_id);
+          signer_pool.getHmacKey(recv_id);
       std::vector<uint8_t> key(secure_vector_key.begin(),
                                secure_vector_key.end());
       std::vector<uint8_t> hmac = Hmac::generateHMAC(packed_msg, key);
@@ -78,11 +87,12 @@ void MessageHandler::packMsg(OutputMessage &output_msg) {
   }
 
   MergerClient merger_client;
-  merger_client.sendMessage(msg_type, get<1>(output_msg), packed_msg_list);
+  merger_client.sendMessage(msg_type, output_msg.receivers, packed_msg_list, output_msg);
 }
 
-bool MessageHandler::validateMessage(MessageHeader &header) {
-  bool check = (header.identifier == G /*&& msg_header.version == VERSION*/);
+bool MessageHandler::validateMsgFormat(MessageHeader &header) {
+  // TODO : Message header에서 확인해야 하는 사항이 있을때 추가예정
+  bool check = (header.identifier == config::G);
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
     check &= (header.message_type == MessageType::MSG_SUCCESS ||
               header.message_type == MessageType::MSG_SSIG);
@@ -92,12 +102,12 @@ bool MessageHandler::validateMessage(MessageHeader &header) {
 
 int MessageHandler::getMsgBodySize(MessageHeader &header) {
   int total_size = HeaderController::convertU8ToU32BE(header.total_length);
-  int body_size = total_size - static_cast<int>(HEADER_LENGTH);
+  int body_size = total_size - static_cast<int>(config::HEADER_LENGTH);
   return body_size;
 }
 
 std::string MessageHandler::getMsgBody(std::string &packed_msg, int body_size) {
-  std::string packed_body = packed_msg.substr(HEADER_LENGTH, body_size);
+  std::string packed_body = packed_msg.substr(config::HEADER_LENGTH, body_size);
   return packed_body;
 }
 
@@ -107,8 +117,7 @@ MessageHandler::getJson(CompressionAlgorithmType compression_type,
   nlohmann::json unpacked_body;
   switch (compression_type) {
   case CompressionAlgorithmType::LZ4: {
-    std::string origin_data;
-    Compressor::decompressData(body, origin_data, body.size());
+    std::string origin_data = Compressor::decompressData(body);
     unpacked_body = nlohmann::json::parse(origin_data);
   } break;
   case CompressionAlgorithmType::NONE: {
@@ -126,8 +135,7 @@ std::string MessageHandler::genPackedMsg(MessageHeader &header,
 
   switch (header.compression_algo_type) {
   case CompressionAlgorithmType::LZ4: {
-    std::string compressed_body;
-    Compressor::compressData(body_dump, compressed_body);
+    std::string compressed_body = Compressor::compressData(body_dump);
     body_dump = compressed_body;
   } break;
   case CompressionAlgorithmType ::NONE:
