@@ -44,6 +44,8 @@ private:
 
   std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
+  std::unique_ptr<boost::asio::io_service::strand> m_block_gen_strand;
+
   MerkleTree m_merkle_tree;
   PartialBlock m_partial_block;
 
