@@ -55,8 +55,12 @@ bool Storage::saveBlock(const string &block_raw, json &block_header,
       putBlockHeight(block_header, block_id) &&
       putLatestBlockHeader(block_header) &&
       putBlockBody(block_body, block_id) &&
-      putBlockRaw(block_raw_json, block_id))
+      putBlockRaw(block_raw_json, block_id)) {
+    commitBatchAll();
     return true;
+  }
+
+  rollbackBatchAll();
   return false;
 }
 
@@ -71,31 +75,54 @@ string Storage::getPrefix(DBType what) {
   return prefix;
 }
 
-bool Storage::put(DBType what, const string &key, const string &value) {
-  leveldb::Status status;
+bool Storage::putBatch(DBType what, const string &key, const string &value) {
   switch (what) {
   case DBType::BLOCK_HEADER:
-    status = m_db_block_header->Put(m_write_options, key, value);
+    m_batch_block_header.Put(key, value);
     break;
   case DBType::BLOCK_HEIGHT:
-    status = m_db_blockid_height->Put(m_write_options, key, value);
+    m_batch_blockid_height.Put(key, value);
     break;
   case DBType::BLOCK_RAW:
-    status = m_db_block_raw->Put(m_write_options, key, value);
+    m_batch_block_raw.Put(key, value);
     break;
   case DBType::BLOCK_LATEST:
-    status = m_db_latest_block_header->Put(m_write_options, key, value);
+    m_batch_latest_block_header.Put(key, value);
     break;
   case DBType::BLOCK_BODY:
-    status = m_db_block_body->Put(m_write_options, key, value);
+    m_batch_block_body.Put(key, value);
     break;
   case DBType::BLOCK_CERT:
-    status = m_db_certificate->Put(m_write_options, key, value);
+    m_batch_certificate.Put(key, value);
     break;
   default:
     break;
   }
-  return errorOn(status);
+  return true;
+}
+
+void Storage::commitBatchAll() {
+  m_db_block_header->Write(m_write_options, &m_batch_block_header);
+  m_db_blockid_height->Write(m_write_options, &m_batch_blockid_height);
+  m_db_block_raw->Write(m_write_options, &m_batch_block_raw);
+  m_db_latest_block_header->Write(m_write_options, &m_batch_latest_block_header);
+  m_db_block_body->Write(m_write_options, &m_batch_block_body);
+  m_db_certificate->Write(m_write_options, &m_batch_certificate);
+
+  clearBatchAll();
+}
+
+void Storage::rollbackBatchAll() {
+  clearBatchAll();
+}
+
+void Storage::clearBatchAll(){
+  m_batch_block_header.Clear();
+  m_batch_block_raw.Clear();
+  m_batch_latest_block_header.Clear();
+  m_batch_block_body.Clear();
+  m_batch_certificate.Clear();
+  m_batch_blockid_height.Clear();
 }
 
 bool Storage::putBlockHeader(json &data, const string &block_id) {
@@ -106,12 +133,12 @@ bool Storage::putBlockHeader(json &data, const string &block_id) {
       for (size_t i = 0; i < data["SSig"].size(); ++i) {
         key = prefix + block_id + item.second + "_sID_" + to_string(i);
         value = data[item.first][i]["sID"].get<string>();
-        if (!put(DBType::BLOCK_HEADER, key, value))
+        if (!putBatch(DBType::BLOCK_HEADER, key, value))
           return false;
 
         key = prefix + block_id + item.second + "_sig_" + to_string(i);
         value = data["SSig"][i]["sig"].get<string>();
-        if (!put(DBType::BLOCK_HEADER, key, value))
+        if (!putBatch(DBType::BLOCK_HEADER, key, value))
           return false;
       }
     } else {
@@ -120,7 +147,7 @@ bool Storage::putBlockHeader(json &data, const string &block_id) {
         value = data[item.first].dump();
       } else
         value = data[item.first].get<string>();
-      if (!put(DBType::BLOCK_HEADER, key, value))
+      if (!putBatch(DBType::BLOCK_HEADER, key, value))
         return false;
     }
   }
@@ -132,22 +159,24 @@ bool Storage::putBlockHeight(json &data, const string &block_id) {
   string prefix = getPrefix(DBType::BLOCK_HEIGHT);
   key = prefix + data["hgt"].get<string>();
   value = block_id;
-  return put(DBType::BLOCK_HEIGHT, key, value);
+  return putBatch(DBType::BLOCK_HEIGHT, key, value);
 }
+
 bool Storage::putBlockRaw(json &data, const string &block_id) {
   string key, value;
   string prefix = getPrefix(DBType::BLOCK_RAW);
   key = prefix + block_id + "_b64";
   value = data["b64"].get<string>();
-  if (!put(DBType::BLOCK_RAW, key, value))
+  if (!putBatch(DBType::BLOCK_RAW, key, value))
     return false;
 
   key = prefix + block_id + "_hash";
   value = data["hash"].get<string>();
-  if (!put(DBType::BLOCK_RAW, key, value))
+  if (!putBatch(DBType::BLOCK_RAW, key, value))
     return false;
   return true;
 }
+
 bool Storage::putLatestBlockHeader(json &data) {
   string key, value;
   string prefix = getPrefix(DBType::BLOCK_LATEST);
@@ -157,12 +186,12 @@ bool Storage::putLatestBlockHeader(json &data) {
       for (size_t i = 0; i < data["SSig"].size(); ++i) {
         key = prefix + item.first + "_sID_" + to_string(i);
         value = data[item.first][i]["sID"].get<string>();
-        if (!put(DBType::BLOCK_LATEST, key, value))
+        if (!putBatch(DBType::BLOCK_LATEST, key, value))
           return false;
 
         key = prefix + item.first + "_sig_" + to_string(i);
         value = data["SSig"][i]["sig"].get<string>();
-        if (!put(DBType::BLOCK_LATEST, key, value))
+        if (!putBatch(DBType::BLOCK_LATEST, key, value))
           return false;
       }
     } else {
@@ -171,73 +200,64 @@ bool Storage::putLatestBlockHeader(json &data) {
         value = data[item.first].dump();
       else
         value = data[item.first].get<string>();
-      if (!put(DBType::BLOCK_LATEST, key, value))
+      if (!putBatch(DBType::BLOCK_LATEST, key, value))
         return false;
     }
   }
   return true;
 }
+
 bool Storage::putBlockBody(json &data, const string &block_id) {
   if (!data["tx"].is_array())
     return false;
 
   string key, value;
   string prefix = getPrefix(DBType::BLOCK_BODY);
+  leveldb::WriteBatch batch;
 
-  for (size_t tx_idx = 0; tx_idx < data["tx"].size(); ++tx_idx) {
-    json content = data["tx"][tx_idx]["content"];
+  for (size_t i = 0; i < data["tx"].size(); ++i) {
+    json content = data["tx"][i]["content"];
     if (!content.is_array())
       return false;
-    data["tx"][tx_idx]["bID"] = block_id;
-    data["tx"][tx_idx]["mPos"] = to_string(tx_idx);
-    string tx_id = data["tx"][tx_idx]["txID"];
+
+    data["tx"][i]["bID"] = block_id;
+    data["tx"][i]["mPos"] = to_string(i);
+
     for (auto &item : DB_BLOCK_TX_SUFFIX) {
       // Certificate 저장하는 부분
       if (item.first == "type" &&
-          data["tx"][tx_idx][item.first].get<string>() == TXTYPE_CERTIFICATES) {
-        for (auto content_idx = 0; content_idx < content.size();
-             content_idx += 2) {
-          string user_id = content[content_idx].get<string>();
+          data["tx"][i][item.first].get<string>() == TXTYPE_CERTIFICATES) {
+        for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
+          string user_id = content[c_idx].get<string>();
           string cert_idx = getDataByKey(DBType::BLOCK_CERT, user_id);
 
           // User ID에 해당하는 Certification Size 저장
           key = "certificate_" + user_id;
           value = (cert_idx.empty()) ? "1" : to_string(stoi(cert_idx) + 1);
-          if (!put(DBType::BLOCK_CERT, key, value))
+          if (!putBatch(DBType::BLOCK_CERT, key, value))
             return false;
 
           // User ID에 해당하는 n번째 Certification 저장 (발급일, 만료일,
           // 인증서)
           key = (cert_idx.empty()) ? "certificate_" + user_id + "_0"
                                    : "certificate_" + user_id + "_" + cert_idx;
-          string pem = content[content_idx + 1].get<string>();
-          try {
-            Botan::DataSource_Memory cert_datasource(pem);
-            Botan::X509_Certificate cert(cert_datasource);
+          string pem = content[c_idx + 1].get<string>();
+          value = parseCert(pem);
+          if(value.empty())
+            return false; // 하다 말아도 돼?
 
-            json tmp_cert;
-            tmp_cert[0] = to_string(
-                Botan::X509_Time(cert.not_before()).time_since_epoch());
-            tmp_cert[1] = to_string(
-                Botan::X509_Time(cert.not_after()).time_since_epoch());
-            tmp_cert[2] = pem;
-
-            value = tmp_cert.dump();
-            if (!put(DBType::BLOCK_CERT, key, value))
-              return false;
-
-          } catch (Botan::Exception &exception) {
+          if (!putBatch(DBType::BLOCK_CERT, key, value))
             return false;
-          }
         }
       }
 
+      string tx_id = data["tx"][i]["txID"];
       key = prefix + tx_id + item.second;
       if (item.first == "content") {
-        value = data["tx"][tx_idx][item.first].dump();
+        value = data["tx"][i][item.first].dump();
       } else
-        value = data["tx"][tx_idx][item.first].get<string>();
-      if (!put(DBType::BLOCK_BODY, key, value))
+        value = data["tx"][i][item.first].get<string>();
+      if (!putBatch(DBType::BLOCK_BODY, key, value))
         return false;
     }
   }
@@ -250,14 +270,37 @@ bool Storage::putBlockBody(json &data, const string &block_id) {
 
   key = prefix + block_id + "_mtree";
   value = data["mtree"].dump();
-  if (!put(DBType::BLOCK_BODY, key, value))
+  if (!putBatch(DBType::BLOCK_BODY, key, value))
     return false;
 
   key = prefix + block_id + "_txCnt";
   value = data["txCnt"].get<string>();
-  if (!put(DBType::BLOCK_BODY, key, value))
+  if (!putBatch(DBType::BLOCK_BODY, key, value))
     return false;
   return true;
+}
+
+string Storage::parseCert(string& pem){
+  string json_str;
+
+  try {
+    Botan::DataSource_Memory cert_datasource(pem);
+    Botan::X509_Certificate
+    cert(cert_datasource);
+
+    json tmp_cert;
+    tmp_cert[0] = to_string(
+        Botan::X509_Time(cert.not_before()).time_since_epoch());
+    tmp_cert[1] = to_string(
+        Botan::X509_Time(cert.not_after()).time_since_epoch());
+    tmp_cert[2] = pem;
+    json_str = tmp_cert.dump();
+  }
+  catch (...){
+    //do nothing
+  }
+
+  return json_str;
 }
 
 string Storage::getDataByKey(DBType what, const string &keys) {
