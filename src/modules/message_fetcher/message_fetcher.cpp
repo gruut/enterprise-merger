@@ -20,11 +20,13 @@ void MessageFetcher::start() { fetch(); }
 void MessageFetcher::fetch() {
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
-    if (!m_input_queue->empty()) {
-      auto input_message = m_input_queue->fetch();
+    for (int i=0; i<5; i++) {
+      if (!m_input_queue->empty()) {
+        auto input_message = m_input_queue->fetch();
 
-      MessageProxy message_proxy;
-      message_proxy.deliverInputMessage(input_message);
+        MessageProxy message_proxy;
+        message_proxy.deliverInputMessage(input_message);
+      }
     }
   });
 
