@@ -70,7 +70,7 @@ public:
 private:
   bool errorOnCritical(const leveldb::Status &status);
   bool errorOn(const leveldb::Status &status);
-  bool put(DBType what, const string &key, const string &value);
+  bool putBatch(DBType what, const string &key, const string &value);
   bool putBlockHeader(json &data, const string &block_id);
   bool putBlockHeight(json &data, const string &block_id);
   bool putBlockRaw(json &data, const string &block_id);
@@ -78,6 +78,10 @@ private:
   bool putBlockBody(json &data, const string &block_id);
   string getDataByKey(DBType what, const string &keys = "");
   string getPrefix(DBType what);
+  string parseCert(string& pem);
+  void rollbackBatchAll();
+  void commitBatchAll();
+  void clearBatchAll();
 
 private:
   string m_db_path;
@@ -91,6 +95,13 @@ private:
   leveldb::DB *m_db_block_body;
   leveldb::DB *m_db_certificate;
   leveldb::DB *m_db_blockid_height;
+
+  leveldb::WriteBatch m_batch_block_header;
+  leveldb::WriteBatch m_batch_block_raw;
+  leveldb::WriteBatch m_batch_latest_block_header;
+  leveldb::WriteBatch m_batch_block_body;
+  leveldb::WriteBatch m_batch_certificate;
+  leveldb::WriteBatch m_batch_blockid_height;
 };
 } // namespace gruut
 #endif
