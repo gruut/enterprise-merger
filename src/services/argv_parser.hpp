@@ -58,10 +58,15 @@ public:
       setting_json["pass"] = result["pass"].as<string>();
 
       auto parsed_port_num = result["port"].as<string>();
-      if (parsed_port_num != setting_json["Self"]["port"].get<std::string>())
+      if (!parsed_port_num.empty() &&
+          parsed_port_num != setting_json["Self"]["port"].get<std::string>()) {
         setting_json["Self"]["port"] = parsed_port_num; // override
+      }
 
-      setting_json["dbpath"] = result["dbpath"].as<std::string>(); // override
+      auto parsed_db_path = result["dbpath"].as<std::string>();
+      if (!parsed_db_path.empty()) {
+        setting_json["dbpath"] = result["dbpath"].as<std::string>(); // override
+      }
 
       // boost::filesystem::create_directories(parsed_db_path);
 

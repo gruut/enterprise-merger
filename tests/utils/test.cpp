@@ -201,10 +201,18 @@ BOOST_AUTO_TEST_SUITE(Test_TypeConverter)
 
   BOOST_AUTO_TEST_CASE(digitBytesToIntegerStr) {
     uint64_t original_val = 19999;
-    auto bytes = TypeConverter::integerToBytes(19999);
-    auto value = TypeConverter::digitBytesToIntegerStr(bytes);
+    auto bytes_val = TypeConverter::integerToBytes(19999);
+    auto value = TypeConverter::digitBytesToIntegerStr(bytes_val);
 
     BOOST_CHECK_EQUAL(to_string(original_val), value);
+  }
+
+  BOOST_AUTO_TEST_CASE(base64_encode_and_decode) {
+    std::string test_data_b64 = "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw=";
+    std::vector<uint8_t> test_data = TypeConverter::decodeBase64(test_data_b64);
+    std::string test_data_re_b64 = TypeConverter::toBase64Str(test_data);
+
+    BOOST_CHECK_EQUAL(test_data_b64, test_data_re_b64);
   }
 
 BOOST_AUTO_TEST_SUITE_END()

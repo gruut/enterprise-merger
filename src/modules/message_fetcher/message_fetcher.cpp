@@ -20,7 +20,7 @@ void MessageFetcher::start() { fetch(); }
 void MessageFetcher::fetch() {
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
-    for (int i=0; i<5; i++) {
+    for (int i = 0; i < 5; i++) {
       if (!m_input_queue->empty()) {
         auto input_message = m_input_queue->fetch();
 

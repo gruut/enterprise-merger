@@ -8,8 +8,8 @@
 #include "../utils/type_converter.hpp"
 #include "types.hpp"
 
+#include "../../include/nlohmann/json.hpp"
 #include <boost/assert.hpp>
-#include <nlohmann/json.hpp>
 
 #include <array>
 #include <string>
@@ -55,7 +55,7 @@ public:
     setRequestorId(static_cast<id_type>(
         TypeConverter::decodeBase64(tx_json["rID"].get<std::string>())));
     setTransactionType(strToTxType(tx_json["type"].get<std::string>()));
-    SetContents(tx_json["content"]);
+    setContents(tx_json["content"]);
     setSignature(
         TypeConverter::decodeBase64(tx_json["rSig"].get<std::string>()));
 
@@ -100,7 +100,7 @@ public:
     m_signature = signature;
   }
 
-  inline void SetContents(nlohmann::json &content_list) {
+  inline void setContents(nlohmann::json &content_list) {
     m_content_list.clear();
     if (content_list.is_array()) {
       for (auto &cont_item : content_list) {
@@ -108,8 +108,11 @@ public:
       }
     }
   }
+  inline void setContents(std::vector<content_type> &&content_list) {
+    setContents(content_list);
+  }
 
-  inline void SetContents(std::vector<content_type> &content_list) {
+  inline void setContents(std::vector<content_type> &content_list) {
     m_content_list = content_list;
   }
 

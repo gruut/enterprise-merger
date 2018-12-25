@@ -7,6 +7,7 @@
 #include "../../include/json-schema.hpp"
 #include "../../include/nlohmann/json.hpp"
 #include "../chain/types.hpp"
+#include "../config/config.hpp"
 #include "../utils/template_singleton.hpp"
 #include "../utils/type_converter.hpp"
 
@@ -146,7 +147,8 @@ private:
   std::vector<MergerInfo> m_mergers;
 
 public:
-  Setting() {}
+  Setting()
+      : m_port(config::DEFAULT_PORT_NUM), m_db_path(config::DEFAULT_DB_PATH) {}
 
   Setting(json &setting_json) {
     if (!setJson(setting_json)) {

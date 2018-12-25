@@ -50,7 +50,8 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   OutputMsgEntry msg_block;
   msg_block.type = MessageType::MSG_BLOCK;
-  msg_block.body["blockraw"] = std::get<1>(saved_block);
+  msg_block.body["blockraw"] =
+      TypeConverter::toBase64Str(std::get<1>(saved_block));
   msg_block.body["tx"] = std::get<2>(saved_block);
   msg_block.receivers = {recv_id};
 
@@ -75,19 +76,20 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
                                 tx_ids))
     return false;
 
-  std::vector<std::string> mtree_nodes_b64;
+  size_t num_txs = entry.body["tx"].size();
 
-  for (size_t i = 0; i < mtree_nodes.size(); ++i) {
+  std::vector<std::string> mtree_nodes_b64(num_txs);
+
+  for (size_t i = 0; i < num_txs; ++i) {
     mtree_nodes_b64[i] = TypeConverter::toBase64Str(mtree_nodes[i]);
   }
 
-  nlohmann::json block_secret;
-  block_secret["tx"] = entry.body["tx"];
-  block_secret["txCnt"] = entry.body["tx"].size();
-  block_secret["mtree"] = mtree_nodes_b64;
+  nlohmann::json block_body;
+  block_body["tx"] = entry.body["tx"];
+  block_body["txCnt"] = to_string(num_txs);
+  block_body["mtree"] = mtree_nodes_b64;
 
-  m_storage->saveBlock(entry.body["blockraw"].get<std::string>(), block_json,
-                       block_secret);
+  m_storage->saveBlock(block_raw, block_json, block_body);
 
   auto &tx_pool = Application::app().getTransactionPool();
   tx_pool.removeDuplicatedTransactions(tx_ids);
@@ -102,12 +104,19 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   merger_id_type my_mid = setting->getMyId();
   timestamp_type timestamp = Time::now_int();
 
+  std::vector<std::pair<bool, std::string>> siblings =
+      m_storage->findSibling(entry.body["txid"].get<std::string>());
+
+  json proof_json = json::array();
+  for (auto &sibling : siblings) {
+    proof_json.push_back(
+        nlohmann::json{{"side", sibling.first}, {"val", sibling.second}});
+  }
+
   msg_res_check.type = MessageType::MSG_RES_CHECK;
   msg_res_check.body["mID"] = TypeConverter::toBase64Str(my_mid);
   msg_res_check.body["time"] = to_string(timestamp);
-  msg_res_check.body["proof"] = m_storage->findSibling(
-      entry.body["txid"].get<std::string>()); // even if sibilings is empty, do
-                                              // not send error message
+  msg_res_check.body["proof"] = proof_json;
 
   m_msg_proxy.deliverOutputMessage(msg_res_check);
 

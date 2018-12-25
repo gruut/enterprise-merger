@@ -31,13 +31,10 @@ namespace gruut {
 using namespace std;
 using namespace nlohmann;
 
-const map<DBType, string> DB_PREFIX = {
-    {DBType::BLOCK_HEADER, "block_header_"},
-    {DBType::BLOCK_HEIGHT, "blockid_height_"},
-    {DBType::BLOCK_RAW, "block_raw_"},
-    {DBType::BLOCK_LATEST, "latest_block_header_"},
-    {DBType::BLOCK_BODY, "block_body_"},
-    {DBType::BLOCK_CERT, "certificate_"}};
+const map<DBType, std::string> DB_PREFIX = {
+    {DBType::BLOCK_HEADER, "b_"}, {DBType::BLOCK_HEIGHT, "h_"},
+    {DBType::BLOCK_RAW, "r_"},    {DBType::BLOCK_LATEST, "l_"},
+    {DBType::BLOCK_BODY, "o_"},   {DBType::BLOCK_CERT, "c_"}};
 
 const vector<pair<string, string>> DB_BLOCK_HEADER_SUFFIX = {
     {"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
@@ -55,36 +52,40 @@ public:
   Storage();
   ~Storage();
 
-  bool saveBlock(const string &block_raw, json &block_header, json &block_body);
-  pair<string, size_t> findLatestHashAndHeight();
-  tuple<string, string, size_t> findLatestBlockBasicInfo();
-  vector<string> findLatestTxIdList();
-  string findCertificate(const string &user_id,
-                         const timestamp_type &at_this_time = 0);
-  string findCertificate(const signer_id_type &user_id,
-                         const timestamp_type &at_this_time = 0);
+  bool saveBlock(bytes &block_raw, json &block_header, json &block_body);
+  bool saveBlock(const std::string &block_raw_b64, json &block_header,
+                 json &block_body);
+  std::pair<std::string, size_t> findLatestHashAndHeight();
+  std::tuple<std::string, std::string, size_t> findLatestBlockBasicInfo();
+  std::vector<std::string> findLatestTxIdList();
+  std::string findCertificate(const std::string &user_id,
+                              const timestamp_type &at_this_time = 0);
+  std::string findCertificate(const signer_id_type &user_id,
+                              const timestamp_type &at_this_time = 0);
   void deleteAllDirectory();
-  tuple<int, string, json> readBlock(int height);
-  vector<string> findSibling(const string &tx_id);
+  std::tuple<int, std::string, json> readBlock(int height);
+  std::vector<std::pair<bool, std::string>>
+  findSibling(const std::string &tx_id);
 
 private:
   bool errorOnCritical(const leveldb::Status &status);
   bool errorOn(const leveldb::Status &status);
-  bool putBatch(DBType what, const string &key, const string &value);
-  bool putBlockHeader(json &data, const string &block_id);
-  bool putBlockHeight(json &data, const string &block_id);
-  bool putBlockRaw(json &data, const string &block_id);
+  bool putBatch(DBType what, const std::string &key, const std::string &value);
+  bool putBlockHeader(json &data, const std::string &block_id);
+  bool putBlockHeight(json &data, const std::string &block_id);
+  bool putBlockRaw(bytes &block_raw, const std::string &block_id);
   bool putLatestBlockHeader(json &data);
-  bool putBlockBody(json &data, const string &block_id);
-  string getDataByKey(DBType what, const string &keys = "");
-  string getPrefix(DBType what);
-  string parseCert(string& pem);
+  bool putBlockBody(json &data, const std::string &block_id);
+  std::string getDataByKey(DBType what, const std::string &keys = "");
+  std::string getPrefix(DBType what);
+  std::string parseCert(std::string &pem);
   void rollbackBatchAll();
   void commitBatchAll();
   void clearBatchAll();
 
 private:
   string m_db_path;
+
   leveldb::Options m_options;
   leveldb::WriteOptions m_write_options;
   leveldb::ReadOptions m_read_options;
