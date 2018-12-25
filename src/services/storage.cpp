@@ -491,10 +491,11 @@ std::tuple<int, std::string, json> Storage::readBlock(int height) {
   return result;
 }
 
-std::vector<std::string> Storage::findSibling(const std::string &tx_id) {
+std::vector<std::pair<bool, std::string>>
+Storage::findSibling(const std::string &tx_id) {
   int base_offset = stoi(getDataByKey(DBType::BLOCK_BODY, tx_id + "_mPos"));
   std::string block_id = getDataByKey(DBType::BLOCK_BODY, tx_id + "_bID");
-  std::vector<std::string> siblings;
+  std::vector<std::pair<bool, std::string>> siblings;
 
   if (!block_id.empty()) {
 
@@ -514,10 +515,24 @@ std::vector<std::string> Storage::findSibling(const std::string &tx_id) {
 
       std::vector<sha256> mtree = mtree_generator.getMerkleTree();
 
-      int iter_size = (int)log2(config::MAX_MERKLE_LEAVES); // log2(4096)=12
+      int merkle_tree_height =
+          (int)log2(config::MAX_MERKLE_LEAVES); // log2(4096)=12
       int node_idx = base_offset;
-      int size = config::MAX_MERKLE_LEAVES;
-      for (size_t i = 0; i < iter_size; ++i) {
+      int merkle_tree_size = config::MAX_MERKLE_LEAVES;
+
+      // std::string my_digest_b64 =
+      // TypeConverter::toBase64Str(mtree[node_idx]);
+      std::string my_digest_b64 = mtree_json[node_idx].get<std::string>();
+
+      if (my_digest_b64.empty()) {
+        siblings.clear();
+        return siblings;
+      }
+
+      siblings.emplace_back(
+          std::make_pair(((node_idx % 2 == 0) ? false : true), my_digest_b64));
+
+      for (size_t i = 0; i < merkle_tree_height; ++i) {
         node_idx = (node_idx % 2 != 0) ? node_idx - 1 : node_idx + 1;
         if (node_idx >= mtree.size()) {
           siblings.clear();
@@ -531,13 +546,14 @@ std::vector<std::string> Storage::findSibling(const std::string &tx_id) {
           break;
         }
 
-        siblings.emplace_back(sibling);
+        siblings.emplace_back(
+            std::make_pair(((node_idx % 2 == 0) ? false : true), sibling));
         base_offset /= 2;
 
         if (i != 0)
-          size += (int)(config::MAX_MERKLE_LEAVES / pow(2, i));
+          merkle_tree_size += (int)(config::MAX_MERKLE_LEAVES / pow(2, i));
 
-        node_idx = size + base_offset;
+        node_idx = merkle_tree_size + base_offset;
       }
     }
   }
