@@ -5,6 +5,7 @@
 #include <botan-2/botan/secmem.h>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace gruut {
@@ -120,6 +121,11 @@ using header_length_type = uint32_t;
 using content_type = std::string;
 
 using hmac_key_type = Botan::secure_vector<uint8_t>;
+
+using proof_type = struct proof_t {
+  std::string block_id;
+  std::vector<std::pair<bool, std::string>> siblings;
+};
 
 // 아래는 모두 동일한 타입, 문맥에 맞춰서 쓸 것
 // 구별이 안되거나 혼용되어 있으면, id_type을 쓸 것

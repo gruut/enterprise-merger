@@ -219,16 +219,16 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
 
   BOOST_AUTO_TEST_CASE(find_sibling) {
     StorageFixture storage_fixture;
-    std::vector<std::pair<bool,std::string>> siblings = storage_fixture.m_storage->findSibling("c");
+    proof_type proof = storage_fixture.m_storage->findSibling("c");
 
-    if(!siblings.empty()){
+    if(!proof.block_id.empty() || !proof.siblings.empty()){
 
-      BOOST_TEST(siblings[0].first == false);
-      BOOST_TEST(siblings[0].second == "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw=");
+      BOOST_TEST(proof.siblings[0].first == false);
+      BOOST_TEST(proof.siblings[0].second == "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw=");
 
       std::string root_val_b64 = TypeConverter::toBase64Str(storage_fixture.m_mtree_root_1);
 
-      BOOST_TEST(MerkleTree::isValidSiblings(siblings,siblings[0].second,root_val_b64));
+      BOOST_TEST(MerkleTree::isValidSiblings(proof,root_val_b64));
 
     } else
       BOOST_TEST("EMPTY");
