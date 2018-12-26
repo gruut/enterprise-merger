@@ -87,7 +87,8 @@ void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
   }
 
   MergerClient merger_client;
-  merger_client.sendMessage(msg_type, output_msg.receivers, packed_msg_list);
+  merger_client.sendMessage(msg_type, output_msg.receivers, packed_msg_list,
+                            output_msg);
 }
 
 bool MessageHandler::validateMsgFormat(MessageHeader &header) {

@@ -73,9 +73,9 @@ enum class ErrorMsgType : int {
   ECDH_TIMEOUT = 23,
   ECDH_INVALID_SIG = 24,
   ECDH_INVALID_PK = 25,
-  TIME_SYNC = 61
+  TIME_SYNC = 61,
+  BSYNC_NO_BLOCK = 88
 };
-
 
 enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
 

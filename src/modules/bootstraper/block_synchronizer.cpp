@@ -161,10 +161,25 @@ void BlockSynchronizer::saveBlock(int height) {
                        it_map->second.block_json, block_body);
 }
 
+void BlockSynchronizer::syncFinish() {
+
+  m_msg_fetching_timer->cancel();
+  m_sync_ctrl_timer->cancel();
+
+  if (m_sync_fail) {
+    if (m_sync_alone)
+      m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
+    else
+      m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
+  } else
+    m_finish_callback(ExitCode::NORMAL);
+}
+
 void BlockSynchronizer::blockSyncControl() {
 
-  if (m_sync_done)
+  if (m_sync_done) {
     return;
+  }
 
   auto &io_service = Application::app().getIoService();
   io_service.post(m_block_sync_strand->wrap([this]() {
@@ -173,13 +188,9 @@ void BlockSynchronizer::blockSyncControl() {
       m_sync_done = true;
       m_sync_fail = true;
 
-      m_msg_fetching_timer->cancel();
-      m_sync_ctrl_timer->cancel();
+      syncFinish();
 
-      if (m_sync_alone)
-        m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
-      else
-        m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
+      return;
     }
 
     if (m_recv_block_list.empty()) { // not over, but empty
@@ -256,16 +267,8 @@ void BlockSynchronizer::blockSyncControl() {
     }
 
     if (m_sync_done) { // ok! block sync was done
-      m_msg_fetching_timer->cancel();
-      m_sync_ctrl_timer->cancel();
 
-      if (m_sync_fail) {
-        if (m_sync_alone)
-          m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
-        else
-          m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
-      } else
-        m_finish_callback(ExitCode::NORMAL);
+      syncFinish();
 
       return;
     }
@@ -279,7 +282,7 @@ void BlockSynchronizer::blockSyncControl() {
       blockSyncControl();
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;
-      throw;
+      // throw;
     }
   });
 }
@@ -310,16 +313,32 @@ void BlockSynchronizer::messageFetch() {
 
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
+    if (m_inputQueue->empty())
+      return;
+
     InputMsgEntry input_msg_entry = m_inputQueue->fetch();
+
+    if (input_msg_entry.type == MessageType::MSG_NULL)
+      return;
+
+    std::cout << "MSG IN: " << (int)input_msg_entry.type << std::endl;
+
     if (checkMsgFromOtherMerger(input_msg_entry.type)) {
       m_sync_alone = false; // Wow! I am not alone!
     } else if (checkMsgFromSigner(input_msg_entry.type)) {
       sendErrorToSigner(input_msg_entry);
     }
 
-    if(input_msg_entry.type == MessageType::MSG_ERROR && input_msg_entry.body["type"].get<std::string>() == ErrorMsgType::BSYNC_NO_BLOCK)
+    if (input_msg_entry.type == MessageType::MSG_ERROR &&
+        input_msg_entry.body["type"].get<std::string>() ==
+            std::to_string(static_cast<int>(
+                ErrorMsgType::BSYNC_NO_BLOCK))) { // Oh! No block!
+      m_sync_done = true;
+      m_sync_alone = false;
+      m_sync_fail = false;
 
-    if (input_msg_entry.type == MessageType::MSG_BLOCK) {
+      syncFinish();
+    } else if (input_msg_entry.type == MessageType::MSG_BLOCK) {
       pushMsgToBlockList(input_msg_entry);
     }
   });
@@ -332,7 +351,7 @@ void BlockSynchronizer::messageFetch() {
       messageFetch();
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;
-      throw;
+      // throw;
     }
   });
 }
@@ -359,7 +378,8 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
   return (msg_type == MessageType::MSG_UP ||
           msg_type == MessageType::MSG_PING ||
-          msg_type == MessageType::MSG_REQ_BLOCK);
+          msg_type == MessageType::MSG_REQ_BLOCK ||
+          msg_type == MessageType::MSG_ERROR);
 }
 
 bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type) {

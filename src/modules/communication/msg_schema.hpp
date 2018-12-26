@@ -365,13 +365,13 @@ const json SCHEMA_ERROR = R"({
     },
     "type": {
       "description": "Error Type",
-"type": "string"
-}
-},
-"required": [
-"sender",
-"time",
-"type"
+      "type": "string"
+    }
+  },
+  "required": [
+    "sender",
+    "time",
+    "type"
 ]
 })"_json;
 const json SCHEMA_TX = R"({

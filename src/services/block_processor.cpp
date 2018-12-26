@@ -46,15 +46,18 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   auto saved_block =
       m_storage->readBlock(stoi(entry.body["hgt"].get<std::string>()));
 
-  id_type recv_id = TypeConverter::decodeBase64(entry.body["mID"].get<std::string>());
+  id_type recv_id =
+      TypeConverter::decodeBase64(entry.body["mID"].get<std::string>());
 
   if (std::get<0>(saved_block) < 0) {
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_ERROR;
-    output_message.body["sender"] = TypeConverter::toBase64Str(m_my_id); // my_id
+    output_message.body["sender"] =
+        TypeConverter::toBase64Str(m_my_id); // my_id
     output_message.body["time"] = Time::now();
-    output_message.body["type"] = std::to_string(static_cast<int>(ErrorMsgType::BSYNC_NO_BLOCK));
+    output_message.body["type"] =
+        std::to_string(static_cast<int>(ErrorMsgType::BSYNC_NO_BLOCK));
     output_message.body["info"] = "no block!";
     output_message.receivers = {recv_id};
 
