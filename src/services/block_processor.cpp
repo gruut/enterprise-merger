@@ -104,11 +104,11 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   merger_id_type my_mid = setting->getMyId();
   timestamp_type timestamp = Time::now_int();
 
-  std::vector<std::pair<bool, std::string>> siblings =
+  proof_type proof =
       m_storage->findSibling(entry.body["txid"].get<std::string>());
 
   json proof_json = json::array();
-  for (auto &sibling : siblings) {
+  for (auto &sibling : proof.siblings) {
     proof_json.push_back(
         nlohmann::json{{"side", sibling.first}, {"val", sibling.second}});
   }
@@ -116,6 +116,7 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   msg_res_check.type = MessageType::MSG_RES_CHECK;
   msg_res_check.body["mID"] = TypeConverter::toBase64Str(my_mid);
   msg_res_check.body["time"] = to_string(timestamp);
+  msg_res_check.body["blockID"] = proof.block_id;
   msg_res_check.body["proof"] = proof_json;
 
   m_msg_proxy.deliverOutputMessage(msg_res_check);

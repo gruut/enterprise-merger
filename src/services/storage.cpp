@@ -491,13 +491,14 @@ std::tuple<int, std::string, json> Storage::readBlock(int height) {
   return result;
 }
 
-std::vector<std::pair<bool, std::string>>
-Storage::findSibling(const std::string &tx_id) {
+proof_type Storage::findSibling(const std::string &tx_id) {
   int base_offset = stoi(getDataByKey(DBType::BLOCK_BODY, tx_id + "_mPos"));
   std::string block_id = getDataByKey(DBType::BLOCK_BODY, tx_id + "_bID");
-  std::vector<std::pair<bool, std::string>> siblings;
+  proof_type proof;
 
   if (!block_id.empty()) {
+
+    proof.block_id = block_id;
 
     std::string mtree_json_str =
         getDataByKey(DBType::BLOCK_BODY, block_id + "_mtree");
@@ -520,33 +521,31 @@ Storage::findSibling(const std::string &tx_id) {
       int node_idx = base_offset;
       int merkle_tree_size = config::MAX_MERKLE_LEAVES;
 
-      // std::string my_digest_b64 =
-      // TypeConverter::toBase64Str(mtree[node_idx]);
       std::string my_digest_b64 = mtree_json[node_idx].get<std::string>();
 
       if (my_digest_b64.empty()) {
-        siblings.clear();
-        return siblings;
+        proof.siblings.clear();
+        return proof;
       }
 
-      siblings.emplace_back(
+      proof.siblings.emplace_back(
           std::make_pair(((node_idx % 2 == 0) ? false : true), my_digest_b64));
 
       for (size_t i = 0; i < merkle_tree_height; ++i) {
         node_idx = (node_idx % 2 != 0) ? node_idx - 1 : node_idx + 1;
         if (node_idx >= mtree.size()) {
-          siblings.clear();
+          proof.siblings.clear();
           break;
         }
 
         std::string sibling = TypeConverter::toBase64Str(mtree[node_idx]);
 
         if (sibling.empty()) {
-          siblings.clear();
+          proof.siblings.clear();
           break;
         }
 
-        siblings.emplace_back(
+        proof.siblings.emplace_back(
             std::make_pair(((node_idx % 2 == 0) ? false : true), sibling));
         base_offset /= 2;
 
@@ -558,7 +557,7 @@ Storage::findSibling(const std::string &tx_id) {
     }
   }
 
-  return siblings;
+  return proof;
 }
 
 std::string Storage::findCertificate(const signer_id_type &user_id,

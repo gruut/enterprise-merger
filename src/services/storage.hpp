@@ -64,8 +64,7 @@ public:
                               const timestamp_type &at_this_time = 0);
   void deleteAllDirectory();
   std::tuple<int, std::string, json> readBlock(int height);
-  std::vector<std::pair<bool, std::string>>
-  findSibling(const std::string &tx_id);
+  proof_type findSibling(const std::string &tx_id);
 
 private:
   bool errorOnCritical(const leveldb::Status &status);
