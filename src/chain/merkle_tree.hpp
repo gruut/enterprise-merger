@@ -88,6 +88,12 @@ public:
 
   vector<sha256> getMerkleTree() { return m_merkle_tree; }
 
+  static bool isValidSiblings(proof_type &proof,
+                              const std::string &root_val_b64) {
+    return isValidSiblings(proof.siblings, proof.siblings[0].second,
+                           root_val_b64);
+  }
+
   static bool
   isValidSiblings(std::vector<std::pair<bool, std::string>> &siblings_b64,
                   const std::string &my_val_b64,
