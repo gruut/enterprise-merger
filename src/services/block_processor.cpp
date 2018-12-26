@@ -3,7 +3,11 @@
 
 namespace gruut {
 
-BlockProcessor::BlockProcessor() { m_storage = Storage::getInstance(); }
+BlockProcessor::BlockProcessor() {
+  m_storage = Storage::getInstance();
+  auto setting = Setting::getInstance();
+  m_my_id = setting->getMyId();
+}
 
 bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
   switch (entry.type) {
@@ -34,6 +38,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
     if (!RSA::doVerify(entry.body["mCert"].get<std::string>(),
                        msg_builder.getString(), sig_builder.getBytes(), true)) {
+      std::cout << "BPU: ERROR invalid sig MSG_REQ_BLOCK" << std::endl;
       return false;
     }
   }
@@ -41,12 +46,22 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   auto saved_block =
       m_storage->readBlock(stoi(entry.body["hgt"].get<std::string>()));
 
+  id_type recv_id = TypeConverter::decodeBase64(entry.body["mID"].get<std::string>());
+
   if (std::get<0>(saved_block) < 0) {
+
+    OutputMsgEntry output_message;
+    output_message.type = MessageType::MSG_ERROR;
+    output_message.body["sender"] = TypeConverter::toBase64Str(m_my_id); // my_id
+    output_message.body["time"] = Time::now();
+    output_message.body["type"] = std::to_string(static_cast<int>(ErrorMsgType::BSYNC_NO_BLOCK));
+    output_message.body["info"] = "no block!";
+    output_message.receivers = {recv_id};
+
+    m_msg_proxy.deliverOutputMessage(output_message);
+
     return false;
   }
-
-  std::string recv_id_b64 = entry.body["mID"].get<std::string>();
-  id_type recv_id = TypeConverter::decodeBase64(recv_id_b64);
 
   OutputMsgEntry msg_block;
   msg_block.type = MessageType::MSG_BLOCK;

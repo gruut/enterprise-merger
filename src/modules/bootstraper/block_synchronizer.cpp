@@ -23,6 +23,8 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
   cout << "BSYNC: pushMsgToBlockList()" << endl;
 
+  std::string sender_id_b64 = input_msg_entry.body["mID"].get<std::string>();
+
   std::string block_raw_str =
       input_msg_entry.body["blockraw"].get<std::string>();
   bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
@@ -42,7 +44,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
   if (it_map == m_recv_block_list.end()) {
     RcvBlock temp;
-    temp.merger_id_b64 = block_json["mID"].get<std::string>();
+    temp.merger_id_b64 = sender_id_b64;
     temp.hash = Sha256::hash(block_raw);
     temp.block_raw = std::move(block_raw);
     temp.block_json = std::move(block_json);
@@ -57,7 +59,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
   } else if (it_map->second.state == BlockState::RETRIED) {
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
 
-    it_map->second.merger_id_b64 = block_json["mID"].get<std::string>();
+    it_map->second.merger_id_b64 = sender_id_b64;
     it_map->second.hash = Sha256::hash(block_raw);
     it_map->second.block_raw = std::move(block_raw);
     it_map->second.block_json = std::move(block_json);
@@ -95,8 +97,7 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
     }
 
     std::string ans_merger_id_b64 =
-        ans_merger_list[RandomNumGenerator::getRange(
-            0, (int)(ans_merger_list.size() - 1))];
+        ans_merger_list[PRNG::getRange(0, (int)(ans_merger_list.size() - 1))];
     merger_id_type ans_merger_id =
         TypeConverter::decodeBase64(ans_merger_id_b64);
     receivers.emplace_back(ans_merger_id);
@@ -109,9 +110,9 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
   msg_req_block.type = MessageType::MSG_REQ_BLOCK;
   msg_req_block.body["mID"] = TypeConverter::toBase64Str(m_my_id); // my_id
   msg_req_block.body["time"] = Time::now();
-  msg_req_block.body["mCert"] = {};
+  msg_req_block.body["mCert"] = "";
   msg_req_block.body["hgt"] = std::to_string(height);
-  msg_req_block.body["mSig"] = {};
+  msg_req_block.body["mSig"] = "";
   msg_req_block.receivers = receivers;
 
   m_msg_proxy.deliverOutputMessage(msg_req_block);
@@ -315,6 +316,8 @@ void BlockSynchronizer::messageFetch() {
     } else if (checkMsgFromSigner(input_msg_entry.type)) {
       sendErrorToSigner(input_msg_entry);
     }
+
+    if(input_msg_entry.type == MessageType::MSG_ERROR && input_msg_entry.body["type"].get<std::string>() == ErrorMsgType::BSYNC_NO_BLOCK)
 
     if (input_msg_entry.type == MessageType::MSG_BLOCK) {
       pushMsgToBlockList(input_msg_entry);

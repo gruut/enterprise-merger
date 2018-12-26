@@ -28,6 +28,7 @@ class BlockProcessor {
 private:
   MessageProxy m_msg_proxy;
   Storage *m_storage;
+  merger_id_type m_my_id;
 
 public:
   BlockProcessor();

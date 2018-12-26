@@ -123,6 +123,10 @@ const json SCHEMA_BLOCK = R"(
 			  "description": "Merger가 브로드캐스팅할 블록",
 			  "type": "object",
 			  "properties": {
+                "mID": {
+                  "description": "sender's id",
+				  "type": "string"
+                },
 				"blockraw": {
 				  "description": "meta, compressed JSON, mSig",
 				  "type": "string"

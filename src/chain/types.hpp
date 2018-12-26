@@ -70,8 +70,10 @@ enum class ErrorMsgType : int {
   ECDH_MAX_SIGNER_POOL,
   ECDH_TIMEOUT,
   ECDH_INVALID_SIG,
-  ECDH_INVALID_PK
+  ECDH_INVALID_PK,
+  BSYNC_NO_BLOCK
 };
+
 
 enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
 
