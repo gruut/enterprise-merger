@@ -101,6 +101,33 @@ enum class ExitCode {
   ERROR_SKIP_STAGE
 };
 
+enum class EntryName {
+  S_ID,
+  TIME,
+  C_ID,
+  SN,
+  DHX,
+  DHY,
+  TX_ID,
+  R_ID,
+  TYPE,
+  M_ID,
+  S_CNT,
+  SENDER,
+  D_ID,
+  HGT,
+  CONTENT,
+  TX
+};
+
+enum class EntryLength : int {
+  ID = 12,        // AAAAAAAAAAE=
+  SIG_NONCE = 44, // luLSQgVDnMyZjkAh8h2HNokaY1Oe9Md6a4VpjcdGgzs=
+  DIFFIE_HELLMAN =
+      64, // 92943e52e02476bd1a4d74c2498db3b01c204f29a32698495b4ed0a274e12294
+  TX_ID = 44, // Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg=
+};
+
 using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
 using timestamp_type = uint64_t;
