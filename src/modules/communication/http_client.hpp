@@ -14,6 +14,8 @@ public:
 
   CURLcode post(const std::string &packed_msg);
 
+  bool checkServStatus();
+
 private:
   std::string getPostField(const std::string &key, const std::string &value);
 
