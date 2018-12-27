@@ -4,9 +4,11 @@ syntax = "proto3";
 package grpc_se;
 
 service  GruutSeService {
-    rpc transaction(GrpcMsgTX) returns (Nothing) {}
+    rpc transaction(GrpcMsgTX) returns (TxStatus) {}
 }
 message GrpcMsgTX {
     bytes message = 1;
 }
-message Nothing {}
+message TxStatus {
+    bool message = 1;
+}
