@@ -49,14 +49,14 @@ namespace grpc_se {
 class GrpcMsgTX;
 class GrpcMsgTXDefaultTypeInternal;
 extern GrpcMsgTXDefaultTypeInternal _GrpcMsgTX_default_instance_;
-class Nothing;
-class NothingDefaultTypeInternal;
-extern NothingDefaultTypeInternal _Nothing_default_instance_;
+class TxStatus;
+class TxStatusDefaultTypeInternal;
+extern TxStatusDefaultTypeInternal _TxStatus_default_instance_;
 }  // namespace grpc_se
 namespace google {
 namespace protobuf {
 template<> ::grpc_se::GrpcMsgTX* Arena::CreateMaybeMessage<::grpc_se::GrpcMsgTX>(Arena*);
-template<> ::grpc_se::Nothing* Arena::CreateMaybeMessage<::grpc_se::Nothing>(Arena*);
+template<> ::grpc_se::TxStatus* Arena::CreateMaybeMessage<::grpc_se::TxStatus>(Arena*);
 }  // namespace protobuf
 }  // namespace google
 namespace grpc_se {
@@ -174,24 +174,24 @@ class GrpcMsgTX : public ::google::protobuf::Message /* @@protoc_insertion_point
 };
 // -------------------------------------------------------------------
 
-class Nothing : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_se.Nothing) */ {
+class TxStatus : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_se.TxStatus) */ {
  public:
-  Nothing();
-  virtual ~Nothing();
+  TxStatus();
+  virtual ~TxStatus();
 
-  Nothing(const Nothing& from);
+  TxStatus(const TxStatus& from);
 
-  inline Nothing& operator=(const Nothing& from) {
+  inline TxStatus& operator=(const TxStatus& from) {
     CopyFrom(from);
     return *this;
   }
   #if LANG_CXX11
-  Nothing(Nothing&& from) noexcept
-    : Nothing() {
+  TxStatus(TxStatus&& from) noexcept
+    : TxStatus() {
     *this = ::std::move(from);
   }
 
-  inline Nothing& operator=(Nothing&& from) noexcept {
+  inline TxStatus& operator=(TxStatus&& from) noexcept {
     if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
       if (this != &from) InternalSwap(&from);
     } else {
@@ -201,34 +201,34 @@ class Nothing : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   }
   #endif
   static const ::google::protobuf::Descriptor* descriptor();
-  static const Nothing& default_instance();
+  static const TxStatus& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const Nothing* internal_default_instance() {
-    return reinterpret_cast<const Nothing*>(
-               &_Nothing_default_instance_);
+  static inline const TxStatus* internal_default_instance() {
+    return reinterpret_cast<const TxStatus*>(
+               &_TxStatus_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     1;
 
-  void Swap(Nothing* other);
-  friend void swap(Nothing& a, Nothing& b) {
+  void Swap(TxStatus* other);
+  friend void swap(TxStatus& a, TxStatus& b) {
     a.Swap(&b);
   }
 
   // implements Message ----------------------------------------------
 
-  inline Nothing* New() const final {
-    return CreateMaybeMessage<Nothing>(NULL);
+  inline TxStatus* New() const final {
+    return CreateMaybeMessage<TxStatus>(NULL);
   }
 
-  Nothing* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<Nothing>(arena);
+  TxStatus* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<TxStatus>(arena);
   }
   void CopyFrom(const ::google::protobuf::Message& from) final;
   void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const Nothing& from);
-  void MergeFrom(const Nothing& from);
+  void CopyFrom(const TxStatus& from);
+  void MergeFrom(const TxStatus& from);
   void Clear() final;
   bool IsInitialized() const final;
 
@@ -245,7 +245,7 @@ class Nothing : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(Nothing* other);
+  void InternalSwap(TxStatus* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -261,10 +261,17 @@ class Nothing : public ::google::protobuf::Message /* @@protoc_insertion_point(c
 
   // accessors -------------------------------------------------------
 
-  // @@protoc_insertion_point(class_scope:grpc_se.Nothing)
+  // bool message = 1;
+  void clear_message();
+  static const int kMessageFieldNumber = 1;
+  bool message() const;
+  void set_message(bool value);
+
+  // @@protoc_insertion_point(class_scope:grpc_se.TxStatus)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  bool message_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::protobuf_protobuf_5fse_2eproto::TableStruct;
 };
@@ -334,7 +341,21 @@ inline void GrpcMsgTX::set_allocated_message(::std::string* message) {
 
 // -------------------------------------------------------------------
 
-// Nothing
+// TxStatus
+
+// bool message = 1;
+inline void TxStatus::clear_message() {
+  message_ = false;
+}
+inline bool TxStatus::message() const {
+  // @@protoc_insertion_point(field_get:grpc_se.TxStatus.message)
+  return message_;
+}
+inline void TxStatus::set_message(bool value) {
+  
+  message_ = value;
+  // @@protoc_insertion_point(field_set:grpc_se.TxStatus.message)
+}
 
 #ifdef __GNUC__
   #pragma GCC diagnostic pop

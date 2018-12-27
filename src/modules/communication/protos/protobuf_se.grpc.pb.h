@@ -34,32 +34,32 @@ class GruutSeService final {
   class StubInterface {
    public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status transaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc_se::Nothing* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::Nothing>> Asynctransaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::Nothing>>(AsynctransactionRaw(context, request, cq));
+    virtual ::grpc::Status transaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc_se::TxStatus* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::TxStatus>> Asynctransaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::TxStatus>>(AsynctransactionRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::Nothing>> PrepareAsynctransaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::Nothing>>(PrepareAsynctransactionRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::TxStatus>> PrepareAsynctransaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::TxStatus>>(PrepareAsynctransactionRaw(context, request, cq));
     }
   private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::Nothing>* AsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::Nothing>* PrepareAsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::TxStatus>* AsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_se::TxStatus>* PrepareAsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
     Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
-    ::grpc::Status transaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc_se::Nothing* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_se::Nothing>> Asynctransaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_se::Nothing>>(AsynctransactionRaw(context, request, cq));
+    ::grpc::Status transaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc_se::TxStatus* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_se::TxStatus>> Asynctransaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_se::TxStatus>>(AsynctransactionRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_se::Nothing>> PrepareAsynctransaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_se::Nothing>>(PrepareAsynctransactionRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_se::TxStatus>> PrepareAsynctransaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_se::TxStatus>>(PrepareAsynctransactionRaw(context, request, cq));
     }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    ::grpc::ClientAsyncResponseReader< ::grpc_se::Nothing>* AsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::grpc_se::Nothing>* PrepareAsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_se::TxStatus>* AsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_se::TxStatus>* PrepareAsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_transaction_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
@@ -68,7 +68,7 @@ class GruutSeService final {
    public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::Nothing* response);
+    virtual ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::TxStatus* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_transaction : public BaseClass {
@@ -82,11 +82,11 @@ class GruutSeService final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::Nothing* response) override {
+    ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::TxStatus* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void Requesttransaction(::grpc::ServerContext* context, ::grpc_se::GrpcMsgTX* request, ::grpc::ServerAsyncResponseWriter< ::grpc_se::Nothing>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void Requesttransaction(::grpc::ServerContext* context, ::grpc_se::GrpcMsgTX* request, ::grpc::ServerAsyncResponseWriter< ::grpc_se::TxStatus>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
@@ -103,7 +103,7 @@ class GruutSeService final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::Nothing* response) override {
+    ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::TxStatus* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -120,7 +120,7 @@ class GruutSeService final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::Nothing* response) override {
+    ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::TxStatus* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -135,18 +135,18 @@ class GruutSeService final {
    public:
     WithStreamedUnaryMethod_transaction() {
       ::grpc::Service::MarkMethodStreamed(0,
-        new ::grpc::internal::StreamedUnaryHandler< ::grpc_se::GrpcMsgTX, ::grpc_se::Nothing>(std::bind(&WithStreamedUnaryMethod_transaction<BaseClass>::Streamedtransaction, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler< ::grpc_se::GrpcMsgTX, ::grpc_se::TxStatus>(std::bind(&WithStreamedUnaryMethod_transaction<BaseClass>::Streamedtransaction, this, std::placeholders::_1, std::placeholders::_2)));
     }
     ~WithStreamedUnaryMethod_transaction() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::Nothing* response) override {
+    ::grpc::Status transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::TxStatus* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status Streamedtransaction(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::grpc_se::GrpcMsgTX,::grpc_se::Nothing>* server_unary_streamer) = 0;
+    virtual ::grpc::Status Streamedtransaction(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::grpc_se::GrpcMsgTX,::grpc_se::TxStatus>* server_unary_streamer) = 0;
   };
   typedef WithStreamedUnaryMethod_transaction<Service > StreamedUnaryService;
   typedef Service SplitStreamedService;
