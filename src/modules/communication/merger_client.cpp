@@ -1,8 +1,74 @@
 #include "merger_client.hpp"
+#include "../../application.hpp"
 #include "http_client.hpp"
 #include "merger_server.hpp"
 
+using grpc::health::v1::Health;
+using grpc::health::v1::HealthCheckRequest;
+using grpc::health::v1::HealthCheckResponse;
+
 namespace gruut {
+
+MergerClient::MergerClient() {
+  m_rpc_receiver_list = RpcReceiverList::getInstance();
+  m_connection_list = ConnectionList::getInstance();
+  m_setting = Setting::getInstance();
+  m_my_id = m_setting->getMyId();
+}
+
+void MergerClient::setup() {
+  auto &io_service = Application::app().getIoService();
+  m_conn_check_strand.reset(new boost::asio::io_service::strand(io_service));
+  m_conn_check_timer.reset(new boost::asio::deadline_timer(io_service));
+}
+
+void MergerClient::checkConnection() {
+  auto &io_service = Application::app().getIoService();
+
+  io_service.post(m_conn_check_strand->wrap([this]() {
+    auto merger_list = m_setting->getMergerInfo();
+    auto se_list = m_setting->getServiceEndpointInfo();
+
+    for (auto &merger_info : merger_list) {
+      if (m_my_id == merger_info.id)
+        continue;
+
+      HealthCheckRequest request;
+      HealthCheckResponse response;
+      ClientContext context;
+
+      std::shared_ptr<ChannelCredentials> credential =
+          InsecureChannelCredentials();
+      std::shared_ptr<Channel> channel = CreateChannel(
+          merger_info.address + ":" + merger_info.port, credential);
+      std::unique_ptr<Health::Stub> hc_stub =
+          grpc::health::v1::Health::NewStub(channel);
+      Status status = hc_stub->Check(&context, request, &response);
+
+      m_connection_list->setMergerStatus(merger_info.id, status.ok());
+    }
+
+    for (auto &se_info : se_list) {
+      HttpClient http_client(se_info.address + ":" + se_info.port);
+      bool status = http_client.checkServStatus();
+
+      m_connection_list->setSeStatus(se_info.id, status);
+    }
+  }));
+
+  m_conn_check_timer->expires_from_now(
+      boost::posix_time::seconds(config::CONN_CHECK_PERIOD));
+  m_conn_check_timer->async_wait([this](const boost::system::error_code &ec) {
+    if (ec == boost::asio::error::operation_aborted) {
+    } else if (ec.value() == 0) {
+      checkConnection();
+    } else {
+      std::cout << "ERROR: " << ec.message() << std::endl;
+      // throw;
+    }
+  });
+}
+
 void MergerClient::sendMessage(MessageType msg_type,
                                std::vector<id_type> &receiver_list,
                                std::vector<std::string> &packed_msg_list,
@@ -17,8 +83,6 @@ void MergerClient::sendMessage(MessageType msg_type,
   }
 
   if (checkSEMsgType(msg_type)) {
-
-    // TODO : packed msg => stringified json
     sendToSE(receiver_list, output_msg);
   }
 }
@@ -32,15 +96,19 @@ void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
 
   if (receiver_list.empty()) {
     for (auto &service_endpoint : service_endpoints_list) {
-      std::string address = service_endpoint.address + ":" +
-                            service_endpoint.port + "/api/blocks";
-      HttpClient http_client(address);
-      http_client.post(send_msg);
+      bool status = m_connection_list->getSeStatus(service_endpoint.id);
+      if (status) {
+        std::string address = service_endpoint.address + ":" +
+                              service_endpoint.port + "/api/blocks";
+        HttpClient http_client(address);
+        http_client.post(send_msg);
+      }
     }
   } else {
     for (auto &receiver_id : receiver_list) {
       for (auto &service_endpoint : service_endpoints_list) {
-        if (service_endpoint.id == receiver_id) {
+        bool status = m_connection_list->getSeStatus(service_endpoint.id);
+        if (status && service_endpoint.id == receiver_id) {
           std::string address = service_endpoint.address + ":" +
                                 service_endpoint.port + "/api/blocks";
           HttpClient http_client(address);
@@ -55,22 +123,20 @@ void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
 void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
                                 std::string &packed_msg) {
 
-  Setting *setting = Setting::getInstance();
   MergerDataRequest request;
   request.set_data(packed_msg);
 
   if (receiver_list.empty()) {
-    merger_id_type my_id = setting->getMyId();
-    auto merger_info_list = setting->getMergerInfo();
-    for (auto &merger_info : merger_info_list) {
-      if (my_id == merger_info.id)
-        continue;
-      sendMsgToMerger(merger_info, request);
+    for (auto &merger_info : m_setting->getMergerInfo()) {
+      bool status = m_connection_list->getMergerStatus(merger_info.id);
+      if (status && m_my_id != merger_info.id)
+        sendMsgToMerger(merger_info, request);
     }
   } else {
     for (auto &receiver_id : receiver_list) {
-      for (auto &merger_info : setting->getMergerInfo()) {
-        if (merger_info.id == receiver_id) {
+      for (auto &merger_info : m_setting->getMergerInfo()) {
+        bool status = m_connection_list->getMergerStatus(merger_info.id);
+        if (status && merger_info.id == receiver_id) {
           sendMsgToMerger(merger_info, request);
           break;
         }
@@ -176,6 +242,5 @@ bool MergerClient::checkSEMsgType(MessageType msg_type) {
           msg_type == MessageType::MSG_PING ||
           msg_type == MessageType::MSG_HEADER ||
           msg_type == MessageType::MSG_ERROR);
-  // TODO: 다른 MSG TYPE은 차 후 추가
 }
 }; // namespace gruut
