@@ -1,13 +1,15 @@
 #pragma once
 
-#include "../../application.hpp"
 #include "../../services/input_queue.hpp"
+#include "protos/health.grpc.pb.h"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_se.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
 #include "rpc_receiver_list.hpp"
 #include <grpc/support/log.h>
+#include <grpcpp/ext/health_check_service_server_builder_option.h>
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
 using namespace grpc;

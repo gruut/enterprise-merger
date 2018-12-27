@@ -25,6 +25,18 @@ CURLcode HttpClient::post(const string &packed_msg) {
   return CURLE_OK;
 }
 
+bool HttpClient::checkServStatus() {
+  try {
+    m_curl.setOpt(CURLOPT_URL, m_address.data());
+    m_curl.setOpt(CURLOPT_FAILONERROR, 1L);
+
+    m_curl.perform();
+  } catch (curlpp::EasyException &err) {
+    return false;
+  }
+  return true;
+}
+
 std::string HttpClient::getPostField(const string &key, const string &value) {
   const string post_field = key + "=" + value;
   return post_field;
