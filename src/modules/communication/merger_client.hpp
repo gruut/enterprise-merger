@@ -1,12 +1,15 @@
 #pragma once
 
-#include "../../application.hpp"
+#include "connection_list.hpp"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_se.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
 #include "rpc_receiver_list.hpp"
+#include <boost/asio.hpp>
 #include <grpc/support/log.h>
+#include <grpcpp/ext/health_check_service_server_builder_option.h>
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
 using namespace grpc;
@@ -17,13 +20,20 @@ using namespace grpc_signer;
 namespace gruut {
 class MergerClient {
 public:
-  MergerClient() { m_rpc_receiver_list = RpcReceiverList::getInstance(); }
+  MergerClient();
   void sendMessage(MessageType msg_type, std::vector<id_type> &receiver_list,
                    std::vector<std::string> &packed_msg_list,
                    OutputMsgEntry &output_msg);
 
+  void checkConnection();
+  void setup();
+
 private:
   RpcReceiverList *m_rpc_receiver_list;
+  ConnectionList *m_connection_list;
+
+  std::unique_ptr<boost::asio::deadline_timer> m_conn_check_timer;
+  std::unique_ptr<boost::asio::io_service::strand> m_conn_check_strand;
 
   void sendToSE(std::vector<id_type> &receiver_list,
                 OutputMsgEntry &output_msg);

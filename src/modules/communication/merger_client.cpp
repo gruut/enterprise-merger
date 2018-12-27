@@ -1,8 +1,74 @@
 #include "merger_client.hpp"
+#include "../../application.hpp"
 #include "http_client.hpp"
 #include "merger_server.hpp"
 
+using grpc::health::v1::Health;
+using grpc::health::v1::HealthCheckRequest;
+using grpc::health::v1::HealthCheckResponse;
+
 namespace gruut {
+
+MergerClient::MergerClient() {
+  m_rpc_receiver_list = RpcReceiverList::getInstance();
+  m_connection_list = ConnectionList::getInstance();
+}
+
+void MergerClient::setup() {
+  auto &io_service = Application::app().getIoService();
+  m_conn_check_strand.reset(new boost::asio::io_service::strand(io_service));
+  m_conn_check_timer.reset(new boost::asio::deadline_timer(io_service));
+}
+
+void MergerClient::checkConnection() {
+  auto &io_service = Application::app().getIoService();
+
+  io_service.post(m_conn_check_strand->wrap([this]() {
+    auto setting = Setting::getInstance();
+    auto merger_list = setting->getMergerInfo();
+    auto se_list = setting->getServiceEndpointInfo();
+    merger_id_type my_id = setting->getMyId();
+
+    for (auto &merger_info : merger_list) {
+      if (my_id == merger_info.id)
+        continue;
+
+      HealthCheckRequest request;
+      HealthCheckResponse response;
+      ClientContext context;
+
+      std::shared_ptr<ChannelCredentials> credential =
+          InsecureChannelCredentials();
+      std::shared_ptr<Channel> channel = CreateChannel(
+          merger_info.address + ":" + merger_info.port, credential);
+      std::unique_ptr<Health::Stub> hc_stub =
+          grpc::health::v1::Health::NewStub(channel);
+      Status status = hc_stub->Check(&context, request, &response);
+
+      m_connection_list->setMergerStatus(merger_info.id, status.ok());
+    }
+
+    for (auto &se_info : se_list) {
+      HttpClient http_client(se_info.address + ":" + se_info.port);
+      bool status = http_client.checkServStatus();
+
+      m_connection_list->setSeStatus(se_info.id, status);
+    }
+  }));
+
+  m_conn_check_timer->expires_from_now(
+      boost::posix_time::seconds(config::CONN_CHECK_PERIOD));
+  m_conn_check_timer->async_wait([this](const boost::system::error_code &ec) {
+    if (ec == boost::asio::error::operation_aborted) {
+    } else if (ec.value() == 0) {
+      checkConnection();
+    } else {
+      std::cout << "ERROR: " << ec.message() << std::endl;
+      // throw;
+    }
+  });
+}
+
 void MergerClient::sendMessage(MessageType msg_type,
                                std::vector<id_type> &receiver_list,
                                std::vector<std::string> &packed_msg_list,
