@@ -144,10 +144,10 @@ void OpenChannel::proceed() {
 
   case RpcCallStatus::WAIT: {
     if (m_context.IsCancelled()) {
-      std::cout << "Disconnected with signer ID : " << m_signer_id_b64
+      std::cout << "MGS: Disconnected with signer ID : " << m_signer_id_b64
                 << std::endl;
       MessageHandler msg_handler;
-      msg_handler.genInternalMsg(MessageType::MSG_ERROR, m_signer_id_b64);
+      msg_handler.genInternalMsg(MessageType::MSG_LEAVE, m_signer_id_b64);
       delete this;
     }
   } break;

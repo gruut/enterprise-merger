@@ -153,16 +153,16 @@ std::string MessageHandler::genPackedMsg(MessageHeader &header,
 void MessageHandler::genInternalMsg(MessageType msg_type, std::string &id_b64) {
   nlohmann::json msg_body;
   switch (msg_type) {
-  case MessageType::MSG_ERROR: {
+  case MessageType::MSG_LEAVE: {
     msg_body["sID"] = id_b64;
     msg_body["time"] = Time::now();
-    // TODO : 현재 msg는 임시 내용 입니다.
     msg_body["msg"] = "disconnected with signer";
   } break;
 
   default:
     break;
   }
+
   m_input_queue->push(msg_type, msg_body);
 }
 

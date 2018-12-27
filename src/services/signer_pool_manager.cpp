@@ -174,12 +174,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     if (signer_pool.removeSigner(recv_id)) {
       std::string leave_time = message_body_json["time"].get<string>();
       std::string leave_msg = message_body_json["msg"].get<string>();
-      std::cout << "Leave Signer ID : " << recv_id_b64 << std::endl;
-      std::cout << "Leave Time : " << leave_time << std::endl;
-      std::cout << "Leave Msg : " << leave_msg << std::endl;
-    } else {
-      std::cout << "Cannot find Signer ID : " << recv_id_b64 << "in SignerPool"
-                << std::endl;
+      std::cout << "SPM: SIGNER LEAVED (" << recv_id_b64 << ")" << std::endl;
     }
   } break;
   case MessageType::MSG_ECHO:

@@ -23,7 +23,8 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
     switch (message_type) {
     case MessageType::MSG_JOIN:
     case MessageType::MSG_RESPONSE_1:
-    case MessageType::MSG_SUCCESS: {
+    case MessageType::MSG_SUCCESS:
+    case MessageType::MSG_LEAVE: {
       Application::app().getSignerPoolManager().handleMessage(
           message_type, message_body_json);
     } break;
