@@ -101,7 +101,8 @@ void RecvFromSE::proceed() {
       MessageHandler message_handler;
       message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
 
-      Nothing m_reply;
+      TxStatus m_reply;
+      m_reply.set_message(rpc_status.ok());
       m_receive_status = RpcCallStatus::FINISH;
       m_responder.Finish(m_reply, rpc_status, this);
     });
