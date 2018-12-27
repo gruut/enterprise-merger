@@ -169,9 +169,20 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     m_proxy.deliverOutputMessage(output_message);
 
   } break;
+  case MessageType::MSG_LEAVE: {
+    auto &signer_pool = Application::app().getSignerPool();
+    if (signer_pool.removeSigner(recv_id)) {
+      std::string leave_time = message_body_json["time"].get<string>();
+      std::string leave_msg = message_body_json["msg"].get<string>();
+      std::cout << "Leave Signer ID : " << recv_id_b64 << std::endl;
+      std::cout << "Leave Time : " << leave_time << std::endl;
+      std::cout << "Leave Msg : " << leave_msg << std::endl;
+    } else {
+      std::cout << "Cannot find Signer ID : " << recv_id_b64 << "in SignerPool"
+                << std::endl;
+    }
+  } break;
   case MessageType::MSG_ECHO:
-    break;
-  case MessageType::MSG_LEAVE:
     break;
   default:
     break;
