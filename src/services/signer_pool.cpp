@@ -152,8 +152,6 @@ Signer SignerPool::getSigner(int index) {
 
 void SignerPool::createTransactions() {
 
-  cout << "SIP: createTransactions()" << endl;
-
   TransactionGenerator generator;
 
   vector<Signer> signers;

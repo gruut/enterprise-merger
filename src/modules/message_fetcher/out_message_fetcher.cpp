@@ -7,12 +7,15 @@
 #include <iostream>
 #include <thread>
 
+#include "easy_logging.hpp"
+
 namespace gruut {
 
 OutMessageFetcher::OutMessageFetcher() {
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
   m_output_queue = OutputQueueAlt::getInstance();
+  el::Loggers::getLogger("OFCT");
 }
 
 void OutMessageFetcher::start() { fetch(); }
@@ -32,12 +35,11 @@ void OutMessageFetcher::fetch() {
       boost::posix_time::milliseconds(config::OUTQUEUE_MSG_FETCHER_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
-      std::cout << "Out MessageFetcher: Timer was cancelled or retriggered."
-                << std::endl;
+      CLOG(INFO, "OFCT") << "Timer ABORTED";
     } else if (ec.value() == 0) {
       fetch();
     } else {
-      std::cout << "ERROR: " << ec.message() << std::endl;
+      CLOG(ERROR, "OFCT") << ec.message();
       // throw;
     }
   });

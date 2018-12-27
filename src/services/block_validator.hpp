@@ -6,6 +6,7 @@
 #include "../utils/compressor.hpp"
 #include "../utils/rsa.hpp"
 #include "../utils/sha256.hpp"
+#include "easy_logging.hpp"
 #include "setting.hpp"
 #include "storage.hpp"
 
@@ -17,7 +18,7 @@ namespace gruut {
 class BlockValidator {
 
 public:
-  BlockValidator() {}
+  BlockValidator() { el::Loggers::getLogger("BVAL"); }
 
   static nlohmann::json getBlockJson(bytes &block_raw) {
 
@@ -44,15 +45,14 @@ public:
                static_cast<uint8_t>(CompressionAlgorithmType::NONE)) {
       block_json_str.assign(block_header_comp);
     } else {
-      std::cout << "unknown compress type" << std::endl;
+      CLOG(ERROR, "BVAL") << "Unknown compress type";
       return block_json;
     }
 
     try {
       block_json = nlohmann::json::parse(block_json_str);
     } catch (json::parse_error &e) {
-      std::cout << "Received block contains invalid json structure : "
-                << e.what() << endl;
+      CLOG(ERROR, "BVAL") << "Invalid JSON structure - " << e.what();
     }
 
     return block_json;
@@ -82,7 +82,7 @@ public:
 
     std::vector<sha256> tx_digests;
     if (!txs.is_array() || txs.empty() == 0) {
-      std::cout << "tx is not array" << std::endl;
+      CLOG(ERROR, "BVAL") << "TX is not array";
       return false;
     }
 
@@ -120,13 +120,13 @@ public:
           getMergerCert(mergers, tx_one["rID"].get<std::string>());
 
       if (cert.empty()) {
-        std::cout << "no certificate for sender" << std::endl;
+        CLOG(ERROR, "BVAL") << "No certificate for sender";
         return false;
       }
 
       if (!RSA::doVerify(cert, tx_digest_builder.getString(), rsig_byte,
                          true)) {
-        std::cout << "invalid rSig" << std::endl;
+        CLOG(ERROR, "BVAL") << "Invalid rSig";
         return false;
       }
       tx_digest_builder.appendB64(tx_one["rSig"].get<std::string>());
@@ -141,7 +141,7 @@ public:
     txrt_builder.appendB64(block_json["txrt"].get<std::string>());
 
     if (txrt_builder.getBytes() != mtree_nodes.back()) {
-      std::cout << "invalid merkle tree root" << std::endl;
+      CLOG(ERROR, "BVAL") << "Invalid Merkle-tree root";
       return false;
     }
 

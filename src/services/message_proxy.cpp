@@ -5,16 +5,21 @@
 #include "../chain/types.hpp"
 #include "message_validator.hpp"
 
+#include "easy_logging.hpp"
+
 using namespace nlohmann;
 
 namespace gruut {
 
-MessageProxy::MessageProxy() { m_output_queue = OutputQueueAlt::getInstance(); }
+MessageProxy::MessageProxy() {
+  m_output_queue = OutputQueueAlt::getInstance();
+  el::Loggers::getLogger("MPRX");
+}
 
 void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
 
   if (input_message.type != MessageType::MSG_TX)
-    cout << "MSG IN: " << (int)input_message.type << endl;
+    CLOG(INFO, "MPRX") << "MSG IN: " << (int)input_message.type;
 
   auto message_type = input_message.type;
   auto message_body_json = input_message.body;
@@ -52,7 +57,7 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
 
 void MessageProxy::deliverOutputMessage(OutputMsgEntry &output_message) {
 
-  cout << "MSG OUT: " << (int)output_message.type << endl;
+  CLOG(INFO, "MPRX") << "MSG OUT: " << (int)output_message.type;
 
   m_output_queue->push(output_message);
 }

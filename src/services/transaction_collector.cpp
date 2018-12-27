@@ -10,18 +10,23 @@
 #include <botan-2/botan/x509_key.h>
 #include <iostream>
 
+#include "easy_logging.hpp"
+
 using namespace std;
 using namespace nlohmann;
 
 namespace gruut {
 TransactionCollector::TransactionCollector() {
+
+  el::Loggers::getLogger("TXCO");
+
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
 }
 
 void TransactionCollector::handleMessage(json &msg_body_json) {
   if (!isRunnable()) {
-    cout << "TXC: TX drop (not timing)" << endl << flush;
+    CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
     return;
   }
 
@@ -31,7 +36,7 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
   auto &transaction_pool = Application::app().getTransactionPool();
 
   if (transaction_pool.isDuplicated(new_txid)) {
-    cout << "TXC: TX drop (duplicated)" << endl << flush;
+    CLOG(ERROR, "TXCO") << "TX dropped (duplicated)";
     return;
   }
 
@@ -41,7 +46,7 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
   if (new_tx.isValid()) {
     transaction_pool.push(new_tx);
   } else {
-    cout << "TXC: TX drop (invalid)" << endl << flush;
+    CLOG(ERROR, "TXCO") << "TX dropped (invalid)";
   }
 }
 
@@ -56,7 +61,7 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
     turnOnTimer();
   }
 
-  cout << "TXC: setTxCollectStatus(" << (int)stat << ")" << endl << flush;
+  CLOG(INFO, "TXCO") << "Set status (" << (int)stat << ")";
 
   if (m_current_tx_status == BpStatus::PRIMARY) {
     if (m_next_tx_status == BpStatus::PRIMARY) {
@@ -84,7 +89,7 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
 
 void TransactionCollector::turnOnTimer() {
 
-  cout << "TXC: turnOnTimer()" << endl;
+  CLOG(INFO, "TXCO") << "called turnOnTimer()";
 
   m_timer_running = true;
 
@@ -97,7 +102,7 @@ void TransactionCollector::turnOnTimer() {
 
 void TransactionCollector::updateStatus() {
 
-  cout << "TXC: updateStatus()" << endl;
+  CLOG(INFO, "TXCO") << "called updateStatus()";
 
   size_t current_slot = Time::now_int() / BP_INTERVAL;
   time_t next_slot_begin = (current_slot + 1) * BP_INTERVAL;

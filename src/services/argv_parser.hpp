@@ -8,12 +8,14 @@
 #include "../config/config.hpp"
 #include "../utils/file_io.hpp"
 
+#include "easy_logging.hpp"
+
 using namespace nlohmann;
 
 namespace gruut {
 class ArgvParser {
 public:
-  ArgvParser() = default;
+  ArgvParser() { el::Loggers::getLogger("ARGV"); };
 
   json parse(int argc, char *argv[]) {
 
@@ -48,8 +50,8 @@ public:
       string setting_json_str = FileIo::file2str(result["in"].as<string>());
 
       if (setting_json_str.empty()) {
-        cout << "error opening setting files " << result["in"].as<string>()
-             << endl;
+        CLOG(ERROR, "ARGV")
+            << "Failed to open setting files " << result["in"].as<string>();
         return setting_json;
       }
 
@@ -71,9 +73,9 @@ public:
       // boost::filesystem::create_directories(parsed_db_path);
 
     } catch (json::parse_error &e) {
-      cout << "error parsing setting files: " << e.what() << endl;
+      CLOG(ERROR, "ARGV") << "Failed to pars setting files - " << e.what();
     } catch (const cxxopts::OptionException &e) {
-      cout << "error parsing arguments: " << e.what() << endl;
+      CLOG(ERROR, "ARGV") << "Failed to parse arguments - " << e.what();
     }
 
     return setting_json;

@@ -13,6 +13,7 @@ using namespace std;
 namespace gruut {
 class BlockGenerator {
 public:
+  BlockGenerator();
   PartialBlock generatePartialBlock(sha256 &merkle_root, vector<Transaction> &);
   // argument must be call-by-value due to multi-thread safe
   void generateBlock(PartialBlock partial_block, vector<Signature> support_sigs,

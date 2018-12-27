@@ -9,7 +9,7 @@ include(cmake/clang-cxx-dev-tools.cmake)
 find_package(Boost REQUIRED COMPONENTS system thread filesystem)
 find_package(CURL REQUIRED)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_executable(gruut_enterprise_merger main.cpp)
+
 
 file(GLOB SOURCE_FILES
         "src/modules/*/*.cpp"
@@ -31,6 +31,8 @@ file(GLOB HEADER_FILES
         "src/modules/communication/protos/*.h"
         "include/*.hpp"
         )
+
+add_executable(gruut_enterprise_merger main.cpp ${SOURCE_FILES} ${HEADER_FILES})
 
 target_sources(gruut_enterprise_merger
         PRIVATE

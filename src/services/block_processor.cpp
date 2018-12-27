@@ -1,5 +1,6 @@
 #include "block_processor.hpp"
 #include "../application.hpp"
+#include "easy_logging.hpp"
 
 namespace gruut {
 
@@ -7,6 +8,7 @@ BlockProcessor::BlockProcessor() {
   m_storage = Storage::getInstance();
   auto setting = Setting::getInstance();
   m_my_id = setting->getMyId();
+  el::Loggers::getLogger("BPU");
 }
 
 bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
@@ -38,7 +40,9 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
     if (!RSA::doVerify(entry.body["mCert"].get<std::string>(),
                        msg_builder.getString(), sig_builder.getBytes(), true)) {
-      std::cout << "BPU: ERROR invalid sig MSG_REQ_BLOCK" << std::endl;
+
+      CLOG(ERROR, "BPU") << "Invalid mSig on MSG_REQ_BLOCK";
+
       return false;
     }
   }

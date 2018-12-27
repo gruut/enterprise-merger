@@ -8,11 +8,15 @@
 #include "../../services/message_proxy.hpp"
 #include "message_fetcher.hpp"
 
+#include "easy_logging.hpp"
+
 namespace gruut {
 MessageFetcher::MessageFetcher() {
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
   m_input_queue = InputQueueAlt::getInstance();
+
+  el::Loggers::getLogger("MFCT");
 }
 
 void MessageFetcher::start() { fetch(); }
@@ -34,12 +38,11 @@ void MessageFetcher::fetch() {
       boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTERVAL));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
-      std::cout << "MessageFetcher: Timer was cancelled or retriggered."
-                << std::endl;
+      CLOG(INFO, "MFCT") << "Timer ABORTED";
     } else if (ec.value() == 0) {
       fetch();
     } else {
-      std::cout << "ERROR: " << ec.message() << std::endl;
+      CLOG(ERROR, "MFCT") << ec.message();
       // throw;
     }
   });

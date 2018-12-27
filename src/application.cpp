@@ -1,6 +1,7 @@
 #include "application.hpp"
 #include "chain/transaction.hpp"
 #include "config/config.hpp"
+#include "easy_logging.hpp"
 #include "modules/message_fetcher/message_fetcher.hpp"
 #include "modules/module.hpp"
 
@@ -42,7 +43,7 @@ void Application::registerModule(shared_ptr<Module> module, int stage,
 
 void Application::start() {
 
-  cout << "APP: start() - stage " << m_running_stage << endl << flush;
+  CLOG(INFO, "_APP") << "Start modules (stage: " << m_running_stage << ")";
 
   if (m_modules[m_running_stage].empty()) {
     runNextStage(ExitCode::ERROR_SKIP_STAGE);
@@ -75,13 +76,12 @@ void Application::exec() {
 void Application::runNextStage(ExitCode exit_code) {
 
   if (m_running_stage < m_modules.size()) {
-    cout << "APP: runNextStage(" << (int)exit_code << ")" << endl << flush;
+    CLOG(INFO, "_APP") << "Ended stage (" << (int)exit_code << ")";
     ++m_running_stage;
     start();
   } else {
-    cout << "APP: runNextStage(" << (int)exit_code << ") - No more stage"
-         << endl
-         << flush;
+    CLOG(INFO, "_APP") << "Ended stage (" << (int)exit_code
+                       << ") - No more stage";
   }
 }
 
@@ -114,6 +114,7 @@ void Application::setup() {
 
 Application::Application() {
   m_io_serv = make_shared<boost::asio::io_service>();
+  el::Loggers::getLogger("_APP");
 }
 
 } // namespace gruut

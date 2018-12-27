@@ -8,7 +8,7 @@
 #include <botan-2/botan/rsa.h>
 #include <botan-2/botan/x509cert.h>
 
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 
 #include "../utils/rsa.hpp"
 
@@ -24,6 +24,8 @@
 
 #include "signer_pool_manager.hpp"
 
+#include "easy_logging.hpp"
+
 using namespace nlohmann;
 
 namespace gruut {
@@ -31,6 +33,7 @@ SignerPoolManager::SignerPoolManager() {
   auto setting = Setting::getInstance();
   m_my_cert = setting->getMyCert();
   m_my_id = setting->getMyId();
+  el::Loggers::getLogger("SMGR");
 }
 void SignerPoolManager::handleMessage(MessageType &message_type,
                                       json &message_body_json) {
@@ -69,14 +72,13 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   } break;
   case MessageType::MSG_RESPONSE_1: {
     if (m_join_temp_table.find(recv_id_b64) == m_join_temp_table.end()) {
-      std::cout << "SPM: ERROR DH - Illegal join trial to merger." << std::endl;
+      CLOG(ERROR, "SMGR") << "Illegal Trial";
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_ILLEGAL_ACCESS);
       return;
     }
 
     if (isTimeout(recv_id_b64)) {
-      std::cout << "SPM: ERROR DH - Join procedure for " << recv_id_b64
-                << " is timeout." << std::endl;
+      CLOG(ERROR, "SMGR") << "Join timeout (" << recv_id_b64 << ")";
       m_join_temp_table[recv_id_b64].release();
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_TIMEOUT,
                        "too late MSG_RESPONSE_1");
@@ -84,7 +86,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     }
 
     if (!verifySignature(recv_id, message_body_json)) {
-      std::cout << "SPM: ERROR DH - Invalid signature" << std::endl;
+      CLOG(ERROR, "SMGR") << "Invalid Signature";
       m_join_temp_table[recv_id_b64].release();
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_INVALID_SIG);
       return;
@@ -109,7 +111,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
         key_maker.getSharedSecretKey(signer_dhx, signer_dhy, 32);
 
     if (shared_sk_bytes.empty()) {
-      std::cout << "SPM: ERROR DH - Invalid public key" << std::endl;
+      CLOG(ERROR, "SMGR") << "Failed to generate SSK (invalid PK)";
       m_join_temp_table[recv_id_b64].release();
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_INVALID_PK, "");
       return;
@@ -146,8 +148,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     // If the merger is ok, it does not need check m_join_temp_table.
 
     if (isTimeout(recv_id_b64)) {
-      std::cout << "SPM: ERROR DH - Join procedure for " << recv_id_b64
-                << " is timeout." << std::endl;
+      CLOG(ERROR, "SMGR") << "Join timeout (" << recv_id_b64 << ")";
       m_join_temp_table[recv_id_b64].release();
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_TIMEOUT,
                        "too late MSG_SUCCESS");
@@ -171,15 +172,15 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   } break;
   case MessageType::MSG_LEAVE: {
     auto &signer_pool = Application::app().getSignerPool();
-    if(m_join_temp_table.find(recv_id_b64) != m_join_temp_table.end())
+    if (m_join_temp_table.find(recv_id_b64) != m_join_temp_table.end())
       m_join_temp_table[recv_id_b64].release();
 
     if (signer_pool.removeSigner(recv_id)) {
       std::string leave_time = message_body_json["time"].get<string>();
       std::string leave_msg = message_body_json["msg"].get<string>();
-      std::cout << "SPM: SIGNER LEAVED (" << recv_id_b64 << ")" << std::endl;
+      CLOG(INFO, "SMGR") << "Signer left (" << recv_id_b64 << ")";
     }
-    
+
   } break;
   case MessageType::MSG_ECHO:
     break;
