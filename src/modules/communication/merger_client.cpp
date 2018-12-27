@@ -98,15 +98,19 @@ void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
 
   if (receiver_list.empty()) {
     for (auto &service_endpoint : service_endpoints_list) {
-      std::string address = service_endpoint.address + ":" +
-                            service_endpoint.port + "/api/blocks";
-      HttpClient http_client(address);
-      http_client.post(send_msg);
+      bool status = m_connection_list->getSeStatus(service_endpoint.id);
+      if (status) {
+        std::string address = service_endpoint.address + ":" +
+                              service_endpoint.port + "/api/blocks";
+        HttpClient http_client(address);
+        http_client.post(send_msg);
+      }
     }
   } else {
     for (auto &receiver_id : receiver_list) {
       for (auto &service_endpoint : service_endpoints_list) {
-        if (service_endpoint.id == receiver_id) {
+        bool status = m_connection_list->getSeStatus(service_endpoint.id);
+        if (status && service_endpoint.id == receiver_id) {
           std::string address = service_endpoint.address + ":" +
                                 service_endpoint.port + "/api/blocks";
           HttpClient http_client(address);
@@ -129,14 +133,15 @@ void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
     merger_id_type my_id = setting->getMyId();
     auto merger_info_list = setting->getMergerInfo();
     for (auto &merger_info : merger_info_list) {
-      if (my_id == merger_info.id)
-        continue;
-      sendMsgToMerger(merger_info, request);
+      bool status = m_connection_list->getMergerStatus(merger_info.id);
+      if (status && my_id != merger_info.id)
+        sendMsgToMerger(merger_info, request);
     }
   } else {
     for (auto &receiver_id : receiver_list) {
       for (auto &merger_info : setting->getMergerInfo()) {
-        if (merger_info.id == receiver_id) {
+        bool status = m_connection_list->getMergerStatus(merger_info.id);
+        if (status && merger_info.id == receiver_id) {
           sendMsgToMerger(merger_info, request);
           break;
         }

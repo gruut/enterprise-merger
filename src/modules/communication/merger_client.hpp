@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../services/output_queue.hpp"
 #include "connection_list.hpp"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_se.grpc.pb.h"
