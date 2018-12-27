@@ -11,12 +11,15 @@ void MergerServer::runServer(const std::string &port_num) {
   std::string server_address("0.0.0.0:");
   server_address += port_num;
   ServerBuilder builder;
+
+  EnableDefaultHealthCheckService(true);
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&m_merger_service);
   builder.RegisterService(&m_se_service);
   builder.RegisterService(&m_signer_service);
   m_completion_queue = builder.AddCompletionQueue();
   m_server = builder.BuildAndStart();
+
   std::cout << "MGS: Server listening on " << server_address << std::endl;
 
   new RecvFromMerger(&m_merger_service, m_completion_queue.get());
