@@ -7,7 +7,6 @@ BlockProcessor::BlockProcessor() {
   m_storage = Storage::getInstance();
   auto setting = Setting::getInstance();
   m_my_id = setting->getMyId();
-  el::Loggers::getLogger("BPU");
 }
 
 bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
@@ -39,8 +38,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
     if (!RSA::doVerify(entry.body["mCert"].get<std::string>(),
                        msg_builder.getString(), sig_builder.getBytes(), true)) {
-      CLOG(ERROR, "BPU") << "invalid sig MSG_REQ_BLOCK";
-
+      std::cout << "BPU: ERROR invalid sig MSG_REQ_BLOCK" << std::endl;
       return false;
     }
   }

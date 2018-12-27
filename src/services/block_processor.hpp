@@ -1,7 +1,6 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_BLOCK_PROCESSOR_HPP
 #define GRUUT_ENTERPRISE_MERGER_BLOCK_PROCESSOR_HPP
 
-#include "../../include/easy_logging.hpp"
 #include "../chain/merkle_tree.hpp"
 #include "../chain/transaction.hpp"
 #include "../chain/types.hpp"
