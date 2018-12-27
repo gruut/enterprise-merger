@@ -20,6 +20,8 @@ public:
                  id_type &receiver_id);
   void packMsg(OutputMsgEntry &output_msg);
 
+  void genInternalMsg(MessageType msg_type, std::string &id_b64);
+
 private:
   InputQueueAlt *m_input_queue;
   bool validateMsgFormat(MessageHeader &header);

@@ -121,9 +121,9 @@ void OpenChannel::proceed() {
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::READ;
+    m_context.AsyncNotifyWhenDone(this);
     m_service->RequestopenChannel(&m_context, &m_stream, m_completion_queue,
                                   m_completion_queue, this);
-    m_context.AsyncNotifyWhenDone(this);
   } break;
 
   case RpcCallStatus::READ: {
@@ -135,24 +135,25 @@ void OpenChannel::proceed() {
   case RpcCallStatus::PROCESS: {
     id_type receiver_id;
 
-    std::string id_b64_str = m_request.sender();
-    receiver_id = TypeConverter::decodeBase64(id_b64_str);
-
-    m_rpc_receiver_list->setReqSsig(receiver_id, &m_stream, this);
+    m_signer_id_b64 = m_request.sender();
+    receiver_id = TypeConverter::decodeBase64(m_signer_id_b64);
     m_receive_status = RpcCallStatus::WAIT;
+    m_rpc_receiver_list->setReqSsig(receiver_id, &m_stream, this);
+
   } break;
 
   case RpcCallStatus::WAIT: {
     if (m_context.IsCancelled()) {
-      std::cout << "Disconnected with signer" << std::endl;
-      m_receive_status = RpcCallStatus::FINISH;
+      std::cout << "MGS: Disconnected with signer ID : " << m_signer_id_b64
+                << std::endl;
+      MessageHandler msg_handler;
+      msg_handler.genInternalMsg(MessageType::MSG_LEAVE, m_signer_id_b64);
+      delete this;
     }
   } break;
 
-  default: {
-    GPR_ASSERT(m_receive_status == RpcCallStatus::FINISH);
-    delete this;
-  } break;
+  default:
+    break;
   }
 }
 

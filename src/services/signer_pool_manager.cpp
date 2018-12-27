@@ -169,9 +169,19 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     m_proxy.deliverOutputMessage(output_message);
 
   } break;
+  case MessageType::MSG_LEAVE: {
+    auto &signer_pool = Application::app().getSignerPool();
+    if(m_join_temp_table.find(recv_id_b64) != m_join_temp_table.end())
+      m_join_temp_table[recv_id_b64].release();
+
+    if (signer_pool.removeSigner(recv_id)) {
+      std::string leave_time = message_body_json["time"].get<string>();
+      std::string leave_msg = message_body_json["msg"].get<string>();
+      std::cout << "SPM: SIGNER LEAVED (" << recv_id_b64 << ")" << std::endl;
+    }
+    
+  } break;
   case MessageType::MSG_ECHO:
-    break;
-  case MessageType::MSG_LEAVE:
     break;
   default:
     break;
