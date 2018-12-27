@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
-  BOOST_AUTO_TEST_CASE(validate) {
+  BOOST_AUTO_TEST_CASE(validationSuccess) {
     json msg_join_json = R"({
       "sID": "UAABACACAAE=",
       "time": "1543323592",
@@ -407,12 +407,100 @@ BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
     BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_CHECK, msg_req_check_json), true);
     BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_BLOCK, msg_block_json), true);
     BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_BLOCK, msg_req_block_json), true);
+  }
 
+  BOOST_AUTO_TEST_CASE(validationFailure) {
+    json msg_join_json = R"({
+        "time": "1543323592",
+        "ver": "1020181127",
+        "cID": "AAAAAAAAAAE="
+      })"_json;
+    msg_join_json["time"] = Time::now();
+
+    // sID entry가 빠진 경우
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_JOIN, msg_join_json), false);
+
+    // time이 현재 시간보다 10초 이상 경과하는 경우
     msg_join_json["time"] = to_string(stoll(Time::now()) + config::JOIN_TIMEOUT_SEC);
     BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_JOIN, msg_join_json), false);
 
+    json msg_response_1_json = R"({
+      "sID": "UAABACACAAE=",
+      "time": "1543323592",
+      "cert": "-----BEGIN CERTIFICATE-----\nMIIDLDCCAhQCBgEZlK1CPjA....\n-----END CERTIFICATE-----",
+      "sN": "luLSQgVDnMyZjkAh8h2HNokaY1Oe9Md6a4VpjcdGgzs=",
+      "dhx": "92943e52e02476bd1a4d74c2498db3b01c204f29a32698495b4ed0a274e12294",
+      "dhy": "96e2d24205439ccc998e4021f21d8736891a63539ef4c77a6b85698dc746833b",
+      "sig": "QWVMP1UfUJIemaLFqnXvQfGqghVCmYH0yXo1/g5hUWAbouuXdTI/O7Gkgz3C5kXhnIWZ+dHp...."
+    })"_json;
+    msg_response_1_json["time"] = Time::now();
+
+    // signer nonce 길이가 다른 경우
+    msg_response_1_json["sN"] = "abcd";
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_RESPONSE_1, msg_response_1_json), false);
+
+    // time이 현재시간보다 5초 이상 경과하는 경우
     msg_response_1_json["time"] = to_string(stoll(Time::now()) + config::MAX_WAIT_TIME);
     BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_RESPONSE_1, msg_response_1_json), false);
-}
+
+    json msg_tx_json = R"({
+        "txid": "Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg=",
+        "time": "1543323592",
+        "rID": "AAAAAAAAAAE=",
+        "type": "CERTIFICATES",
+        "content": [
+            "UAABACACAAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----",
+            "UAABACACEAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----",
+            "UAABACCCAAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----"
+        ],
+        "rSig": "SM49AwEHA0IABBXqXQz72KPYPp9lwiQeqKaO9MF313icIj8GC2Il0Cy6QuDAiEC....."
+      })"_json;
+    msg_tx_json["time"] = Time::now();
+
+    // content가 잘못 입력됐을 경우
+    msg_tx_json["content"] = "UAABACACAAE=";
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_TX, msg_tx_json), false);
+
+    json msg_ping_json = R"({
+        "mID": "AAAAAAAAAAE=",
+        "time": "1543323592",
+        "sCnt": "25",
+        "stat": "p"
+      })"_json;
+    msg_ping_json["time"] = Time::now();
+
+    // signer count가 200을 초과 했을 경우
+    msg_ping_json["sCnt"] = to_string(config::MAX_SIGNER_NUM + 1);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_PING, msg_ping_json), false);
+
+    json msg_block_json = R"({
+        "mID": "AAAAAAAAAAE=",
+        "blockraw": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      })"_json;
+
+    // tx entry가 빠진 경우
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_BLOCK, msg_block_json), false);
+
+    json msg_req_block_json = R"({
+        "mID": "AAAAAAAAAAE=",
+        "time": "1543323592",
+        "mCert": "-----BEGIN CERTIFICATE-----\nMIIDLDCCAhQCBgEZlK1CPjA....\n-----END CERTIFICATE-----",
+        "hgt": "-1",
+        "mSig": "vQPcP1sloKtQzEP+cOgYwbf0F3QhblPsABOtJrq8nNAEXtibe5J/9B4d4t920JLnQsbZtSMHo...."
+      })"_json;
+    msg_req_block_json["time"] = Time::now();
+
+    // hgt가 0인 경우
+    msg_req_block_json["hgt"] = "0";
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_BLOCK, msg_req_block_json), false);
+
+    // hgt가 -2인 경우
+    msg_req_block_json["hgt"] = "-2";
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_BLOCK, msg_req_block_json), false);
+
+    // hgt가 1인 경우 (성공 케이스)
+    msg_req_block_json["hgt"] = "1";
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_BLOCK, msg_req_block_json), true);
+  }
 
 BOOST_AUTO_TEST_SUITE_END()

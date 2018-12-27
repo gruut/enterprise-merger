@@ -90,6 +90,8 @@ public:
   }
 
   static bool contentIdValidate(json content_json) {
+    if (!content_json.is_array())
+      return false;
     for (size_t i = 0; i < content_json.size(); i += 2) {
       if (!idValidate(content_json[i].get<string>()))
         return false;
@@ -113,6 +115,8 @@ public:
       }
 
       if (item == EntryName::TX) { // MSG_BLOCK의 tx 처리
+        if (!message_body_json[entry_name].is_array())
+          return false;
         for (size_t i = 0; i < message_body_json[entry_name].size(); ++i) {
           if (!entryValidate(message_type, MSG_TX_INFO,
                              message_body_json[entry_name][i]))
@@ -121,7 +125,9 @@ public:
         continue;
       }
 
-      string entry_value = message_body_json[entry_name].get<string>();
+      string entry_value = message_body_json[entry_name].empty()
+                               ? ""
+                               : message_body_json[entry_name].get<string>();
       if (entry_value.empty())
         return false;
 
