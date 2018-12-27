@@ -74,6 +74,8 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   auto block_id =
       static_cast<block_id_type>(Sha256::hash(block_id_builder.getString()));
 
+  std::string my_id_b64 = TypeConverter::toBase64Str(partial_block.merger_id);
+
   // step 2) making block_header (JSON)
 
   json block_header;
@@ -103,7 +105,7 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
         TypeConverter::toBase64Str(support_sigs[i].signer_signature);
   }
 
-  block_header["mID"] = TypeConverter::toBase64Str(partial_block.merger_id);
+  block_header["mID"] = my_id_b64;
 
   // step-3) making block_raw with mSig
 
@@ -167,6 +169,7 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
 
   OutputMsgEntry msg_block_msg;
   msg_block_msg.type = MessageType::MSG_BLOCK; // MSG_BLOCK = 0xB4
+  msg_block_msg.body["mID"] = my_id_b64;
   msg_block_msg.body["blockraw"] = block_raw_b64;
   msg_block_msg.body["tx"] = block_body["tx"];
   msg_block_msg.receivers = vector<id_type>{};

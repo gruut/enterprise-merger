@@ -68,6 +68,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   OutputMsgEntry msg_block;
   msg_block.type = MessageType::MSG_BLOCK;
+  msg_block.body["mID"] = TypeConverter::toBase64Str(m_my_id);
   msg_block.body["blockraw"] =
       TypeConverter::toBase64Str(std::get<1>(saved_block));
   msg_block.body["tx"] = std::get<2>(saved_block);
