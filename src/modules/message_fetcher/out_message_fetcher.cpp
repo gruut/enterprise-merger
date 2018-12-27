@@ -38,7 +38,7 @@ void OutMessageFetcher::fetch() {
       fetch();
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;
-      throw;
+      // throw;
     }
   });
 }

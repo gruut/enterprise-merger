@@ -23,6 +23,8 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
   cout << "BSYNC: pushMsgToBlockList()" << endl;
 
+  std::string sender_id_b64 = input_msg_entry.body["mID"].get<std::string>();
+
   std::string block_raw_str =
       input_msg_entry.body["blockraw"].get<std::string>();
   bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
@@ -42,7 +44,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
   if (it_map == m_recv_block_list.end()) {
     RcvBlock temp;
-    temp.merger_id_b64 = block_json["mID"].get<std::string>();
+    temp.merger_id_b64 = sender_id_b64;
     temp.hash = Sha256::hash(block_raw);
     temp.block_raw = std::move(block_raw);
     temp.block_json = std::move(block_json);
@@ -57,7 +59,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
   } else if (it_map->second.state == BlockState::RETRIED) {
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
 
-    it_map->second.merger_id_b64 = block_json["mID"].get<std::string>();
+    it_map->second.merger_id_b64 = sender_id_b64;
     it_map->second.hash = Sha256::hash(block_raw);
     it_map->second.block_raw = std::move(block_raw);
     it_map->second.block_json = std::move(block_json);
@@ -95,8 +97,7 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
     }
 
     std::string ans_merger_id_b64 =
-        ans_merger_list[RandomNumGenerator::getRange(
-            0, (int)(ans_merger_list.size() - 1))];
+        ans_merger_list[PRNG::getRange(0, (int)(ans_merger_list.size() - 1))];
     merger_id_type ans_merger_id =
         TypeConverter::decodeBase64(ans_merger_id_b64);
     receivers.emplace_back(ans_merger_id);
@@ -109,9 +110,9 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
   msg_req_block.type = MessageType::MSG_REQ_BLOCK;
   msg_req_block.body["mID"] = TypeConverter::toBase64Str(m_my_id); // my_id
   msg_req_block.body["time"] = Time::now();
-  msg_req_block.body["mCert"] = {};
+  msg_req_block.body["mCert"] = "";
   msg_req_block.body["hgt"] = std::to_string(height);
-  msg_req_block.body["mSig"] = {};
+  msg_req_block.body["mSig"] = "";
   msg_req_block.receivers = receivers;
 
   m_msg_proxy.deliverOutputMessage(msg_req_block);
@@ -160,10 +161,25 @@ void BlockSynchronizer::saveBlock(int height) {
                        it_map->second.block_json, block_body);
 }
 
+void BlockSynchronizer::syncFinish() {
+
+  m_msg_fetching_timer->cancel();
+  m_sync_ctrl_timer->cancel();
+
+  if (m_sync_fail) {
+    if (m_sync_alone)
+      m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
+    else
+      m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
+  } else
+    m_finish_callback(ExitCode::NORMAL);
+}
+
 void BlockSynchronizer::blockSyncControl() {
 
-  if (m_sync_done)
+  if (m_sync_done) {
     return;
+  }
 
   auto &io_service = Application::app().getIoService();
   io_service.post(m_block_sync_strand->wrap([this]() {
@@ -172,13 +188,9 @@ void BlockSynchronizer::blockSyncControl() {
       m_sync_done = true;
       m_sync_fail = true;
 
-      m_msg_fetching_timer->cancel();
-      m_sync_ctrl_timer->cancel();
+      syncFinish();
 
-      if (m_sync_alone)
-        m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
-      else
-        m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
+      return;
     }
 
     if (m_recv_block_list.empty()) { // not over, but empty
@@ -255,16 +267,8 @@ void BlockSynchronizer::blockSyncControl() {
     }
 
     if (m_sync_done) { // ok! block sync was done
-      m_msg_fetching_timer->cancel();
-      m_sync_ctrl_timer->cancel();
 
-      if (m_sync_fail) {
-        if (m_sync_alone)
-          m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
-        else
-          m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
-      } else
-        m_finish_callback(ExitCode::NORMAL);
+      syncFinish();
 
       return;
     }
@@ -278,7 +282,7 @@ void BlockSynchronizer::blockSyncControl() {
       blockSyncControl();
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;
-      throw;
+      // throw;
     }
   });
 }
@@ -309,14 +313,32 @@ void BlockSynchronizer::messageFetch() {
 
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
+    if (m_inputQueue->empty())
+      return;
+
     InputMsgEntry input_msg_entry = m_inputQueue->fetch();
+
+    if (input_msg_entry.type == MessageType::MSG_NULL)
+      return;
+
+    std::cout << "MSG IN: " << (int)input_msg_entry.type << std::endl;
+
     if (checkMsgFromOtherMerger(input_msg_entry.type)) {
       m_sync_alone = false; // Wow! I am not alone!
     } else if (checkMsgFromSigner(input_msg_entry.type)) {
       sendErrorToSigner(input_msg_entry);
     }
 
-    if (input_msg_entry.type == MessageType::MSG_BLOCK) {
+    if (input_msg_entry.type == MessageType::MSG_ERROR &&
+        input_msg_entry.body["type"].get<std::string>() ==
+            std::to_string(static_cast<int>(
+                ErrorMsgType::BSYNC_NO_BLOCK))) { // Oh! No block!
+      m_sync_done = true;
+      m_sync_alone = false;
+      m_sync_fail = false;
+
+      syncFinish();
+    } else if (input_msg_entry.type == MessageType::MSG_BLOCK) {
       pushMsgToBlockList(input_msg_entry);
     }
   });
@@ -329,7 +351,7 @@ void BlockSynchronizer::messageFetch() {
       messageFetch();
     } else {
       std::cout << "ERROR: " << ec.message() << std::endl;
-      throw;
+      // throw;
     }
   });
 }
@@ -356,7 +378,8 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
   return (msg_type == MessageType::MSG_UP ||
           msg_type == MessageType::MSG_PING ||
-          msg_type == MessageType::MSG_REQ_BLOCK);
+          msg_type == MessageType::MSG_REQ_BLOCK ||
+          msg_type == MessageType::MSG_ERROR);
 }
 
 bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type) {

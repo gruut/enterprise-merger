@@ -80,6 +80,8 @@ private:
 
   void saveBlock(int height);
 
+  void syncFinish();
+
   void blockSyncControl();
 
   void messageFetch();

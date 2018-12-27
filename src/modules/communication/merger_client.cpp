@@ -5,31 +5,51 @@
 namespace gruut {
 void MergerClient::sendMessage(MessageType msg_type,
                                std::vector<id_type> &receiver_list,
-                               std::vector<std::string> &packed_msg_list) {
+                               std::vector<std::string> &packed_msg_list,
+                               OutputMsgEntry &output_msg) {
 
   if (checkMergerMsgType(msg_type)) {
     sendToMerger(receiver_list, packed_msg_list[0]);
-  } else if (checkSignerMsgType(msg_type)) {
+  }
+
+  if (checkSignerMsgType(msg_type)) {
     sendToSigner(msg_type, receiver_list, packed_msg_list);
   }
 
   if (checkSEMsgType(msg_type)) {
 
     // TODO : packed msg => stringified json
-    sendToSE(packed_msg_list[0]);
+    sendToSE(receiver_list, output_msg);
   }
 }
 
-void MergerClient::sendToSE(std::string &packed_msg) {
+void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
+                            OutputMsgEntry &output_msg) {
   auto setting = Setting::getInstance();
   auto service_endpoints_list = setting->getServiceEndpointInfo();
 
-  auto service_endpoint = service_endpoints_list[0];
-  const string address =
-      service_endpoint.address + ":" + service_endpoint.port + "/api/blocks";
+  std::string send_msg = output_msg.body.dump();
 
-  HttpClient http_client(address);
-  http_client.post(packed_msg);
+  if (receiver_list.empty()) {
+    for (auto &service_endpoint : service_endpoints_list) {
+      std::string address = service_endpoint.address + ":" +
+                            service_endpoint.port + "/api/blocks";
+      HttpClient http_client(address);
+      http_client.post(send_msg);
+    }
+  } else {
+    for (auto &receiver_id : receiver_list) {
+      for (auto &service_endpoint : service_endpoints_list) {
+        if (service_endpoint.id == receiver_id) {
+          std::string address = service_endpoint.address + ":" +
+                                service_endpoint.port + "/api/blocks";
+          HttpClient http_client(address);
+          http_client.post(send_msg);
+          break;
+        }
+      }
+    }
+  }
 }
 
 void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
@@ -136,10 +156,10 @@ void MergerClient::sendToSigner(MessageType msg_type,
 }
 
 bool MergerClient::checkMergerMsgType(MessageType msg_type) {
-  return (msg_type == MessageType::MSG_UP ||
-          msg_type == MessageType::MSG_PING ||
-          msg_type == MessageType::MSG_REQ_BLOCK ||
-          msg_type == MessageType::MSG_BLOCK);
+  return (
+      msg_type == MessageType::MSG_UP || msg_type == MessageType::MSG_PING ||
+      msg_type == MessageType::MSG_REQ_BLOCK ||
+      msg_type == MessageType::MSG_BLOCK || msg_type == MessageType::MSG_ERROR);
 }
 
 bool MergerClient::checkSignerMsgType(MessageType msg_type) {
@@ -154,7 +174,8 @@ bool MergerClient::checkSignerMsgType(MessageType msg_type) {
 bool MergerClient::checkSEMsgType(MessageType msg_type) {
   return (msg_type == MessageType::MSG_UP ||
           msg_type == MessageType::MSG_PING ||
-          msg_type == MessageType::MSG_HEADER);
+          msg_type == MessageType::MSG_HEADER ||
+          msg_type == MessageType::MSG_ERROR);
   // TODO: 다른 MSG TYPE은 차 후 추가
 }
 }; // namespace gruut
