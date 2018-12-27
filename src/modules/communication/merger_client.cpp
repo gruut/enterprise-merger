@@ -12,6 +12,8 @@ namespace gruut {
 MergerClient::MergerClient() {
   m_rpc_receiver_list = RpcReceiverList::getInstance();
   m_connection_list = ConnectionList::getInstance();
+  m_setting = Setting::getInstance();
+  m_my_id = m_setting->getMyId();
 }
 
 void MergerClient::setup() {
@@ -24,13 +26,11 @@ void MergerClient::checkConnection() {
   auto &io_service = Application::app().getIoService();
 
   io_service.post(m_conn_check_strand->wrap([this]() {
-    auto setting = Setting::getInstance();
-    auto merger_list = setting->getMergerInfo();
-    auto se_list = setting->getServiceEndpointInfo();
-    merger_id_type my_id = setting->getMyId();
+    auto merger_list = m_setting->getMergerInfo();
+    auto se_list = m_setting->getServiceEndpointInfo();
 
     for (auto &merger_info : merger_list) {
-      if (my_id == merger_info.id)
+      if (m_my_id == merger_info.id)
         continue;
 
       HealthCheckRequest request;
@@ -83,8 +83,6 @@ void MergerClient::sendMessage(MessageType msg_type,
   }
 
   if (checkSEMsgType(msg_type)) {
-
-    // TODO : packed msg => stringified json
     sendToSE(receiver_list, output_msg);
   }
 }
@@ -125,21 +123,18 @@ void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
 void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
                                 std::string &packed_msg) {
 
-  Setting *setting = Setting::getInstance();
   MergerDataRequest request;
   request.set_data(packed_msg);
 
   if (receiver_list.empty()) {
-    merger_id_type my_id = setting->getMyId();
-    auto merger_info_list = setting->getMergerInfo();
-    for (auto &merger_info : merger_info_list) {
+    for (auto &merger_info : m_setting->getMergerInfo()) {
       bool status = m_connection_list->getMergerStatus(merger_info.id);
-      if (status && my_id != merger_info.id)
+      if (status && m_my_id != merger_info.id)
         sendMsgToMerger(merger_info, request);
     }
   } else {
     for (auto &receiver_id : receiver_list) {
-      for (auto &merger_info : setting->getMergerInfo()) {
+      for (auto &merger_info : m_setting->getMergerInfo()) {
         bool status = m_connection_list->getMergerStatus(merger_info.id);
         if (status && merger_info.id == receiver_id) {
           sendMsgToMerger(merger_info, request);
@@ -247,6 +242,5 @@ bool MergerClient::checkSEMsgType(MessageType msg_type) {
           msg_type == MessageType::MSG_PING ||
           msg_type == MessageType::MSG_HEADER ||
           msg_type == MessageType::MSG_ERROR);
-  // TODO: 다른 MSG TYPE은 차 후 추가
 }
 }; // namespace gruut

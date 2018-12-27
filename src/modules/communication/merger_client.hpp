@@ -32,6 +32,8 @@ public:
 private:
   RpcReceiverList *m_rpc_receiver_list;
   ConnectionList *m_connection_list;
+  Setting *m_setting;
+  merger_id_type m_my_id;
 
   std::unique_ptr<boost::asio::deadline_timer> m_conn_check_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_conn_check_strand;
