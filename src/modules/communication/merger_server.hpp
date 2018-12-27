@@ -97,6 +97,7 @@ public:
   void proceed();
 
 private:
+  std::string m_signer_id_b64;
   RpcReceiverList *m_rpc_receiver_list;
   GruutNetworkService::AsyncService *m_service;
   Identity m_request;

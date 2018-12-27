@@ -1,6 +1,7 @@
 #include "message_handler.hpp"
 #include "../../config/config.hpp"
 #include "../../utils/compressor.hpp"
+#include "../../utils/time.hpp"
 #include "../../utils/type_converter.hpp"
 #include "merger_client.hpp"
 
@@ -148,4 +149,21 @@ std::string MessageHandler::genPackedMsg(MessageHeader &header,
       body_dump, header.message_type, header.compression_algo_type);
   return packed_msg;
 }
+
+void MessageHandler::genInternalMsg(MessageType msg_type, std::string &id_b64) {
+  nlohmann::json msg_body;
+  switch (msg_type) {
+  case MessageType::MSG_ERROR: {
+    msg_body["sID"] = id_b64;
+    msg_body["time"] = Time::now();
+    // TODO : 현재 msg는 임시 내용 입니다.
+    msg_body["msg"] = "disconnected with signer";
+  } break;
+
+  default:
+    break;
+  }
+  m_input_queue->push(msg_type, msg_body);
+}
+
 }; // namespace gruut
