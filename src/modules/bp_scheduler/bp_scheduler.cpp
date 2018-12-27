@@ -55,65 +55,108 @@ void BpScheduler::reschedule() {
 
   BpRecvStatusInfo my_bp_status;
   for (BpRecvStatusInfo &item : m_recv_status) {
-    if (m_my_mid_b64 == get<0>(item)) {
+    if (m_my_mid_b64 == std::get<0>(item)) {
       my_bp_status = item;
       break;
     }
   }
 
   size_t current_time_slot = Time::now_int() / BP_INTERVAL;
-  BpStatus my_prev_status = get<2>(my_bp_status);
+  BpStatus my_prev_status = std::get<2>(my_bp_status);
 
-  if (my_prev_status == BpStatus::SECONDARY) {
-    m_current_status = BpStatus::PRIMARY;
-  } else if (my_prev_status == BpStatus::IN_BOOT_WAIT) {
+  if (my_prev_status == BpStatus::IN_BOOT_WAIT) {
     m_current_status = BpStatus::IDLE;
-  } else {
-    size_t my_pos = 0;
-    std::vector<BpRecvStatusInfo> possible_bp_list;
-    for (BpRecvStatusInfo &item : m_recv_status) {
-      size_t time_slot = get<1>(item);
-      BpStatus status = get<2>(item);
-      if (time_slot == current_time_slot &&
-          (status == BpStatus::IDLE || status == BpStatus::PRIMARY ||
-           status == BpStatus::SECONDARY))
-        possible_bp_list.emplace_back(item);
+    return;
+  }
 
-      if (m_my_mid_b64 == get<0>(item)) {
-        my_pos = possible_bp_list.size() - 1;
-      }
+  size_t my_pos = 0;
+  std::vector<std::tuple<std::string, BpStatus, BpStatus>> possible_merger_list;
+  bool is_all_idle = true;
+  for (BpRecvStatusInfo &item : m_recv_status) {
+    size_t time_slot = std::get<1>(item);
+    BpStatus status = std::get<2>(item);
+    if (time_slot == current_time_slot &&
+        (status == BpStatus::IDLE || status == BpStatus::PRIMARY ||
+         status == BpStatus::SECONDARY))
+      possible_merger_list.emplace_back(
+          std::make_tuple(std::get<0>(item), status, BpStatus::UNKNOWN));
+
+    if (status != BpStatus::IDLE) {
+      is_all_idle = false;
     }
 
-    size_t list_size = possible_bp_list.size();
+    if (m_my_mid_b64 == std::get<0>(item)) {
+      my_pos = possible_merger_list.size() - 1;
+    }
+  }
 
-    if (my_prev_status == BpStatus::PRIMARY) {
-      if (list_size > 2)
-        m_current_status = BpStatus::IDLE;
-      else if (list_size == 2) {
-        size_t others_pos = (my_pos + 1) % 2;
-        BpStatus others_status = get<2>(possible_bp_list[others_pos]);
-        if (others_status == BpStatus::IDLE)
-          m_current_status = BpStatus::PRIMARY;
-        else
-          m_current_status = BpStatus::SECONDARY;
-      } else
-        m_current_status = BpStatus::PRIMARY;
-    } else {
-      if (list_size == 0) {
-        /* do nothing */
-      } else if (list_size == 1) {
-        m_current_status = BpStatus::PRIMARY;
-      } else {
-        size_t prev_pos = (list_size + my_pos - 1) % list_size;
-        BpStatus others_status = get<2>(possible_bp_list[prev_pos]);
-        if (others_status == BpStatus::SECONDARY ||
-            others_status == BpStatus::PRIMARY)
-          m_current_status = BpStatus::SECONDARY;
-        else
-          m_current_status = BpStatus::IDLE;
+  size_t num_possible_mergers = possible_merger_list.size();
+
+  if (num_possible_mergers ==
+      0) { // in this case, we cannot determine current status
+    return;
+  }
+
+  if (num_possible_mergers == 1) { // I am the only merger
+    m_current_status = BpStatus::PRIMARY;
+    return;
+  }
+
+  if (is_all_idle) { // All mergers were IDLE
+
+    if (my_pos == 0)
+      m_current_status = BpStatus::PRIMARY;
+    else if (my_pos == 1)
+      m_current_status = BpStatus::SECONDARY;
+    else
+      m_current_status = BpStatus::IDLE;
+
+    return;
+  }
+
+  // step 1) find PRIMARY
+
+  size_t primary_pos = 0;
+
+  bool found_primary = false;
+
+  for (size_t i = 0; i < num_possible_mergers; ++i) {
+    if (std::get<1>(possible_merger_list[i]) == BpStatus::SECONDARY) {
+      found_primary = true;
+      std::get<2>(possible_merger_list[i]) = BpStatus::PRIMARY;
+      primary_pos = i;
+      break;
+    }
+  }
+
+  if (!found_primary) { // no secondary, in this case, primary becomes primary
+                        // again
+    for (size_t i = 0; i < num_possible_mergers; ++i) {
+      if (std::get<1>(possible_merger_list[i]) == BpStatus::PRIMARY) {
+        std::get<2>(possible_merger_list[i]) = BpStatus::PRIMARY;
+        primary_pos = i;
+        break;
       }
     }
   }
+
+  // step 2) find SECONDARY
+
+  size_t secondary_pos = (primary_pos + 1) % num_possible_mergers;
+  std::get<2>(possible_merger_list[secondary_pos]) = BpStatus::SECONDARY;
+
+  // step 3) all others will be IDLE
+
+  for (auto &possible_bp : possible_merger_list) {
+    if (std::get<2>(possible_bp) == BpStatus::PRIMARY ||
+        std::get<2>(possible_bp) == BpStatus::SECONDARY) {
+      continue;
+    }
+    std::get<2>(possible_bp) = BpStatus::IDLE;
+  }
+
+  // setp 4) update my status
+  m_current_status = std::get<2>(possible_merger_list[my_pos]);
 }
 
 void BpScheduler::lockStatusloop() {
