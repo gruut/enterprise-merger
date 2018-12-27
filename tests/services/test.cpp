@@ -13,6 +13,7 @@
 #include "../../src/services/block_generator.hpp"
 #include "../../src/services/input_queue.hpp"
 #include "../../src/services/output_queue.hpp"
+#include "../../src/services/message_validator.hpp"
 
 #include "../../src/utils/compressor.hpp"
 #include "../../src/utils/type_converter.hpp"
@@ -277,6 +278,141 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
     BOOST_CHECK_EQUAL(tx_id, encoded_tx_id);
 
     storage->deleteAllDirectory();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
+  BOOST_AUTO_TEST_CASE(validate) {
+    json msg_join_json = R"({
+      "sID": "UAABACACAAE=",
+      "time": "1543323592",
+      "ver": "1020181127",
+      "cID": "AAAAAAAAAAE="
+    })"_json;
+    msg_join_json["time"] = Time::now();
+
+    json msg_response_1_json = R"({
+      "sID": "UAABACACAAE=",
+      "time": "1543323592",
+      "cert": "-----BEGIN CERTIFICATE-----\nMIIDLDCCAhQCBgEZlK1CPjA....\n-----END CERTIFICATE-----",
+      "sN": "luLSQgVDnMyZjkAh8h2HNokaY1Oe9Md6a4VpjcdGgzs=",
+      "dhx": "92943e52e02476bd1a4d74c2498db3b01c204f29a32698495b4ed0a274e12294",
+      "dhy": "96e2d24205439ccc998e4021f21d8736891a63539ef4c77a6b85698dc746833b",
+      "sig": "QWVMP1UfUJIemaLFqnXvQfGqghVCmYH0yXo1/g5hUWAbouuXdTI/O7Gkgz3C5kXhnIWZ+dHp...."
+    })"_json;
+    msg_response_1_json["time"] = Time::now();
+
+    json msg_success_json = R"({
+      "sID": "UAABACACAAE=",
+      "time": "1543323592",
+      "val": true
+    })"_json;
+    msg_success_json["time"] = Time::now();
+
+    json msg_tx_json = R"({
+      "txid": "Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg=",
+      "time": "1543323592",
+      "rID": "AAAAAAAAAAE=",
+      "type": "CERTIFICATES",
+      "content": [
+          "UAABACACAAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----",
+          "UAABACACEAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----",
+          "UAABACCCAAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----"
+      ],
+      "rSig": "SM49AwEHA0IABBXqXQz72KPYPp9lwiQeqKaO9MF313icIj8GC2Il0Cy6QuDAiEC....."
+    })"_json;
+    msg_tx_json["time"] = Time::now();
+
+    json msg_ssig_json = R"({
+      "sID": "UAABACACAAE=",
+      "time": "1543323592",
+      "sig": "QWVMP1UfUJIemaLFqnXvQfGqghVCmYH0yXo1/g5hUWAbouuXdTI/O7Gkgz3C5kXhnIWZ+dHp...."
+    })"_json;
+    msg_ssig_json["time"] = Time::now();
+
+    json msg_ping_json = R"({
+      "mID": "AAAAAAAAAAE=",
+      "time": "1543323592",
+      "sCnt": "25",
+      "stat": "p"
+    })"_json;
+    msg_ping_json["time"] = Time::now();
+
+    json msg_up_json = R"({
+      "mID": "AAAAAAAAAAE=",
+      "time": "1543323592",
+      "ver": "1020181127",
+      "cID": "AAAAAAAAAAE="
+    })"_json;
+    msg_up_json["time"] = Time::now();
+
+    json msg_req_check_json = R"({
+      "sender": "AAAAAAAAAAE=",
+      "time": "1543323592",
+      "dID": "AAAAAAAAAAE=",
+      "txid": "Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg="
+    })"_json;
+    msg_req_check_json["time"] = Time::now();
+
+    json msg_block_json = R"({
+      "mID": "AAAAAAAAAAE=",
+      "blockraw": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "tx":[
+        {
+          "txid": "Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg=",
+          "time": "1543323592",
+          "rID": "AAAAAAAAAAE=",
+          "type": "CERTIFICATES",
+          "content": [
+            "UAABACACAAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----",
+            "UAABACACEAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----",
+            "UAABACCCAAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----"
+          ],
+          "rSig": "SM49AwEHA0IABBXqXQz72KPYPp9lwiQeqKaO9MF313icIj8GC2Il0Cy6QuDAiEC....."
+        },
+        {
+          "txid": "Av0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg=",
+          "time": "1543323592",
+          "rID": "AAAAAAAAAAE=",
+          "type": "CERTIFICATES",
+          "content": [
+            "UAABACACAAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----",
+            "UAABACACEAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----",
+            "UAABACCCAAE=","-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----"
+          ],
+          "rSig": "SM49AwEHA0IABBXqXQz72KPYPp9lwiQeqKaO9MF313icIj8GC2Il0Cy6QuDAiEC....."
+        }
+      ]
+    })"_json;
+    msg_block_json["tx"][0]["time"] = Time::now();
+    msg_block_json["tx"][1]["time"] = Time::now();
+
+    json msg_req_block_json = R"({
+      "mID": "AAAAAAAAAAE=",
+      "time": "1543323592",
+      "mCert": "-----BEGIN CERTIFICATE-----\nMIIDLDCCAhQCBgEZlK1CPjA....\n-----END CERTIFICATE-----",
+      "hgt": "-1",
+      "mSig": "vQPcP1sloKtQzEP+cOgYwbf0F3QhblPsABOtJrq8nNAEXtibe5J/9B4d4t920JLnQsbZtSMHo...."
+    })"_json;
+    msg_req_block_json["time"] = Time::now();
+
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_JOIN, msg_join_json), true);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_RESPONSE_1, msg_response_1_json), true);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_SUCCESS, msg_success_json), true);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_TX, msg_tx_json), true);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_SSIG, msg_ssig_json), true);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_PING, msg_ping_json), true);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_UP, msg_up_json), true);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_CHECK, msg_req_check_json), true);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_BLOCK, msg_block_json), true);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_BLOCK, msg_req_block_json), true);
+
+    msg_join_json["time"] = to_string(stoll(Time::now()) + config::JOIN_TIMEOUT_SEC);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_JOIN, msg_join_json), false);
+
+    msg_response_1_json["time"] = to_string(stoll(Time::now()) + config::MAX_WAIT_TIME);
+    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_RESPONSE_1, msg_response_1_json), false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
