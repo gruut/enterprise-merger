@@ -4,23 +4,27 @@
 #include "src/services/setting.hpp"
 #include "src/services/argv_parser.hpp"
 
+#include "easy_logging.hpp"
+
 using namespace std;
 using namespace gruut;
 using namespace nlohmann;
 
 int main(int argc, char *argv[]) {
 
+  el::Loggers::getLogger("MAIN");
+
   ArgvParser argv_parser;
   json setting_json = argv_parser.parse(argc,argv);
   if(setting_json.empty()) {
-    cout << "Setting file is empty or invalid path was given." << endl;
+    CLOG(ERROR, "MAIN") << "Setting file is empty or invalid path was given";
     return -1;
   }
 
   auto setting = Setting::getInstance();
 
   if(!setting->setJson(setting_json)) {
-    cout << "Setting file is not a valid json " << endl;
+    CLOG(ERROR, "MAIN") << "Setting file is not a valid JSON";
     return -2;
   }
 

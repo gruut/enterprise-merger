@@ -11,6 +11,8 @@
 #include "../utils/template_singleton.hpp"
 #include "../utils/type_converter.hpp"
 
+#include "easy_logging.hpp"
+
 namespace gruut {
 using namespace nlohmann;
 using namespace nlohmann::json_schema_draft4;
@@ -38,11 +40,9 @@ struct MergerInfo {
 const json SCHEMA_SETTING = R"(
 {
   "title": "Setting",
-  "description": "Self, LocalChain, GA, SE, MG의 기본 Setting",
   "type": "object",
   "properties": {
     "Self": {
-      "description": "Self의 id, address, port, sk",
       "type":"object",
       "properties" : {
         "id" : {"type":"string"},
@@ -58,7 +58,6 @@ const json SCHEMA_SETTING = R"(
       ]
     },
     "LocalChain": {
-      "description": "LocalChain의 id, name",
       "type":"object",
       "properties" : {
         "id" : {"type":"string"},
@@ -70,7 +69,6 @@ const json SCHEMA_SETTING = R"(
       ]
     },
     "GA": {
-      "description": "Gruut Authority의 id, address, cert",
       "type":"object",
       "properties" : {
         "id" : {"type":"string"},
@@ -84,7 +82,6 @@ const json SCHEMA_SETTING = R"(
       ]
     },
     "SE": {
-      "description": "Service Endpoint의 id, address, cert",
       "type":"array",
       "items":{
         "type":"object",
@@ -101,7 +98,6 @@ const json SCHEMA_SETTING = R"(
       }
     },
     "MG": {
-      "description": "Merger의 id, address, port, cert",
       "type":"array",
       "items":{
         "type":"object",
@@ -148,11 +144,14 @@ private:
 
 public:
   Setting()
-      : m_port(config::DEFAULT_PORT_NUM), m_db_path(config::DEFAULT_DB_PATH) {}
+      : m_port(config::DEFAULT_PORT_NUM), m_db_path(config::DEFAULT_DB_PATH) {
+    el::Loggers::getLogger("SETT");
+  }
 
   Setting(json &setting_json) {
+    el::Loggers::getLogger("SETT");
     if (!setJson(setting_json)) {
-      std::cout << "error on parsing setting json" << std::endl;
+      CLOG(ERROR, "SETT") << "Failed to parse setting JSON";
     }
   }
 

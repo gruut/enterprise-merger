@@ -10,9 +10,14 @@
 #include "../utils/type_converter.hpp"
 #include "message_proxy.hpp"
 
+#include "easy_logging.hpp"
+
 using namespace std;
 
 namespace gruut {
+
+BlockGenerator::BlockGenerator() { el::Loggers::getLogger("BGEN"); }
+
 PartialBlock
 BlockGenerator::generatePartialBlock(sha256 &merkle_root,
                                      vector<Transaction> &transactions) {
@@ -156,9 +161,8 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
 
   storage->saveBlock(block_raw, block_header, block_body);
 
-  cout << "=========================== BGT: BLOCK GENERATED (height="
-       << partial_block.height << ",size=" << partial_block.transactions.size()
-       << ")" << endl;
+  CLOG(INFO, "BGEN") << "BLOCK GENERATED (height=" << partial_block.height
+                     << ",size=" << partial_block.transactions.size() << ")";
 
   // setp-6) send blocks to others
 

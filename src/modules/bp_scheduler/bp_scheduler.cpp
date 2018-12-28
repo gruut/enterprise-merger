@@ -1,6 +1,8 @@
 #include "bp_scheduler.hpp"
 #include "../../application.hpp"
 
+#include "easy_logging.hpp"
+
 namespace gruut {
 
 BpScheduler::BpScheduler() {
@@ -15,6 +17,8 @@ BpScheduler::BpScheduler() {
   auto &io_service = Application::app().getIoService();
   m_timer.reset(new boost::asio::deadline_timer(io_service));
   m_lock_timer.reset(new boost::asio::deadline_timer(io_service));
+
+  el::Loggers::getLogger("BPSC");
 }
 
 void BpScheduler::start() {
@@ -171,16 +175,18 @@ void BpScheduler::lockStatusloop() {
   boost::posix_time::ptime lock_time =
       boost::posix_time::from_time_t(next_lock_time);
 
-  cout << "BPS: lockStatus(" << next_lock_time << ")" << endl << flush;
+  CLOG(INFO, "BPSC") << "called lockStatus (time=" << next_lock_time << ")";
 
   m_lock_timer->expires_at(lock_time);
   m_lock_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
+      CLOG(INFO, "BPSC") << "LockTimer ABORTED";
     } else if (ec.value() == 0) {
       postLockJob();
       lockStatusloop();
     } else {
-      throw;
+      CLOG(ERROR, "BPSC") << ec.message();
+      // throw;
     }
   });
 }
@@ -205,11 +211,13 @@ void BpScheduler::sendPingloop() {
   m_timer->expires_at(ping_time);
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
+      CLOG(INFO, "BPSC") << "PingTimer ABORTED";
     } else if (ec.value() == 0) {
       postSendPingJob();
       sendPingloop();
     } else {
-      throw;
+      CLOG(ERROR, "BPSC") << ec.message();
+      // throw;
     }
   });
 }
@@ -235,8 +243,9 @@ void BpScheduler::postSendPingJob() {
           BpStatus::IDLE; // It was IDLE, even I said ERROR_ON_SIGNERS.
     }
 
-    cout << "BPS: sendPing(" << m_my_mid_b64 << "," << num_signers << ","
-         << statusToString(m_current_status) << ")" << endl;
+    CLOG(INFO, "BPSC") << "Send MSG_PING (" << m_my_mid_b64 << ","
+                       << num_signers << "," << statusToString(m_current_status)
+                       << ")";
 
     OutputMsgEntry output_msg;
     output_msg.type = MessageType::MSG_PING;

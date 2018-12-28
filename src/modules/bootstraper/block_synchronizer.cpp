@@ -2,6 +2,8 @@
 #include "../../application.hpp"
 #include "../../services/message_proxy.hpp"
 
+#include "easy_logging.hpp"
+
 namespace gruut {
 
 BlockSynchronizer::BlockSynchronizer() {
@@ -17,11 +19,13 @@ BlockSynchronizer::BlockSynchronizer() {
   auto setting = Setting::getInstance();
 
   m_my_id = setting->getMyId();
+
+  el::Loggers::getLogger("BSYN");
 }
 
 bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
-  cout << "BSYNC: pushMsgToBlockList()" << endl;
+  CLOG(INFO, "BSYN") << "called pushMsgToBlockList()";
 
   std::string sender_id_b64 = input_msg_entry.body["mID"].get<std::string>();
 
@@ -31,12 +35,15 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
   nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
 
-  if (block_json.empty())
+  if (block_json.empty()) {
+    CLOG(ERROR, "BSYN") << "Block dropped (invalid block)";
     return false;
+  }
 
   int block_hgt = stoi(block_json["hgt"].get<std::string>());
 
   if (block_hgt <= m_my_last_height) {
+    CLOG(INFO, "BSYN") << "Block dropped (old block)";
     return false;
   }
 
@@ -69,6 +76,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
     m_block_list_mutex.unlock();
   } else {
+    CLOG(ERROR, "BSYN") << "Block dropped (unknown)";
     return false;
   }
 
@@ -79,8 +87,6 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 }
 
 bool BlockSynchronizer::sendBlockRequest(int height) {
-
-  cout << "BSYNC: sendBlockRequest()" << endl;
 
   std::vector<id_type> receivers = {};
 
@@ -114,6 +120,8 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
   msg_req_block.body["hgt"] = std::to_string(height);
   msg_req_block.body["mSig"] = "";
   msg_req_block.receivers = receivers;
+
+  CLOG(INFO, "BSYN") << "send MSG_REQ_BLOCK (" << height << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_req_block);
 
@@ -278,10 +286,11 @@ void BlockSynchronizer::blockSyncControl() {
       boost::posix_time::milliseconds(config::SYNC_CONTROL_INTERVAL));
   m_sync_ctrl_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
+      CLOG(INFO, "BSYN") << "CtrlTimer ABORTED";
     } else if (ec.value() == 0) {
       blockSyncControl();
     } else {
-      std::cout << "ERROR: " << ec.message() << std::endl;
+      CLOG(ERROR, "BSYN") << ec.message();
       // throw;
     }
   });
@@ -321,7 +330,7 @@ void BlockSynchronizer::messageFetch() {
     if (input_msg_entry.type == MessageType::MSG_NULL)
       return;
 
-    std::cout << "MSG IN: " << (int)input_msg_entry.type << std::endl;
+    CLOG(INFO, "BSYN") << "MSG IN: " << (int)input_msg_entry.type;
 
     if (checkMsgFromOtherMerger(input_msg_entry.type)) {
       m_sync_alone = false; // Wow! I am not alone!
@@ -347,10 +356,11 @@ void BlockSynchronizer::messageFetch() {
       boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTERVAL));
   m_msg_fetching_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
+      CLOG(INFO, "BSYN") << "FetchingTimer ABORTED";
     } else if (ec.value() == 0) {
       messageFetch();
     } else {
-      std::cout << "ERROR: " << ec.message() << std::endl;
+      CLOG(ERROR, "BSYN") << ec.message();
       // throw;
     }
   });
@@ -358,7 +368,7 @@ void BlockSynchronizer::messageFetch() {
 
 void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 
-  cout << "BSYNC: startBlockSync()" << endl;
+  CLOG(INFO, "BSYN") << "called startBlockSync()";
 
   m_finish_callback = std::move(callback);
 

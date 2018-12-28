@@ -20,7 +20,7 @@ void MergerServer::runServer(const std::string &port_num) {
   m_completion_queue = builder.AddCompletionQueue();
   m_server = builder.BuildAndStart();
 
-  std::cout << "MGS: Server listening on " << server_address << std::endl;
+  CLOG(INFO, "MSVR") << "Server listening on " << server_address;
 
   new RecvFromMerger(&m_merger_service, m_completion_queue.get());
   new RecvFromSE(&m_se_service, m_completion_queue.get());
@@ -43,8 +43,7 @@ void MergerServer::recvMessage() {
         continue;
       static_cast<CallData *>(tag)->proceed();
     } else {
-      std::cout << "MGS: INPUTQUEUE (" << m_input_queue->size() << ")"
-                << std::endl;
+      CLOG(INFO, "MSVR") << "#InputQueue = " << m_input_queue->size();
       std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
   }
@@ -145,8 +144,8 @@ void OpenChannel::proceed() {
 
   case RpcCallStatus::WAIT: {
     if (m_context.IsCancelled()) {
-      std::cout << "MGS: Disconnected with signer ID : " << m_signer_id_b64
-                << std::endl;
+      CLOG(INFO, "MSVR") << "Disconnected with signer (" << m_signer_id_b64
+                         << ")";
       MessageHandler msg_handler;
       msg_handler.genInternalMsg(MessageType::MSG_LEAVE, m_signer_id_b64);
       delete this;

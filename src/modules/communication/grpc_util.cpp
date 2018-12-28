@@ -8,6 +8,8 @@
 #include <botan-2/botan/mac.h>
 #include <cstring>
 
+#include "easy_logging.hpp"
+
 namespace gruut {
 std::string
 HeaderController::attachHeader(std::string &compressed_json,
@@ -81,6 +83,8 @@ bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {
   using nlohmann::json;
   using nlohmann::json_schema_draft4::json_validator;
 
+  el::Loggers::getLogger("JVAL");
+
   json_validator schema_validator;
   schema_validator.set_root_schema(MessageSchema::getSchema(msg_type));
 
@@ -88,8 +92,7 @@ bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {
     schema_validator.validate(json_object);
     return true;
   } catch (const std::exception &e) {
-    std::cout << "JsonValidator: validateSchema() - Validation failed : "
-              << e.what() << std::endl;
+    CLOG(ERROR, "JVAL") << "Validation failed - " << e.what();
     return false;
   }
 }

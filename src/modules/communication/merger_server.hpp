@@ -12,6 +12,9 @@
 #include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
+
+#include "easy_logging.hpp"
+
 using namespace grpc;
 using namespace grpc_merger;
 using namespace grpc_se;
@@ -21,7 +24,10 @@ namespace gruut {
 
 class MergerServer {
 public:
-  MergerServer() { m_input_queue = InputQueueAlt::getInstance(); }
+  MergerServer() {
+    m_input_queue = InputQueueAlt::getInstance();
+    el::Loggers::getLogger("MSVR");
+  }
   ~MergerServer() {
     m_server->Shutdown();
     m_completion_queue->Shutdown();

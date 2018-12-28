@@ -12,6 +12,8 @@
 #include "signature_requester.hpp"
 #include "signer_pool.hpp"
 
+#include "easy_logging.hpp"
+
 using namespace gruut::config;
 
 namespace gruut {
@@ -21,6 +23,7 @@ SignatureRequester::SignatureRequester() {
   m_check_timer.reset(new boost::asio::deadline_timer(io_service));
   m_collect_timer.reset(new boost::asio::deadline_timer(io_service));
   m_block_gen_strand.reset(new boost::asio::io_service::strand(io_service));
+  el::Loggers::getLogger("SIGR");
 }
 
 void SignatureRequester::checkProcess() {
@@ -36,12 +39,12 @@ void SignatureRequester::checkProcess() {
       config::SIGNATURE_COLLECTION_CHECK_INTERVAL));
   m_check_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
-      cout << "SGR: CheckTimer aborted" << endl;
+      CLOG(INFO, "SIGR") << "CheckTimer ABORTED";
     } else if (ec.value() == 0) {
       checkProcess();
     } else {
-      std::cout << "ERROR: " << ec.message() << std::endl;
-      throw;
+      CLOG(ERROR, "SIGR") << ec.message();
+      // throw;
     }
   });
 }
@@ -67,7 +70,7 @@ void SignatureRequester::requestSignatures() {
 
 void SignatureRequester::stopCollectTimerAndCreateBlock() {
 
-  cout << "=========================== SGR: START MAKING BLOCK" << endl;
+  CLOG(INFO, "SIGR") << "START MAKING BLOCK" << endl;
 
   m_is_collect_timer_running = false;
 
@@ -90,7 +93,7 @@ void SignatureRequester::stopCollectTimerAndCreateBlock() {
       BlockGenerator generator;
       generator.generateBlock(m_partial_block, signatures, m_merkle_tree);
     } else {
-      cout << "=========================== SGR: CANCEL MAKING BLOCK" << endl;
+      CLOG(ERROR, "SIGR") << "CANCEL MAKING BLOCK" << endl;
       signature_pool.clear();
     }
   }));
@@ -103,13 +106,13 @@ void SignatureRequester::startSignatureCollectTimer() {
       boost::posix_time::milliseconds(config::SIGNATURE_COLLECTION_INTERVAL));
   m_collect_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
-      cout << "SGR: SigCollectTimer aborted" << endl;
+      CLOG(INFO, "SIGR") << "SigCollectTimer ABORTED";
     } else if (ec.value() == 0) {
       if (m_is_collect_timer_running)
         stopCollectTimerAndCreateBlock();
     } else {
-      cout << "ERROR: " << ec.message() << endl;
-      throw;
+      CLOG(ERROR, "SIGR") << ec.message();
+      // throw;
     }
   });
 }

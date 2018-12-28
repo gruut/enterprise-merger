@@ -9,6 +9,8 @@
 #include "block_synchronizer.hpp"
 #include "nlohmann/json.hpp"
 
+#include "easy_logging.hpp"
+
 #include <boost/asio.hpp>
 #include <chrono>
 #include <functional>
@@ -31,6 +33,7 @@ public:
     auto setting = Setting::getInstance();
     m_my_id = setting->getMyId();
     m_my_localchain_id = setting->getLocalChainId();
+    el::Loggers::getLogger("BOOT");
   }
   ~BootStraper() = default;
 
@@ -39,7 +42,7 @@ public:
 private:
   void sendMsgUp() {
 
-    cout << "BST: sendMsgUp()" << endl;
+    CLOG(INFO, "BOOT") << "send MSG_UP";
 
     OutputMsgEntry output_msg;
     output_msg.type = MessageType::MSG_UP;
@@ -53,7 +56,7 @@ private:
 
   void startSync() {
 
-    cout << "BST: startSync()" << endl;
+    CLOG(INFO, "BOOT") << "Start block synchronization";
 
     m_block_synchronizer.startBlockSync(
         std::bind(&BootStraper::endSync, this, std::placeholders::_1));
@@ -61,13 +64,12 @@ private:
 
   void endSync(ExitCode exit_code) {
 
-    cout << "BST: endSync(" << (int)exit_code << ")" << endl;
+    CLOG(INFO, "BOOT") << "Ended block synchronization (" << (int)exit_code
+                       << ")";
 
     if (exit_code == ExitCode::NORMAL ||
         exit_code == ExitCode::ERROR_SYNC_ALONE) { // complete done or alone
       sendMsgUp();
-
-      // TODO : BPscheduler, MessageFetcher 구동
 
       stageOver(exit_code);
 

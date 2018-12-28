@@ -1,11 +1,16 @@
 #include "storage.hpp"
+#include "easy_logging.hpp"
 #include "setting.hpp"
 #include <botan-2/botan/asn1_time.h>
+
 namespace gruut {
+
 using namespace std;
 using namespace nlohmann;
 
 Storage::Storage() {
+  el::Loggers::getLogger("STRG");
+
   auto setting = Setting::getInstance();
   m_db_path = setting->getMyDbPath();
 
@@ -54,8 +59,13 @@ bool Storage::saveBlock(bytes &block_raw, json &block_header,
       putLatestBlockHeader(block_header) &&
       putBlockBody(block_body, block_id) && putBlockRaw(block_raw, block_id)) {
     commitBatchAll();
+
+    CLOG(INFO, "STRG") << "Success to save block";
+
     return true;
   }
+
+  CLOG(ERROR, "STRG") << "Failed to save block";
 
   rollbackBatchAll();
   return false;
@@ -339,7 +349,7 @@ bool Storage::errorOnCritical(const leveldb::Status &status) {
   if (status.ok())
     return true;
 
-  cout << "STG: FATAL ERROR on LevelDB " << status.ToString() << endl;
+  CLOG(FATAL, "STRG") << "FATAL ERROR on LevelDB " << status.ToString();
 
   // throw; // it terminates this program
   return false;
@@ -349,7 +359,7 @@ bool Storage::errorOn(const leveldb::Status &status) {
   if (status.ok())
     return true;
 
-  cout << "STG: ERROR on LevelDB " << status.ToString() << endl;
+  CLOG(ERROR, "STRG") << "ERROR on LevelDB " << status.ToString();
 
   return false;
 }
