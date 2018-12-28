@@ -89,20 +89,29 @@ public:
     }
   }
 
+  static bool contentValidate(json &content_json) {
+    if (!content_json.is_array())
+      return false;
+    for (size_t i = 0; i < content_json.size(); ++i) {
+      if (!content_json[i].is_string())
+        return false;
+    }
+    return true;
+  }
+
   static bool entryValidate(MessageType message_type,
                             vector<EntryName> message_type_info,
-                            json message_body_json) {
+                            json &message_body_json) {
     for (auto &item : message_type_info) {
       string entry_name = getEntryName(item);
       if (entry_name.empty())
         return false;
 
       if (item == EntryName::CONTENT) { // MSG_TX의 content 처리
-        if (message_body_json[entry_name].is_array() &&
-            message_body_json[entry_name].size() > 0)
-          continue;
-
-        return false;
+        if (!contentValidate(message_body_json[entry_name]))
+          return false;
+        
+        continue;
       }
 
       if (item == EntryName::TX) { // MSG_BLOCK의 tx 처리
@@ -163,7 +172,7 @@ public:
     return true;
   }
 
-  static bool validate(MessageType message_type, json message_body_json) {
+  static bool validate(MessageType message_type, json &message_body_json) {
     switch (message_type) {
     case MessageType::MSG_JOIN:
       return entryValidate(MessageType::MSG_JOIN, MSG_JOIN_INFO,

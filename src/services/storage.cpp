@@ -52,7 +52,7 @@ Storage::~Storage() {
 
 bool Storage::saveBlock(bytes &block_raw, json &block_header,
                         json &block_body) {
-  string block_id = block_header["bID"];
+  string block_id = block_header["bID"].get<string>();
 
   if (putBlockHeader(block_header, block_id) &&
       putBlockHeight(block_header, block_id) &&
