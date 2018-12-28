@@ -22,7 +22,8 @@ public:
 private:
   std::list<Transaction> m_transaction_pool;
 
-  std::mutex m_mutex;
+  std::mutex m_push_mutex;
+  std::mutex m_check_mutex;
 };
 } // namespace gruut
 #endif
