@@ -89,11 +89,11 @@ public:
     }
   }
 
-  static bool contentIdValidate(json content_json) {
+  static bool contentIdValidate(json &content_json) {
     if (!content_json.is_array())
       return false;
-    for (size_t i = 0; i < content_json.size(); i += 2) {
-      if (!idValidate(content_json[i].get<string>()))
+    for (size_t i = 0; i < content_json.size(); ++i) {
+      if (!content_json[i].is_string())
         return false;
     }
     return true;
@@ -101,7 +101,7 @@ public:
 
   static bool entryValidate(MessageType message_type,
                             vector<EntryName> message_type_info,
-                            json message_body_json) {
+                            json &message_body_json) {
     for (auto &item : message_type_info) {
       string entry_name = getEntryName(item);
       if (entry_name.empty())
@@ -172,7 +172,7 @@ public:
     return true;
   }
 
-  static bool validate(MessageType message_type, json message_body_json) {
+  static bool validate(MessageType message_type, json &message_body_json) {
     switch (message_type) {
     case MessageType::MSG_JOIN:
       return entryValidate(MessageType::MSG_JOIN, MSG_JOIN_INFO,

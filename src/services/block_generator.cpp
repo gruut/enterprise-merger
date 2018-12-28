@@ -64,7 +64,8 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
     prev_header_hash_b64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
   } else {
     prev_header_id_b64 = std::get<0>(latest_block_info);
-    prev_header_hash_b64 = std::get<1>(latest_block_info);
+    prev_header_hash_b64 =
+        TypeConverter::toBase64Str(std::get<1>(latest_block_info));
   }
 
   std::vector<transaction_id_type> transaction_ids;
