@@ -22,10 +22,10 @@ public:
     json j_partial_block;
 
     j_partial_block["time"] = Time::now();
-    j_partial_block["mID"] = TypeConverter::toBase64Str(block.merger_id);
-    j_partial_block["cID"] = TypeConverter::toBase64Str(block.chain_id);
+    j_partial_block["mID"] = TypeConverter::encodeBase64(block.merger_id);
+    j_partial_block["cID"] = TypeConverter::encodeBase64(block.chain_id);
     j_partial_block["txrt"] =
-        TypeConverter::toBase64Str(block.transaction_root);
+        TypeConverter::encodeBase64(block.transaction_root);
     j_partial_block["hgt"] = block.height;
 
     vector<id_type> receivers_list;

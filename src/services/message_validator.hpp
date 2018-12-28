@@ -110,7 +110,7 @@ public:
       if (item == EntryName::CONTENT) { // MSG_TX의 content 처리
         if (!contentValidate(message_body_json[entry_name]))
           return false;
-        
+
         continue;
       }
 

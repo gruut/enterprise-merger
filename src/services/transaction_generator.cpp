@@ -26,7 +26,7 @@ void TransactionGenerator::generate(vector<Signer> &signers) {
   std::vector<content_type> content_list;
   for (auto &signer : signers) {
     if (signer.isNew()) {
-      auto user_id_str = TypeConverter::toBase64Str(signer.user_id);
+      auto user_id_str = TypeConverter::encodeBase64(signer.user_id);
       content_list.emplace_back(user_id_str);
       content_list.emplace_back(signer.pk_cert);
     }

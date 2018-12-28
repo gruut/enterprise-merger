@@ -1,14 +1,17 @@
 #include "message_handler.hpp"
 #include "../../config/config.hpp"
 #include "../../utils/compressor.hpp"
+#include "../../utils/safe.hpp"
 #include "../../utils/time.hpp"
 #include "../../utils/type_converter.hpp"
+#include "easy_logging.hpp"
 #include "merger_client.hpp"
 
 namespace gruut {
 
 MessageHandler::MessageHandler() {
   m_input_queue = InputQueueAlt::getInstance();
+  el::Loggers::getLogger("MHDL");
 }
 
 void MessageHandler::unpackMsg(std::string &packed_msg,
@@ -25,7 +28,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
   }
   int body_size = getMsgBodySize(header);
   recv_id = header.sender_id;
-  std::string recv_str_id = TypeConverter::toBase64Str(recv_id);
+  std::string recv_str_id = TypeConverter::encodeBase64(recv_id);
 
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
     std::string msg = packed_msg.substr(0, config::HEADER_LENGTH + body_size);
@@ -117,16 +120,18 @@ nlohmann::json
 MessageHandler::getJson(CompressionAlgorithmType compression_type,
                         std::string &body) {
   nlohmann::json unpacked_body;
-  switch (compression_type) {
-  case CompressionAlgorithmType::LZ4: {
-    std::string origin_data = Compressor::decompressData(body);
-    unpacked_body = nlohmann::json::parse(origin_data);
-  } break;
-  case CompressionAlgorithmType::NONE: {
-    unpacked_body = nlohmann::json::parse(body);
-  } break;
-  default:
-    break;
+  if (!body.empty()) {
+    switch (compression_type) {
+    case CompressionAlgorithmType::LZ4: {
+      std::string origin_data = Compressor::decompressData(body);
+      unpacked_body = Safe::parseJson(origin_data);
+    } break;
+    case CompressionAlgorithmType::NONE: {
+      unpacked_body = Safe::parseJson(body);
+    } break;
+    default:
+      break;
+    }
   }
   return unpacked_body;
 }

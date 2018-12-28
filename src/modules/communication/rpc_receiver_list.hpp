@@ -39,7 +39,7 @@ public:
   setReqSsig(id_type &recv_id,
              ServerAsyncReaderWriter<GrpcMsgReqSsig, Identity> *req_sig_rpc,
              void *tag) {
-    string recv_id_b64 = TypeConverter::toBase64Str(recv_id);
+    string recv_id_b64 = TypeConverter::encodeBase64(recv_id);
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list[recv_id_b64].send_req_ssig = req_sig_rpc;
     m_receiver_list[recv_id_b64].tag_identity = tag;
@@ -49,7 +49,7 @@ public:
   void setChanllenge(id_type &recv_id,
                      ServerAsyncResponseWriter<GrpcMsgChallenge> *challenge,
                      void *tag, RpcCallStatus *status) {
-    string recv_id_b64 = TypeConverter::toBase64Str(recv_id);
+    string recv_id_b64 = TypeConverter::encodeBase64(recv_id);
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list[recv_id_b64].send_challenge = challenge;
     m_receiver_list[recv_id_b64].tag_join = tag;
@@ -60,7 +60,7 @@ public:
   void setResponse2(id_type &recv_id,
                     ServerAsyncResponseWriter<GrpcMsgResponse2> *response2,
                     void *tag, RpcCallStatus *status) {
-    string recv_id_b64 = TypeConverter::toBase64Str(recv_id);
+    string recv_id_b64 = TypeConverter::encodeBase64(recv_id);
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list[recv_id_b64].send_response2 = response2;
     m_receiver_list[recv_id_b64].tag_dhkeyex = tag;
@@ -71,7 +71,7 @@ public:
   void setAccept(id_type &recv_id,
                  ServerAsyncResponseWriter<GrpcMsgAccept> *accept, void *tag,
                  RpcCallStatus *status) {
-    string recv_id_b64 = TypeConverter::toBase64Str(recv_id);
+    string recv_id_b64 = TypeConverter::encodeBase64(recv_id);
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list[recv_id_b64].send_accept = accept;
     m_receiver_list[recv_id_b64].tag_keyexfinished = tag;
@@ -80,7 +80,7 @@ public:
   }
 
   SignerRpcInfo getSignerRpcInfo(id_type &recv_id) {
-    string recv_id_b64 = TypeConverter::toBase64Str(recv_id);
+    string recv_id_b64 = TypeConverter::encodeBase64(recv_id);
     std::lock_guard<std::mutex> lock(m_mutex);
     SignerRpcInfo rpc_info = m_receiver_list[recv_id_b64];
     m_mutex.unlock();

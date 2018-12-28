@@ -62,7 +62,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_CHALLENGE;
-    output_message.body["mID"] = TypeConverter::toBase64Str(m_my_id);
+    output_message.body["mID"] = TypeConverter::encodeBase64(m_my_id);
     output_message.body["time"] = to_string(current_time);
     output_message.body["mN"] = m_join_temp_table[recv_id_b64]->merger_nonce;
     output_message.receivers = receiver_list;
@@ -124,7 +124,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_RESPONSE_2;
-    output_message.body["mID"] = TypeConverter::toBase64Str(m_my_id);
+    output_message.body["mID"] = TypeConverter::encodeBase64(m_my_id);
     output_message.body["time"] = to_string(current_time);
     output_message.body["cert"] = m_my_cert;
     output_message.body["dhx"] = dhx;
@@ -162,7 +162,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_ACCEPT;
-    output_message.body["mID"] = TypeConverter::toBase64Str(m_my_id);
+    output_message.body["mID"] = TypeConverter::encodeBase64(m_my_id);
     output_message.body["time"] = Time::now();
     output_message.body["val"] = true;
     output_message.receivers = receiver_list;
@@ -197,7 +197,7 @@ bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
 
   string cert_in = message_body_json["cert"].get<string>();
 
-  string signer_id_b64 = TypeConverter::toBase64Str(signer_id);
+  string signer_id_b64 = TypeConverter::encodeBase64(signer_id);
 
   BytesBuilder msg_builder;
   msg_builder.appendB64(m_join_temp_table[signer_id_b64]->merger_nonce);
@@ -224,7 +224,7 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
   msg_builder.appendHex(dhy);
   msg_builder.append(timestamp);
 
-  return TypeConverter::toBase64Str(
+  return TypeConverter::encodeBase64(
       RSA::doSign(rsa_sk_pem, msg_builder.getBytes(), true, rsa_sk_pass));
 }
 
@@ -245,7 +245,7 @@ void SignerPoolManager::sendErrorMessage(vector<signer_id_type> &receiver_list,
 
   OutputMsgEntry output_message;
   output_message.type = MessageType::MSG_ERROR;
-  output_message.body["sender"] = TypeConverter::toBase64Str(m_my_id); // my_id
+  output_message.body["sender"] = TypeConverter::encodeBase64(m_my_id); // my_id
   output_message.body["time"] = Time::now();
   output_message.body["type"] = std::to_string(static_cast<int>(error_type));
   output_message.body["info"] = info;

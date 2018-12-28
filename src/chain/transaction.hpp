@@ -64,11 +64,11 @@ public:
 
   nlohmann::json getJson() {
     return nlohmann::json{
-        {"txID", TypeConverter::toBase64Str(m_transaction_id)},
+        {"txID", TypeConverter::encodeBase64(m_transaction_id)},
         {"time", to_string(m_sent_time)},
-        {"rID", TypeConverter::toBase64Str(m_requestor_id)},
+        {"rID", TypeConverter::encodeBase64(m_requestor_id)},
         {"type", txTypeToStr(m_transaction_type)},
-        {"rSig", TypeConverter::toBase64Str(m_signature)},
+        {"rSig", TypeConverter::encodeBase64(m_signature)},
         {"content", m_content_list}};
   }
 

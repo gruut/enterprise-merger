@@ -55,8 +55,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
     temp.hash = Sha256::hash(block_raw);
     temp.block_raw = std::move(block_raw);
     temp.block_json = std::move(block_json);
-    temp.txs =
-        nlohmann::json::parse(input_msg_entry.body["tx"].get<std::string>());
+    temp.txs = Safe::parseJson(input_msg_entry.body["tx"].get<std::string>());
 
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
 
@@ -71,7 +70,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
     it_map->second.block_raw = std::move(block_raw);
     it_map->second.block_json = std::move(block_json);
     it_map->second.txs =
-        nlohmann::json::parse(input_msg_entry.body["tx"].get<std::string>());
+        Safe::parseJson(input_msg_entry.body["tx"].get<std::string>());
     it_map->second.mtree = {};
 
     m_block_list_mutex.unlock();
@@ -114,7 +113,7 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
   OutputMsgEntry msg_req_block;
 
   msg_req_block.type = MessageType::MSG_REQ_BLOCK;
-  msg_req_block.body["mID"] = TypeConverter::toBase64Str(m_my_id); // my_id
+  msg_req_block.body["mID"] = TypeConverter::encodeBase64(m_my_id); // my_id
   msg_req_block.body["time"] = Time::now();
   msg_req_block.body["mCert"] = "";
   msg_req_block.body["hgt"] = std::to_string(height);
@@ -156,7 +155,7 @@ void BlockSynchronizer::saveBlock(int height) {
   std::vector<std::string> mtree_nodes_b64(num_txs);
 
   for (size_t i = 0; i < num_txs; ++i) { // to save data, we need only digests
-    mtree_nodes_b64[i] = TypeConverter::toBase64Str(it_map->second.mtree[i]);
+    mtree_nodes_b64[i] = TypeConverter::encodeBase64(it_map->second.mtree[i]);
   }
 
   nlohmann::json block_body;
@@ -217,7 +216,7 @@ void BlockSynchronizer::blockSyncControl() {
             m_block_list_mutex.unlock();
 
             m_my_last_blk_hash_b64 =
-                TypeConverter::toBase64Str(blk_item.second.hash);
+                TypeConverter::encodeBase64(blk_item.second.hash);
             m_my_last_height = blk_item.first;
 
             m_last_task_time = Time::now_int();
@@ -306,7 +305,7 @@ void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry) {
 
   OutputMsgEntry output_msg;
   output_msg.type = MessageType::MSG_ERROR;
-  output_msg.body["sender"] = TypeConverter::toBase64Str(m_my_id); // my_id
+  output_msg.body["sender"] = TypeConverter::encodeBase64(m_my_id); // my_id
   output_msg.body["time"] = Time::now();
   output_msg.body["type"] =
       std::to_string(static_cast<int>(ErrorMsgType::MERGER_BOOTSTRAP));

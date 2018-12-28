@@ -5,6 +5,7 @@
 #include "../utils/bytes_builder.hpp"
 #include "../utils/compressor.hpp"
 #include "../utils/rsa.hpp"
+#include "../utils/safe.hpp"
 #include "../utils/sha256.hpp"
 #include "easy_logging.hpp"
 #include "setting.hpp"
@@ -49,11 +50,9 @@ public:
       return block_json;
     }
 
-    try {
-      block_json = nlohmann::json::parse(block_json_str);
-    } catch (json::parse_error &e) {
-      CLOG(ERROR, "BVAL") << "Invalid JSON structure - " << e.what();
-    }
+    block_json = Safe::parseJson(block_json_str);
+    if (block_json.empty())
+      CLOG(ERROR, "BVAL") << "Invalid JSON structure";
 
     return block_json;
   }

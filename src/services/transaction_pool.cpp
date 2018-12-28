@@ -14,10 +14,12 @@ bool TransactionPool::isDuplicated(transaction_id_type &&tx_id) {
   return isDuplicated(tx_id);
 }
 bool TransactionPool::isDuplicated(transaction_id_type &tx_id) {
-  std::lock_guard<std::mutex> guard(m_check_mutex);
-  return (m_transaction_pool.end() !=
-          std::find_if(m_transaction_pool.begin(), m_transaction_pool.end(),
-                       [&](Transaction &tx) { return tx.getId() == tx_id; }));
+  auto start_pos = m_transaction_pool.begin();
+  auto end_pos = m_transaction_pool.end();
+  auto find_pos = std::find_if(
+      start_pos, end_pos, [&](Transaction &tx) { return tx.getId() == tx_id; });
+
+  return (find_pos != end_pos);
 }
 
 bool TransactionPool::pop(Transaction &transaction) {

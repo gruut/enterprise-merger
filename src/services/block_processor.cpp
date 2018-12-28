@@ -58,7 +58,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_ERROR;
     output_message.body["sender"] =
-        TypeConverter::toBase64Str(m_my_id); // my_id
+        TypeConverter::encodeBase64(m_my_id); // my_id
     output_message.body["time"] = Time::now();
     output_message.body["type"] =
         std::to_string(static_cast<int>(ErrorMsgType::BSYNC_NO_BLOCK));
@@ -72,9 +72,9 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   OutputMsgEntry msg_block;
   msg_block.type = MessageType::MSG_BLOCK;
-  msg_block.body["mID"] = TypeConverter::toBase64Str(m_my_id);
+  msg_block.body["mID"] = TypeConverter::encodeBase64(m_my_id);
   msg_block.body["blockraw"] =
-      TypeConverter::toBase64Str(std::get<1>(saved_block));
+      TypeConverter::encodeBase64(std::get<1>(saved_block));
   msg_block.body["tx"] = std::get<2>(saved_block);
   msg_block.receivers = {recv_id};
 
@@ -104,7 +104,7 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   std::vector<std::string> mtree_nodes_b64(num_txs);
 
   for (size_t i = 0; i < num_txs; ++i) {
-    mtree_nodes_b64[i] = TypeConverter::toBase64Str(mtree_nodes[i]);
+    mtree_nodes_b64[i] = TypeConverter::encodeBase64(mtree_nodes[i]);
   }
 
   nlohmann::json block_body;
@@ -137,7 +137,7 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   }
 
   msg_res_check.type = MessageType::MSG_RES_CHECK;
-  msg_res_check.body["mID"] = TypeConverter::toBase64Str(my_mid);
+  msg_res_check.body["mID"] = TypeConverter::encodeBase64(my_mid);
   msg_res_check.body["time"] = to_string(timestamp);
   msg_res_check.body["blockID"] = proof.block_id;
   msg_res_check.body["proof"] = proof_json;

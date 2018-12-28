@@ -46,10 +46,10 @@ private:
 
     OutputMsgEntry output_msg;
     output_msg.type = MessageType::MSG_UP;
-    output_msg.body["mID"] = TypeConverter::toBase64Str(m_my_id);
+    output_msg.body["mID"] = TypeConverter::encodeBase64(m_my_id);
     output_msg.body["time"] = Time::now();
     output_msg.body["ver"] = to_string(1);
-    output_msg.body["cID"] = TypeConverter::toBase64Str(m_my_localchain_id);
+    output_msg.body["cID"] = TypeConverter::encodeBase64(m_my_localchain_id);
 
     m_msg_proxy.deliverOutputMessage(output_msg);
   }

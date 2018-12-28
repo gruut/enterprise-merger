@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     StorageFixture storage_fixture;
     pair<string, int> hash_and_height = storage_fixture.m_storage->findLatestHashAndHeight();
 
-    BOOST_TEST(TypeConverter::toBase64Str(hash_and_height.first) == TypeConverter::toBase64Str(block_hash_2));
+    BOOST_TEST(TypeConverter::encodeBase64(hash_and_height.first) == TypeConverter::encodeBase64(block_hash_2));
     BOOST_TEST(hash_and_height.second == 2);
   }
 
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
       BOOST_TEST(proof.siblings[0].first == false);
       BOOST_TEST(proof.siblings[0].second == "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw=");
 
-      std::string root_val_b64 = TypeConverter::toBase64Str(storage_fixture.m_mtree_root_1);
+      std::string root_val_b64 = TypeConverter::encodeBase64(storage_fixture.m_mtree_root_1);
 
       BOOST_TEST(MerkleTree::isValidSiblings(proof,root_val_b64));
 
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
 
     auto latest_list = storage->findLatestTxIdList();
     auto tx_id = latest_list[0];
-    string encoded_tx_id = TypeConverter::toBase64Str(test_tx.getId());
+    string encoded_tx_id = TypeConverter::encodeBase64(test_tx.getId());
     BOOST_CHECK_EQUAL(tx_id, encoded_tx_id);
 
     storage->deleteAllDirectory();

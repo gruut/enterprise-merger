@@ -139,7 +139,7 @@ public:
     return to_string(num);
   }
 
-  template <typename T> inline static std::string toBase64Str(T &&t) {
+  template <typename T> inline static std::string encodeBase64(T &&t) {
     return Botan::base64_encode(vector<uint8_t>(begin(t), end(t)));
   }
 

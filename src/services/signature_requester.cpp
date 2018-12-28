@@ -70,7 +70,7 @@ void SignatureRequester::requestSignatures() {
 
 void SignatureRequester::stopCollectTimerAndCreateBlock() {
 
-  CLOG(INFO, "SIGR") << "START MAKING BLOCK" << endl;
+  CLOG(INFO, "SIGR") << "START MAKING BLOCK";
 
   m_is_collect_timer_running = false;
 
