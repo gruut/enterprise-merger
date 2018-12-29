@@ -3,6 +3,8 @@
 #include "http_client.hpp"
 #include "merger_server.hpp"
 
+#include "easy_logging.hpp"
+
 using grpc::health::v1::Health;
 using grpc::health::v1::HealthCheckRequest;
 using grpc::health::v1::HealthCheckResponse;
@@ -14,6 +16,8 @@ MergerClient::MergerClient() {
   m_connection_list = ConnectionList::getInstance();
   m_setting = Setting::getInstance();
   m_my_id = m_setting->getMyId();
+
+  el::Loggers::getLogger("MCLN");
 }
 
 void MergerClient::setup() {
@@ -60,10 +64,11 @@ void MergerClient::checkConnection() {
       boost::posix_time::seconds(config::CONN_CHECK_PERIOD));
   m_conn_check_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
+      CLOG(INFO, "MCLN") << "ConCheckTimer ABORTED";
     } else if (ec.value() == 0) {
       checkConnection();
     } else {
-      std::cout << "ERROR: " << ec.message() << std::endl;
+      CLOG(ERROR, "MCLN") << ec.message();
       // throw;
     }
   });
@@ -73,6 +78,8 @@ void MergerClient::sendMessage(MessageType msg_type,
                                std::vector<id_type> &receiver_list,
                                std::vector<std::string> &packed_msg_list,
                                OutputMsgEntry &output_msg) {
+
+  // CLOG(INFO, "MCLN") << "called sendMessage()";
 
   if (checkMergerMsgType(msg_type)) {
     sendToMerger(receiver_list, packed_msg_list[0]);
@@ -123,14 +130,20 @@ void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
 void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
                                 std::string &packed_msg) {
 
+  // CLOG(INFO, "MCLN") << "called sendToMerger()";
+
   MergerDataRequest request;
   request.set_data(packed_msg);
+
+  bool sent_somewhere = false;
 
   if (receiver_list.empty()) {
     for (auto &merger_info : m_setting->getMergerInfo()) {
       bool status = m_connection_list->getMergerStatus(merger_info.id);
-      if (status && m_my_id != merger_info.id)
+      if (status && m_my_id != merger_info.id) {
         sendMsgToMerger(merger_info, request);
+        sent_somewhere = true;
+      }
     }
   } else {
     for (auto &receiver_id : receiver_list) {
@@ -138,19 +151,23 @@ void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
         bool status = m_connection_list->getMergerStatus(merger_info.id);
         if (status && merger_info.id == receiver_id) {
           sendMsgToMerger(merger_info, request);
+          sent_somewhere = true;
           break;
         }
       }
     }
+  }
+
+  if (!sent_somewhere) {
+    CLOG(ERROR, "MCLN") << "Nowhere to sent message";
   }
 }
 
 void MergerClient::sendMsgToMerger(MergerInfo &merger_info,
                                    MergerDataRequest &request) {
 
-  std::cout << "MGC: sendToMerger("
-            << merger_info.address + ":" + merger_info.port << ") "
-            << std::endl;
+  CLOG(INFO, "MCLN") << "sendToMerger("
+                     << merger_info.address + ":" + merger_info.port << ") ";
 
   std::shared_ptr<ChannelCredentials> credential = InsecureChannelCredentials();
   std::shared_ptr<Channel> channel =
@@ -163,7 +180,7 @@ void MergerClient::sendMsgToMerger(MergerInfo &merger_info,
 
   Status status = stub->pushData(&context, request, &reply);
   if (!status.ok())
-    std::cout << "MGC: ERROR " << status.error_message() << std::endl;
+    CLOG(ERROR, "MCLN") << status.error_message();
 }
 
 void MergerClient::sendToSigner(MessageType msg_type,

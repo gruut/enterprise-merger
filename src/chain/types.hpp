@@ -91,7 +91,7 @@ enum class DBType : int {
   BLOCK_CERT
 };
 
-enum class BlockState { RECEIVED, TOSAVE, TODELETE, RETRIED };
+enum class BlockState { RECEIVED, TOSAVE, TODELETE, RETRIED, RESERVED };
 
 enum class ExitCode {
   NORMAL,

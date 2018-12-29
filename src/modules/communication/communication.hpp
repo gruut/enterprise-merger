@@ -11,6 +11,8 @@ public:
   Communication();
   void start() override;
 
+  inline bool isStarted() { return m_merger_server.isStarted(); }
+
 private:
   MergerServer m_merger_server;
   MergerClient m_merger_client;

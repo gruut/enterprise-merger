@@ -175,7 +175,7 @@ void BpScheduler::lockStatusloop() {
   boost::posix_time::ptime lock_time =
       boost::posix_time::from_time_t(next_lock_time);
 
-  CLOG(INFO, "BPSC") << "called lockStatus (time=" << next_lock_time << ")";
+  // CLOG(INFO, "BPSC") << "called lockStatus (time=" << next_lock_time << ")";
 
   m_lock_timer->expires_at(lock_time);
   m_lock_timer->async_wait([this](const boost::system::error_code &ec) {

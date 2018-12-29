@@ -25,17 +25,13 @@ public:
 
     nlohmann::json block_json = {};
 
-    union ByteToInt {
-      uint8_t b[4];
-      uint32_t t;
-    };
+    if (block_raw.size() <= 5) {
+      return block_json;
+    }
 
-    ByteToInt len_parse{};
-    len_parse.b[0] = block_raw[1];
-    len_parse.b[1] = block_raw[2];
-    len_parse.b[2] = block_raw[3];
-    len_parse.b[3] = block_raw[4];
-    size_t header_end = len_parse.t;
+    size_t header_end =
+        static_cast<size_t>(block_raw[1] << 24 | block_raw[2] << 16 |
+                            block_raw[3] << 8 | block_raw[4]);
 
     std::string block_header_comp(block_raw.begin() + 5,
                                   block_raw.begin() + header_end);

@@ -89,7 +89,7 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
 
 void TransactionCollector::turnOnTimer() {
 
-  CLOG(INFO, "TXCO") << "called turnOnTimer()";
+  // CLOG(INFO, "TXCO") << "called turnOnTimer()";
 
   m_timer_running = true;
 
@@ -102,7 +102,7 @@ void TransactionCollector::turnOnTimer() {
 
 void TransactionCollector::updateStatus() {
 
-  CLOG(INFO, "TXCO") << "called updateStatus()";
+  // CLOG(INFO, "TXCO") << "called updateStatus()";
 
   size_t current_slot = Time::now_int() / BP_INTERVAL;
   time_t next_slot_begin = (current_slot + 1) * BP_INTERVAL;

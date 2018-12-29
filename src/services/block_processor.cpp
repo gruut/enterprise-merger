@@ -8,7 +8,7 @@ BlockProcessor::BlockProcessor() {
   m_storage = Storage::getInstance();
   auto setting = Setting::getInstance();
   m_my_id = setting->getMyId();
-  el::Loggers::getLogger("BPU");
+  el::Loggers::getLogger("BPRO");
 }
 
 bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
@@ -41,7 +41,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
     if (!RSA::doVerify(entry.body["mCert"].get<std::string>(),
                        msg_builder.getString(), sig_builder.getBytes(), true)) {
 
-      CLOG(ERROR, "BPU") << "Invalid mSig on MSG_REQ_BLOCK";
+      CLOG(ERROR, "BPRO") << "Invalid mSig on MSG_REQ_BLOCK";
 
       return false;
     }
@@ -113,6 +113,9 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   block_body["mtree"] = mtree_nodes_b64;
 
   m_storage->saveBlock(block_raw, block_json, block_body);
+
+  CLOG(INFO, "BPRO") << "Block saved (height="
+                     << block_json["hgt"].get<std::string>() << ")";
 
   auto &tx_pool = Application::app().getTransactionPool();
   tx_pool.removeDuplicatedTransactions(tx_ids);

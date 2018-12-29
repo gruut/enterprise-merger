@@ -6,6 +6,7 @@
 #include "protos/protobuf_se.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
 #include "rpc_receiver_list.hpp"
+#include <atomic>
 #include <grpc/support/log.h>
 #include <grpcpp/ext/health_check_service_server_builder_option.h>
 #include <grpcpp/grpcpp.h>
@@ -34,6 +35,8 @@ public:
   }
   void runServer(const std::string &port_num);
 
+  inline bool isStarted() { return m_is_started; }
+
 private:
   std::unique_ptr<Server> m_server;
   std::unique_ptr<ServerCompletionQueue> m_completion_queue;
@@ -44,6 +47,7 @@ private:
   RpcReceiverList *m_rpc_receivers;
   InputQueueAlt *m_input_queue;
   void recvMessage();
+  std::atomic<bool> m_is_started{false};
 };
 
 class CallData {
