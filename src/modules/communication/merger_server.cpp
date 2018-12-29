@@ -20,6 +20,8 @@ void MergerServer::runServer(const std::string &port_num) {
   m_completion_queue = builder.AddCompletionQueue();
   m_server = builder.BuildAndStart();
 
+  m_is_started = true;
+
   CLOG(INFO, "MSVR") << "Server listening on " << server_address;
 
   new RecvFromMerger(&m_merger_service, m_completion_queue.get());
@@ -68,6 +70,8 @@ void RecvFromMerger::proceed() {
 
       MessageHandler message_handler;
       message_handler.unpackMsg(packed_msg, rpc_status, recv_id);
+
+      ConnectionList::getInstance()->setMergerStatus(recv_id, true);
 
       MergerDataReply m_reply;
       m_receive_status = RpcCallStatus::FINISH;

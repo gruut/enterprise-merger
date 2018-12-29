@@ -51,7 +51,7 @@ private:
   size_t m_my_last_height;
   std::string m_my_last_blk_hash_b64;
   merger_id_type m_my_id;
-  int m_first_recv_block_height{-1};
+  size_t m_first_recv_block_height{0};
 
   std::function<void(ExitCode)> m_finish_callback;
   std::map<size_t, RcvBlock> m_recv_block_list;
@@ -70,24 +70,17 @@ public:
   void startBlockSync(std::function<void(ExitCode)> callback);
 
 private:
+  void reserveBlockList(size_t begin, size_t end);
   bool pushMsgToBlockList(InputMsgEntry &input_msg_entry);
-
   bool sendBlockRequest(int height);
-
   void sendErrorToSigner(InputMsgEntry &input_msg_entry);
-
-  bool validateBlock(int height);
-
-  void saveBlock(int height);
-
+  bool validateBlock(size_t height);
+  void saveBlock(size_t height);
   void syncFinish();
-
   void blockSyncControl();
-
   void messageFetch();
-
   bool checkMsgFromOtherMerger(MessageType msg_type);
-
   bool checkMsgFromSigner(MessageType msg_type);
+  void updateTaskTime();
 };
 } // namespace gruut

@@ -33,16 +33,17 @@ constexpr size_t OUTQUEUE_MSG_FETCHER_INTERVAL = 100;
 constexpr size_t SIGNATURE_COLLECTION_INTERVAL = 3000;
 constexpr size_t SIGNATURE_COLLECTION_CHECK_INTERVAL = 500;
 
-constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 20;
+constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 10;
+constexpr size_t BOOTSTRAP_MAX_REQ_BLOCK_RETRY = 5;
+constexpr size_t BOOTSTRAP_MAX_TASK_WAIT_TIME = 10;
 
-constexpr size_t MAX_REQ_BLOCK_RETRY = 5;
 constexpr size_t MAX_WAIT_TIME = 5;
 
-constexpr int SYNC_CONTROL_INTERVAL = 500;
+constexpr size_t SYNC_CONTROL_INTERVAL = 1000;
 
-constexpr int AVAILABLE_INPUT_SIZE = 100;
+constexpr size_t AVAILABLE_INPUT_SIZE = 100;
 
-constexpr int CONN_CHECK_PERIOD = 10;
+constexpr size_t CONN_CHECK_PERIOD = 1;
 
 const std::string DEFAULT_PORT_NUM = "50051";
 const std::string DEFAULT_DB_PATH = "./db";
