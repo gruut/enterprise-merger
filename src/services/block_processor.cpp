@@ -25,6 +25,9 @@ bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
 }
 
 bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
+
+  CLOG(INFO, "BPRO") << "called handleMsgReqBlock()";
+
   if (entry.body["mCert"].get<std::string>().empty() ||
       entry.body["mSig"].get<std::string>().empty()) {
     // TODO : check whether the requester is trustworthy or not
@@ -48,12 +51,12 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   }
 
   auto saved_block =
-      m_storage->readBlock(stoi(entry.body["hgt"].get<std::string>()));
+      m_storage->readBlock(static_cast<size_t>(stoi(entry.body["hgt"].get<std::string>())));
 
   id_type recv_id =
       TypeConverter::decodeBase64(entry.body["mID"].get<std::string>());
 
-  if (std::get<0>(saved_block) < 0) {
+  if (std::get<0>(saved_block) <= 0) {
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_ERROR;

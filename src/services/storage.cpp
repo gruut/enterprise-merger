@@ -461,15 +461,15 @@ void Storage::deleteAllDirectory() {
   boost::filesystem::remove_all(m_db_path + "/blockid_height");
 }
 
-std::tuple<int, std::string, json> Storage::readBlock(int height) {
-  std::tuple<int, std::string, json> result;
+std::tuple<size_t, std::string, json> Storage::readBlock(size_t height) {
+  std::tuple<size_t, std::string, json> result;
   std::string block_id =
-      (height == -1) ? getDataByKey(DBType::BLOCK_LATEST, "bID")
+      (height == 0) ? getDataByKey(DBType::BLOCK_LATEST, "bID")
                      : getDataByKey(DBType::BLOCK_HEIGHT, to_string(height));
   if (block_id.empty())
-    result = std::make_tuple(-1, "", json({}));
+    result = std::make_tuple(0, "", json({}));
   else {
-    if (height == -1)
+    if (height == 0)
       height = stoi(getDataByKey(DBType::BLOCK_LATEST, "hgt"));
     std::string block_raw = getDataByKey(DBType::BLOCK_RAW, block_id);
 

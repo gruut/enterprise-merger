@@ -25,10 +25,9 @@ BlockSynchronizer::BlockSynchronizer() {
 
 bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
-  std::string sender_id_b64 = input_msg_entry.body["mID"].get<std::string>();
+  std::string sender_id_b64 = Safe::getString(input_msg_entry.body["mID"]);
+  std::string block_raw_str = Safe::getString(input_msg_entry.body["blockraw"]);
 
-  std::string block_raw_str =
-      input_msg_entry.body["blockraw"].get<std::string>();
   bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
 
   nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
@@ -39,7 +38,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
   }
 
   size_t block_height =
-      static_cast<size_t>(stoi(block_json["hgt"].get<std::string>()));
+      static_cast<size_t>(stoi(Safe::getString(block_json["hgt"])));
 
   if (block_height <= m_my_last_height) {
     CLOG(ERROR, "BSYN") << "Block dropped (old block)";
@@ -120,11 +119,11 @@ void BlockSynchronizer::reserveBlockList(size_t begin, size_t end) {
   m_block_list_mutex.unlock();
 }
 
-bool BlockSynchronizer::sendBlockRequest(int height) {
+bool BlockSynchronizer::sendBlockRequest(size_t height) {
 
   std::vector<id_type> receivers = {};
 
-  if (height != -1) { // unicast
+  if (height != 0) { // unicast
 
     if (m_recv_block_list.empty()) { // but, no body
       return false;
@@ -133,7 +132,8 @@ bool BlockSynchronizer::sendBlockRequest(int height) {
     std::vector<std::string> ans_merger_list;
 
     for (auto &blk_item : m_recv_block_list) {
-      ans_merger_list.emplace_back(blk_item.second.merger_id_b64);
+      if(!blk_item.second.merger_id_b64.empty())
+        ans_merger_list.emplace_back(blk_item.second.merger_id_b64);
     }
 
     std::string ans_merger_id_b64 =
@@ -244,10 +244,10 @@ void BlockSynchronizer::blockSyncControl() {
 
     // step 1 - validate min height block
     for (auto &block_item : m_recv_block_list) {
-      if (block_item.first == m_my_last_height + 1) {
+      if (block_item.first == m_my_last_height + 1 && block_item.second.state == BlockState::RECEIVED) {
         if (block_item.second.block_json["prevH"].get<std::string>() ==
             m_my_last_blk_hash_b64) {
-          if (validateBlock((int)block_item.first)) {
+          if (validateBlock(block_item.first)) {
 
             std::lock_guard<std::mutex> lock(m_block_list_mutex);
             block_item.second.state = BlockState::TOSAVE;
@@ -271,7 +271,7 @@ void BlockSynchronizer::blockSyncControl() {
     // step 2 - save block
     for (auto &block_item : m_recv_block_list) {
       if (block_item.second.state == BlockState::TOSAVE) {
-        saveBlock((int)block_item.first);
+        saveBlock(block_item.first);
         block_item.second.state = BlockState::TODELETE;
       }
     }
@@ -288,9 +288,10 @@ void BlockSynchronizer::blockSyncControl() {
       }
     }
 
-    // step 4 - retry block
+    // step 4 - retry min block
+    bool is_retry_block = false;
+    size_t retry_block = std::numeric_limits<size_t>::max();
     for (auto &block_item : m_recv_block_list) {
-
       if (block_item.second.num_retry > config::BOOTSTRAP_MAX_REQ_BLOCK_RETRY) {
         m_sync_done = true;
         m_sync_fail = true;
@@ -298,10 +299,42 @@ void BlockSynchronizer::blockSyncControl() {
       }
 
       if (block_item.second.state == BlockState::RETRIED) {
-        std::lock_guard<std::mutex> lock(m_block_list_mutex);
-        block_item.second.num_retry += 1;
-        m_block_list_mutex.unlock();
-        sendBlockRequest((int)block_item.first);
+        is_retry_block = true;
+        if(retry_block > block_item.first)
+          retry_block = block_item.first;
+      }
+    }
+
+    if(is_retry_block) {
+
+      auto it_map = m_recv_block_list.find(retry_block);
+      std::lock_guard<std::mutex> lock(m_block_list_mutex);
+      it_map->second.num_retry += 1;
+      m_block_list_mutex.unlock();
+      sendBlockRequest(retry_block);
+
+    } else {
+
+      if(!m_recv_block_list.empty()) { // no retry block and not empty list
+
+        bool is_reserve_block = false;
+        size_t reserve_block = std::numeric_limits<size_t>::max();
+        for (auto &block_item : m_recv_block_list) {
+          if (block_item.second.state == BlockState::RESERVED) {
+            is_reserve_block = true;
+            if(reserve_block > block_item.first)
+              reserve_block = block_item.first;
+          }
+        }
+
+        if(is_reserve_block){
+          auto it_map = m_recv_block_list.find(reserve_block);
+          std::lock_guard<std::mutex> lock(m_block_list_mutex);
+          it_map->second.num_retry += 1;
+          it_map->second.state = BlockState::RETRIED;
+          m_block_list_mutex.unlock();
+          sendBlockRequest(reserve_block);
+        }
       }
     }
 
@@ -416,7 +449,7 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 
   m_recv_block_list.clear();
 
-  sendBlockRequest(-1);
+  sendBlockRequest(0);
 
   messageFetch();
   blockSyncControl();

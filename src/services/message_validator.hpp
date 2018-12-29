@@ -75,7 +75,7 @@ public:
   }
 
   inline static bool heightValidate(const string &hgt) {
-    return (stoi(hgt) == -1 || stoi(hgt) > 0);
+    return (stoi(hgt) >= 0);
   }
 
   static bool timeValidate(MessageType message_type, const string &my_time) {

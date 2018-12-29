@@ -63,7 +63,7 @@ public:
   std::string findCertificate(const signer_id_type &user_id,
                               const timestamp_type &at_this_time = 0);
   void deleteAllDirectory();
-  std::tuple<int, std::string, json> readBlock(int height);
+  std::tuple<size_t, std::string, json> readBlock(size_t height);
   proof_type findSibling(const std::string &tx_id);
 
 private:

@@ -72,7 +72,7 @@ public:
 private:
   void reserveBlockList(size_t begin, size_t end);
   bool pushMsgToBlockList(InputMsgEntry &input_msg_entry);
-  bool sendBlockRequest(int height);
+  bool sendBlockRequest(size_t height);
   void sendErrorToSigner(InputMsgEntry &input_msg_entry);
   bool validateBlock(size_t height);
   void saveBlock(size_t height);

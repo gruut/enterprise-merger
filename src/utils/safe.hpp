@@ -22,4 +22,21 @@ public:
 
     return ret_json;
   }
+
+  static std::string getString(nlohmann::json &&json_obj) {
+    return getString(json_obj);
+  }
+
+  static std::string getString(nlohmann::json &json_obj) {
+    std::string ret_str;
+    if(!json_obj.empty()){
+      try {
+        ret_str = json_obj.get<std::string>();
+      } catch (...) {
+        /* do nothing */
+      }
+    }
+
+    return ret_str;
+  }
 };
