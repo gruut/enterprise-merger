@@ -2,6 +2,8 @@
 
 #include "../chain/types.hpp"
 #include "../utils/template_singleton.hpp"
+#include "concurrentqueue.hpp"
+
 #include <deque>
 #include <iostream>
 #include <mutex>
@@ -20,8 +22,7 @@ struct InputMsgEntry {
 
 class InputQueueAlt : public TemplateSingleton<InputQueueAlt> {
 private:
-  std::deque<InputMsgEntry> m_input_msg_pool;
-  std::mutex m_queue_mutex;
+  moodycamel::ConcurrentQueue<InputMsgEntry> m_input_msg_pool;
 
 public:
   void push(std::tuple<MessageType, nlohmann::json> &msg_entry_tuple) {
@@ -35,27 +36,16 @@ public:
     push(tmp_msg_entry);
   }
 
-  void push(InputMsgEntry &msg_entry) {
-    std::lock_guard<std::mutex> lock(m_queue_mutex);
-    m_input_msg_pool.emplace_back(msg_entry);
-    m_queue_mutex.unlock();
-  }
+  void push(InputMsgEntry &msg_entry) { m_input_msg_pool.enqueue(msg_entry); }
 
   InputMsgEntry fetch() {
     InputMsgEntry ret_msg;
-    std::lock_guard<std::mutex> lock(m_queue_mutex);
-    if (!m_input_msg_pool.empty()) {
-      ret_msg = m_input_msg_pool.front();
-      m_input_msg_pool.pop_front();
-    }
-    m_queue_mutex.unlock();
+    m_input_msg_pool.try_dequeue(ret_msg);
     return ret_msg;
   }
 
-  inline size_t size() { return m_input_msg_pool.size(); }
+  inline size_t size() { return m_input_msg_pool.size_approx(); }
 
-  inline bool empty() { return m_input_msg_pool.empty(); }
-
-  inline void clearInputQueue() { m_input_msg_pool.clear(); }
+  inline bool empty() { return (m_input_msg_pool.size_approx() == 0); }
 };
 } // namespace gruut

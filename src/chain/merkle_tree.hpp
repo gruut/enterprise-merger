@@ -159,7 +159,7 @@ private:
 
   sha256 makeParent(sha256 left, sha256 &right) {
     left.insert(left.cend(), right.cbegin(), right.cend());
-    std::string lookup_key = TypeConverter::toBase64Str(left);
+    std::string lookup_key = TypeConverter::encodeBase64(left);
 
     auto it_map = m_hash_lookup.find(lookup_key);
     if (it_map != m_hash_lookup.end()) {

@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_SUITE(Test_TypeConverter)
   BOOST_AUTO_TEST_CASE(base64_encode_and_decode) {
     std::string test_data_b64 = "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw=";
     std::vector<uint8_t> test_data = TypeConverter::decodeBase64(test_data_b64);
-    std::string test_data_re_b64 = TypeConverter::toBase64Str(test_data);
+    std::string test_data_re_b64 = TypeConverter::encodeBase64(test_data);
 
     BOOST_CHECK_EQUAL(test_data_b64, test_data_re_b64);
   }

@@ -65,7 +65,7 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   } else {
     prev_header_id_b64 = std::get<0>(latest_block_info);
     prev_header_hash_b64 =
-        TypeConverter::toBase64Str(std::get<1>(latest_block_info));
+        TypeConverter::encodeBase64(std::get<1>(latest_block_info));
   }
 
   std::vector<transaction_id_type> transaction_ids;
@@ -80,35 +80,35 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   auto block_id =
       static_cast<block_id_type>(Sha256::hash(block_id_builder.getString()));
 
-  std::string my_id_b64 = TypeConverter::toBase64Str(partial_block.merger_id);
+  std::string my_id_b64 = TypeConverter::encodeBase64(partial_block.merger_id);
 
   // step 2) making block_header (JSON)
 
   json block_header;
   block_header["ver"] = to_string(version);
-  block_header["cID"] = TypeConverter::toBase64Str(partial_block.chain_id);
+  block_header["cID"] = TypeConverter::encodeBase64(partial_block.chain_id);
   block_header["prevH"] = prev_header_hash_b64;
   block_header["prevbID"] = prev_header_id_b64;
-  block_header["bID"] = TypeConverter::toBase64Str(block_id);
+  block_header["bID"] = TypeConverter::encodeBase64(block_id);
   block_header["time"] = Time::now();
   block_header["hgt"] = to_string(partial_block.height);
   block_header["txrt"] =
-      TypeConverter::toBase64Str(partial_block.transaction_root);
+      TypeConverter::encodeBase64(partial_block.transaction_root);
 
   std::vector<std::string> tx_ids_b64;
   std::transform(transaction_ids.begin(), transaction_ids.end(),
                  back_inserter(tx_ids_b64),
                  [](const transaction_id_type &transaction_id) {
-                   return TypeConverter::toBase64Str(transaction_id);
+                   return TypeConverter::encodeBase64(transaction_id);
                  });
   block_header["txids"] = tx_ids_b64;
 
   for (size_t i = 0; i < support_sigs.size(); ++i) {
 
     block_header["SSig"][i]["sID"] =
-        TypeConverter::toBase64Str(support_sigs[i].signer_id);
+        TypeConverter::encodeBase64(support_sigs[i].signer_id);
     block_header["SSig"][i]["sig"] =
-        TypeConverter::toBase64Str(support_sigs[i].signer_signature);
+        TypeConverter::encodeBase64(support_sigs[i].signer_signature);
   }
 
   block_header["mID"] = my_id_b64;
@@ -134,7 +134,7 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   block_raw_builder.append(signature); // == mSig
 
   bytes block_raw = block_raw_builder.getBytes();
-  std::string block_raw_b64 = TypeConverter::toBase64Str(block_raw);
+  std::string block_raw_b64 = TypeConverter::encodeBase64(block_raw);
 
   // step-4) making block_body (JSON)
 
@@ -144,7 +144,7 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   std::vector<sha256> mtree_nodes = merkle_tree.getMerkleTree();
 
   for (size_t i = 0; i < num_txs; ++i) {
-    mtree_node_b64[i] = TypeConverter::toBase64Str(mtree_nodes[i]);
+    mtree_node_b64[i] = TypeConverter::encodeBase64(mtree_nodes[i]);
   }
 
   std::vector<json> transactions_arr;

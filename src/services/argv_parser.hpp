@@ -55,7 +55,7 @@ public:
         return setting_json;
       }
 
-      setting_json = json::parse(setting_json_str);
+      setting_json = json::parse(setting_json_str); // try-catch below
 
       setting_json["pass"] = result["pass"].as<string>();
 

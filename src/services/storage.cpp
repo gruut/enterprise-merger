@@ -1,4 +1,5 @@
 #include "storage.hpp"
+#include "../utils/safe.hpp"
 #include "easy_logging.hpp"
 #include "setting.hpp"
 #include <botan-2/botan/asn1_time.h>
@@ -402,9 +403,11 @@ std::vector<std::string> Storage::findLatestTxIdList() {
   if (!block_id.empty()) {
     auto tx_ids = getDataByKey(DBType::BLOCK_HEADER, block_id + "_txids");
     if (!tx_ids.empty()) {
-      json tx_ids_json = json::parse(tx_ids);
-      for (auto &tx_id_json : tx_ids_json) {
-        tx_ids_list.emplace_back(tx_id_json.get<string>());
+      json tx_ids_json = Safe::parseJson(tx_ids);
+      if (!tx_ids_json.empty()) {
+        for (auto &tx_id_json : tx_ids_json) {
+          tx_ids_list.emplace_back(tx_id_json.get<string>());
+        }
       }
     }
   }
@@ -419,27 +422,27 @@ std::string Storage::findCertificate(const std::string &user_id,
     if (at_this_time == 0) {
       std::string latest_cert = getDataByKey(
           DBType::BLOCK_CERT, user_id + "_" + to_string(stoi(cert_size) - 1));
-      if (latest_cert.empty())
-        cert.assign("");
-      else
-        cert = json::parse(latest_cert)[2].get<string>();
+
+      json latest_cert_json = Safe::parseJson(latest_cert);
+      if (!latest_cert_json.empty())
+        cert = latest_cert_json[2].get<string>();
+
     } else {
       timestamp_type max_start_date = 0;
       for (int i = 0; i < stoi(cert_size); ++i) {
         std::string nth_cert =
             getDataByKey(DBType::BLOCK_CERT, user_id + "_" + to_string(i));
-        if (nth_cert.empty()) {
-          cert.assign("");
+
+        json cert_json = Safe::parseJson(nth_cert);
+        if (cert_json.empty())
           break;
-        } else {
-          json cert_json = json::parse(nth_cert);
-          auto start_date = (timestamp_type)stoi(cert_json[0].get<string>());
-          auto end_date = (timestamp_type)stoi(cert_json[1].get<string>());
-          if (start_date <= at_this_time && at_this_time <= end_date) {
-            if (max_start_date < start_date) {
-              max_start_date = start_date;
-              cert = cert_json[2].get<string>();
-            }
+
+        auto start_date = (timestamp_type)stoi(cert_json[0].get<string>());
+        auto end_date = (timestamp_type)stoi(cert_json[1].get<string>());
+        if (start_date <= at_this_time && at_this_time <= end_date) {
+          if (max_start_date < start_date) {
+            max_start_date = start_date;
+            cert = cert_json[2].get<string>();
           }
         }
       }
@@ -475,7 +478,7 @@ std::tuple<int, std::string, json> Storage::readBlock(int height) {
         getDataByKey(DBType::BLOCK_HEADER, block_id + "_txids");
 
     if (!tx_ids_json_str.empty()) {
-      json tx_ids_json = json::parse(tx_ids_json_str);
+      json tx_ids_json = Safe::parseJson(tx_ids_json_str);
 
       for (size_t i = 0; i < tx_ids_json.size(); ++i) {
         std::string tx_id = tx_ids_json[i].get<std::string>();
@@ -486,8 +489,8 @@ std::tuple<int, std::string, json> Storage::readBlock(int height) {
         txs_json[i]["rSig"] = getDataByKey(DBType::BLOCK_BODY, tx_id + "_rSig");
         txs_json[i]["type"] = getDataByKey(DBType::BLOCK_BODY, tx_id + "_type");
 
-        json content =
-            json::parse(getDataByKey(DBType::BLOCK_BODY, tx_id + "_content"));
+        json content = Safe::parseJson(
+            getDataByKey(DBType::BLOCK_BODY, tx_id + "_content"));
         if (txs_json[i]["type"] == TXTYPE_CERTIFICATES ||
             txs_json[i]["type"] == TXTYPE_DIGESTS) {
           for (size_t j = 0; j < content.size(); ++j)
@@ -514,7 +517,7 @@ proof_type Storage::findSibling(const std::string &tx_id) {
         getDataByKey(DBType::BLOCK_BODY, block_id + "_mtree");
 
     if (!mtree_json_str.empty()) {
-      json mtree_json = json::parse(mtree_json_str);
+      json mtree_json = Safe::parseJson(mtree_json_str);
       std::vector<sha256> mtree_digests(mtree_json.size());
 
       for (size_t i = 0; i < mtree_json.size(); ++i) {
@@ -548,7 +551,7 @@ proof_type Storage::findSibling(const std::string &tx_id) {
           break;
         }
 
-        std::string sibling = TypeConverter::toBase64Str(mtree[node_idx]);
+        std::string sibling = TypeConverter::encodeBase64(mtree[node_idx]);
 
         if (sibling.empty()) {
           proof.siblings.clear();
@@ -572,7 +575,7 @@ proof_type Storage::findSibling(const std::string &tx_id) {
 
 std::string Storage::findCertificate(const signer_id_type &user_id,
                                      const timestamp_type &at_this_time) {
-  std::string user_id_b64 = TypeConverter::toBase64Str(user_id);
+  std::string user_id_b64 = TypeConverter::encodeBase64(user_id);
   return findCertificate(user_id_b64);
 }
 } // namespace gruut

@@ -203,8 +203,8 @@ json block_body_sample2 = {
 
 std::string block_raw_sample1_bytes = block_header_sample1.dump();
 std::string block_raw_sample2_bytes = block_header_sample2.dump();
-std::string block_raw_sample1_b64 = TypeConverter::toBase64Str(block_raw_sample1_bytes);
-std::string block_raw_sample2_b64 = TypeConverter::toBase64Str(block_raw_sample2_bytes);
+std::string block_raw_sample1_b64 = TypeConverter::encodeBase64(block_raw_sample1_bytes);
+std::string block_raw_sample2_b64 = TypeConverter::encodeBase64(block_raw_sample2_bytes);
 sha256 block_hash_2 = Sha256::hash(block_raw_sample2_bytes);
 } // namespace gruut
 

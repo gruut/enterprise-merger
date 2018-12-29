@@ -89,7 +89,7 @@ public:
     }
   }
 
-  static bool contentIdValidate(json &content_json) {
+  static bool contentValidate(json &content_json) {
     if (!content_json.is_array())
       return false;
     for (size_t i = 0; i < content_json.size(); ++i) {
@@ -108,10 +108,10 @@ public:
         return false;
 
       if (item == EntryName::CONTENT) { // MSG_TX의 content 처리
-        if (!contentIdValidate(message_body_json[entry_name]))
+        if (!contentValidate(message_body_json[entry_name]))
           return false;
-        else
-          continue;
+
+        continue;
       }
 
       if (item == EntryName::TX) { // MSG_BLOCK의 tx 처리

@@ -25,7 +25,7 @@ public:
   }
 
   static string toString(vector<uint8_t> &&random_number_list) {
-    return TypeConverter::toBase64Str(random_number_list);
+    return TypeConverter::encodeBase64(random_number_list);
   }
 
   static int getRange(int min, int max) {

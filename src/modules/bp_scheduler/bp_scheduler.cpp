@@ -11,8 +11,8 @@ BpScheduler::BpScheduler() {
   m_my_mid = m_setting->getMyId();
   m_my_cid = m_setting->getLocalChainId();
 
-  m_my_mid_b64 = TypeConverter::toBase64Str(m_my_mid);
-  m_my_cid_b64 = TypeConverter::toBase64Str(m_my_cid);
+  m_my_mid_b64 = TypeConverter::encodeBase64(m_my_mid);
+  m_my_cid_b64 = TypeConverter::encodeBase64(m_my_cid);
 
   auto &io_service = Application::app().getIoService();
   m_timer.reset(new boost::asio::deadline_timer(io_service));
