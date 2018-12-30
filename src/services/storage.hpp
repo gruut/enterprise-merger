@@ -42,7 +42,7 @@ const vector<pair<string, string>> DB_BLOCK_HEADER_SUFFIX = {
     {"mID", "_mID"},   {"prevbID", "_prevbID"}, {"prevH", "_prevH"},
     {"txrt", "_txrt"}, {"txids", "_txids"}};
 
-const vector<pair<string, string>> DB_BLOCK_TX_SUFFIX = {
+const vector<pair<string, string>> DB_TX_SUFFIX = {
     {"time", "_time"}, {"rID", "_rID"},         {"rSig", "_rSig"},
     {"type", "_type"}, {"content", "_content"}, {"bID", "_bID"},
     {"mPos", "_mPos"}};
@@ -63,7 +63,7 @@ public:
   std::string findCertificate(const signer_id_type &user_id,
                               const timestamp_type &at_this_time = 0);
   void deleteAllDirectory();
-  std::tuple<size_t, std::string, json> readBlock(size_t height);
+  read_block_type readBlock(size_t height);
   proof_type findSibling(const std::string &txid_b64);
 
 private:
@@ -75,7 +75,8 @@ private:
   bool putBlockRaw(bytes &block_raw, const std::string &block_id_b64);
   bool putLatestBlockHeader(json &block_json);
   bool putBlockBody(json &block_body_json, const std::string &block_id_b64);
-  std::string getDataByKey(DBType what, const std::string &keys = "");
+  std::string getDataByKey(DBType what,
+                           const std::string &base_suffix_keys = "");
   std::string getPrefix(DBType what);
   std::string parseCert(std::string &pem);
   void rollbackBatchAll();

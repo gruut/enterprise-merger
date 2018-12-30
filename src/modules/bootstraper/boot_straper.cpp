@@ -33,14 +33,15 @@ void BootStraper::selfCheckUp() {
   io_service.post([this]() {
     CLOG(INFO, "BOOT") << "Start Self Check-up";
 
-    // TODO :: do jobs for self check-up
-
-    CLOG(INFO, "BOOT") << "Waiting communication to start";
+    CLOG(INFO, "BOOT") << "1) Waiting communication to start";
     while (!m_communication->isStarted()) {
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
+    CLOG(INFO, "BOOT") << "2) Waiting communication to check (in 10 sec)";
     std::this_thread::sleep_for(std::chrono::seconds(10));
+
+    // TODO :: do jobs for self check-up
 
     CLOG(INFO, "BOOT") << "Ended Self Check-up";
 
@@ -49,8 +50,6 @@ void BootStraper::selfCheckUp() {
 }
 
 void BootStraper::startSync() {
-
-  CLOG(INFO, "BOOT") << "Start block synchronization";
 
   m_block_synchronizer.startBlockSync(
       std::bind(&BootStraper::endSync, this, std::placeholders::_1));

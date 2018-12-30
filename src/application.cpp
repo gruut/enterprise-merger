@@ -43,12 +43,14 @@ void Application::registerModule(shared_ptr<Module> module, int stage,
 
 void Application::start() {
 
-  CLOG(INFO, "_APP") << "Start modules (stage: " << m_running_stage << ")";
-
   if (m_modules[m_running_stage].empty()) {
     runNextStage(ExitCode::ERROR_SKIP_STAGE);
     return;
   }
+
+  CLOG(INFO, "_APP") << "======================================================"
+                        "=====================";
+  CLOG(INFO, "_APP") << "START STAGE #" << m_running_stage;
 
   try {
     for (auto &module : m_modules[m_running_stage]) {

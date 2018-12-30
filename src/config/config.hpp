@@ -9,7 +9,7 @@ namespace gruut {
 namespace config {
 
 constexpr size_t MAX_THREAD = 40;
-constexpr CompressionAlgorithmType COMPRESSION_ALGO_TYPE =
+constexpr CompressionAlgorithmType DEFAULT_COMPRESSION_TYPE =
     CompressionAlgorithmType::LZ4;
 
 constexpr size_t BP_INTERVAL = 10;
@@ -37,7 +37,7 @@ constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 10;
 constexpr size_t BOOTSTRAP_MAX_REQ_BLOCK_RETRY = 5;
 constexpr size_t BOOTSTRAP_MAX_TASK_WAIT_TIME = 10;
 
-constexpr size_t MAX_WAIT_TIME = 5;
+constexpr size_t MAX_WAIT_TIME = 120;
 
 constexpr size_t SYNC_CONTROL_INTERVAL = 1000;
 
@@ -48,8 +48,10 @@ constexpr size_t CONN_CHECK_PERIOD = 1;
 const std::string DEFAULT_PORT_NUM = "50051";
 const std::string DEFAULT_DB_PATH = "./db";
 
-const std::string GENESIS_BLOCK_PREV_HASH_B64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-const std::string GENESIS_BLOCK_PREV_ID_B64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+const std::string GENESIS_BLOCK_PREV_HASH_B64 =
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+const std::string GENESIS_BLOCK_PREV_ID_B64 =
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
 constexpr uint8_t G = 'G';
 constexpr uint8_t VERSION = '1';

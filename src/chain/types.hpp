@@ -1,8 +1,11 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 #define GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 
-#include <array>
+#include "nlohmann/json.hpp"
+
 #include <botan-2/botan/secmem.h>
+
+#include <array>
 #include <map>
 #include <string>
 #include <utility>
@@ -77,7 +80,12 @@ enum class ErrorMsgType : int {
   BSYNC_NO_BLOCK = 88
 };
 
-enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
+enum class CompressionAlgorithmType : uint8_t {
+  LZ4 = 0x04,
+  MessagePack = 0x05,
+  CBOR = 0x06,
+  NONE = 0xFF
+};
 
 enum class SignerStatus { UNKNOWN, TEMPORARY, ERROR, GOOD };
 
@@ -153,6 +161,12 @@ using hmac_key_type = Botan::secure_vector<uint8_t>;
 using proof_type = struct proof_t {
   std::string block_id_b64;
   std::vector<std::pair<bool, std::string>> siblings;
+};
+
+using read_block_type = struct read_block_t {
+  size_t height;
+  bytes block_raw;
+  nlohmann::json txs;
 };
 
 // 아래는 모두 동일한 타입, 문맥에 맞춰서 쓸 것
