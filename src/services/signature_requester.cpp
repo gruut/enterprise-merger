@@ -60,7 +60,8 @@ void SignatureRequester::requestSignatures() {
 
   auto &signature_pool = Application::app().getSignaturePool();
 
-  signature_pool.setupSigPool(m_partial_block.height, m_partial_block.time, m_partial_block.transaction_root);
+  signature_pool.setupSigPool(m_partial_block.height, m_partial_block.time,
+                              m_partial_block.transaction_root);
   requestSignature(signers);
   startSignatureCollectTimer();
   checkProcess();
@@ -91,7 +92,7 @@ void SignatureRequester::stopCollectTimerAndCreateBlock() {
       BlockGenerator generator;
       generator.generateBlock(m_partial_block, signatures, m_merkle_tree);
     } else {
-      CLOG(ERROR, "SIGR") << "CANCEL MAKING BLOCK" << endl;
+      CLOG(ERROR, "SIGR") << "CANCEL MAKING BLOCK";
       signature_pool.clear();
     }
   }));
@@ -151,9 +152,12 @@ void SignatureRequester::requestSignature(Signers &signers) {
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_REQ_SSIG;
     output_message.body["time"] = Time::now();
-    output_message.body["mID"] = TypeConverter::encodeBase64(m_partial_block.merger_id);
-    output_message.body["cID"] = TypeConverter::encodeBase64(m_partial_block.chain_id);
-    output_message.body["txrt"] = TypeConverter::encodeBase64(m_partial_block.transaction_root);
+    output_message.body["mID"] =
+        TypeConverter::encodeBase64(m_partial_block.merger_id);
+    output_message.body["cID"] =
+        TypeConverter::encodeBase64(m_partial_block.chain_id);
+    output_message.body["txrt"] =
+        TypeConverter::encodeBase64(m_partial_block.transaction_root);
     output_message.body["hgt"] = m_partial_block.height;
     output_message.receivers = receivers_list;
 

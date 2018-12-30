@@ -4,9 +4,9 @@
 #include "../services/setting.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/rsa.hpp"
+#include "../utils/safe.hpp"
 #include "../utils/sha256.hpp"
 #include "../utils/type_converter.hpp"
-#include "../utils/safe.hpp"
 #include "types.hpp"
 
 #include "../../include/nlohmann/json.hpp"
@@ -57,24 +57,22 @@ public:
         TypeConverter::decodeBase64(Safe::getString(tx_json["rID"]))));
     setTransactionType(strToTxType(Safe::getString(tx_json["type"])));
 
-    if(tx_json["content"].is_array())
+    if (tx_json["content"].is_array())
       setContents(tx_json["content"]);
 
-    setSignature(
-        TypeConverter::decodeBase64(Safe::getString(tx_json["rSig"])));
+    setSignature(TypeConverter::decodeBase64(Safe::getString(tx_json["rSig"])));
 
     return true;
   }
 
   nlohmann::json getJson() {
-    return nlohmann::json({
-        {"txID", TypeConverter::encodeBase64(m_transaction_id)},
-        {"time", to_string(m_sent_time)},
-        {"rID", TypeConverter::encodeBase64(m_requestor_id)},
-        {"type", txTypeToStr(m_transaction_type)},
-        {"rSig", TypeConverter::encodeBase64(m_signature)},
-        {"content", m_content_list}
-    });
+    return nlohmann::json(
+        {{"txid", TypeConverter::encodeBase64(m_transaction_id)},
+         {"time", to_string(m_sent_time)},
+         {"rID", TypeConverter::encodeBase64(m_requestor_id)},
+         {"type", txTypeToStr(m_transaction_type)},
+         {"rSig", TypeConverter::encodeBase64(m_signature)},
+         {"content", m_content_list}});
   }
 
   inline void setId(transaction_id_type transaction_id) {
@@ -121,11 +119,11 @@ public:
     m_content_list = content_list;
   }
 
-  std::map<std::string,std::string> getCertsIf(){
-    std::map<std::string,std::string> ret_certs;
-    if(m_transaction_type == TransactionType::CERTIFICATE){
-      for(size_t i = 0; i < m_content_list.size(); i += 2) {
-        ret_certs.insert({m_content_list[i], m_content_list[i+1]});
+  std::map<std::string, std::string> getCertsIf() {
+    std::map<std::string, std::string> ret_certs;
+    if (m_transaction_type == TransactionType::CERTIFICATE) {
+      for (size_t i = 0; i < m_content_list.size(); i += 2) {
+        ret_certs.insert({m_content_list[i], m_content_list[i + 1]});
       }
     }
 
@@ -134,13 +132,13 @@ public:
 
   bool isValid(const std::string &pk_pem_instant = "") {
 
-    if (m_signature.empty()) {
+    if (m_content_list.empty() || m_signature.empty()) {
       return false;
     }
 
     std::string pk_pem = pk_pem_instant;
 
-    if (pk_pem.empty()){
+    if (pk_pem.empty()) {
       std::vector<ServiceEndpointInfo> service_endpoints =
           Setting::getInstance()->getServiceEndpointInfo();
       for (auto &srv_point : service_endpoints) {
@@ -161,7 +159,7 @@ public:
       }
     }
 
-    if (pk_pem.empty()){
+    if (pk_pem.empty()) {
       return false;
     }
 
@@ -187,7 +185,7 @@ public:
 
   sha256 getDigest() {
     bytes msg = getBeforeDigestByte();
-    msg.insert(msg.end(),m_signature.begin(),m_signature.end());
+    msg.insert(msg.end(), m_signature.begin(), m_signature.end());
     return Sha256::hash(msg);
   }
 

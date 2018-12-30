@@ -105,26 +105,40 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   block_header["txids"] = tx_ids_b64;
 
   for (auto &ssig : support_sigs) {
-    block_header["SSig"].push_back(json({
-      {"sID", TypeConverter::encodeBase64(ssig.signer_id) },
-      {"sig", TypeConverter::encodeBase64(ssig.signer_signature) }
-    }));
+    block_header["SSig"].push_back(
+        json({{"sID", TypeConverter::encodeBase64(ssig.signer_id)},
+              {"sig", TypeConverter::encodeBase64(ssig.signer_signature)}}));
   }
 
   block_header["mID"] = my_id_b64;
 
   // step-3) making block_raw with mSig
 
-  bytes compressed_json = Compressor::compressData(TypeConverter::stringToBytes(
-      block_header.dump())); // now, we cannot change block_raw any more
+  bytes compressed_json;
+
+  switch (config::DEFAULT_COMPRESSION_TYPE) {
+  case CompressionAlgorithmType::LZ4:
+    compressed_json = Compressor::compressData(
+        TypeConverter::stringToBytes(block_header.dump()));
+    break;
+  case CompressionAlgorithmType::MessagePack:
+    compressed_json = json::to_msgpack(block_header);
+    break;
+  case CompressionAlgorithmType::CBOR:
+    compressed_json = json::to_cbor(block_header);
+    break;
+  default:
+    compressed_json = TypeConverter::stringToBytes(block_header.dump());
+  }
+  // now, we cannot change block_raw any more
 
   auto header_length =
       static_cast<header_length_type>(compressed_json.size() + 5);
 
   BytesBuilder block_raw_builder;
   block_raw_builder.append(
-      static_cast<uint8_t>(config::COMPRESSION_ALGO_TYPE)); // 1-byte
-  block_raw_builder.append(header_length, 4);               // 4-bytes
+      static_cast<uint8_t>(config::DEFAULT_COMPRESSION_TYPE)); // 1-byte
+  block_raw_builder.append(header_length, 4);                  // 4-bytes
   block_raw_builder.append(compressed_json);
 
   string rsa_sk = setting->getMySK();

@@ -140,11 +140,11 @@ public:
   }
 
   template <typename T> inline static std::string encodeBase64(T &&t) {
-    try{
-      std::string ret_str = Botan::base64_encode(vector<uint8_t>(begin(t), end(t)));
+    try {
+      std::string ret_str =
+          Botan::base64_encode(vector<uint8_t>(begin(t), end(t)));
       return ret_str;
-    }
-    catch(Botan::Exception &e){
+    } catch (Botan::Exception &e) {
       std::cout << e.what() << std::endl;
     }
     return std::string("");

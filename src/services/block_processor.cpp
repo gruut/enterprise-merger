@@ -28,10 +28,11 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   CLOG(INFO, "BPRO") << "called handleMsgReqBlock()";
 
-  size_t req_block_height = static_cast<size_t>(stoll(Safe::getString(entry.body["hgt"])));
+  size_t req_block_height =
+      static_cast<size_t>(stoll(Safe::getString(entry.body["hgt"])));
 
   if (Safe::getString(entry.body["mCert"]).empty() ||
-    Safe::getString(entry.body["mSig"]).empty()) {
+      Safe::getString(entry.body["mSig"]).empty()) {
     // TODO : check whether the requester is trustworthy or not
   } else {
     BytesBuilder msg_builder;
@@ -52,12 +53,12 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
     }
   }
 
-  auto saved_block = m_storage->readBlock(req_block_height);
+  read_block_type saved_block = m_storage->readBlock(req_block_height);
 
   id_type recv_id =
       TypeConverter::decodeBase64(Safe::getString(entry.body["mID"]));
 
-  if (std::get<0>(saved_block) <= 0) {
+  if (saved_block.height <= 0) {
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_ERROR;
@@ -73,8 +74,6 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
     m_msg_proxy.deliverOutputMessage(output_message);
 
-
-
     return false;
   }
 
@@ -82,11 +81,12 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   msg_block.type = MessageType::MSG_BLOCK;
   msg_block.body["mID"] = TypeConverter::encodeBase64(m_my_id);
   msg_block.body["blockraw"] =
-      TypeConverter::encodeBase64(std::get<1>(saved_block));
-  msg_block.body["tx"] = std::get<2>(saved_block);
+      TypeConverter::encodeBase64(saved_block.block_raw);
+  msg_block.body["tx"] = saved_block.txs;
   msg_block.receivers = {recv_id};
 
-  CLOG(INFO, "BPRO") << "Send MSG_BLOCK (" << req_block_height << ")";
+  CLOG(INFO, "BPRO") << "Send MSG_BLOCK (height=" << req_block_height
+                     << ", #TX=" << saved_block.txs.size() << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_block);
 
@@ -102,11 +102,11 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   if (block_json.empty())
     return false;
 
-  std::vector<sha256> mtree_nodes;
+  std::vector<sha256> full_merkle_tree_nodes;
   std::vector<transaction_id_type> tx_ids;
 
-  if (!BlockValidator::validateAndGetTree(block_json, entry.body["tx"], mtree_nodes,
-                                          tx_ids))
+  if (!BlockValidator::validateAndGetTree(block_json, entry.body["tx"],
+                                          full_merkle_tree_nodes, tx_ids))
     return false;
 
   size_t num_txs = entry.body["tx"].size(); // entry.body["tx"] must be array
@@ -114,7 +114,7 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   std::vector<std::string> mtree_nodes_b64(num_txs);
 
   for (size_t i = 0; i < num_txs; ++i) {
-    mtree_nodes_b64[i] = TypeConverter::encodeBase64(mtree_nodes[i]);
+    mtree_nodes_b64[i] = TypeConverter::encodeBase64(full_merkle_tree_nodes[i]);
   }
 
   nlohmann::json block_body;

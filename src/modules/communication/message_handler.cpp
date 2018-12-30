@@ -18,12 +18,14 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
                                grpc::Status &rpc_status, id_type &recv_id) {
   using namespace grpc;
   if (packed_msg.size() < config::HEADER_LENGTH) {
-    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message (MessageHandler::unpackMsg)");
+    rpc_status = Status(StatusCode::INVALID_ARGUMENT,
+                        "Wrong Message (MessageHandler::unpackMsg)");
     return;
   }
   MessageHeader header = HeaderController::parseHeader(packed_msg);
   if (!validateMsgFormat(header)) {
-    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message (MessageHandler::unpackMsg)");
+    rpc_status = Status(StatusCode::INVALID_ARGUMENT,
+                        "Wrong Message (MessageHandler::unpackMsg)");
     return;
   }
   size_t body_size = getMsgBodySize(header);
@@ -43,7 +45,8 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
                                                     secure_vector_key.end());
 
     if (!Hmac::verifyHMAC(msg, hmac, key)) {
-      rpc_status = Status(StatusCode::UNAUTHENTICATED, "Wrong HMAC (MessageHandler::unpackMsg)");
+      rpc_status = Status(StatusCode::UNAUTHENTICATED,
+                          "Wrong HMAC (MessageHandler::unpackMsg)");
       return;
     }
   }
@@ -52,8 +55,8 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
   nlohmann::json json_data = getJson(header.compression_algo_type, msg_body);
 
   if (!JsonValidator::validateSchema(json_data, header.message_type)) {
-    rpc_status =
-        Status(grpc::StatusCode::INVALID_ARGUMENT, "Json schema check fail (MessageHandler::unpackMsg)");
+    rpc_status = Status(grpc::StatusCode::INVALID_ARGUMENT,
+                        "Json schema check fail (MessageHandler::unpackMsg)");
     return;
   }
 
@@ -68,7 +71,7 @@ void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
   MessageHeader header;
   header.message_type = msg_type;
 
-  header.compression_algo_type = config::COMPRESSION_ALGO_TYPE;
+  header.compression_algo_type = config::DEFAULT_COMPRESSION_TYPE;
   std::string packed_msg = genPackedMsg(header, body);
   std::vector<std::string> packed_msg_list;
 
