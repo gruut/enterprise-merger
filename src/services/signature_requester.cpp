@@ -7,7 +7,6 @@
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
 #include "block_generator.hpp"
-#include "message_factory.hpp"
 #include "message_proxy.hpp"
 #include "signature_requester.hpp"
 #include "signer_pool.hpp"
@@ -61,8 +60,7 @@ void SignatureRequester::requestSignatures() {
 
   auto &signature_pool = Application::app().getSignaturePool();
 
-  signature_pool.setupSigPool(m_partial_block.height,
-                              m_partial_block.transaction_root);
+  signature_pool.setupSigPool(m_partial_block.height, m_partial_block.time, m_partial_block.transaction_root);
   requestSignature(signers);
   startSignatureCollectTimer();
   checkProcess();
@@ -144,10 +142,23 @@ PartialBlock SignatureRequester::makePartialBlock(Transactions &transactions) {
 
 void SignatureRequester::requestSignature(Signers &signers) {
   if (!signers.empty()) {
-    auto message =
-        MessageFactory::createSigRequestMessage(m_partial_block, signers);
+
+    vector<id_type> receivers_list;
+    for_each(signers.begin(), signers.end(), [&receivers_list](Signer signer) {
+      receivers_list.emplace_back(signer.user_id);
+    });
+
+    OutputMsgEntry output_message;
+    output_message.type = MessageType::MSG_REQ_SSIG;
+    output_message.body["time"] = Time::now();
+    output_message.body["mID"] = TypeConverter::encodeBase64(m_partial_block.merger_id);
+    output_message.body["cID"] = TypeConverter::encodeBase64(m_partial_block.chain_id);
+    output_message.body["txrt"] = TypeConverter::encodeBase64(m_partial_block.transaction_root);
+    output_message.body["hgt"] = m_partial_block.height;
+    output_message.receivers = receivers_list;
+
     MessageProxy proxy;
-    proxy.deliverOutputMessage(message);
+    proxy.deliverOutputMessage(output_message);
   }
 }
 

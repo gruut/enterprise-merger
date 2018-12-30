@@ -29,10 +29,10 @@ namespace gruut {
 
 struct RcvBlock {
   sha256 hash;
-  nlohmann::json block_json;
-  nlohmann::json txs;
-  bytes block_raw;
-  std::vector<sha256> mtree;
+  nlohmann::json block_header_json;
+  nlohmann::json txs_json;
+  bytes block_raw_bytes;
+  std::vector<sha256> merkle_tree;
   std::string merger_id_b64;
   int num_retry{0};
   BlockState state{BlockState::RECEIVED};
@@ -71,7 +71,7 @@ public:
 
 private:
   void reserveBlockList(size_t begin, size_t end);
-  bool pushMsgToBlockList(InputMsgEntry &input_msg_entry);
+  bool pushMsgToBlockList(InputMsgEntry &msg_block);
   bool sendBlockRequest(size_t height);
   void sendErrorToSigner(InputMsgEntry &input_msg_entry);
   bool validateBlock(size_t height);

@@ -23,33 +23,33 @@ BlockSynchronizer::BlockSynchronizer() {
   el::Loggers::getLogger("BSYN");
 }
 
-bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
+bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
 
   CLOG(INFO, "BSYN") << "called pushMsgToBlockList()";
 
   updateTaskTime();
 
-  std::string sender_id_b64 = Safe::getString(input_msg_entry.body["mID"]);
-  std::string block_raw_str = Safe::getString(input_msg_entry.body["blockraw"]);
+  std::string sender_id_b64 = Safe::getString(msg_block.body["mID"]);
+  std::string block_raw_b64 = Safe::getString(msg_block.body["blockraw"]);
 
-  bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
+  bytes block_raw_bytes = TypeConverter::decodeBase64(block_raw_b64);
 
-  nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
+  nlohmann::json block_header_json = BlockValidator::getBlockHeaderJson(block_raw_bytes);
 
-  if (block_json.empty()) {
-    CLOG(ERROR, "BSYN") << "Block dropped (invalid block)";
+  if (block_header_json.empty()) {
+    CLOG(ERROR, "BSYN") << "Block dropped (empty block)";
     return false;
   }
 
   size_t block_height =
-      static_cast<size_t>(stoi(Safe::getString(block_json["hgt"])));
+      static_cast<size_t>(stoi(Safe::getString(block_header_json["hgt"])));
 
   if (block_height <= m_my_last_height) {
     CLOG(ERROR, "BSYN") << "Block dropped (old block)";
     return false;
   }
 
-  if (!input_msg_entry.body["tx"].is_array()) {
+  if (!msg_block.body["tx"].is_array()) {
     CLOG(ERROR, "BSYN") << "Block dropped (TXs are not array)";
     return false;
   }
@@ -66,33 +66,28 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
     reserveBlockList(m_my_last_height + 1, m_first_recv_block_height);
   }
 
-  if (it_map == m_recv_block_list.end()) {
-    RcvBlock temp;
-    temp.merger_id_b64 = sender_id_b64;
-    temp.hash = Sha256::hash(block_raw);
-    temp.block_raw = std::move(block_raw);
-    temp.block_json = std::move(block_json);
-    temp.txs = input_msg_entry.body["tx"];
-    temp.mtree = {}; // will be filled after validation
-    temp.state = BlockState::RECEIVED;
+  RcvBlock recv_block;
+  recv_block.merger_id_b64 = sender_id_b64;
+  recv_block.hash = Sha256::hash(block_raw_bytes);
+  recv_block.block_raw_bytes = std::move(block_raw_bytes);
+  recv_block.block_header_json = std::move(block_header_json);
+  recv_block.txs_json = msg_block.body["tx"];
+  recv_block.merkle_tree = {}; // will be filled after validation
+  recv_block.state = BlockState::RECEIVED;
+
+  if (is_new_block) {
 
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
-
-    m_recv_block_list.insert(make_pair(block_height, temp));
-
+    m_recv_block_list.insert(make_pair(block_height, recv_block));
     m_block_list_mutex.unlock();
+
   } else if (it_map->second.state == BlockState::RETRIED) {
+
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
-
-    it_map->second.merger_id_b64 = sender_id_b64;
-    it_map->second.hash = Sha256::hash(block_raw);
-    it_map->second.block_raw = std::move(block_raw);
-    it_map->second.block_json = std::move(block_json);
-    it_map->second.txs = input_msg_entry.body["tx"];
-    it_map->second.mtree = {}; // will be filled after validation
-    it_map->second.state = BlockState::RECEIVED;
-
+    m_recv_block_list.erase(block_height);
+    m_recv_block_list.insert(std::make_pair(block_height, recv_block));
     m_block_list_mutex.unlock();
+
   } else {
     CLOG(ERROR, "BSYN") << "Block dropped (unknown)";
     return false;
@@ -171,40 +166,41 @@ bool BlockSynchronizer::validateBlock(size_t height) {
   if (it_map == m_recv_block_list.end())
     return false;
 
-  std::vector<sha256> mtree;
-  std::vector<transaction_id_type> dummy_tx_ids;
+  std::vector<sha256> full_merkle_tree;
+  std::vector<transaction_id_type> dummy_txids;
 
-  if (BlockValidator::validate(it_map->second.block_json, it_map->second.txs,
-                               mtree, dummy_tx_ids)) {
-    it_map->second.mtree = mtree;
+  if (BlockValidator::validateAndGetTree(it_map->second.block_header_json, it_map->second.txs_json,
+                                         full_merkle_tree, dummy_txids)) {
+    it_map->second.merkle_tree = full_merkle_tree;
+    return true;
   }
 
-  return true;
+  return false;
 }
 
 void BlockSynchronizer::saveBlock(size_t height) {
+
+  CLOG(INFO, "BSYN") << "called saveBlock()";
 
   auto it_map = m_recv_block_list.find(height);
   if (it_map == m_recv_block_list.end()) {
     return;
   }
 
-  size_t num_txs = it_map->second.txs.size();
+  size_t num_txs = it_map->second.txs_json.size();
 
   std::vector<std::string> mtree_nodes_b64(num_txs);
 
   for (size_t i = 0; i < num_txs; ++i) { // to save data, we need only digests
-    mtree_nodes_b64[i] = TypeConverter::encodeBase64(it_map->second.mtree[i]);
+    mtree_nodes_b64[i] = TypeConverter::encodeBase64(it_map->second.merkle_tree[i]);
   }
 
   nlohmann::json block_body;
-  block_body["tx"] = it_map->second.txs;
+  block_body["tx"] = it_map->second.txs_json;
   block_body["txCnt"] = to_string(num_txs);
   block_body["mtree"] = mtree_nodes_b64;
 
-  m_storage->saveBlock(std::string(it_map->second.block_raw.begin(),
-                                   it_map->second.block_raw.end()),
-                       it_map->second.block_json, block_body);
+  m_storage->saveBlock(it_map->second.block_raw_bytes, it_map->second.block_header_json, block_body);
 
   CLOG(INFO, "BSYN") << "Block saved (height=" << height << ")";
 }
@@ -256,7 +252,7 @@ void BlockSynchronizer::blockSyncControl() {
     if(lowest_block_height == m_my_last_height + 1) {
       auto it_map = m_recv_block_list.find(lowest_block_height);
       if(it_map->second.state == BlockState::RECEIVED){
-        std::string prev_hash_b64 = Safe::getString(it_map->second.block_json["prevH"]);
+        std::string prev_hash_b64 = Safe::getString(it_map->second.block_header_json["prevH"]);
         if(prev_hash_b64 == m_my_last_blk_hash_b64) {
           if (validateBlock(it_map->first)) {
 
@@ -271,6 +267,7 @@ void BlockSynchronizer::blockSyncControl() {
             updateTaskTime();
 
           } else {
+            CLOG(ERROR, "BSYN") << "Invalid block";
             std::lock_guard<std::mutex> lock(m_block_list_mutex);
             it_map->second.state = BlockState::RETRIED;
             m_block_list_mutex.unlock();

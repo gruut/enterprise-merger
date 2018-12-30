@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     StorageFixture storage_fixture;
     proof_type proof = storage_fixture.m_storage->findSibling("c");
 
-    if(!proof.block_id.empty() || !proof.siblings.empty()){
+    if(!proof.block_id_b64.empty() || !proof.siblings.empty()){
 
       BOOST_TEST(proof.siblings[0].first == false);
       BOOST_TEST(proof.siblings[0].second == "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw=");

@@ -97,7 +97,7 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   std::string block_raw_str = Safe::getString(entry.body["blockraw"]);
   bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
 
-  nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
+  nlohmann::json block_json = BlockValidator::getBlockHeaderJson(block_raw);
 
   if (block_json.empty())
     return false;
@@ -105,8 +105,8 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   std::vector<sha256> mtree_nodes;
   std::vector<transaction_id_type> tx_ids;
 
-  if (!BlockValidator::validate(block_json, entry.body["tx"], mtree_nodes,
-                                tx_ids))
+  if (!BlockValidator::validateAndGetTree(block_json, entry.body["tx"], mtree_nodes,
+                                          tx_ids))
     return false;
 
   size_t num_txs = entry.body["tx"].size(); // entry.body["tx"] must be array
@@ -152,7 +152,7 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   msg_res_check.type = MessageType::MSG_RES_CHECK;
   msg_res_check.body["mID"] = TypeConverter::encodeBase64(my_mid);
   msg_res_check.body["time"] = to_string(timestamp);
-  msg_res_check.body["blockID"] = proof.block_id;
+  msg_res_check.body["blockID"] = proof.block_id_b64;
   msg_res_check.body["proof"] = proof_json;
 
   m_msg_proxy.deliverOutputMessage(msg_res_check);

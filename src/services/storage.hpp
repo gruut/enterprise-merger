@@ -64,17 +64,17 @@ public:
                               const timestamp_type &at_this_time = 0);
   void deleteAllDirectory();
   std::tuple<size_t, std::string, json> readBlock(size_t height);
-  proof_type findSibling(const std::string &tx_id);
+  proof_type findSibling(const std::string &txid_b64);
 
 private:
   bool errorOnCritical(const leveldb::Status &status);
   bool errorOn(const leveldb::Status &status);
-  bool putBatch(DBType what, const std::string &key, const std::string &value);
-  bool putBlockHeader(json &data, const std::string &block_id);
-  bool putBlockHeight(json &data, const std::string &block_id);
-  bool putBlockRaw(bytes &block_raw, const std::string &block_id);
-  bool putLatestBlockHeader(json &data);
-  bool putBlockBody(json &data, const std::string &block_id);
+  bool addBatch(DBType what, const std::string &key, const std::string &value);
+  bool putBlockHeader(json &block_json, const std::string &block_id_b64);
+  bool putBlockHeight(json &block_json, const std::string &block_id_b64);
+  bool putBlockRaw(bytes &block_raw, const std::string &block_id_b64);
+  bool putLatestBlockHeader(json &block_json);
+  bool putBlockBody(json &block_body_json, const std::string &block_id_b64);
   std::string getDataByKey(DBType what, const std::string &keys = "");
   std::string getPrefix(DBType what);
   std::string parseCert(std::string &pem);

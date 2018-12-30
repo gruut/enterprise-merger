@@ -33,9 +33,9 @@ void SignaturePool::handleMessage(json &message_body_json) {
   }
 }
 
-void SignaturePool::setupSigPool(block_height_type chain_height,
-                                 sha256 &tx_root) {
+void SignaturePool::setupSigPool(block_height_type chain_height, timestamp_type block_time, sha256 &tx_root) {
   m_chain_height = chain_height;
+  m_block_time = block_time;
   m_tx_root = tx_root;
 }
 
@@ -70,12 +70,9 @@ bool SignaturePool::verifySignature(signer_id_type &receiver_id,
   auto signer_id_b64 = message_body_json["sID"].get<string>();
   signer_id_type signer_id = TypeConverter::decodeBase64(signer_id_b64);
 
-  auto timestamp = static_cast<timestamp_type>(
-      stoll(message_body_json["time"].get<string>()));
-
   BytesBuilder msg_builder;
   msg_builder.append(signer_id);
-  msg_builder.append(timestamp);
+  msg_builder.append(m_block_time);
   msg_builder.append(m_my_id);
   msg_builder.append(m_my_chain_id);
   msg_builder.append(m_chain_height);

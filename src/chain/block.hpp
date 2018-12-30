@@ -12,6 +12,7 @@ using namespace std;
 
 namespace gruut {
 struct PartialBlock {
+  timestamp_type time;
   merger_id_type merger_id;
   local_chain_id_type chain_id;
   block_height_type height;

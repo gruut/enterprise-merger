@@ -151,7 +151,7 @@ using content_type = std::string;
 using hmac_key_type = Botan::secure_vector<uint8_t>;
 
 using proof_type = struct proof_t {
-  std::string block_id;
+  std::string block_id_b64;
   std::vector<std::pair<bool, std::string>> siblings;
 };
 
