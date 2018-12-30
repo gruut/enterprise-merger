@@ -60,8 +60,8 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   std::string prev_header_id_b64, prev_header_hash_b64;
 
   if (std::get<0>(latest_block_info).empty()) { // this is genesis block
-    prev_header_id_b64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-    prev_header_hash_b64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    prev_header_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
+    prev_header_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
   } else {
     prev_header_id_b64 = std::get<0>(latest_block_info);
     prev_header_hash_b64 =

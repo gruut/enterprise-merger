@@ -28,20 +28,22 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   CLOG(INFO, "BPRO") << "called handleMsgReqBlock()";
 
-  if (entry.body["mCert"].get<std::string>().empty() ||
-      entry.body["mSig"].get<std::string>().empty()) {
+  size_t req_block_height = static_cast<size_t>(stoll(Safe::getString(entry.body["hgt"])));
+
+  if (Safe::getString(entry.body["mCert"]).empty() ||
+    Safe::getString(entry.body["mSig"]).empty()) {
     // TODO : check whether the requester is trustworthy or not
   } else {
     BytesBuilder msg_builder;
-    msg_builder.appendB64(entry.body["mID"].get<std::string>());
-    msg_builder.appendDec(entry.body["time"].get<std::string>());
-    msg_builder.append(entry.body["mCert"].get<std::string>());
-    msg_builder.appendDec(entry.body["hgt"].get<std::string>());
+    msg_builder.appendB64(Safe::getString(entry.body["mID"]));
+    msg_builder.appendDec(Safe::getString(entry.body["time"]));
+    msg_builder.append(Safe::getString(entry.body["mCert"]));
+    msg_builder.append(req_block_height);
 
     BytesBuilder sig_builder;
-    sig_builder.appendB64(entry.body["mSig"].get<std::string>());
+    sig_builder.appendB64(Safe::getString(entry.body["mSig"]));
 
-    if (!RSA::doVerify(entry.body["mCert"].get<std::string>(),
+    if (!RSA::doVerify(Safe::getString(entry.body["mCert"]),
                        msg_builder.getString(), sig_builder.getBytes(), true)) {
 
       CLOG(ERROR, "BPRO") << "Invalid mSig on MSG_REQ_BLOCK";
@@ -50,11 +52,10 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
     }
   }
 
-  auto saved_block =
-      m_storage->readBlock(static_cast<size_t>(stoi(entry.body["hgt"].get<std::string>())));
+  auto saved_block = m_storage->readBlock(req_block_height);
 
   id_type recv_id =
-      TypeConverter::decodeBase64(entry.body["mID"].get<std::string>());
+      TypeConverter::decodeBase64(Safe::getString(entry.body["mID"]));
 
   if (std::get<0>(saved_block) <= 0) {
 
@@ -68,7 +69,11 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
     output_message.body["info"] = "no block!";
     output_message.receivers = {recv_id};
 
+    CLOG(INFO, "BPRO") << "Send MSG_ERROR (no block)";
+
     m_msg_proxy.deliverOutputMessage(output_message);
+
+
 
     return false;
   }
@@ -81,13 +86,15 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   msg_block.body["tx"] = std::get<2>(saved_block);
   msg_block.receivers = {recv_id};
 
+  CLOG(INFO, "BPRO") << "Send MSG_BLOCK (" << req_block_height << ")";
+
   m_msg_proxy.deliverOutputMessage(msg_block);
 
   return true;
 }
 
 bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
-  std::string block_raw_str = entry.body["blockraw"].get<std::string>();
+  std::string block_raw_str = Safe::getString(entry.body["blockraw"]);
   bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
 
   nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
@@ -102,7 +109,7 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
                                 tx_ids))
     return false;
 
-  size_t num_txs = entry.body["tx"].size();
+  size_t num_txs = entry.body["tx"].size(); // entry.body["tx"] must be array
 
   std::vector<std::string> mtree_nodes_b64(num_txs);
 
@@ -118,7 +125,7 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   m_storage->saveBlock(block_raw, block_json, block_body);
 
   CLOG(INFO, "BPRO") << "Block saved (height="
-                     << block_json["hgt"].get<std::string>() << ")";
+                     << Safe::getString(block_json["hgt"]) << ")";
 
   auto &tx_pool = Application::app().getTransactionPool();
   tx_pool.removeDuplicatedTransactions(tx_ids);
@@ -134,7 +141,7 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   timestamp_type timestamp = Time::now_int();
 
   proof_type proof =
-      m_storage->findSibling(entry.body["txid"].get<std::string>());
+      m_storage->findSibling(Safe::getString(entry.body["txid"]));
 
   json proof_json = json::array();
   for (auto &sibling : proof.siblings) {

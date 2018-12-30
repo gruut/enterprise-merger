@@ -18,15 +18,15 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
                                grpc::Status &rpc_status, id_type &recv_id) {
   using namespace grpc;
   if (packed_msg.size() < config::HEADER_LENGTH) {
-    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message");
+    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message (MessageHandler::unpackMsg)");
     return;
   }
   MessageHeader header = HeaderController::parseHeader(packed_msg);
   if (!validateMsgFormat(header)) {
-    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message");
+    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message (MessageHandler::unpackMsg)");
     return;
   }
-  int body_size = getMsgBodySize(header);
+  size_t body_size = getMsgBodySize(header);
   recv_id = header.sender_id;
   std::string recv_str_id = TypeConverter::encodeBase64(recv_id);
 
@@ -43,7 +43,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
                                                     secure_vector_key.end());
 
     if (!Hmac::verifyHMAC(msg, hmac, key)) {
-      rpc_status = Status(StatusCode::UNAUTHENTICATED, "Wrong HMAC");
+      rpc_status = Status(StatusCode::UNAUTHENTICATED, "Wrong HMAC (MessageHandler::unpackMsg)");
       return;
     }
   }
@@ -53,7 +53,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
 
   if (!JsonValidator::validateSchema(json_data, header.message_type)) {
     rpc_status =
-        Status(grpc::StatusCode::INVALID_ARGUMENT, "json schema check fail");
+        Status(grpc::StatusCode::INVALID_ARGUMENT, "Json schema check fail (MessageHandler::unpackMsg)");
     return;
   }
 

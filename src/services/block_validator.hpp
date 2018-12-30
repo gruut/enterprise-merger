@@ -19,9 +19,9 @@ namespace gruut {
 class BlockValidator {
 
 public:
-  BlockValidator() { el::Loggers::getLogger("BVAL"); }
-
   static nlohmann::json getBlockJson(bytes &block_raw) {
+
+    el::Loggers::getLogger("BVAL");
 
     nlohmann::json block_json = {};
 
@@ -72,11 +72,14 @@ public:
                        std::vector<sha256> &mtree_nodes,
                        std::vector<transaction_id_type> &tx_ids) {
 
+    el::Loggers::getLogger("BVAL");
+
     auto setting = Setting::getInstance();
     std::vector<MergerInfo> mergers = setting->getMergerInfo();
 
     std::vector<sha256> tx_digests;
-    if (!txs.is_array() || txs.empty() == 0) {
+
+    if (txs.empty() || !txs.is_array()) {
       CLOG(ERROR, "BVAL") << "TX is not array";
       return false;
     }
@@ -87,32 +90,36 @@ public:
 
     for (auto &tx_one : txs) {
       BytesBuilder tx_digest_builder;
-      tx_digest_builder.appendB64(tx_one["txid"].get<std::string>());
-      tx_digest_builder.appendDec(tx_one["time"].get<std::string>());
-      tx_digest_builder.appendB64(tx_one["rID"].get<std::string>());
-      tx_digest_builder.append(tx_one["type"].get<std::string>());
+      tx_digest_builder.appendB64(Safe::getString(tx_one["txid"]));
+      tx_digest_builder.appendDec(Safe::getString(tx_one["time"]));
+      tx_digest_builder.appendB64(Safe::getString(tx_one["rID"]));
+      tx_digest_builder.append(Safe::getString(tx_one["type"]));
 
-      for (auto &content_one : tx_one["content"]) {
-        tx_digest_builder.append(content_one.get<std::string>());
+      if(tx_one["content"].is_array()) {
+        for (auto &each_content : tx_one["content"]) {
+          tx_digest_builder.append(Safe::getString(each_content));
+        }
       }
 
-      if (tx_one["type"].get<std::string>() == TXTYPE_CERTIFICATES) {
-        for (size_t j = 0; j < tx_one["content"].size(); j += 2) {
-          user_cert_map[tx_one["content"][j]] = tx_one["content"][j + 1];
+      if (Safe::getString(tx_one["type"]) == TXTYPE_CERTIFICATES) {
+        if (tx_one["content"].is_array()){
+          for (size_t j = 0; j < tx_one["content"].size(); j += 2) {
+            user_cert_map[tx_one["content"][j]] = tx_one["content"][j + 1];
+          }
         }
       } else { // except certificates
-        std::string this_tx_id_b64 = tx_one["txid"].get<std::string>();
+        std::string this_tx_id_b64 = Safe::getString(tx_one["txid"]);
         transaction_id_type this_tx_id =
             TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
                 this_tx_id_b64);
         tx_ids.emplace_back(this_tx_id);
       }
 
-      std::string rsig_b64 = tx_one["rSig"].get<std::string>();
+      std::string rsig_b64 = Safe::getString(tx_one["rSig"]);
       bytes rsig_byte = TypeConverter::decodeBase64(rsig_b64);
 
       std::string cert =
-          getMergerCert(mergers, tx_one["rID"].get<std::string>());
+          getMergerCert(mergers, Safe::getString(tx_one["rID"]));
 
       if (cert.empty()) {
         CLOG(ERROR, "BVAL") << "No certificate for sender";
@@ -124,7 +131,7 @@ public:
         CLOG(ERROR, "BVAL") << "Invalid rSig";
         return false;
       }
-      tx_digest_builder.appendB64(tx_one["rSig"].get<std::string>());
+      tx_digest_builder.appendB64(Safe::getString(tx_one["rSig"]));
       tx_digests.emplace_back(Sha256::hash(tx_digest_builder.getString()));
     }
 
@@ -133,7 +140,7 @@ public:
     mtree_nodes = merkle_tree.getMerkleTree();
 
     BytesBuilder txrt_builder;
-    txrt_builder.appendB64(block_json["txrt"].get<std::string>());
+    txrt_builder.appendB64(Safe::getString(block_json["txrt"]));
 
     if (txrt_builder.getBytes() != mtree_nodes.back()) {
       CLOG(ERROR, "BVAL") << "Invalid Merkle-tree root";
@@ -141,38 +148,41 @@ public:
     }
 
     auto block_time = static_cast<timestamp_type>(
-        stoll(block_json["time"].get<std::string>()));
+        stoll(Safe::getString(block_json["time"])));
 
     BytesBuilder ssig_msg_wo_sid_builder;
     ssig_msg_wo_sid_builder.append(block_time);
-    ssig_msg_wo_sid_builder.appendB64(block_json["mID"].get<std::string>());
-    ssig_msg_wo_sid_builder.appendB64(block_json["cID"].get<std::string>());
-    ssig_msg_wo_sid_builder.appendDec(block_json["hgt"].get<std::string>());
-    ssig_msg_wo_sid_builder.appendB64(block_json["txrt"].get<std::string>());
+    ssig_msg_wo_sid_builder.appendB64(Safe::getString(block_json["mID"]));
+    ssig_msg_wo_sid_builder.appendB64(Safe::getString(block_json["cID"]));
+    ssig_msg_wo_sid_builder.appendDec(Safe::getString(block_json["hgt"]));
+    ssig_msg_wo_sid_builder.appendB64(Safe::getString(block_json["txrt"]));
     bytes ssig_msg_wo_sid = ssig_msg_wo_sid_builder.getBytes();
 
     auto storage_manager = Storage::getInstance();
 
+    if(!block_json["SSig"]["sID"].is_array()) {
+      CLOG(ERROR, "BVAL") << "Invalid support signatures";
+      return false;
+    }
+
     for (size_t k = 0; k < block_json["SSig"]["sID"].size(); ++k) {
       BytesBuilder ssig_msg_builder;
-      ssig_msg_builder.appendB64(
-          block_json["SSig"][k]["sID"].get<std::string>());
+      ssig_msg_builder.appendB64(Safe::getString(block_json["SSig"][k]["sID"]));
       ssig_msg_builder.append(ssig_msg_wo_sid);
       BytesBuilder ssig_sig_builder;
-      ssig_sig_builder.appendB64(
-          block_json["SSig"][k]["sig"].get<std::string>());
+      ssig_sig_builder.appendB64(Safe::getString(block_json["SSig"][k]["sig"]));
       std::string user_pk_pem;
 
       auto it_map =
-          user_cert_map.find(block_json["SSig"][k]["sID"].get<std::string>());
+        user_cert_map.find(Safe::getString(block_json["SSig"][k]["sID"]));
       if (it_map != user_cert_map.end()) {
         user_pk_pem = it_map->second;
       } else {
-        user_pk_pem = storage_manager->findCertificate(
-            block_json["SSig"][k]["sID"].get<std::string>(), block_time);
+        user_pk_pem = storage_manager->findCertificate(Safe::getString(block_json["SSig"][k]["sID"]), block_time);
       }
 
       if (user_pk_pem.empty()) {
+        CLOG(ERROR, "BVAL") << "No suitable user certificate";
         return false;
       }
 
@@ -181,6 +191,7 @@ public:
         return false;
       }
     }
+
     return true;
   }
 };

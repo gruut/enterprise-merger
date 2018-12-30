@@ -48,6 +48,9 @@ constexpr size_t CONN_CHECK_PERIOD = 1;
 const std::string DEFAULT_PORT_NUM = "50051";
 const std::string DEFAULT_DB_PATH = "./db";
 
+const std::string GENESIS_BLOCK_PREV_HASH_B64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+const std::string GENESIS_BLOCK_PREV_ID_B64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+
 constexpr uint8_t G = 'G';
 constexpr uint8_t VERSION = '1';
 constexpr uint8_t NOT_USED = 0x00;

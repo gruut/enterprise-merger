@@ -25,6 +25,10 @@ BlockSynchronizer::BlockSynchronizer() {
 
 bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
 
+  CLOG(INFO, "BSYN") << "called pushMsgToBlockList()";
+
+  updateTaskTime();
+
   std::string sender_id_b64 = Safe::getString(input_msg_entry.body["mID"]);
   std::string block_raw_str = Safe::getString(input_msg_entry.body["blockraw"]);
 
@@ -49,8 +53,6 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
     CLOG(ERROR, "BSYN") << "Block dropped (TXs are not array)";
     return false;
   }
-
-  CLOG(INFO, "BSYN") << "Block received (height=" << block_height << ")";
 
   auto it_map = m_recv_block_list.find(block_height);
 
@@ -96,7 +98,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &input_msg_entry) {
     return false;
   }
 
-  updateTaskTime();
+  CLOG(INFO, "BSYN") << "Block received (height=" << block_height << ")";
 
   return true;
 }
@@ -106,6 +108,8 @@ void BlockSynchronizer::updateTaskTime() {
 }
 
 void BlockSynchronizer::reserveBlockList(size_t begin, size_t end) {
+
+  CLOG(INFO, "BSYN") << "called reserveBlockList(from=" << begin << ",before=" << end << ")";
 
   RcvBlock temp;
   temp.state = BlockState::RESERVED;
@@ -243,27 +247,36 @@ void BlockSynchronizer::blockSyncControl() {
     }
 
     // step 1 - validate min height block
+    size_t lowest_block_height = std::numeric_limits<size_t>::max();
     for (auto &block_item : m_recv_block_list) {
-      if (block_item.first == m_my_last_height + 1 && block_item.second.state == BlockState::RECEIVED) {
-        if (block_item.second.block_json["prevH"].get<std::string>() ==
-            m_my_last_blk_hash_b64) {
-          if (validateBlock(block_item.first)) {
+      if(lowest_block_height > block_item.first)
+        lowest_block_height = block_item.first;
+    }
+
+    if(lowest_block_height == m_my_last_height + 1) {
+      auto it_map = m_recv_block_list.find(lowest_block_height);
+      if(it_map->second.state == BlockState::RECEIVED){
+        std::string prev_hash_b64 = Safe::getString(it_map->second.block_json["prevH"]);
+        if(prev_hash_b64 == m_my_last_blk_hash_b64) {
+          if (validateBlock(it_map->first)) {
 
             std::lock_guard<std::mutex> lock(m_block_list_mutex);
-            block_item.second.state = BlockState::TOSAVE;
+            it_map->second.state = BlockState::TOSAVE;
             m_block_list_mutex.unlock();
 
             m_my_last_blk_hash_b64 =
-                TypeConverter::encodeBase64(block_item.second.hash);
-            m_my_last_height = block_item.first;
+              TypeConverter::encodeBase64(it_map->second.hash);
+            m_my_last_height = it_map->first;
 
             updateTaskTime();
 
           } else {
             std::lock_guard<std::mutex> lock(m_block_list_mutex);
-            block_item.second.state = BlockState::RETRIED;
+            it_map->second.state = BlockState::RETRIED;
             m_block_list_mutex.unlock();
           }
+        } else {
+          CLOG(ERROR, "BSYN") << "Chain is not match (" << m_my_last_blk_hash_b64 << " != " << prev_hash_b64 << ")";
         }
       }
     }
@@ -305,35 +318,38 @@ void BlockSynchronizer::blockSyncControl() {
       }
     }
 
-    if(is_retry_block) {
+    if(!m_sync_done) {
 
-      auto it_map = m_recv_block_list.find(retry_block);
-      std::lock_guard<std::mutex> lock(m_block_list_mutex);
-      it_map->second.num_retry += 1;
-      m_block_list_mutex.unlock();
-      sendBlockRequest(retry_block);
+      if (is_retry_block) {
 
-    } else {
+        auto it_map = m_recv_block_list.find(retry_block);
+        std::lock_guard <std::mutex> lock(m_block_list_mutex);
+        it_map->second.num_retry += 1;
+        m_block_list_mutex.unlock();
+        sendBlockRequest(retry_block);
 
-      if(!m_recv_block_list.empty()) { // no retry block and not empty list
+      } else {
 
-        bool is_reserve_block = false;
-        size_t reserve_block = std::numeric_limits<size_t>::max();
-        for (auto &block_item : m_recv_block_list) {
-          if (block_item.second.state == BlockState::RESERVED) {
-            is_reserve_block = true;
-            if(reserve_block > block_item.first)
-              reserve_block = block_item.first;
+        if (!m_recv_block_list.empty()) { // no retry block and not empty list
+
+          bool is_reserve_block = false;
+          size_t reserve_block = std::numeric_limits<size_t>::max();
+          for (auto &block_item : m_recv_block_list) {
+            if (block_item.second.state == BlockState::RESERVED) {
+              is_reserve_block = true;
+              if (reserve_block > block_item.first)
+                reserve_block = block_item.first;
+            }
           }
-        }
 
-        if(is_reserve_block){
-          auto it_map = m_recv_block_list.find(reserve_block);
-          std::lock_guard<std::mutex> lock(m_block_list_mutex);
-          it_map->second.num_retry += 1;
-          it_map->second.state = BlockState::RETRIED;
-          m_block_list_mutex.unlock();
-          sendBlockRequest(reserve_block);
+          if (is_reserve_block) {
+            auto it_map = m_recv_block_list.find(reserve_block);
+            std::lock_guard <std::mutex> lock(m_block_list_mutex);
+            it_map->second.num_retry += 1;
+            it_map->second.state = BlockState::RETRIED;
+            m_block_list_mutex.unlock();
+            sendBlockRequest(reserve_block);
+          }
         }
       }
     }
@@ -371,7 +387,7 @@ void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry) {
   if (input_msg_entry.body["sID"].empty())
     return;
 
-  std::string signer_id_b64 = input_msg_entry.body["sID"];
+  std::string signer_id_b64 = Safe::getString(input_msg_entry.body["sID"]);
   signer_id_type signer_id = TypeConverter::decodeBase64(signer_id_b64);
 
   OutputMsgEntry output_msg;
@@ -409,7 +425,7 @@ void BlockSynchronizer::messageFetch() {
     }
 
     if (input_msg_entry.type == MessageType::MSG_ERROR &&
-        input_msg_entry.body["type"].get<std::string>() ==
+        Safe::getString(input_msg_entry.body["type"]) ==
             std::to_string(static_cast<int>(
                 ErrorMsgType::BSYNC_NO_BLOCK))) { // Oh! No block!
       m_sync_done = true;
@@ -445,7 +461,12 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
   std::pair<std::string, size_t> hash_and_height =
       m_storage->findLatestHashAndHeight();
   m_my_last_height = hash_and_height.second; // if 0, no block in DB
-  m_my_last_blk_hash_b64 = TypeConverter::encodeBase64(hash_and_height.first);
+
+  if(m_my_last_height == 0){
+    m_my_last_blk_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
+  } else {
+    m_my_last_blk_hash_b64 = TypeConverter::encodeBase64(hash_and_height.first);
+  }
 
   m_recv_block_list.clear();
 
@@ -459,6 +480,7 @@ bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
   return (msg_type == MessageType::MSG_UP ||
           msg_type == MessageType::MSG_PING ||
           msg_type == MessageType::MSG_REQ_BLOCK ||
+          msg_type == MessageType::MSG_BLOCK ||
           msg_type == MessageType::MSG_ERROR);
 }
 
