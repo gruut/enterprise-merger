@@ -49,137 +49,28 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
                                    vector<Signature> support_sigs,
                                    MerkleTree merkle_tree) {
 
-  // step 1) preparing basic data
+  // step-1) make block
 
-  auto setting = Setting::getInstance();
+  Block new_block;
+  new_block.initWithParitalBlock(partial_block);
+  new_block.setSupportSigs(support_sigs);
+  new_block.linkPreviousBlock();
+
+  json block_header = new_block.getBlockHeaderJson();
+  bytes block_raw = new_block.getBlockRaw();
+  json block_body = new_block.getBlockBodyJson();
+
+  // step-2) save block
+
   auto storage = Storage::getInstance();
-
-  block_version_type version = 1;
-  std::tuple<string, string, size_t> latest_block_info =
-      storage->findLatestBlockBasicInfo();
-
-  std::string prev_header_id_b64, prev_header_hash_b64;
-
-  if (std::get<0>(latest_block_info).empty()) { // this is genesis block
-    prev_header_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
-    prev_header_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
-  } else {
-    prev_header_id_b64 = std::get<0>(latest_block_info);
-    prev_header_hash_b64 =
-        TypeConverter::encodeBase64(std::get<1>(latest_block_info));
-  }
-
-  std::vector<transaction_id_type> transaction_ids;
-  std::transform(
-      partial_block.transactions.begin(), partial_block.transactions.end(),
-      back_inserter(transaction_ids), [](Transaction &t) { return t.getId(); });
-
-  BytesBuilder block_id_builder;
-  block_id_builder.append(partial_block.chain_id);
-  block_id_builder.append(partial_block.height);
-  block_id_builder.append(partial_block.merger_id);
-  auto block_id =
-      static_cast<block_id_type>(Sha256::hash(block_id_builder.getString()));
-
-  std::string my_id_b64 = TypeConverter::encodeBase64(partial_block.merger_id);
-
-  // step 2) making block_header (JSON)
-
-  json block_header;
-  block_header["ver"] = to_string(version);
-  block_header["cID"] = TypeConverter::encodeBase64(partial_block.chain_id);
-  block_header["prevH"] = prev_header_hash_b64;
-  block_header["prevbID"] = prev_header_id_b64;
-  block_header["bID"] = TypeConverter::encodeBase64(block_id);
-  block_header["time"] = to_string(partial_block.time); // important!!
-  block_header["hgt"] = to_string(partial_block.height);
-  block_header["txrt"] =
-      TypeConverter::encodeBase64(partial_block.transaction_root);
-
-  std::vector<std::string> tx_ids_b64;
-  std::transform(transaction_ids.begin(), transaction_ids.end(),
-                 back_inserter(tx_ids_b64),
-                 [](const transaction_id_type &transaction_id) {
-                   return TypeConverter::encodeBase64(transaction_id);
-                 });
-  block_header["txids"] = tx_ids_b64;
-
-  for (auto &ssig : support_sigs) {
-    block_header["SSig"].push_back(
-        json({{"sID", TypeConverter::encodeBase64(ssig.signer_id)},
-              {"sig", TypeConverter::encodeBase64(ssig.signer_signature)}}));
-  }
-
-  block_header["mID"] = my_id_b64;
-
-  // step-3) making block_raw with mSig
-
-  bytes compressed_json;
-
-  switch (config::DEFAULT_COMPRESSION_TYPE) {
-  case CompressionAlgorithmType::LZ4:
-    compressed_json = Compressor::compressData(
-        TypeConverter::stringToBytes(block_header.dump()));
-    break;
-  case CompressionAlgorithmType::MessagePack:
-    compressed_json = json::to_msgpack(block_header);
-    break;
-  case CompressionAlgorithmType::CBOR:
-    compressed_json = json::to_cbor(block_header);
-    break;
-  default:
-    compressed_json = TypeConverter::stringToBytes(block_header.dump());
-  }
-  // now, we cannot change block_raw any more
-
-  auto header_length =
-      static_cast<header_length_type>(compressed_json.size() + 5);
-
-  BytesBuilder block_raw_builder;
-  block_raw_builder.append(
-      static_cast<uint8_t>(config::DEFAULT_COMPRESSION_TYPE)); // 1-byte
-  block_raw_builder.append(header_length, 4);                  // 4-bytes
-  block_raw_builder.append(compressed_json);
-
-  string rsa_sk = setting->getMySK();
-  string rsa_sk_pass = setting->getMyPass();
-  auto signature =
-      RSA::doSign(rsa_sk, block_raw_builder.getBytes(), true, rsa_sk_pass);
-  block_raw_builder.append(signature); // == mSig
-
-  bytes block_raw = block_raw_builder.getBytes();
-  std::string block_raw_b64 = TypeConverter::encodeBase64(block_raw);
-
-  // step-4) making block_body (JSON)
-
-  size_t num_txs = partial_block.transactions.size();
-
-  std::vector<std::string> mtree_node_b64(num_txs);
-  std::vector<sha256> mtree_nodes = merkle_tree.getMerkleTree();
-
-  for (size_t i = 0; i < num_txs; ++i) {
-    mtree_node_b64[i] = TypeConverter::encodeBase64(mtree_nodes[i]);
-  }
-
-  std::vector<json> transactions_arr;
-  std::transform(partial_block.transactions.begin(),
-                 partial_block.transactions.end(),
-                 back_inserter(transactions_arr),
-                 [this](Transaction &tx) { return tx.getJson(); });
-
-  nlohmann::json block_body;
-  block_body["mtree"] = mtree_node_b64;
-  block_body["txCnt"] = to_string(num_txs);
-  block_body["tx"] = transactions_arr;
-
-  // step-5) save block
+  auto setting = Setting::getInstance();
 
   storage->saveBlock(block_raw, block_header, block_body);
 
   CLOG(INFO, "BGEN") << "BLOCK GENERATED (height=" << partial_block.height
                      << ",size=" << partial_block.transactions.size() << ")";
 
-  // setp-6) send blocks to others
+  // setp-3) send blocks to others
 
   OutputMsgEntry msg_header_msg;
   msg_header_msg.type = MessageType::MSG_HEADER;  // MSG_HEADER = 0xB5
@@ -188,8 +79,8 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
 
   OutputMsgEntry msg_block_msg;
   msg_block_msg.type = MessageType::MSG_BLOCK; // MSG_BLOCK = 0xB4
-  msg_block_msg.body["mID"] = my_id_b64;
-  msg_block_msg.body["blockraw"] = block_raw_b64;
+  msg_block_msg.body["mID"] = TypeConverter::encodeBase64(setting->getMyId());
+  msg_block_msg.body["blockraw"] = TypeConverter::encodeBase64(block_raw);
   msg_block_msg.body["tx"] = block_body["tx"];
   msg_block_msg.receivers = vector<id_type>{};
 
