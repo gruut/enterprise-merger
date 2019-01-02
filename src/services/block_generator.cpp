@@ -28,20 +28,21 @@ BlockGenerator::generatePartialBlock(sha256 &merkle_root,
   tuple<string, string, size_t> latest_block_info =
       storage->findLatestBlockBasicInfo();
 
-  PartialBlock block;
+  PartialBlock partial_block;
 
-  block.merger_id = setting->getMyId();
-  block.chain_id = setting->getLocalChainId();
+  partial_block.time = Time::now_int();
+  partial_block.merger_id = setting->getMyId();
+  partial_block.chain_id = setting->getLocalChainId();
 
   if (std::get<0>(latest_block_info).empty())
-    block.height = 1; // this is genesis block
+    partial_block.height = 1; // this is genesis block
   else
-    block.height = std::get<2>(latest_block_info) + 1;
+    partial_block.height = std::get<2>(latest_block_info) + 1;
 
-  block.transaction_root = merkle_root;
-  block.transactions = transactions;
+  partial_block.transaction_root = merkle_root;
+  partial_block.transactions = transactions;
 
-  return block;
+  return partial_block;
 }
 
 void BlockGenerator::generateBlock(PartialBlock partial_block,
@@ -60,8 +61,8 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   std::string prev_header_id_b64, prev_header_hash_b64;
 
   if (std::get<0>(latest_block_info).empty()) { // this is genesis block
-    prev_header_id_b64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-    prev_header_hash_b64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    prev_header_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
+    prev_header_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
   } else {
     prev_header_id_b64 = std::get<0>(latest_block_info);
     prev_header_hash_b64 =
@@ -90,7 +91,7 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   block_header["prevH"] = prev_header_hash_b64;
   block_header["prevbID"] = prev_header_id_b64;
   block_header["bID"] = TypeConverter::encodeBase64(block_id);
-  block_header["time"] = Time::now();
+  block_header["time"] = to_string(partial_block.time); // important!!
   block_header["hgt"] = to_string(partial_block.height);
   block_header["txrt"] =
       TypeConverter::encodeBase64(partial_block.transaction_root);
@@ -103,28 +104,41 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
                  });
   block_header["txids"] = tx_ids_b64;
 
-  for (size_t i = 0; i < support_sigs.size(); ++i) {
-
-    block_header["SSig"][i]["sID"] =
-        TypeConverter::encodeBase64(support_sigs[i].signer_id);
-    block_header["SSig"][i]["sig"] =
-        TypeConverter::encodeBase64(support_sigs[i].signer_signature);
+  for (auto &ssig : support_sigs) {
+    block_header["SSig"].push_back(
+        json({{"sID", TypeConverter::encodeBase64(ssig.signer_id)},
+              {"sig", TypeConverter::encodeBase64(ssig.signer_signature)}}));
   }
 
   block_header["mID"] = my_id_b64;
 
   // step-3) making block_raw with mSig
 
-  bytes compressed_json = Compressor::compressData(TypeConverter::stringToBytes(
-      block_header.dump())); // now, we cannot change block_raw any more
+  bytes compressed_json;
+
+  switch (config::DEFAULT_COMPRESSION_TYPE) {
+  case CompressionAlgorithmType::LZ4:
+    compressed_json = Compressor::compressData(
+        TypeConverter::stringToBytes(block_header.dump()));
+    break;
+  case CompressionAlgorithmType::MessagePack:
+    compressed_json = json::to_msgpack(block_header);
+    break;
+  case CompressionAlgorithmType::CBOR:
+    compressed_json = json::to_cbor(block_header);
+    break;
+  default:
+    compressed_json = TypeConverter::stringToBytes(block_header.dump());
+  }
+  // now, we cannot change block_raw any more
 
   auto header_length =
       static_cast<header_length_type>(compressed_json.size() + 5);
 
   BytesBuilder block_raw_builder;
   block_raw_builder.append(
-      static_cast<uint8_t>(config::COMPRESSION_ALGO_TYPE)); // 1-byte
-  block_raw_builder.append(header_length, 4);               // 4-bytes
+      static_cast<uint8_t>(config::DEFAULT_COMPRESSION_TYPE)); // 1-byte
+  block_raw_builder.append(header_length, 4);                  // 4-bytes
   block_raw_builder.append(compressed_json);
 
   string rsa_sk = setting->getMySK();

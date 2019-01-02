@@ -182,7 +182,7 @@ void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
   }
 
   if (!sent_somewhere) {
-    CLOG(ERROR, "MCLN") << "Nowhere to sent message";
+    CLOG(ERROR, "MCLN") << "Nowhere to send message";
   }
 }
 

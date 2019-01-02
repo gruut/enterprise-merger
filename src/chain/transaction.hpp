@@ -4,6 +4,7 @@
 #include "../services/setting.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/rsa.hpp"
+#include "../utils/safe.hpp"
 #include "../utils/sha256.hpp"
 #include "../utils/type_converter.hpp"
 #include "types.hpp"
@@ -43,7 +44,7 @@ public:
   bool setJson(nlohmann::json &tx_json) {
 
     auto new_txid_bytes =
-        TypeConverter::decodeBase64(tx_json["txid"].get<std::string>());
+        TypeConverter::decodeBase64(Safe::getString(tx_json["txid"]));
 
     BOOST_ASSERT_MSG(new_txid_bytes.size() == 32,
                      "The size of the transaction is not 32 bytes");
@@ -51,25 +52,27 @@ public:
     setId(
         TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(new_txid_bytes));
     setTime(
-        static_cast<timestamp_type>(stoll(tx_json["time"].get<std::string>())));
+        static_cast<timestamp_type>(stoll(Safe::getString(tx_json["time"]))));
     setRequestorId(static_cast<id_type>(
-        TypeConverter::decodeBase64(tx_json["rID"].get<std::string>())));
-    setTransactionType(strToTxType(tx_json["type"].get<std::string>()));
-    setContents(tx_json["content"]);
-    setSignature(
-        TypeConverter::decodeBase64(tx_json["rSig"].get<std::string>()));
+        TypeConverter::decodeBase64(Safe::getString(tx_json["rID"]))));
+    setTransactionType(strToTxType(Safe::getString(tx_json["type"])));
+
+    if (tx_json["content"].is_array())
+      setContents(tx_json["content"]);
+
+    setSignature(TypeConverter::decodeBase64(Safe::getString(tx_json["rSig"])));
 
     return true;
   }
 
   nlohmann::json getJson() {
-    return nlohmann::json{
-        {"txID", TypeConverter::encodeBase64(m_transaction_id)},
-        {"time", to_string(m_sent_time)},
-        {"rID", TypeConverter::encodeBase64(m_requestor_id)},
-        {"type", txTypeToStr(m_transaction_type)},
-        {"rSig", TypeConverter::encodeBase64(m_signature)},
-        {"content", m_content_list}};
+    return nlohmann::json(
+        {{"txid", TypeConverter::encodeBase64(m_transaction_id)},
+         {"time", to_string(m_sent_time)},
+         {"rID", TypeConverter::encodeBase64(m_requestor_id)},
+         {"type", txTypeToStr(m_transaction_type)},
+         {"rSig", TypeConverter::encodeBase64(m_signature)},
+         {"content", m_content_list}});
   }
 
   inline void setId(transaction_id_type transaction_id) {
@@ -104,7 +107,7 @@ public:
     m_content_list.clear();
     if (content_list.is_array()) {
       for (auto &cont_item : content_list) {
-        m_content_list.emplace_back(cont_item.get<std::string>());
+        m_content_list.emplace_back(Safe::getString(cont_item));
       }
     }
   }
@@ -116,26 +119,48 @@ public:
     m_content_list = content_list;
   }
 
+  std::map<std::string, std::string> getCertsIf() {
+    std::map<std::string, std::string> ret_certs;
+    if (m_transaction_type == TransactionType::CERTIFICATE) {
+      for (size_t i = 0; i < m_content_list.size(); i += 2) {
+        ret_certs.insert({m_content_list[i], m_content_list[i + 1]});
+      }
+    }
+
+    return ret_certs;
+  }
+
   bool isValid(const std::string &pk_pem_instant = "") {
 
-    if (m_signature.empty())
+    if (m_content_list.empty() || m_signature.empty()) {
       return false;
+    }
 
-    std::string pk_pem;
-    if (!pk_pem_instant.empty()) {
-      pk_pem = pk_pem_instant;
-    } else {
+    std::string pk_pem = pk_pem_instant;
+
+    if (pk_pem.empty()) {
       std::vector<ServiceEndpointInfo> service_endpoints =
           Setting::getInstance()->getServiceEndpointInfo();
-
       for (auto &srv_point : service_endpoints) {
         if (srv_point.id == m_requestor_id) {
           pk_pem = srv_point.cert;
+          break;
         }
       }
+    }
 
-      if (pk_pem.empty())
-        return false;
+    if (pk_pem.empty()) { // not in service endpoint
+      std::vector<MergerInfo> mergers = Setting::getInstance()->getMergerInfo();
+      for (auto &merger : mergers) {
+        if (merger.id == m_requestor_id) {
+          pk_pem = merger.cert;
+          break;
+        }
+      }
+    }
+
+    if (pk_pem.empty()) {
+      return false;
     }
 
     return RSA::doVerify(pk_pem, getBeforeDigestByte(), m_signature, true);
@@ -160,6 +185,7 @@ public:
 
   sha256 getDigest() {
     bytes msg = getBeforeDigestByte();
+    msg.insert(msg.end(), m_signature.begin(), m_signature.end());
     return Sha256::hash(msg);
   }
 

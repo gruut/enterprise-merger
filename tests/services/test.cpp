@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
   BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
     StorageFixture storage_fixture;
     auto height_raw_tx = storage_fixture.m_storage->readBlock(1);
-    auto latest_height_raw_tx = storage_fixture.m_storage->readBlock(-1);
+    auto latest_height_raw_tx = storage_fixture.m_storage->readBlock(0);
     auto no_data_raw_tx = storage_fixture.m_storage->readBlock(9999);
 
     BOOST_TEST(1 == get<0>(height_raw_tx));
@@ -213,8 +213,8 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     BOOST_TEST(block_raw_sample2_bytes == get<1>(latest_height_raw_tx));
     //cout << get<2>(latest_height_raw_tx) <<endl;
 
-    BOOST_TEST(-1 == get<0>(no_data_raw_tx));
-    BOOST_TEST("" == get<1>(no_data_raw_tx));
+    BOOST_TEST(0 == get<0>(no_data_raw_tx));
+    BOOST_TEST(get<1>(no_data_raw_tx).empty());
     BOOST_TEST(get<2>(no_data_raw_tx).empty());
   }
 
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     StorageFixture storage_fixture;
     proof_type proof = storage_fixture.m_storage->findSibling("c");
 
-    if(!proof.block_id.empty() || !proof.siblings.empty()){
+    if(!proof.block_id_b64.empty() || !proof.siblings.empty()){
 
       BOOST_TEST(proof.siblings[0].first == false);
       BOOST_TEST(proof.siblings[0].second == "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw=");

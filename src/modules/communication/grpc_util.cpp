@@ -92,7 +92,8 @@ bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {
     schema_validator.validate(json_object);
     return true;
   } catch (const std::exception &e) {
-    CLOG(ERROR, "JVAL") << "Validation failed - " << e.what();
+    CLOG(ERROR, "JVAL") << "Validation failed (" << (int)msg_type << ", "
+                        << e.what() << ")";
     return false;
   }
 }

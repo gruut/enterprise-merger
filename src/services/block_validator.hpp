@@ -19,160 +19,140 @@ namespace gruut {
 class BlockValidator {
 
 public:
-  BlockValidator() { el::Loggers::getLogger("BVAL"); }
+  static nlohmann::json getBlockHeaderJson(bytes &block_raw_bytes) {
 
-  static nlohmann::json getBlockJson(bytes &block_raw) {
+    el::Loggers::getLogger("BVAL");
 
-    nlohmann::json block_json = {};
+    nlohmann::json block_header_json;
 
-    if (block_raw.size() <= 5) {
-      return block_json;
+    if (block_raw_bytes.size() <= 5) {
+      return block_header_json;
     }
 
-    size_t header_end =
-        static_cast<size_t>(block_raw[1] << 24 | block_raw[2] << 16 |
-                            block_raw[3] << 8 | block_raw[4]);
+    size_t header_end = static_cast<size_t>(
+        block_raw_bytes[1] << 24 | block_raw_bytes[2] << 16 |
+        block_raw_bytes[3] << 8 | block_raw_bytes[4]);
 
-    std::string block_header_comp(block_raw.begin() + 5,
-                                  block_raw.begin() + header_end);
-    std::string block_json_str;
-    if (block_raw[0] == static_cast<uint8_t>(CompressionAlgorithmType::LZ4)) {
-      block_json_str = Compressor::decompressData(block_header_comp);
-    } else if (block_raw[0] ==
-               static_cast<uint8_t>(CompressionAlgorithmType::NONE)) {
-      block_json_str.assign(block_header_comp);
-    } else {
+    std::string block_header_comp(block_raw_bytes.begin() + 5,
+                                  block_raw_bytes.begin() + header_end);
+
+    switch (static_cast<CompressionAlgorithmType>(block_raw_bytes[0])) {
+    case CompressionAlgorithmType::LZ4: {
+      block_header_json =
+          Safe::parseJson(Compressor::decompressData(block_header_comp));
+      break;
+    }
+    case CompressionAlgorithmType::MessagePack: {
+      block_header_json = json::from_msgpack(block_header_comp);
+      break;
+    }
+    case CompressionAlgorithmType::CBOR: {
+      block_header_json = json::from_cbor(block_header_comp);
+      break;
+    }
+    case CompressionAlgorithmType::NONE: {
+      block_header_json = Safe::parseJson(block_header_comp);
+      break;
+    }
+    default:
       CLOG(ERROR, "BVAL") << "Unknown compress type";
-      return block_json;
+      return block_header_json;
     }
 
-    block_json = Safe::parseJson(block_json_str);
-    if (block_json.empty())
+    if (block_header_json.empty())
       CLOG(ERROR, "BVAL") << "Invalid JSON structure";
 
-    return block_json;
+    return block_header_json;
   }
 
-  static std::string getMergerCert(std::vector<MergerInfo> mergers,
-                                   const std::string &merger_id_b64) {
-    merger_id_type merger_id = TypeConverter::decodeBase64(merger_id_b64);
-    std::string merger_cert;
-    if (!mergers.empty()) {
-      for (auto &merger : mergers) {
-        if (merger.id == merger_id) {
-          merger_cert = merger.cert;
-          break;
-        }
-      }
-    }
-    return merger_cert;
-  }
+  static bool validateAndGetTree(nlohmann::json &block_header_json,
+                                 nlohmann::json &txs_json,
+                                 std::vector<sha256> &merkle_tree_nodes,
+                                 std::vector<transaction_id_type> &txids) {
 
-  static bool validate(nlohmann::json &block_json, nlohmann::json &txs,
-                       std::vector<sha256> &mtree_nodes,
-                       std::vector<transaction_id_type> &tx_ids) {
+    el::Loggers::getLogger("BVAL");
 
     auto setting = Setting::getInstance();
     std::vector<MergerInfo> mergers = setting->getMergerInfo();
 
-    std::vector<sha256> tx_digests;
-    if (!txs.is_array() || txs.empty() == 0) {
-      CLOG(ERROR, "BVAL") << "TX is not array";
+    if (txs_json.empty() || !txs_json.is_array()) {
+      CLOG(ERROR, "BVAL") << "TX is empty or not array";
       return false;
     }
 
-    tx_ids.clear();
+    txids.clear();
 
     std::map<std::string, std::string> user_cert_map;
 
-    for (auto &tx_one : txs) {
-      BytesBuilder tx_digest_builder;
-      tx_digest_builder.appendB64(tx_one["txid"].get<std::string>());
-      tx_digest_builder.appendDec(tx_one["time"].get<std::string>());
-      tx_digest_builder.appendB64(tx_one["rID"].get<std::string>());
-      tx_digest_builder.append(tx_one["type"].get<std::string>());
+    std::vector<sha256> tx_digests;
 
-      for (auto &content_one : tx_one["content"]) {
-        tx_digest_builder.append(content_one.get<std::string>());
-      }
-
-      if (tx_one["type"].get<std::string>() == TXTYPE_CERTIFICATES) {
-        for (size_t j = 0; j < tx_one["content"].size(); j += 2) {
-          user_cert_map[tx_one["content"][j]] = tx_one["content"][j + 1];
-        }
-      } else { // except certificates
-        std::string this_tx_id_b64 = tx_one["txid"].get<std::string>();
-        transaction_id_type this_tx_id =
-            TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
-                this_tx_id_b64);
-        tx_ids.emplace_back(this_tx_id);
-      }
-
-      std::string rsig_b64 = tx_one["rSig"].get<std::string>();
-      bytes rsig_byte = TypeConverter::decodeBase64(rsig_b64);
-
-      std::string cert =
-          getMergerCert(mergers, tx_one["rID"].get<std::string>());
-
-      if (cert.empty()) {
-        CLOG(ERROR, "BVAL") << "No certificate for sender";
+    for (auto &each_tx_json : txs_json) {
+      Transaction each_tx;
+      each_tx.setJson(each_tx_json);
+      if (each_tx.isValid()) {
+        tx_digests.emplace_back(each_tx.getDigest());
+        std::map<std::string, std::string> tx_user_cert_map =
+            each_tx.getCertsIf();
+        user_cert_map.insert(tx_user_cert_map.begin(), tx_user_cert_map.end());
+      } else {
+        CLOG(ERROR, "BVAL") << "Block has an invalid TX";
         return false;
       }
-
-      if (!RSA::doVerify(cert, tx_digest_builder.getString(), rsig_byte,
-                         true)) {
-        CLOG(ERROR, "BVAL") << "Invalid rSig";
-        return false;
-      }
-      tx_digest_builder.appendB64(tx_one["rSig"].get<std::string>());
-      tx_digests.emplace_back(Sha256::hash(tx_digest_builder.getString()));
     }
 
     MerkleTree merkle_tree;
     merkle_tree.generate(tx_digests);
-    mtree_nodes = merkle_tree.getMerkleTree();
+    merkle_tree_nodes = merkle_tree.getMerkleTree();
 
-    BytesBuilder txrt_builder;
-    txrt_builder.appendB64(block_json["txrt"].get<std::string>());
-
-    if (txrt_builder.getBytes() != mtree_nodes.back()) {
+    if (Safe::getString(block_header_json["txrt"]) !=
+        TypeConverter::encodeBase64(merkle_tree_nodes.back())) {
       CLOG(ERROR, "BVAL") << "Invalid Merkle-tree root";
       return false;
     }
 
     auto block_time = static_cast<timestamp_type>(
-        stoll(block_json["time"].get<std::string>()));
+        stoll(Safe::getString(block_header_json["time"])));
 
     BytesBuilder ssig_msg_wo_sid_builder;
     ssig_msg_wo_sid_builder.append(block_time);
-    ssig_msg_wo_sid_builder.appendB64(block_json["mID"].get<std::string>());
-    ssig_msg_wo_sid_builder.appendB64(block_json["cID"].get<std::string>());
-    ssig_msg_wo_sid_builder.appendDec(block_json["hgt"].get<std::string>());
-    ssig_msg_wo_sid_builder.appendB64(block_json["txrt"].get<std::string>());
+    ssig_msg_wo_sid_builder.appendB64(
+        Safe::getString(block_header_json["mID"]));
+    ssig_msg_wo_sid_builder.appendB64(
+        Safe::getString(block_header_json["cID"]));
+    ssig_msg_wo_sid_builder.appendDec(
+        Safe::getString(block_header_json["hgt"]));
+    ssig_msg_wo_sid_builder.appendB64(
+        Safe::getString(block_header_json["txrt"]));
     bytes ssig_msg_wo_sid = ssig_msg_wo_sid_builder.getBytes();
 
     auto storage_manager = Storage::getInstance();
 
-    for (size_t k = 0; k < block_json["SSig"]["sID"].size(); ++k) {
+    if (!block_header_json["SSig"].is_array()) {
+      CLOG(ERROR, "BVAL") << "Invalid support signatures";
+      return false;
+    }
+
+    for (size_t k = 0; k < block_header_json["SSig"].size(); ++k) {
       BytesBuilder ssig_msg_builder;
       ssig_msg_builder.appendB64(
-          block_json["SSig"][k]["sID"].get<std::string>());
+          Safe::getString(block_header_json["SSig"][k]["sID"]));
       ssig_msg_builder.append(ssig_msg_wo_sid);
       BytesBuilder ssig_sig_builder;
       ssig_sig_builder.appendB64(
-          block_json["SSig"][k]["sig"].get<std::string>());
+          Safe::getString(block_header_json["SSig"][k]["sig"]));
       std::string user_pk_pem;
 
-      auto it_map =
-          user_cert_map.find(block_json["SSig"][k]["sID"].get<std::string>());
+      auto it_map = user_cert_map.find(
+          Safe::getString(block_header_json["SSig"][k]["sID"]));
       if (it_map != user_cert_map.end()) {
         user_pk_pem = it_map->second;
       } else {
         user_pk_pem = storage_manager->findCertificate(
-            block_json["SSig"][k]["sID"].get<std::string>(), block_time);
+            Safe::getString(block_header_json["SSig"][k]["sID"]), block_time);
       }
 
       if (user_pk_pem.empty()) {
+        CLOG(ERROR, "BVAL") << "No suitable user certificate";
         return false;
       }
 
@@ -181,6 +161,7 @@ public:
         return false;
       }
     }
+
     return true;
   }
 };

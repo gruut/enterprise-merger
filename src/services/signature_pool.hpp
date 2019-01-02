@@ -21,7 +21,8 @@ public:
 
   void push(Signature &signature);
 
-  void setupSigPool(block_height_type chain_height, sha256 &tx_root);
+  void setupSigPool(block_height_type chain_height, timestamp_type block_time,
+                    sha256 &tx_root);
 
   bool empty();
 
@@ -41,8 +42,9 @@ private:
 
   merger_id_type m_my_id;
   local_chain_id_type m_my_chain_id;
-  block_height_type m_chain_height;
+  block_height_type m_height;
   sha256 m_tx_root;
+  timestamp_type m_block_time;
 
   std::mutex m_mutex;
 };

@@ -52,6 +52,8 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
     default:
       break;
     }
+  } else {
+    CLOG(INFO, "MPRX") << "Incomming message is not valid";
   }
 }
 

@@ -70,12 +70,12 @@ public:
   }
 
   inline static bool signerCountValidate(const string &my_signer_cnt) {
-    return ((0 < stoi(my_signer_cnt)) &&
+    return ((0 <= stoi(my_signer_cnt)) &&
             (stoi(my_signer_cnt) <= config::MAX_SIGNER_NUM));
   }
 
   inline static bool heightValidate(const string &hgt) {
-    return (stoi(hgt) == -1 || stoi(hgt) > 0);
+    return (stoi(hgt) >= 0);
   }
 
   static bool timeValidate(MessageType message_type, const string &my_time) {
