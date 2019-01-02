@@ -21,15 +21,13 @@ SignaturePool::SignaturePool() {
 }
 
 void SignaturePool::handleMessage(json &msg_body_json) {
-  signer_id_type signer_id =
-      TypeConverter::decodeBase64(Safe::getString(msg_body_json["sID"]));
+  signer_id_type signer_id = Safe::getBytesFromB64(msg_body_json, "sID");
 
   if (verifySignature(signer_id, msg_body_json)) {
     Signature ssig;
 
     ssig.signer_id = signer_id;
-    ssig.signer_signature =
-        TypeConverter::decodeBase64(Safe::getString(msg_body_json["sig"]));
+    ssig.signer_signature = Safe::getBytesFromB64(msg_body_json, "sig");
 
     push(ssig);
 
@@ -74,8 +72,7 @@ bool SignaturePool::verifySignature(signer_id_type &recv_id,
     return false;
   }
 
-  signer_id_type signer_id =
-      TypeConverter::decodeBase64(Safe::getString(msg_body_json["sID"]));
+  signer_id_type signer_id = Safe::getBytesFromB64(msg_body_json, "sID");
 
   BytesBuilder msg_builder;
   msg_builder.append(signer_id);
@@ -85,8 +82,7 @@ bool SignaturePool::verifySignature(signer_id_type &recv_id,
   msg_builder.append(m_height);
   msg_builder.append(m_tx_root);
 
-  auto sig_bytes =
-      TypeConverter::decodeBase64(Safe::getString(msg_body_json["sig"]));
+  auto sig_bytes = Safe::getBytesFromB64(msg_body_json, "sig");
 
   return RSA::doVerify(pk_cert, msg_builder.getBytes(), sig_bytes, true);
 }

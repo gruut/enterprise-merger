@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../../chain/block.hpp"
 #include "../../chain/types.hpp"
 #include "../../config/config.hpp"
-#include "../../services/block_validator.hpp"
 #include "../../services/input_queue.hpp"
 #include "../../services/message_proxy.hpp"
 #include "../../services/storage.hpp"
@@ -27,13 +27,9 @@
 
 namespace gruut {
 
-struct RcvBlock {
-  sha256 hash;
-  nlohmann::json block_header_json;
-  nlohmann::json txs_json;
-  bytes block_raw_bytes;
-  std::vector<sha256> merkle_tree;
+struct RcvBlockMapItem {
   std::string merger_id_b64;
+  Block block;
   int num_retry{0};
   BlockState state{BlockState::RECEIVED};
 };
@@ -54,7 +50,7 @@ private:
   size_t m_first_recv_block_height{0};
 
   std::function<void(ExitCode)> m_finish_callback;
-  std::map<size_t, RcvBlock> m_recv_block_list;
+  std::map<size_t, RcvBlockMapItem> m_recv_block_list;
   std::mutex m_block_list_mutex;
 
   timestamp_type m_last_task_time{0};

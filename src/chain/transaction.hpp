@@ -43,24 +43,21 @@ public:
 
   bool setJson(nlohmann::json &tx_json) {
 
-    auto new_txid_bytes =
-        TypeConverter::decodeBase64(Safe::getString(tx_json["txid"]));
+    auto new_txid_bytes = Safe::getBytesFromB64(tx_json, "txid");
 
     BOOST_ASSERT_MSG(new_txid_bytes.size() == 32,
                      "The size of the transaction is not 32 bytes");
 
     setId(
         TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(new_txid_bytes));
-    setTime(
-        static_cast<timestamp_type>(stoll(Safe::getString(tx_json["time"]))));
-    setRequestorId(static_cast<id_type>(
-        TypeConverter::decodeBase64(Safe::getString(tx_json["rID"]))));
-    setTransactionType(strToTxType(Safe::getString(tx_json["type"])));
+    setTime(Safe::getTime(tx_json, "time"));
+    setRequestorId(Safe::getBytesFromB64<id_type>(tx_json, "rID"));
+    setTransactionType(strToTxType(Safe::getString(tx_json, "type")));
 
     if (tx_json["content"].is_array())
       setContents(tx_json["content"]);
 
-    setSignature(TypeConverter::decodeBase64(Safe::getString(tx_json["rSig"])));
+    setSignature(Safe::getBytesFromB64(tx_json, "rSig"));
 
     return true;
   }

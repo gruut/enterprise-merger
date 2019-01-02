@@ -31,7 +31,7 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
   }
 
   auto new_txid = TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
-      msg_body_json["txid"].get<string>());
+      Safe::getString(msg_body_json, "txid"));
 
   auto &transaction_pool = Application::app().getTransactionPool();
 

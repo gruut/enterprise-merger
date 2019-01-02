@@ -292,9 +292,8 @@ void BpScheduler::updateRecvStatus(const std::string &id_b64, size_t timeslot,
 
 void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
-  std::string merger_id_b64 = msg.body["mID"].get<std::string>();
-  timestamp_type merger_time =
-      (timestamp_type)std::stoll(msg.body["time"].get<std::string>());
+  std::string merger_id_b64 = Safe::getString(msg.body, "mID");
+  timestamp_type merger_time = Safe::getTime(msg.body, "time");
   size_t timeslot = merger_time / config::BP_INTERVAL;
 
   if (abs((int64_t)merger_time - (int64_t)Time::now_int()) >
@@ -305,10 +304,9 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
   switch (msg.type) {
   case MessageType::MSG_PING: {
 
-    std::string num_signers_str = msg.body["sCnt"].get<std::string>();
-    auto num_singers = static_cast<size_t>(std::stoll(num_signers_str));
+    auto num_singers = Safe::getInt(msg.body, "sCnt");
 
-    BpStatus status = stringToStatus(msg.body["stat"].get<std::string>());
+    BpStatus status = stringToStatus(Safe::getString(msg.body, "stat"));
     if (num_singers < config::MIN_SIGNATURE_COLLECT_SIZE)
       status = BpStatus::ERROR_ON_SIGNERS;
     updateRecvStatus(merger_id_b64, timeslot, status);
@@ -316,7 +314,7 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
   } break;
   case MessageType::MSG_UP: {
     // std::string ver = msg.body["ver"].get<std::string>();
-    if (msg.body["cID"].get<std::string>() != m_my_cid_b64) {
+    if (Safe::getString(msg.body, "cID") != m_my_cid_b64) {
       break;
     }
     updateRecvStatus(merger_id_b64, timeslot, BpStatus::IN_BOOT_WAIT);

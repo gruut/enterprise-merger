@@ -52,9 +52,10 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   // step-1) make block
 
   Block new_block;
-  new_block.initWithParitalBlock(partial_block);
+  new_block.initWithParitalBlock(partial_block, merkle_tree.getMerkleTree());
   new_block.setSupportSigs(support_sigs);
   new_block.linkPreviousBlock();
+  new_block.refreshBlockRaw();
 
   json block_header = new_block.getBlockHeaderJson();
   bytes block_raw = new_block.getBlockRaw();
@@ -67,22 +68,22 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
 
   storage->saveBlock(block_raw, block_header, block_body);
 
-  CLOG(INFO, "BGEN") << "BLOCK GENERATED (height=" << partial_block.height
-                     << ",size=" << partial_block.transactions.size() << ")";
+  CLOG(INFO, "BGEN") << "BLOCK GENERATED (height=" << new_block.getHeight()
+                     << ",#tx=" << new_block.getNumTransactions() << ")";
 
   // setp-3) send blocks to others
 
   OutputMsgEntry msg_header_msg;
   msg_header_msg.type = MessageType::MSG_HEADER;  // MSG_HEADER = 0xB5
   msg_header_msg.body["blockraw"] = block_header; // original = block_raw_b64
-  msg_header_msg.receivers = vector<id_type>{};
+  msg_header_msg.receivers = std::vector<id_type>{};
 
   OutputMsgEntry msg_block_msg;
   msg_block_msg.type = MessageType::MSG_BLOCK; // MSG_BLOCK = 0xB4
   msg_block_msg.body["mID"] = TypeConverter::encodeBase64(setting->getMyId());
   msg_block_msg.body["blockraw"] = TypeConverter::encodeBase64(block_raw);
   msg_block_msg.body["tx"] = block_body["tx"];
-  msg_block_msg.receivers = vector<id_type>{};
+  msg_block_msg.receivers = std::vector<id_type>{};
 
   MessageProxy proxy;
   proxy.deliverOutputMessage(msg_header_msg);

@@ -8,6 +8,8 @@
 namespace gruut {
 namespace config {
 
+constexpr block_version_type DEFAULT_VERSION = 0x01;
+
 constexpr size_t MAX_THREAD = 40;
 constexpr CompressionAlgorithmType DEFAULT_COMPRESSION_TYPE =
     CompressionAlgorithmType::LZ4;

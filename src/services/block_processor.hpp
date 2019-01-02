@@ -8,7 +8,6 @@
 #include "../utils/compressor.hpp"
 #include "../utils/rsa.hpp"
 #include "../utils/sha256.hpp"
-#include "block_validator.hpp"
 #include "botan-2/botan/base64.h"
 #include "botan-2/botan/buf_comp.h"
 #include "input_queue.hpp"

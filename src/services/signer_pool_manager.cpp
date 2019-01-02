@@ -38,9 +38,8 @@ SignerPoolManager::SignerPoolManager() {
 void SignerPoolManager::handleMessage(MessageType &message_type,
                                       json &message_body_json) {
 
-  string recv_id_b64 = message_body_json["sID"].get<string>();
-  signer_id_type recv_id =
-      TypeConverter::decodeBase64(message_body_json["sID"].get<string>());
+  string recv_id_b64 = Safe::getString(message_body_json, "sID");
+  signer_id_type recv_id = Safe::getBytesFromB64(message_body_json, "sID");
 
   vector<signer_id_type> receiver_list{recv_id};
 

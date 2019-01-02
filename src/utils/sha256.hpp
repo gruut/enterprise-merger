@@ -30,6 +30,8 @@ public:
     return base64_encode(hashed_list);
   }
 
+  static sha256 hash(std::vector<uint8_t> &&data) { return hash(data); }
+
   static sha256 hash(std::vector<uint8_t> &data) {
     std::unique_ptr<Botan::HashFunction> hash_function(
         Botan::HashFunction::create("SHA-256"));

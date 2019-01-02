@@ -48,6 +48,11 @@ std::vector<Transaction> TransactionPool::fetchLastN(size_t n) {
 }
 
 void TransactionPool::removeDuplicatedTransactions(
+    std::vector<transaction_id_type> &&tx_ids) {
+  removeDuplicatedTransactions(tx_ids);
+}
+
+void TransactionPool::removeDuplicatedTransactions(
     std::vector<transaction_id_type> &tx_ids) {
   if (tx_ids.empty())
     return;
