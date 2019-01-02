@@ -37,13 +37,14 @@ constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 10;
 constexpr size_t BOOTSTRAP_MAX_REQ_BLOCK_RETRY = 5;
 constexpr size_t BOOTSTRAP_MAX_TASK_WAIT_TIME = 10;
 
-constexpr size_t MAX_WAIT_TIME = 5;
+constexpr size_t MAX_WAIT_TIME = 120;
 
 constexpr size_t SYNC_CONTROL_INTERVAL = 1000;
 
 constexpr size_t AVAILABLE_INPUT_SIZE = 100;
 
-constexpr size_t CONN_CHECK_PERIOD = 1;
+constexpr int RPC_CHECK_PERIOD = 1;
+constexpr int HTTP_CHECK_PERIOD = 5;
 
 const std::string DEFAULT_PORT_NUM = "50051";
 const std::string DEFAULT_DB_PATH = "./db";

@@ -47,6 +47,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   switch (message_type) {
   case MessageType::MSG_JOIN: {
     if (!isJoinable()) {
+      CLOG(ERROR, "SMGR") << "Merger is full";
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_MAX_SIGNER_POOL);
       return;
     }
