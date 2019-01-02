@@ -13,7 +13,8 @@ Communication::Communication() {
 };
 
 void Communication::start() {
-  m_merger_client.checkConnection();
+  m_merger_client.checkRpcConnection();
+  m_merger_client.checkHttpConnection();
 
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() { m_merger_server.runServer(m_port_num); });

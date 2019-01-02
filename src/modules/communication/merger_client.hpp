@@ -26,7 +26,8 @@ public:
                    std::vector<std::string> &packed_msg_list,
                    OutputMsgEntry &output_msg);
 
-  void checkConnection();
+  void checkRpcConnection();
+  void checkHttpConnection();
   void setup();
 
 private:
@@ -35,8 +36,11 @@ private:
   Setting *m_setting;
   merger_id_type m_my_id;
 
-  std::unique_ptr<boost::asio::deadline_timer> m_conn_check_timer;
-  std::unique_ptr<boost::asio::io_service::strand> m_conn_check_strand;
+  std::unique_ptr<boost::asio::deadline_timer> m_rpc_check_timer;
+  std::unique_ptr<boost::asio::io_service::strand> m_rpc_check_strand;
+
+  std::unique_ptr<boost::asio::deadline_timer> m_http_check_timer;
+  std::unique_ptr<boost::asio::io_service::strand> m_http_check_strand;
 
   void sendToSE(std::vector<id_type> &receiver_list,
                 OutputMsgEntry &output_msg);
