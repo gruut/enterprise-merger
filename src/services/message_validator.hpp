@@ -70,7 +70,7 @@ public:
   }
 
   inline static bool signerCountValidate(const string &my_signer_cnt) {
-    return ((0 < stoi(my_signer_cnt)) &&
+    return ((0 <= stoi(my_signer_cnt)) &&
             (stoi(my_signer_cnt) <= config::MAX_SIGNER_NUM));
   }
 
