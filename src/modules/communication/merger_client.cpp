@@ -75,11 +75,12 @@ void MergerClient::checkRpcConnection() {
           InsecureChannelCredentials();
       std::shared_ptr<Channel> channel = CreateChannel(
           merger_info.address + ":" + merger_info.port, credential);
-      std::unique_ptr<Health::Stub> hc_stub =
-          grpc::health::v1::Health::NewStub(channel);
-      Status status = hc_stub->Check(&context, request, &response);
 
-      m_connection_list->setMergerStatus(merger_info.id, status.ok());
+      grpc_connectivity_state conn_status = channel->GetState(true);
+      bool st = (conn_status == GRPC_CHANNEL_CONNECTING) ||
+                (conn_status == GRPC_CHANNEL_IDLE) ||
+                (conn_status == GRPC_CHANNEL_READY);
+      m_connection_list->setMergerStatus(merger_info.id, st);
     }
   }));
 

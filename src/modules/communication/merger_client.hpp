@@ -8,9 +8,7 @@
 #include "rpc_receiver_list.hpp"
 #include <boost/asio.hpp>
 #include <grpc/support/log.h>
-#include <grpcpp/ext/health_check_service_server_builder_option.h>
 #include <grpcpp/grpcpp.h>
-#include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
 using namespace grpc;

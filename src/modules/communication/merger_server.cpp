@@ -12,7 +12,6 @@ void MergerServer::runServer(const std::string &port_num) {
   server_address += port_num;
   ServerBuilder builder;
 
-  EnableDefaultHealthCheckService(true);
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&m_merger_service);
   builder.RegisterService(&m_se_service);
