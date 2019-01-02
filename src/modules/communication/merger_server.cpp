@@ -127,16 +127,26 @@ void RecvFromSE::proceed(bool st) {
 
     auto &io_service = Application::app().getIoService();
     io_service.post([this]() {
-      std::string packed_msg = m_request.message();
-
       Status rpc_status;
       servend_id_type receiver_id;
+      TxReply m_reply;
+      try {
+        std::string packed_msg = m_request.message();
+        MessageHandler message_handler;
+        message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
 
-      MessageHandler message_handler;
-      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
-
-      TxStatus m_reply;
-      m_reply.set_message(rpc_status.ok());
+        if (rpc_status.ok()) {
+          m_reply.set_status(TxReply_Status_SUCCESS);
+          m_reply.set_message("OK");
+        } else {
+          m_reply.set_status(TxReply_Status_INVALID);
+          m_reply.set_message(rpc_status.error_message());
+        }
+      } catch (std::exception &e) {
+        m_reply.set_status(TxReply_Status_INTERNAL);
+        m_reply.set_message("Merger internal error");
+        CLOG(INFO, "MSVR") << e.what();
+      }
       m_receive_status = RpcCallStatus::FINISH;
       m_responder.Finish(m_reply, rpc_status, this);
     });
