@@ -12,12 +12,16 @@ void MergerServer::runServer(const std::string &port_num) {
   server_address += port_num;
   ServerBuilder builder;
 
+  EnableDefaultHealthCheckService(true);
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&m_merger_service);
   builder.RegisterService(&m_se_service);
   builder.RegisterService(&m_signer_service);
   m_completion_queue = builder.AddCompletionQueue();
   m_server = builder.BuildAndStart();
+
+  HealthCheckServiceInterface *hc_service = m_server->GetHealthCheckService();
+  hc_service->SetServingStatus("healthy_service", true);
 
   m_is_started = true;
 

@@ -2,6 +2,7 @@
 
 #include "../../services/output_queue.hpp"
 #include "connection_list.hpp"
+#include "protos/health.grpc.pb.h"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_se.grpc.pb.h"
 #include "protos/protobuf_signer.grpc.pb.h"
@@ -9,6 +10,7 @@
 #include <boost/asio.hpp>
 #include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
 using namespace grpc;
