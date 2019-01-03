@@ -4,7 +4,7 @@
 #include "../chain/types.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/compressor.hpp"
-#include "../utils/rsa.hpp"
+#include "../utils/ecdsa.hpp"
 #include "../utils/safe.hpp"
 #include "../utils/sha256.hpp"
 #include "easy_logging.hpp"
@@ -156,8 +156,8 @@ public:
         return false;
       }
 
-      if (!RSA::doVerify(user_pk_pem, ssig_msg_builder.getString(),
-                         ssig_sig_builder.getBytes(), true)) {
+      if (!ECDSA::doVerify(user_pk_pem, ssig_msg_builder.getString(),
+                           ssig_sig_builder.getBytes())) {
         return false;
       }
     }

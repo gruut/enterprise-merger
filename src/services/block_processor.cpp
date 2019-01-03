@@ -44,8 +44,8 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
     BytesBuilder sig_builder;
     sig_builder.appendB64(Safe::getString(entry.body["mSig"]));
 
-    if (!RSA::doVerify(Safe::getString(entry.body["mCert"]),
-                       msg_builder.getString(), sig_builder.getBytes(), true)) {
+    if (!ECDSA::doVerify(Safe::getString(entry.body["mCert"]),
+                         msg_builder.getString(), sig_builder.getBytes())) {
 
       CLOG(ERROR, "BPRO") << "Invalid mSig on MSG_REQ_BLOCK";
 

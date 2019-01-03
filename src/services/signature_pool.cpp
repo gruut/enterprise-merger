@@ -1,6 +1,6 @@
 #include "../application.hpp"
 #include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
+#include "../utils/ecdsa.hpp"
 #include "../utils/safe.hpp"
 #include "../utils/type_converter.hpp"
 
@@ -88,6 +88,6 @@ bool SignaturePool::verifySignature(signer_id_type &recv_id,
   auto sig_bytes =
       TypeConverter::decodeBase64(Safe::getString(msg_body_json["sig"]));
 
-  return RSA::doVerify(pk_cert, msg_builder.getBytes(), sig_bytes, true);
+  return ECDSA::doVerify(pk_cert, msg_builder.getBytes(), sig_bytes);
 }
 } // namespace gruut

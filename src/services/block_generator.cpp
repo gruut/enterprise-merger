@@ -5,7 +5,7 @@
 #include "../src/application.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/compressor.hpp"
-#include "../utils/rsa.hpp"
+#include "../utils/ecdsa.hpp"
 #include "../utils/time.hpp"
 #include "../utils/type_converter.hpp"
 #include "message_proxy.hpp"
@@ -141,10 +141,10 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   block_raw_builder.append(header_length, 4);                  // 4-bytes
   block_raw_builder.append(compressed_json);
 
-  string rsa_sk = setting->getMySK();
-  string rsa_sk_pass = setting->getMyPass();
+  string ecdsa_sk = setting->getMySK();
+  string ecdsa_sk_pass = setting->getMyPass();
   auto signature =
-      RSA::doSign(rsa_sk, block_raw_builder.getBytes(), true, rsa_sk_pass);
+      ECDSA::doSign(ecdsa_sk, block_raw_builder.getBytes(), ecdsa_sk_pass);
   block_raw_builder.append(signature); // == mSig
 
   bytes block_raw = block_raw_builder.getBytes();

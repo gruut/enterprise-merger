@@ -3,7 +3,8 @@
 
 #include "../services/setting.hpp"
 #include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
+
+#include "../utils/ecdsa.hpp"
 #include "../utils/safe.hpp"
 #include "../utils/sha256.hpp"
 #include "../utils/type_converter.hpp"
@@ -163,7 +164,7 @@ public:
       return false;
     }
 
-    return RSA::doVerify(pk_pem, getBeforeDigestByte(), m_signature, true);
+    return ECDSA::doVerify(pk_pem, getBeforeDigestByte(), m_signature);
   }
 
   void refreshSignature(const std::string &pem_sk_instant = "",
@@ -180,7 +181,7 @@ public:
       pem_pass = pem_pass_instant;
     }
 
-    m_signature = RSA::doSign(pem_sk, getBeforeDigestByte(), true, pem_pass);
+    m_signature = ECDSA::doSign(pem_sk, getBeforeDigestByte(), pem_pass);
   }
 
   sha256 getDigest() {

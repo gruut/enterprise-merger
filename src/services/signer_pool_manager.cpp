@@ -10,7 +10,7 @@
 
 #include "nlohmann/json.hpp"
 
-#include "../utils/rsa.hpp"
+#include "../utils/ecdsa.hpp"
 
 #include "../application.hpp"
 #include "../chain/types.hpp"
@@ -207,7 +207,7 @@ bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
   msg_builder.appendHex(message_body_json["dhy"].get<string>());
   msg_builder.appendDec(message_body_json["time"].get<string>());
 
-  return RSA::doVerify(cert_in, msg_builder.getBytes(), sig_bytes, true);
+  return ECDSA::doVerify(cert_in, msg_builder.getBytes(), sig_bytes);
 }
 
 string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
@@ -215,8 +215,8 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
                                       timestamp_type timestamp) {
 
   auto setting = Setting::getInstance();
-  string rsa_sk_pem = setting->getMySK();
-  string rsa_sk_pass = setting->getMyPass();
+  string ecdsa_sk_pem = setting->getMySK();
+  string ecdsa_sk_pass = setting->getMyPass();
 
   BytesBuilder msg_builder;
   msg_builder.appendB64(merger_nonce);
@@ -226,7 +226,7 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
   msg_builder.append(timestamp);
 
   return TypeConverter::encodeBase64(
-      RSA::doSign(rsa_sk_pem, msg_builder.getBytes(), true, rsa_sk_pass));
+      ECDSA::doSign(ecdsa_sk_pem, msg_builder.getBytes(), ecdsa_sk_pass));
 }
 
 bool SignerPoolManager::isJoinable() {
