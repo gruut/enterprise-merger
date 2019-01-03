@@ -9,6 +9,7 @@
 #include <atomic>
 #include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
 
