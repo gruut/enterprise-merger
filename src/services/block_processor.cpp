@@ -92,7 +92,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   Block new_block;
-  if (!new_block.initWithMessageJson(entry.body)) {
+  if (!new_block.initialze(entry.body)) {
     CLOG(ERROR, "BPRO") << "Block dropped (missing information)";
     return false;
   }
@@ -127,7 +127,7 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   json proof_json = json::array();
   for (auto &sibling : proof.siblings) {
     proof_json.push_back(
-        nlohmann::json{{"side", sibling.first}, {"val", sibling.second}});
+        json{{"side", sibling.first}, {"val", sibling.second}});
   }
 
   msg_res_check.type = MessageType::MSG_RES_CHECK;

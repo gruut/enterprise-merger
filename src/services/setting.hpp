@@ -1,21 +1,21 @@
 #pragma once
 
+#include "json-schema.hpp"
+#include "nlohmann/json.hpp"
+
+#include "../chain/types.hpp"
+#include "../config/config.hpp"
+#include "../utils/safe.hpp"
+#include "../utils/template_singleton.hpp"
+#include "../utils/type_converter.hpp"
+
+#include "easy_logging.hpp"
+
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "../../include/json-schema.hpp"
-#include "../../include/nlohmann/json.hpp"
-#include "../chain/types.hpp"
-#include "../config/config.hpp"
-#include "../utils/template_singleton.hpp"
-#include "../utils/type_converter.hpp"
-
-#include "../utils/safe.hpp"
-#include "easy_logging.hpp"
-
 namespace gruut {
-using namespace nlohmann;
 using namespace nlohmann::json_schema_draft4;
 
 struct GruutAuthorityInfo {

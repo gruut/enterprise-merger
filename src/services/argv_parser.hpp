@@ -3,14 +3,12 @@
 #include <iostream>
 
 #include "cxxopts.hpp"
+#include "easy_logging.hpp"
 #include "nlohmann/json.hpp"
 
+#include "../chain/types.hpp"
 #include "../config/config.hpp"
 #include "../utils/file_io.hpp"
-
-#include "easy_logging.hpp"
-
-using namespace nlohmann;
 
 namespace gruut {
 class ArgvParser {

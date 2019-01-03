@@ -1,14 +1,7 @@
 #include "../application.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
-#include "../utils/safe.hpp"
-#include "../utils/type_converter.hpp"
-
 #include "easy_logging.hpp"
+#include "signer_pool.hpp"
 
-#include <string>
-
-using namespace nlohmann;
 using namespace std;
 
 namespace gruut {

@@ -50,8 +50,8 @@ private:
 public:
   Block() { el::Loggers::getLogger("BLOC"); };
 
-  bool initWithParitalBlock(PartialBlock &partial_block,
-                            std::vector<sha256> &&merkle_Tree_node = {}) {
+  bool initalize(PartialBlock &partial_block,
+                 std::vector<sha256> &&merkle_Tree_node = {}) {
     m_time = partial_block.time;
     m_merger_id = partial_block.merger_id;
     m_chain_id = partial_block.chain_id;
@@ -64,16 +64,16 @@ public:
     else
       m_merkle_tree_node = merkle_Tree_node;
 
-    extractUserCertsIf();
+    m_user_certs = extractUserCertsIf();
 
     return true;
   }
 
-  bool initWithMessageJson(nlohmann::json &msg_body) {
+  bool initialze(json &msg_body) {
 
     bytes block_raw_bytes = Safe::getBytesFromB64(msg_body, "blockraw");
 
-    nlohmann::json block_header_json = parseBlockRaw(block_raw_bytes);
+    json block_header_json = getBlockHeader(block_raw_bytes);
     if (block_header_json.empty())
       return false;
 
@@ -89,7 +89,7 @@ public:
     m_prev_block_id_b64 = Safe::getString(block_header_json, "prevbID");
     m_block_id = Safe::getBytesFromB64<block_id_type>(block_header_json, "bID");
 
-    if (!setSupportSigs(block_header_json["SSig"]))
+    if (!setSupportSignatures(block_header_json["SSig"]))
       return false;
 
     if (!setTransactions(msg_body["tx"]))
@@ -100,7 +100,7 @@ public:
 
     m_block_raw = block_raw_bytes;
     m_block_hash = Sha256::hash(block_raw_bytes);
-    m_signature = parseBlockSignature(block_raw_bytes);
+    m_signature = getBlockSignature(block_raw_bytes);
 
     return true;
   }
@@ -110,7 +110,7 @@ public:
     return true;
   }
 
-  bool setTransactions(nlohmann::json &txs_json) {
+  bool setTransactions(json &txs_json) {
     if (!txs_json.is_array()) {
       return false;
     }
@@ -125,14 +125,14 @@ public:
     return true;
   }
 
-  bool setSupportSigs(std::vector<Signature> &ssigs) {
+  bool setSupportSignatures(std::vector<Signature> &ssigs) {
     if (ssigs.empty())
       return false;
     m_ssigs = ssigs;
     return true;
   }
 
-  bool setSupportSigs(nlohmann::json &ssigs) {
+  bool setSupportSignatures(json &ssigs) {
     if (!ssigs.is_array())
       return false;
 
@@ -172,44 +172,18 @@ public:
         static_cast<block_id_type>(Sha256::hash(block_id_builder.getBytes()));
   }
 
-  void refreshBlockRaw() {
-    nlohmann::json block_header = getBlockHeaderJson();
-
-    bytes compressed_block_header;
-
-    switch (config::DEFAULT_COMPRESSION_TYPE) {
-    case CompressionAlgorithmType::LZ4:
-      compressed_block_header = Compressor::compressData(
-          TypeConverter::stringToBytes(block_header.dump()));
-      break;
-    case CompressionAlgorithmType::MessagePack:
-      compressed_block_header = json::to_msgpack(block_header);
-      break;
-    case CompressionAlgorithmType::CBOR:
-      compressed_block_header = json::to_cbor(block_header);
-      break;
-    default:
-      compressed_block_header =
-          TypeConverter::stringToBytes(block_header.dump());
-    }
-    // now, we cannot change block_raw any more
-
-    auto header_length =
-        static_cast<header_length_type>(compressed_block_header.size() + 5);
-
-    BytesBuilder block_raw_builder;
-    block_raw_builder.append(
-        static_cast<uint8_t>(config::DEFAULT_COMPRESSION_TYPE)); // 1-byte
-    block_raw_builder.append(header_length, 4);                  // 4-bytes
-    block_raw_builder.append(compressed_block_header);
+  void finalize() {
+    bytes block_meta_comp_header = generateMetaWithCompHeader();
 
     auto setting = Setting::getInstance();
 
     string rsa_sk = setting->getMySK();
     string rsa_sk_pass = setting->getMyPass();
     m_signature =
-        RSA::doSign(rsa_sk, block_raw_builder.getBytes(), true, rsa_sk_pass);
+        RSA::doSign(rsa_sk, block_meta_comp_header, true, rsa_sk_pass);
 
+    BytesBuilder block_raw_builder;
+    block_raw_builder.append(block_meta_comp_header);
     block_raw_builder.append(m_signature);
 
     m_block_raw = block_raw_builder.getBytes();
@@ -219,7 +193,7 @@ public:
 
   bytes getBlockRaw() {
     if (m_block_raw.empty()) {
-      refreshBlockRaw();
+      finalize();
     }
     return m_block_raw;
   }
@@ -232,9 +206,9 @@ public:
     return ret_txids;
   }
 
-  nlohmann::json getBlockHeaderJson() {
+  json getBlockHeaderJson() {
 
-    nlohmann::json block_header;
+    json block_header;
 
     block_header["ver"] = to_string(m_version);
     block_header["cID"] = TypeConverter::encodeBase64(m_chain_id);
@@ -251,9 +225,9 @@ public:
     }
 
     for (auto &ssig : m_ssigs) {
-      block_header["SSig"].push_back(nlohmann::json(
-          {{"sID", TypeConverter::encodeBase64(ssig.signer_id)},
-           {"sig", TypeConverter::encodeBase64(ssig.signer_signature)}}));
+      block_header["SSig"].push_back(
+          json({{"sID", TypeConverter::encodeBase64(ssig.signer_id)},
+                {"sig", TypeConverter::encodeBase64(ssig.signer_signature)}}));
     }
 
     block_header["mID"] = TypeConverter::encodeBase64(m_merger_id);
@@ -261,7 +235,7 @@ public:
     return block_header;
   }
 
-  nlohmann::json getBlockBodyJson() {
+  json getBlockBodyJson() {
 
     std::vector<std::string> mtree_node_b64;
     for (size_t i = 0; i < m_transactions.size(); ++i) {
@@ -274,11 +248,9 @@ public:
       txs.push_back(each_tx.getJson());
     }
 
-    nlohmann::json block_body;
-    block_body["mtree"] = mtree_node_b64;
-    block_body["txCnt"] = to_string(m_transactions.size());
-    block_body["tx"] = txs;
-    return block_body;
+    return json({{"mtree", mtree_node_b64},
+                 {"txCnt", to_string(m_transactions.size())},
+                 {"tx", txs}});
   }
 
   size_t getHeight() { return m_height; }
@@ -295,16 +267,21 @@ public:
 
   bool isValid() {
 
-    // step 1 - check merkle tree
+    if (m_block_raw.empty() || m_signature.empty()) {
+      CLOG(ERROR, "BLOC") << "Empty blockraw or signature";
+      return false;
+    }
+
+    // step - check merkle tree
     if (m_tx_root != m_merkle_tree_node.back()) {
       CLOG(ERROR, "BLOC") << "Invalid Merkle-tree root";
       return false;
     }
 
-    // step 2 - check support signatures
+    // step - check support signatures
     auto storage = Storage::getInstance();
 
-    bytes ssig_msg_after_sid = getSupportSigMessageAfterSid();
+    bytes ssig_msg_after_sid = getSupportSigMessageCommon();
 
     for (auto &each_ssig : m_ssigs) {
       BytesBuilder ssig_msg_builder;
@@ -334,26 +311,26 @@ public:
       }
     }
 
-    // step 3 - check merger's signature
+    // step - check merger's signature
 
     auto setting = Setting::getInstance();
 
-    std::string merger_pk_pem;
-
     std::vector<MergerInfo> merger_list = setting->getMergerInfo();
 
-    for (auto &merger : merger_list) {
-      if (merger.id == m_merger_id) {
-        merger_pk_pem = merger.cert;
-        break;
-      }
-    }
+    auto pk_it =
+        std::find_if(merger_list.begin(), merger_list.end(),
+                     [&](MergerInfo &t) { return t.id == m_merger_id; });
 
-    if (merger_pk_pem.empty()) {
+    if (pk_it == merger_list.end()) {
       CLOG(ERROR, "BLOC") << "No suitable merger certificate";
+      return false;
     }
 
-    if (!RSA::doVerify(merger_pk_pem, m_block_raw, m_signature, true)) {
+    std::string merger_pk_pem = pk_it->cert;
+
+    bytes meta_header_raw = getBlockMetaHeaderRaw(m_block_raw);
+
+    if (!RSA::doVerify(merger_pk_pem, meta_header_raw, m_signature, true)) {
       CLOG(ERROR, "BLOC") << "Invalid merger signature";
       return false;
     }
@@ -362,50 +339,51 @@ public:
   }
 
 private:
-  void init() {}
-
-  bytes genBlockRaw() {
+  bytes generateMetaWithCompHeader() {
 
     bytes compressed_json;
 
-    nlohmann::json block_header = getBlockHeaderJson();
+    json block_header = getBlockHeaderJson();
 
-    switch (config::DEFAULT_COMPRESSION_TYPE) {
-    case CompressionAlgorithmType::LZ4:
+    switch (config::DEFAULT_BLOCKRAW_COMP_ALGO) {
+    case CompressionAlgorithmType::LZ4: {
       compressed_json = Compressor::compressData(
           TypeConverter::stringToBytes(block_header.dump()));
       break;
-    case CompressionAlgorithmType::MessagePack:
+    }
+    case CompressionAlgorithmType::MessagePack: {
       compressed_json = json::to_msgpack(block_header);
       break;
-    case CompressionAlgorithmType::CBOR:
+    }
+    case CompressionAlgorithmType::CBOR: {
       compressed_json = json::to_cbor(block_header);
       break;
+    }
     default:
       compressed_json = TypeConverter::stringToBytes(block_header.dump());
     }
     // now, we cannot change block_raw any more
 
-    auto header_length =
+    auto header_end =
         static_cast<header_length_type>(compressed_json.size() + 5);
 
     BytesBuilder block_raw_builder;
     block_raw_builder.append(
-        static_cast<uint8_t>(config::DEFAULT_COMPRESSION_TYPE)); // 1-byte
-    block_raw_builder.append(header_length, 4);                  // 4-bytes
+        static_cast<uint8_t>(config::DEFAULT_BLOCKRAW_COMP_ALGO)); // 1-byte
+    block_raw_builder.append(header_end, 4);                       // 4-bytes
     block_raw_builder.append(compressed_json);
 
     return block_raw_builder.getBytes();
   }
 
-  bytes getSupportSigMessageAfterSid() {
-    BytesBuilder ssig_msg_after_sid_builder;
-    ssig_msg_after_sid_builder.append(m_time);
-    ssig_msg_after_sid_builder.append(m_merger_id);
-    ssig_msg_after_sid_builder.append(m_chain_id);
-    ssig_msg_after_sid_builder.append(m_height);
-    ssig_msg_after_sid_builder.append(m_tx_root);
-    return ssig_msg_after_sid_builder.getBytes();
+  bytes getSupportSigMessageCommon() {
+    BytesBuilder ssig_msg_common_builder;
+    ssig_msg_common_builder.append(m_time);
+    ssig_msg_common_builder.append(m_merger_id);
+    ssig_msg_common_builder.append(m_chain_id);
+    ssig_msg_common_builder.append(m_height);
+    ssig_msg_common_builder.append(m_tx_root);
+    return ssig_msg_common_builder.getBytes();
   }
 
   std::vector<sha256> calcMerkleTreeNode() {
@@ -433,50 +411,81 @@ private:
     return ret_map;
   }
 
-  bytes parseBlockSignature(bytes &block_raw_bytes) {
+  size_t getHeaderEnd(bytes &block_raw_bytes) {
     if (block_raw_bytes.size() <= 5) {
-      return bytes();
+      return 0;
     }
 
-    size_t header_end = static_cast<size_t>(
+    auto header_end = static_cast<size_t>(
         block_raw_bytes[1] << 24 | block_raw_bytes[2] << 16 |
         block_raw_bytes[3] << 8 | block_raw_bytes[4]);
 
     if (header_end >= block_raw_bytes.size())
+      return 0;
+
+    return header_end;
+  }
+
+  bytes getBlockMetaHeaderRaw(bytes &block_raw_bytes) {
+
+    size_t header_end = getHeaderEnd(block_raw_bytes);
+
+    if (header_end == 0) {
+      CLOG(ERROR, "BLOC") << "Empty header end";
       return bytes();
+    }
+
+    return bytes(block_raw_bytes.begin(), block_raw_bytes.begin() + header_end);
+  }
+
+  bytes getBlockSignature(bytes &block_raw_bytes) {
+    size_t header_end = getHeaderEnd(block_raw_bytes);
+
+    if (header_end == 0) {
+      CLOG(ERROR, "BLOC") << "Empty header end";
+      return bytes();
+    }
 
     return bytes(block_raw_bytes.begin() + header_end, block_raw_bytes.end());
   }
 
-  nlohmann::json parseBlockRaw(bytes &block_raw_bytes) {
+  json getBlockHeader(bytes &block_raw_bytes) {
 
-    el::Loggers::getLogger("BLOC");
+    json block_header_json;
 
-    nlohmann::json block_header_json;
+    size_t header_end = getHeaderEnd(block_raw_bytes);
 
-    if (block_raw_bytes.size() <= 5) {
-      return block_header_json;
+    if (header_end == 0) {
+      CLOG(ERROR, "BLOC") << "Empty header end";
+      return bytes();
     }
-
-    size_t header_end = static_cast<size_t>(
-        block_raw_bytes[1] << 24 | block_raw_bytes[2] << 16 |
-        block_raw_bytes[3] << 8 | block_raw_bytes[4]);
 
     std::string block_header_comp(block_raw_bytes.begin() + 5,
                                   block_raw_bytes.begin() + header_end);
 
-    switch (static_cast<CompressionAlgorithmType>(block_raw_bytes[0])) {
+    auto compression_algo =
+        static_cast<CompressionAlgorithmType>(block_raw_bytes[0]);
+
+    switch (compression_algo) {
     case CompressionAlgorithmType::LZ4: {
       block_header_json =
           Safe::parseJson(Compressor::decompressData(block_header_comp));
       break;
     }
     case CompressionAlgorithmType::MessagePack: {
-      block_header_json = json::from_msgpack(block_header_comp);
+      try {
+        block_header_json = json::from_msgpack(block_header_comp);
+      } catch (json::exception &e) {
+        CLOG(ERROR, "BLOC") << e.what();
+      }
       break;
     }
     case CompressionAlgorithmType::CBOR: {
-      block_header_json = json::from_cbor(block_header_comp);
+      try {
+        block_header_json = json::from_cbor(block_header_comp);
+      } catch (json::exception &e) {
+        CLOG(ERROR, "BLOC") << e.what();
+      }
       break;
     }
     case CompressionAlgorithmType::NONE: {
@@ -489,7 +498,8 @@ private:
     }
 
     if (block_header_json.empty())
-      CLOG(ERROR, "BLOC") << "Invalid JSON structure";
+      CLOG(ERROR, "BLOC") << "Failed decompression (" << (int)compression_algo
+                          << ")";
 
     return block_header_json;
   }

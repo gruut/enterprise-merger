@@ -1,11 +1,11 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TRANSACTION_POOL_HPP
 #define GRUUT_ENTERPRISE_MERGER_TRANSACTION_POOL_HPP
 
+#include "../chain/transaction.hpp"
+
 #include <algorithm>
 #include <list>
 #include <mutex>
-
-#include "../chain/transaction.hpp"
 
 namespace gruut {
 class TransactionPool {

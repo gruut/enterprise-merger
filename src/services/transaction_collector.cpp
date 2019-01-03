@@ -1,19 +1,8 @@
 #include "transaction_collector.hpp"
 #include "../application.hpp"
-#include "../chain/transaction.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
-#include "../utils/type_converter.hpp"
-#include <boost/assert.hpp>
-#include <botan-2/botan/base64.h>
-#include <botan-2/botan/data_src.h>
-#include <botan-2/botan/x509_key.h>
-#include <iostream>
-
 #include "easy_logging.hpp"
 
 using namespace std;
-using namespace nlohmann;
 
 namespace gruut {
 TransactionCollector::TransactionCollector() {

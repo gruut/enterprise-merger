@@ -1,15 +1,5 @@
 #include "block_generator.hpp"
-#include "../chain/merkle_tree.hpp"
-#include "../chain/signature.hpp"
-#include "../chain/types.hpp"
-#include "../src/application.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/compressor.hpp"
-#include "../utils/rsa.hpp"
-#include "../utils/time.hpp"
-#include "../utils/type_converter.hpp"
-#include "message_proxy.hpp"
-
+#include "../application.hpp"
 #include "easy_logging.hpp"
 
 using namespace std;
@@ -52,10 +42,10 @@ void BlockGenerator::generateBlock(PartialBlock partial_block,
   // step-1) make block
 
   Block new_block;
-  new_block.initWithParitalBlock(partial_block, merkle_tree.getMerkleTree());
-  new_block.setSupportSigs(support_sigs);
+  new_block.initalize(partial_block, merkle_tree.getMerkleTree());
+  new_block.setSupportSignatures(support_sigs);
   new_block.linkPreviousBlock();
-  new_block.refreshBlockRaw();
+  new_block.finalize();
 
   json block_header = new_block.getBlockHeaderJson();
   bytes block_raw = new_block.getBlockRaw();

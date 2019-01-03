@@ -13,6 +13,8 @@ constexpr block_version_type DEFAULT_VERSION = 0x01;
 constexpr size_t MAX_THREAD = 40;
 constexpr CompressionAlgorithmType DEFAULT_COMPRESSION_TYPE =
     CompressionAlgorithmType::LZ4;
+constexpr CompressionAlgorithmType DEFAULT_BLOCKRAW_COMP_ALGO =
+    CompressionAlgorithmType::LZ4;
 
 constexpr size_t BP_INTERVAL = 10;
 constexpr size_t BP_PING_PERIOD = 4;

@@ -13,7 +13,6 @@
 
 using namespace std;
 using namespace gruut;
-using namespace nlohmann;
 
 BOOST_AUTO_TEST_SUITE(Test_HeaderController)
 

@@ -41,7 +41,7 @@ public:
         m_requestor_id(requestor_id), m_transaction_type(transaction_type),
         m_signature(signature), m_content_list(content_list) {}
 
-  bool setJson(nlohmann::json &tx_json) {
+  bool setJson(json &tx_json) {
 
     auto new_txid_bytes = Safe::getBytesFromB64(tx_json, "txid");
 
@@ -62,45 +62,40 @@ public:
     return true;
   }
 
-  nlohmann::json getJson() {
-    return nlohmann::json(
-        {{"txid", TypeConverter::encodeBase64(m_transaction_id)},
-         {"time", to_string(m_sent_time)},
-         {"rID", TypeConverter::encodeBase64(m_requestor_id)},
-         {"type", txTypeToStr(m_transaction_type)},
-         {"rSig", TypeConverter::encodeBase64(m_signature)},
-         {"content", m_content_list}});
+  json getJson() {
+    return json({{"txid", TypeConverter::encodeBase64(m_transaction_id)},
+                 {"time", to_string(m_sent_time)},
+                 {"rID", TypeConverter::encodeBase64(m_requestor_id)},
+                 {"type", txTypeToStr(m_transaction_type)},
+                 {"rSig", TypeConverter::encodeBase64(m_signature)},
+                 {"content", m_content_list}});
   }
 
-  inline void setId(transaction_id_type transaction_id) {
+  void setId(transaction_id_type transaction_id) {
     m_transaction_id = transaction_id;
   }
 
-  inline transaction_id_type getId() { return m_transaction_id; }
+  transaction_id_type getId() { return m_transaction_id; }
 
-  inline void setTime(timestamp_type sent_time) { m_sent_time = sent_time; }
+  void setTime(timestamp_type sent_time) { m_sent_time = sent_time; }
 
-  inline void setRequestorId(requestor_id_type &&requestor_id) {
+  void setRequestorId(requestor_id_type &&requestor_id) {
     m_requestor_id = requestor_id;
   }
 
-  inline void setRequestorId(requestor_id_type &requestor_id) {
+  void setRequestorId(requestor_id_type &requestor_id) {
     m_requestor_id = requestor_id;
   }
 
-  inline void setTransactionType(TransactionType transaction_type) {
+  void setTransactionType(TransactionType transaction_type) {
     m_transaction_type = transaction_type;
   }
 
-  inline void setSignature(signature_type &&signature) {
-    m_signature = signature;
-  }
+  void setSignature(signature_type &&signature) { m_signature = signature; }
 
-  inline void setSignature(signature_type &signature) {
-    m_signature = signature;
-  }
+  void setSignature(signature_type &signature) { m_signature = signature; }
 
-  inline void setContents(nlohmann::json &content_list) {
+  void setContents(json &content_list) {
     m_content_list.clear();
     if (content_list.is_array()) {
       for (auto &cont_item : content_list) {
@@ -108,11 +103,11 @@ public:
       }
     }
   }
-  inline void setContents(std::vector<content_type> &&content_list) {
+  void setContents(std::vector<content_type> &&content_list) {
     setContents(content_list);
   }
 
-  inline void setContents(std::vector<content_type> &content_list) {
+  void setContents(std::vector<content_type> &content_list) {
     m_content_list = content_list;
   }
 

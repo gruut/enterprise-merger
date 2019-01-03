@@ -1,12 +1,12 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_MESSAGE_VALIDATOR_HPP
 #define GRUUT_ENTERPRISE_MERGER_MESSAGE_VALIDATOR_HPP
+#include "nlohmann/json.hpp"
+
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
 #include "../utils/time.hpp"
-#include "nlohmann/json.hpp"
 
 namespace gruut {
-using namespace nlohmann;
 using namespace std;
 
 const map<EntryName, string> ENTRY_NAME_TO_STRING = {

@@ -1,13 +1,9 @@
 #include "storage.hpp"
-#include "../utils/safe.hpp"
 #include "easy_logging.hpp"
-#include "setting.hpp"
-#include <botan-2/botan/asn1_time.h>
 
 namespace gruut {
 
 using namespace std;
-using namespace nlohmann;
 
 Storage::Storage() {
   el::Loggers::getLogger("STRG");
@@ -481,7 +477,7 @@ read_block_type Storage::readBlock(size_t height) {
     std::string txids_json_str =
         getDataByKey(DBType::BLOCK_HEADER, block_id_b64 + "_txids");
 
-    json txs_json = nlohmann::json::array();
+    json txs_json = json::array();
 
     if (!txids_json_str.empty()) {
       json txids_json = Safe::parseJson(txids_json_str);
@@ -490,7 +486,7 @@ read_block_type Storage::readBlock(size_t height) {
         for (auto &each_txid : txids_json) {
           std::string txid_b64 = Safe::getString(each_txid);
 
-          json tx_json = nlohmann::json(
+          json tx_json = json(
               {{"txid", txid_b64},
                {"time", getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_time")},
                {"rID", getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_rID")},

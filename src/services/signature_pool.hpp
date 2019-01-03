@@ -1,14 +1,19 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGNATURE_POOL_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGNATURE_POOL_HPP
 
-#include <list>
-#include <mutex>
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 
+#include "../application.hpp"
 #include "../chain/block.hpp"
 #include "../chain/signature.hpp"
+#include "../utils/bytes_builder.hpp"
+#include "../utils/rsa.hpp"
+#include "../utils/safe.hpp"
+#include "../utils/type_converter.hpp"
 
-using namespace nlohmann;
+#include <list>
+#include <mutex>
+#include <string>
 
 namespace gruut {
 using Signatures = std::vector<Signature>;
@@ -17,7 +22,7 @@ class SignaturePool {
 public:
   SignaturePool();
 
-  void handleMessage(nlohmann::json &);
+  void handleMessage(json &);
 
   void push(Signature &signature);
 

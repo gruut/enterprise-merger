@@ -32,7 +32,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
   std::string sender_id_b64 = Safe::getString(msg_block.body, "mID");
 
   Block new_block;
-  if (!new_block.initWithMessageJson(msg_block.body)) {
+  if (!new_block.initialze(msg_block.body)) {
     CLOG(ERROR, "BSYN") << "Block dropped (missing information)";
     return false;
   }
@@ -438,14 +438,14 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
   blockSyncControl();
 }
 
-bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
+inline bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
   return (
       msg_type == MessageType::MSG_UP || msg_type == MessageType::MSG_PING ||
       msg_type == MessageType::MSG_REQ_BLOCK ||
       msg_type == MessageType::MSG_BLOCK || msg_type == MessageType::MSG_ERROR);
 }
 
-bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type) {
+inline bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type) {
   return (msg_type == MessageType::MSG_JOIN ||
           msg_type == MessageType::MSG_RESPONSE_1 ||
           msg_type == MessageType::MSG_ECHO ||

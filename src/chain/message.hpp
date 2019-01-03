@@ -21,15 +21,12 @@ struct MessageHeader {
   uint8_t reserved_space[6];
 };
 
-using InputMessage = tuple<MessageType, id_type, nlohmann::json>;
-using OutputMessage = tuple<MessageType, vector<id_type>, nlohmann::json>;
-
 struct Message : public MessageHeader {
   Message() = delete;
 
   Message(MessageHeader &header) : MessageHeader(header) {}
 
-  nlohmann::json data;
+  json data;
 };
 } // namespace gruut
 #endif

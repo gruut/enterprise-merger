@@ -1,5 +1,7 @@
 #pragma once
 
+#include "nlohmann/json.hpp"
+
 #include "../../chain/types.hpp"
 #include "../../config/config.hpp"
 #include "../../services/message_proxy.hpp"
@@ -7,10 +9,11 @@
 #include "../../utils/time.hpp"
 #include "../communication/communication.hpp"
 #include "../module.hpp"
+
 #include "block_synchronizer.hpp"
-#include "nlohmann/json.hpp"
 
 #include <boost/asio.hpp>
+
 #include <chrono>
 #include <functional>
 #include <iostream>
@@ -31,7 +34,7 @@ private:
 public:
   BootStraper();
 
-  inline void setCommunication(std::shared_ptr<Communication> communication) {
+  void setCommunication(std::shared_ptr<Communication> communication) {
     m_communication = communication;
   }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../chain/types.hpp"
 #include "nlohmann/json.hpp"
 
 class Safe {

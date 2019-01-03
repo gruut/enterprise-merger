@@ -1,6 +1,5 @@
 #include "boot_straper.hpp"
 #include "../../application.hpp"
-
 #include "easy_logging.hpp"
 
 namespace gruut {

@@ -24,7 +24,6 @@
 #include "fixture.hpp"
 
 using namespace gruut;
-using namespace nlohmann;
 using namespace std;
 
 BOOST_AUTO_TEST_SUITE(Test_BlockGenerator)
@@ -100,7 +99,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(Test_MessageIOQueues)
 
   BOOST_AUTO_TEST_CASE(pushMessages) {
-    nlohmann::json msg_body = "{}"_json;
+    json msg_body = "{}"_json;
     std::vector<id_type> msg_receiver = {};
 
     auto input_queue = InputQueueAlt::getInstance();

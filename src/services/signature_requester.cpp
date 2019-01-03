@@ -1,19 +1,6 @@
-#include <boost/system/error_code.hpp>
-#include <iostream>
-#include <random>
-
-#include "../application.hpp"
-#include "../chain/signer.hpp"
-#include "../chain/types.hpp"
-#include "../config/config.hpp"
-#include "block_generator.hpp"
-#include "message_proxy.hpp"
 #include "signature_requester.hpp"
-#include "signer_pool.hpp"
-
+#include "../application.hpp"
 #include "easy_logging.hpp"
-
-using namespace gruut::config;
 
 namespace gruut {
 
