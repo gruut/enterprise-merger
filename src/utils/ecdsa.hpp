@@ -52,7 +52,8 @@ public:
   static std::vector<uint8_t> doSign(Botan::ECDSA_PrivateKey &ecdsa_sk,
                                      const std::vector<uint8_t> &data) {
     Botan::AutoSeeded_RNG auto_rng;
-    Botan::PK_Signer signer(ecdsa_sk, auto_rng, "EMSA1(SHA-256)");
+    Botan::PK_Signer signer(ecdsa_sk, auto_rng, "EMSA1(SHA-256)",
+                            Botan::Signature_Format::DER_SEQUENCE);
     return signer.sign_message(data, auto_rng);
   }
 
@@ -77,7 +78,8 @@ public:
   static bool doVerify(Botan::Public_Key &ecdsa_pk,
                        const std::vector<uint8_t> &data,
                        const std::vector<uint8_t> &sig) {
-    Botan::PK_Verifier verifier(ecdsa_pk, "EMSA1(SHA-256)");
+    Botan::PK_Verifier verifier(ecdsa_pk, "EMSA1(SHA-256)",
+                                Botan::Signature_Format::DER_SEQUENCE);
     return verifier.verify_message(data, sig);
   }
 
