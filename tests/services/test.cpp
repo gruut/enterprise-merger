@@ -198,24 +198,24 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     BOOST_TEST(certificate4 == "");
   }
 
-  BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
-    StorageFixture storage_fixture;
-    auto height_raw_tx = storage_fixture.m_storage->readBlock(1);
-    auto latest_height_raw_tx = storage_fixture.m_storage->readBlock(0);
-    auto no_data_raw_tx = storage_fixture.m_storage->readBlock(9999);
-
-    BOOST_TEST(1 == get<0>(height_raw_tx));
-    BOOST_TEST(block_raw_sample1_bytes == get<1>(height_raw_tx));
-    //cout << get<2>(height_raw_tx) << endl;
-
-    BOOST_TEST(2 == get<0>(latest_height_raw_tx));
-    BOOST_TEST(block_raw_sample2_bytes == get<1>(latest_height_raw_tx));
-    //cout << get<2>(latest_height_raw_tx) <<endl;
-
-    BOOST_TEST(0 == get<0>(no_data_raw_tx));
-    BOOST_TEST(get<1>(no_data_raw_tx).empty());
-    BOOST_TEST(get<2>(no_data_raw_tx).empty());
-  }
+//  BOOST_AUTO_TEST_CASE(read_block_for_block_processor) {
+//    StorageFixture storage_fixture;
+//    auto height_raw_tx = storage_fixture.m_storage->readBlock(1);
+//    auto latest_height_raw_tx = storage_fixture.m_storage->readBlock(0);
+//    auto no_data_raw_tx = storage_fixture.m_storage->readBlock(9999);
+//
+//    BOOST_TEST(1 == get<0>(height_raw_tx));
+//    BOOST_TEST(block_raw_sample1_bytes == get<1>(height_raw_tx));
+//    //cout << get<2>(height_raw_tx) << endl;
+//
+//    BOOST_TEST(2 == get<0>(latest_height_raw_tx));
+//    BOOST_TEST(block_raw_sample2_bytes == get<1>(latest_height_raw_tx));
+//    //cout << get<2>(latest_height_raw_tx) <<endl;
+//
+//    BOOST_TEST(0 == get<0>(no_data_raw_tx));
+//    BOOST_TEST(get<1>(no_data_raw_tx).empty());
+//    BOOST_TEST(get<2>(no_data_raw_tx).empty());
+//  }
 
   BOOST_AUTO_TEST_CASE(find_sibling) {
     StorageFixture storage_fixture;
@@ -256,8 +256,8 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
     p_block.transactions.push_back(test_tx);
 
     vector<Signature> signature;
-    signer_id_type signer_id = TypeConverter::integerToBytes(1);
-    signature.push_back({signer_id, TypeConverter::integerToBytes(1)});
+    Signature tmp_sig(static_cast<signer_id_type>(TypeConverter::integerToBytes(1)),static_cast<signature_type>(TypeConverter::integerToBytes(1)));
+    signature.emplace_back(tmp_sig);
 
     MerkleTree tree;
     vector<Transaction> transactions = {test_tx};
@@ -283,14 +283,18 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
   BOOST_AUTO_TEST_CASE(validationSuccess) {
+
+    InputMsgEntry msg_join_test;
     json msg_join_json = R"({
       "sID": "UAABACACAAE=",
       "time": "1543323592",
       "ver": "1020181127",
       "cID": "AAAAAAAAAAE="
     })"_json;
-    msg_join_json["time"] = Time::now();
+    msg_join_test.type = MessageType::MSG_JOIN;
+    msg_join_test.body = msg_join_json;
 
+    InputMsgEntry msg_response_1_test;
     json msg_response_1_json = R"({
       "sID": "UAABACACAAE=",
       "time": "1543323592",
@@ -300,15 +304,19 @@ BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
       "dhy": "96e2d24205439ccc998e4021f21d8736891a63539ef4c77a6b85698dc746833b",
       "sig": "QWVMP1UfUJIemaLFqnXvQfGqghVCmYH0yXo1/g5hUWAbouuXdTI/O7Gkgz3C5kXhnIWZ+dHp...."
     })"_json;
-    msg_response_1_json["time"] = Time::now();
+    msg_response_1_test.type = MessageType::MSG_RESPONSE_1;
+    msg_response_1_test.body = msg_response_1_json;
 
+    InputMsgEntry msg_success_test;
     json msg_success_json = R"({
       "sID": "UAABACACAAE=",
       "time": "1543323592",
       "val": true
     })"_json;
-    msg_success_json["time"] = Time::now();
+    msg_success_test.type = MessageType::MSG_SUCCESS;
+    msg_success_test.body = msg_success_json;
 
+    InputMsgEntry msg_tx_test;
     json msg_tx_json = R"({
       "txid": "Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg=",
       "time": "1543323592",
@@ -321,39 +329,49 @@ BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
       ],
       "rSig": "SM49AwEHA0IABBXqXQz72KPYPp9lwiQeqKaO9MF313icIj8GC2Il0Cy6QuDAiEC....."
     })"_json;
-    msg_tx_json["time"] = Time::now();
+    msg_tx_test.type = MessageType::MSG_TX;
+    msg_tx_test.body = msg_tx_json;
 
+    InputMsgEntry msg_ssig_test;
     json msg_ssig_json = R"({
       "sID": "UAABACACAAE=",
       "time": "1543323592",
       "sig": "QWVMP1UfUJIemaLFqnXvQfGqghVCmYH0yXo1/g5hUWAbouuXdTI/O7Gkgz3C5kXhnIWZ+dHp...."
     })"_json;
-    msg_ssig_json["time"] = Time::now();
+    msg_ssig_test.type = MessageType::MSG_SSIG;
+    msg_ssig_test.body = msg_ssig_json;
 
+    InputMsgEntry msg_ping_test;
     json msg_ping_json = R"({
       "mID": "AAAAAAAAAAE=",
       "time": "1543323592",
       "sCnt": "25",
       "stat": "p"
     })"_json;
-    msg_ping_json["time"] = Time::now();
+    msg_ping_test.type = MessageType::MSG_PING;
+    msg_ping_test.body = msg_ping_json;
 
+    InputMsgEntry msg_up_test;
     json msg_up_json = R"({
       "mID": "AAAAAAAAAAE=",
       "time": "1543323592",
       "ver": "1020181127",
       "cID": "AAAAAAAAAAE="
     })"_json;
-    msg_up_json["time"] = Time::now();
+    msg_up_test.type = MessageType::MSG_UP;
+    msg_up_test.body = msg_up_json;
 
+    InputMsgEntry msg_req_check_test;
     json msg_req_check_json = R"({
       "sender": "AAAAAAAAAAE=",
       "time": "1543323592",
       "dID": "AAAAAAAAAAE=",
       "txid": "Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg="
     })"_json;
-    msg_req_check_json["time"] = Time::now();
+    msg_req_check_test.type = MessageType::MSG_REQ_CHECK;
+    msg_req_check_test.body = msg_req_check_json;
 
+    InputMsgEntry msg_block_test;
     json msg_block_json = R"({
       "mID": "AAAAAAAAAAE=",
       "blockraw": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -384,65 +402,68 @@ BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
         }
       ]
     })"_json;
-    msg_block_json["tx"][0]["time"] = Time::now();
-    msg_block_json["tx"][1]["time"] = Time::now();
+    msg_block_test.type = MessageType::MSG_BLOCK;
+    msg_block_test.body = msg_block_json;
 
+    InputMsgEntry msg_req_block_test;
     json msg_req_block_json = R"({
       "mID": "AAAAAAAAAAE=",
       "time": "1543323592",
       "mCert": "-----BEGIN CERTIFICATE-----\nMIIDLDCCAhQCBgEZlK1CPjA....\n-----END CERTIFICATE-----",
-      "hgt": "-1",
+      "hgt": "1",
       "mSig": "vQPcP1sloKtQzEP+cOgYwbf0F3QhblPsABOtJrq8nNAEXtibe5J/9B4d4t920JLnQsbZtSMHo...."
     })"_json;
-    msg_req_block_json["time"] = Time::now();
+    msg_req_block_test.type = MessageType::MSG_REQ_BLOCK;
+    msg_req_block_test.body = msg_req_block_json;
 
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_JOIN, msg_join_json), true);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_RESPONSE_1, msg_response_1_json), true);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_SUCCESS, msg_success_json), true);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_TX, msg_tx_json), true);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_SSIG, msg_ssig_json), true);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_PING, msg_ping_json), true);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_UP, msg_up_json), true);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_CHECK, msg_req_check_json), true);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_BLOCK, msg_block_json), true);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_BLOCK, msg_req_block_json), true);
+    MessageValidator validator_test;
+
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_join_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_response_1_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_success_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_tx_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_ssig_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_ping_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_up_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_req_check_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_block_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_req_block_test), true);
   }
 
-  BOOST_AUTO_TEST_CASE(validationFailure) {
-    json msg_join_json = R"({
+BOOST_AUTO_TEST_CASE(validationFailure) {
+  MessageValidator validator_test;
+
+  // sID entry가 빠진 경우
+  InputMsgEntry msg_join_test;
+  json msg_join_json = R"({
         "time": "1543323592",
         "ver": "1020181127",
         "cID": "AAAAAAAAAAE="
       })"_json;
-    msg_join_json["time"] = Time::now();
+  msg_join_test.type = MessageType::MSG_JOIN;
+  msg_join_test.body = msg_join_json;
 
-    // sID entry가 빠진 경우
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_JOIN, msg_join_json), false);
+  BOOST_CHECK_EQUAL(validator_test.validate(msg_join_test), false);
 
-    // time이 현재 시간보다 10초 이상 경과하는 경우
-    msg_join_json["time"] = to_string(stoll(Time::now()) + config::JOIN_TIMEOUT_SEC);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_JOIN, msg_join_json), false);
-
-    json msg_response_1_json = R"({
+  // signer nonce 길이가 다른 경우
+  InputMsgEntry msg_response_1_test;
+  json msg_response_1_json = R"({
       "sID": "UAABACACAAE=",
       "time": "1543323592",
       "cert": "-----BEGIN CERTIFICATE-----\nMIIDLDCCAhQCBgEZlK1CPjA....\n-----END CERTIFICATE-----",
-      "sN": "luLSQgVDnMyZjkAh8h2HNokaY1Oe9Md6a4VpjcdGgzs=",
+      "sN": "abcd",
       "dhx": "92943e52e02476bd1a4d74c2498db3b01c204f29a32698495b4ed0a274e12294",
       "dhy": "96e2d24205439ccc998e4021f21d8736891a63539ef4c77a6b85698dc746833b",
       "sig": "QWVMP1UfUJIemaLFqnXvQfGqghVCmYH0yXo1/g5hUWAbouuXdTI/O7Gkgz3C5kXhnIWZ+dHp...."
     })"_json;
-    msg_response_1_json["time"] = Time::now();
+  msg_response_1_test.type = MessageType::MSG_RESPONSE_1;
+  msg_response_1_test.body = msg_response_1_json;
 
-    // signer nonce 길이가 다른 경우
-    msg_response_1_json["sN"] = "abcd";
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_RESPONSE_1, msg_response_1_json), false);
+  BOOST_CHECK_EQUAL(validator_test.validate(msg_response_1_test), false);
 
-    // time이 현재시간보다 5초 이상 경과하는 경우
-    msg_response_1_json["time"] = to_string(stoll(Time::now()) + config::MAX_WAIT_TIME);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_RESPONSE_1, msg_response_1_json), false);
-
-    json msg_tx_json = R"({
+  // content가 잘못 입력됐을 경우
+  InputMsgEntry msg_tx_test;
+  json msg_tx_json = R"({
         "txid": "Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg=",
         "time": "1543323592",
         "rID": "AAAAAAAAAAE=",
@@ -454,52 +475,51 @@ BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
         ],
         "rSig": "SM49AwEHA0IABBXqXQz72KPYPp9lwiQeqKaO9MF313icIj8GC2Il0Cy6QuDAiEC....."
       })"_json;
-    msg_tx_json["time"] = Time::now();
 
-    // content가 잘못 입력됐을 경우
-    msg_tx_json["content"] = "UAABACACAAE=";
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_TX, msg_tx_json), false);
+  msg_tx_json["content"] = "UAABACACAAE=";
+  msg_tx_test.type = MessageType::MSG_TX;
+  msg_tx_test.body = msg_tx_json;
 
-    json msg_ping_json = R"({
+  BOOST_CHECK_EQUAL(validator_test.validate(msg_tx_test), false);
+
+  // signer count가 200을 초과 했을 경우
+  InputMsgEntry msg_ping_test;
+  json msg_ping_json = R"({
         "mID": "AAAAAAAAAAE=",
         "time": "1543323592",
-        "sCnt": "25",
+        "sCnt": "201",
         "stat": "p"
       })"_json;
-    msg_ping_json["time"] = Time::now();
 
-    // signer count가 200을 초과 했을 경우
-    msg_ping_json["sCnt"] = to_string(config::MAX_SIGNER_NUM + 1);
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_PING, msg_ping_json), false);
+  msg_ping_test.type = MessageType::MSG_PING;
+  msg_ping_test.body = msg_ping_json;
 
-    json msg_block_json = R"({
+  BOOST_CHECK_EQUAL(validator_test.validate(msg_ping_test), false);
+
+  // tx entry가 빠진 경우
+  InputMsgEntry msg_block_test;
+  json msg_block_json = R"({
         "mID": "AAAAAAAAAAE=",
         "blockraw": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       })"_json;
+  msg_block_test.type = MessageType::MSG_BLOCK;
+  msg_block_test.body = msg_block_json;
 
-    // tx entry가 빠진 경우
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_BLOCK, msg_block_json), false);
+  BOOST_CHECK_EQUAL(validator_test.validate(msg_block_test), false);
 
-    json msg_req_block_json = R"({
+  // hgt = -1
+  InputMsgEntry msg_req_block_test;
+  json msg_req_block_json = R"({
         "mID": "AAAAAAAAAAE=",
         "time": "1543323592",
         "mCert": "-----BEGIN CERTIFICATE-----\nMIIDLDCCAhQCBgEZlK1CPjA....\n-----END CERTIFICATE-----",
         "hgt": "-1",
         "mSig": "vQPcP1sloKtQzEP+cOgYwbf0F3QhblPsABOtJrq8nNAEXtibe5J/9B4d4t920JLnQsbZtSMHo...."
       })"_json;
-    msg_req_block_json["time"] = Time::now();
+  msg_req_block_test.type = MessageType::MSG_REQ_BLOCK;
+  msg_req_block_test.body = msg_req_block_json;
+  BOOST_CHECK_EQUAL(validator_test.validate(msg_req_block_test), false);
 
-    // hgt가 0인 경우
-    msg_req_block_json["hgt"] = "0";
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_BLOCK, msg_req_block_json), false);
-
-    // hgt가 -2인 경우
-    msg_req_block_json["hgt"] = "-2";
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_BLOCK, msg_req_block_json), false);
-
-    // hgt가 1인 경우 (성공 케이스)
-    msg_req_block_json["hgt"] = "1";
-    BOOST_CHECK_EQUAL(MessageValidator::validate(MessageType::MSG_REQ_BLOCK, msg_req_block_json), true);
-  }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
