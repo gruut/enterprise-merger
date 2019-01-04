@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_TEMPLATE_SINGLETON_HPP
+#define GRUUT_ENTERPRISE_MERGER_TEMPLATE_SINGLETON_HPP
 
 #include <cstdlib>
 #include <memory>
@@ -47,3 +48,5 @@ private:
 
 template <typename T> T *TemplateSingleton<T>::m_instance = 0;
  */
+
+#endif

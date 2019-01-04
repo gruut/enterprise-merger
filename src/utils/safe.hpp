@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_SAFE_HPP
+#define GRUUT_ENTERPRISE_MERGER_SAFE_HPP
 
 #include "../utils/type_converter.hpp"
 #include "nlohmann/json.hpp"
@@ -105,3 +106,5 @@ public:
     return static_cast<T>(TypeConverter::decodeBase64(parse_str));
   }
 };
+
+#endif

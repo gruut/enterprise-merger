@@ -1,7 +1,7 @@
 #include <iostream>
 
+#include "src/config/config.hpp"
 #include "src/chain/types.hpp"
-
 #include "src/application.hpp"
 #include "src/services/setting.hpp"
 #include "src/services/argv_parser.hpp"

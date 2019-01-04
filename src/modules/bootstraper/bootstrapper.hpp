@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_BOOTSTRAPPER_HPP
+#define GRUUT_ENTERPRISE_MERGER_BOOTSTRAPPER_HPP
 
 #include "nlohmann/json.hpp"
 
@@ -23,7 +24,7 @@
 
 namespace gruut {
 
-class BootStraper : public Module {
+class Bootstrapper : public Module {
 private:
   BlockSynchronizer m_block_synchronizer;
   merger_id_type m_my_id;
@@ -32,7 +33,7 @@ private:
   std::shared_ptr<Communication> m_communication;
 
 public:
-  BootStraper();
+  Bootstrapper();
 
   void setCommunication(std::shared_ptr<Communication> communication) {
     m_communication = communication;
@@ -47,3 +48,5 @@ private:
   void endSync(ExitCode exit_code);
 };
 } // namespace gruut
+
+#endif

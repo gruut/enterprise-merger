@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_BLOCK_SYNCHRONIZER_HPP
+#define GRUUT_ENTERPRISE_MERGER_BLOCK_SYNCHRONIZER_HPP
 
 #include "../../chain/block.hpp"
 #include "../../chain/types.hpp"
@@ -80,3 +81,5 @@ private:
   void updateTaskTime();
 };
 } // namespace gruut
+
+#endif

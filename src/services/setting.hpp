@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_SETTING_HPP
+#define GRUUT_ENTERPRISE_MERGER_SETTING_HPP
 
 #include "json-schema.hpp"
 #include "nlohmann/json.hpp"
@@ -266,3 +267,5 @@ private:
   }
 };
 } // namespace gruut
+
+#endif

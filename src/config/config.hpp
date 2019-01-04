@@ -8,6 +8,11 @@
 namespace gruut {
 namespace config {
 
+const std::string APP_NAME = "Merger for Gruut Enterprise Networks (C++)";
+const std::string APP_CODE_NAME = "Super-Koopa";
+const std::string APP_BUILD_DATE = __DATE__;
+const std::string APP_BUILD_TIME = __TIME__;
+
 constexpr block_version_type DEFAULT_VERSION = 0x01;
 
 constexpr size_t MAX_THREAD = 40;

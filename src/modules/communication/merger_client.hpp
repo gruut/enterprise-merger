@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_MERGER_CLIENT_HPP
+#define GRUUT_ENTERPRISE_MERGER_MERGER_CLIENT_HPP
 
 #include "../../services/output_queue.hpp"
 #include "connection_list.hpp"
@@ -13,6 +14,7 @@
 #include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
+
 using namespace grpc;
 using namespace grpc_merger;
 using namespace grpc_se;
@@ -57,3 +59,5 @@ private:
   bool checkSEMsgType(MessageType msg_type);
 };
 } // namespace gruut
+
+#endif

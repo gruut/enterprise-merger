@@ -1,4 +1,6 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_GRPC_UTIL_HPP
+#define GRUUT_ENTERPRISE_MERGER_GRPC_UTIL_HPP
+
 #include "../../../include/nlohmann/json.hpp"
 #include "../../application.hpp"
 #include "../../utils/hmac.hpp"
@@ -23,3 +25,5 @@ public:
   static bool validateSchema(json json_object, MessageType msg_type);
 };
 } // namespace gruut
+
+#endif

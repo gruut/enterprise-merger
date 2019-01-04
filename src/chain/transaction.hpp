@@ -1,6 +1,8 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TRANSACTION_HPP
 #define GRUUT_ENTERPRISE_MERGER_TRANSACTION_HPP
 
+#include "nlohmann/json.hpp"
+
 #include "../services/setting.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/ecdsa.hpp"
@@ -9,7 +11,6 @@
 #include "../utils/type_converter.hpp"
 #include "types.hpp"
 
-#include "../../include/nlohmann/json.hpp"
 #include <boost/assert.hpp>
 
 #include <array>
@@ -113,7 +114,7 @@ public:
 
   std::map<std::string, std::string> getCertsIf() {
     std::map<std::string, std::string> ret_certs;
-    if (m_transaction_type == TransactionType::CERTIFICATE) {
+    if (m_transaction_type == TransactionType::CERTIFICATES) {
       for (size_t i = 0; i < m_content_list.size(); i += 2) {
         ret_certs.insert({m_content_list[i], m_content_list[i + 1]});
       }
@@ -203,7 +204,7 @@ private:
     if (tx_type_str == TXTYPE_DIGESTS)
       ret_type = TransactionType::DIGESTS;
     else if (tx_type_str == TXTYPE_CERTIFICATES)
-      ret_type = TransactionType::CERTIFICATE;
+      ret_type = TransactionType::CERTIFICATES;
     else
       ret_type = TransactionType::UNKNOWN;
 

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_MERGER_SERVER_HPP
+#define GRUUT_ENTERPRISE_MERGER_MERGER_SERVER_HPP
 
 #include "../../services/input_queue.hpp"
 #include "protos/health.grpc.pb.h"
@@ -191,3 +192,5 @@ private:
 };
 
 } // namespace gruut
+
+#endif

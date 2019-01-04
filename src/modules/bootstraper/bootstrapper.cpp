@@ -1,19 +1,19 @@
-#include "boot_straper.hpp"
+#include "bootstrapper.hpp"
 #include "../../application.hpp"
 #include "easy_logging.hpp"
 
 namespace gruut {
 
-BootStraper::BootStraper() {
+Bootstrapper::Bootstrapper() {
   auto setting = Setting::getInstance();
   m_my_id = setting->getMyId();
   m_my_localchain_id = setting->getLocalChainId();
   el::Loggers::getLogger("BOOT");
 }
 
-void BootStraper::start() { selfCheckUp(); }
+void Bootstrapper::start() { selfCheckUp(); }
 
-void BootStraper::sendMsgUp() {
+void Bootstrapper::sendMsgUp() {
 
   CLOG(INFO, "BOOT") << "send MSG_UP";
 
@@ -27,37 +27,32 @@ void BootStraper::sendMsgUp() {
   m_msg_proxy.deliverOutputMessage(output_msg);
 }
 
-void BootStraper::selfCheckUp() {
+void Bootstrapper::selfCheckUp() {
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
-    CLOG(INFO, "BOOT") << "Start Self Check-up";
-
-    CLOG(INFO, "BOOT") << "1) Waiting communication to start";
+    CLOG(INFO, "BOOT") << "1) Waiting server to start";
     while (!m_communication->isStarted()) {
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
-    CLOG(INFO, "BOOT") << "2) Waiting communication to check (in 5 sec)";
+    CLOG(INFO, "BOOT") << "2) Waiting connection check (in 5 sec)";
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     // TODO :: do jobs for self check-up
-
-    CLOG(INFO, "BOOT") << "Ended Self Check-up";
 
     startSync();
   });
 }
 
-void BootStraper::startSync() {
+void Bootstrapper::startSync() {
+
+  CLOG(INFO, "BOOT") << "3) Starting block synchronization";
 
   m_block_synchronizer.startBlockSync(
-      std::bind(&BootStraper::endSync, this, std::placeholders::_1));
+      std::bind(&Bootstrapper::endSync, this, std::placeholders::_1));
 }
 
-void BootStraper::endSync(ExitCode exit_code) {
-
-  CLOG(INFO, "BOOT") << "Ended block synchronization (" << (int)exit_code
-                     << ")";
+void Bootstrapper::endSync(ExitCode exit_code) {
 
   if (exit_code == ExitCode::NORMAL ||
       exit_code == ExitCode::ERROR_SYNC_ALONE) { // complete done or alone

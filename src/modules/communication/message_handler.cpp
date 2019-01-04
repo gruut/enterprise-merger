@@ -24,8 +24,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
   }
   MessageHeader header = HeaderController::parseHeader(packed_msg);
   if (!validateMsgFormat(header)) {
-    rpc_status = Status(StatusCode::INVALID_ARGUMENT,
-                        "Wrong Message (MessageHandler::unpackMsg)");
+    rpc_status = Status(StatusCode::INVALID_ARGUMENT, "Wrong Message");
     return;
   }
   size_t body_size = getMsgBodySize(header);
@@ -45,8 +44,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
                                                     secure_vector_key.end());
 
     if (!Hmac::verifyHMAC(msg, hmac, key)) {
-      rpc_status = Status(StatusCode::UNAUTHENTICATED,
-                          "Wrong HMAC (MessageHandler::unpackMsg)");
+      rpc_status = Status(StatusCode::UNAUTHENTICATED, "Wrong HMAC");
       return;
     }
   }
@@ -55,8 +53,8 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
   json json_data = getJson(header.compression_algo_type, msg_body);
 
   if (!JsonValidator::validateSchema(json_data, header.message_type)) {
-    rpc_status = Status(grpc::StatusCode::INVALID_ARGUMENT,
-                        "Json schema check fail (MessageHandler::unpackMsg)");
+    rpc_status =
+        Status(grpc::StatusCode::INVALID_ARGUMENT, "Json schema check fail");
     return;
   }
 

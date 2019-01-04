@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_CONNECTION_LIST_HPP
+#define GRUUT_ENTERPRISE_MERGER_CONNECTION_LIST_HPP
 
 #include "../../services/setting.hpp"
 #include "../../utils/template_singleton.hpp"
@@ -57,3 +58,5 @@ private:
 };
 
 } // namespace gruut
+
+#endif

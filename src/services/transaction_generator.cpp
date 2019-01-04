@@ -14,7 +14,7 @@ void TransactionGenerator::generate(vector<Signer> &signers) {
   new_transaction.setId(generateTransactionId());
   new_transaction.setTime(static_cast<timestamp_type>(Time::now_int()));
   new_transaction.setRequestorId(setting->getMyId());
-  new_transaction.setTransactionType(TransactionType::CERTIFICATE);
+  new_transaction.setTransactionType(TransactionType::CERTIFICATES);
 
   std::vector<content_type> content_list;
   for (auto &signer : signers) {

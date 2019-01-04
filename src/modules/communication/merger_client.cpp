@@ -203,7 +203,7 @@ void MergerClient::sendMsgToMerger(MergerInfo &merger_info,
 
   Status status = stub->pushData(&context, request, &reply);
   if (!status.ok())
-    CLOG(ERROR, "MCLN") << status.error_message();
+    CLOG(ERROR, "MCLN") << "Opponent's response - " << status.error_message();
 }
 
 void MergerClient::sendToSigner(MessageType msg_type,

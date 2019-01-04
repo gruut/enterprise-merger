@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_FILE_IO_HPP
+#define GRUUT_ENTERPRISE_MERGER_FILE_IO_HPP
 
 #include <fstream>
 #include <iostream>
@@ -25,3 +26,5 @@ public:
     return ret_str;
   }
 };
+
+#endif

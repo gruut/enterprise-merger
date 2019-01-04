@@ -1,4 +1,6 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_MSG_SCHEMA_HPP
+#define GRUUT_ENTERPRISE_MERGER_MSG_SCHEMA_HPP
+
 #include "../../../include/nlohmann/json.hpp"
 #include "../../application.hpp"
 #include <map>
@@ -375,3 +377,5 @@ std::map<MessageType, json> MessageSchema::schema_list = {
     {MessageType::MSG_TX, SCHEMA_TX}};
 
 }; // namespace gruut
+
+#endif
