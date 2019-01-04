@@ -1,12 +1,14 @@
 #pragma once
 
+#include "nlohmann/json.hpp"
+#include "easy_logging.hpp"
+
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
 #include "../utils/safe.hpp"
 #include "../utils/time.hpp"
-#include "easy_logging.hpp"
 #include "input_queue.hpp"
-#include "nlohmann/json.hpp"
+
 #include <climits>
 #include <cmath>
 #include <cstdlib>
@@ -28,11 +30,10 @@ enum class EntryType {
 };
 
 enum class EntryLength : int {
-  ID = 12,        // AAAAAAAAAAE=
-  SIG_NONCE = 44, // luLSQgVDnMyZjkAh8h2HNokaY1Oe9Md6a4VpjcdGgzs=
-  DIFFIE_HELLMAN =
-      64, // 92943e52e02476bd1a4d74c2498db3b01c204f29a32698495b4ed0a274e12294
-  TX_ID = 44, // Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg=
+  ID = 12,              // Base64 64-bit = 4 * ceil(8-byte/3) = 12 chars
+  SIG_NONCE = 44,       // Base64 256-bit = 4 * ceil(32-byte/3) = 44 chars
+  DIFFIE_HELLMAN = 64,  // Hex 256-bit = 64 chars
+  TX_ID = 44,           // Base64 256-bit = 44 chars
   NONE = 0
 };
 
@@ -107,7 +108,7 @@ public:
         continue;
 
       if (!validEntryType(msg_entry.body, std::get<2>(val), std::get<1>(val)) ||
-          !validEntryLen(msg_entry.body, std::get<1>(val), std::get<3>(val)))
+          !hasValidLength(msg_entry.body, std::get<1>(val), std::get<3>(val)))
         return false;
     }
 
@@ -115,49 +116,54 @@ public:
   }
 
 private:
-  bool arrayOfObjectIsValid(nlohmann::json &tx_json) {
-    return (tx_json.is_array() && !tx_json.empty());
-  }
 
-  bool arrayOfStringIsValid(nlohmann::json &content_json) {
-    return (content_json.is_array() && !content_json.empty());
-  }
-
-  bool validEntryLen(nlohmann::json &msg_body, const std::string &key,
-                     const EntryLength &len) {
+  bool hasValidLength(nlohmann::json &msg_body, const std::string &key,
+                      const EntryLength &len) {
     if (len == EntryLength::NONE)
       return true;
 
     return Safe::getString(msg_body, key).length() == static_cast<int>(len);
   }
 
-  bool validEntryType(nlohmann::json &msg_body, const EntryType &type,
-                      const std::string &key) {
-    std::string temp = Safe::getString(msg_body, key);
+  bool validEntryType(nlohmann::json &msg_body, const EntryType &type, const std::string &key) {
+
     switch (type) {
     case EntryType::BASE64: {
+      std::string temp = Safe::getString(msg_body, key);
       std::regex rgx(
           "([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)");
       return !temp.empty() && std::regex_match(temp, rgx);
     }
-    case EntryType::TIMESTAMP:
+    case EntryType::TIMESTAMP: {
+      std::string temp = Safe::getString(msg_body, key);
       return !temp.empty() && std::all_of(temp.begin(), temp.end(), ::isdigit);
-    case EntryType::HEX:
+    }
+    case EntryType::HEX: {
+      std::string temp = Safe::getString(msg_body, key);
       return !temp.empty() && std::all_of(temp.begin(), temp.end(), ::isxdigit);
-    case EntryType::STRING:
+    }
+    case EntryType::STRING: {
+      std::string temp = Safe::getString(msg_body, key);
       return (temp == TXTYPE_CERTIFICATES || temp == TXTYPE_DIGESTS);
-    case EntryType::DECIMAL:
+    }
+    case EntryType::DECIMAL: {
+      std::string temp = Safe::getString(msg_body, key);
       return !temp.empty() &&
-             std::all_of(temp.begin(), temp.end(), ::isdigit) &&
-             (0 <= stoi(temp) && stoi(temp) <= config::MAX_SIGNER_NUM);
-    case EntryType::UINT:
+        std::all_of(temp.begin(), temp.end(), ::isdigit) &&
+        (0 <= stoi(temp) && stoi(temp) <= config::MAX_SIGNER_NUM);
+    }
+    case EntryType::UINT: {
+      std::string temp = Safe::getString(msg_body, key);
       return !temp.empty() &&
-             std::all_of(temp.begin(), temp.end(), ::isdigit) &&
-             (stoi(temp) >= 0);
-    case EntryType::ARRAYOFSTRING:
-      return arrayOfObjectIsValid(msg_body["content"]);
-    case EntryType::ARRAYOFOBJECT:
-      return arrayOfStringIsValid(msg_body["tx"]);
+        std::all_of(temp.begin(), temp.end(), ::isdigit) &&
+        (stoi(temp) >= 0);
+    }
+    case EntryType::ARRAYOFSTRING: {
+      return (msg_body[key].is_array() && !msg_body[key].empty());
+    }
+    case EntryType::ARRAYOFOBJECT: {
+      return (msg_body[key].is_array() && !msg_body[key].empty());
+    }
     default:
       return true;
     }
