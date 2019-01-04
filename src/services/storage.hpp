@@ -1,18 +1,23 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 #define GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 
-#include "../chain/merkle_tree.hpp"
-#include "../chain/types.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
-#include "../utils/sha256.hpp"
-#include "../utils/template_singleton.hpp"
-#include "../utils/time.hpp"
 #include "leveldb/db.h"
 #include "leveldb/options.h"
 #include "leveldb/write_batch.h"
 #include "nlohmann/json.hpp"
 
+#include "../chain/merkle_tree.hpp"
+#include "../chain/types.hpp"
+#include "../utils/bytes_builder.hpp"
+#include "../utils/rsa.hpp"
+#include "../utils/safe.hpp"
+#include "../utils/sha256.hpp"
+#include "../utils/template_singleton.hpp"
+#include "../utils/time.hpp"
+
+#include "setting.hpp"
+
+#include <botan-2/botan/asn1_time.h>
 #include <botan-2/botan/auto_rng.h>
 #include <botan-2/botan/data_src.h>
 #include <botan-2/botan/exceptn.h>
@@ -29,7 +34,6 @@
 
 namespace gruut {
 using namespace std;
-using namespace nlohmann;
 
 const map<DBType, std::string> DB_PREFIX = {
     {DBType::BLOCK_HEADER, "b_"}, {DBType::BLOCK_HEIGHT, "h_"},

@@ -1,25 +1,27 @@
 #pragma once
 
+#include "nlohmann/json.hpp"
+
 #include "../chain/types.hpp"
 #include "../utils/template_singleton.hpp"
+
 #include <deque>
 #include <iostream>
 #include <mutex>
-#include <nlohmann/json.hpp>
 #include <thread>
 
 namespace gruut {
 
 struct OutputMsgEntry {
   MessageType type;
-  nlohmann::json body;
+  json body;
   std::vector<id_type> receivers;
   OutputMsgEntry()
       : type(MessageType::MSG_NULL), body(nullptr), receivers({}) {}
-  OutputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_,
+  OutputMsgEntry(MessageType msg_type_, json &msg_body_,
                  std::vector<id_type> &msg_receivers_)
       : type(msg_type_), body(msg_body_), receivers(msg_receivers_) {}
-  OutputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_)
+  OutputMsgEntry(MessageType msg_type_, json &msg_body_)
       : type(msg_type_), body(msg_body_), receivers({}) {}
 };
 
@@ -29,8 +31,8 @@ private:
   std::mutex m_queue_mutex;
 
 public:
-  void push(std::tuple<MessageType, nlohmann::json, std::vector<id_type>>
-                &msg_entry_tuple) {
+  void
+  push(std::tuple<MessageType, json, std::vector<id_type>> &msg_entry_tuple) {
     OutputMsgEntry tmp_msg_entry(std::get<0>(msg_entry_tuple),
                                  std::get<1>(msg_entry_tuple),
                                  std::get<2>(msg_entry_tuple));
@@ -38,13 +40,13 @@ public:
     push(tmp_msg_entry);
   }
 
-  void push(MessageType msg_type, nlohmann::json &msg_body) {
+  void push(MessageType msg_type, json &msg_body) {
     std::vector<id_type> msg_receivers;
     OutputMsgEntry tmp_msg_entry(msg_type, msg_body, msg_receivers);
     push(tmp_msg_entry);
   }
 
-  void push(MessageType msg_type, nlohmann::json &msg_body,
+  void push(MessageType msg_type, json &msg_body,
             std::vector<id_type> &msg_receivers) {
     OutputMsgEntry tmp_msg_entry(msg_type, msg_body, msg_receivers);
     push(tmp_msg_entry);

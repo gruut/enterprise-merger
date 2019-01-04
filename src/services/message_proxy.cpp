@@ -1,13 +1,6 @@
 #include "message_proxy.hpp"
-#include "../../include/nlohmann/json.hpp"
 #include "../application.hpp"
-#include "../chain/message.hpp"
-#include "../chain/types.hpp"
-#include "message_validator.hpp"
-
 #include "easy_logging.hpp"
-
-using namespace nlohmann;
 
 namespace gruut {
 

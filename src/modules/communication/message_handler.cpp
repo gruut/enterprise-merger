@@ -52,7 +52,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
   }
 
   std::string msg_body = getMsgBody(packed_msg, body_size);
-  nlohmann::json json_data = getJson(header.compression_algo_type, msg_body);
+  json json_data = getJson(header.compression_algo_type, msg_body);
 
   if (!JsonValidator::validateSchema(json_data, header.message_type)) {
     rpc_status = Status(grpc::StatusCode::INVALID_ARGUMENT,
@@ -67,7 +67,7 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
 void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
   MessageType msg_type = output_msg.type;
 
-  nlohmann::json body = output_msg.body;
+  json body = output_msg.body;
   MessageHeader header;
   header.message_type = msg_type;
 
@@ -119,10 +119,9 @@ std::string MessageHandler::getMsgBody(std::string &packed_msg, int body_size) {
   return packed_body;
 }
 
-nlohmann::json
-MessageHandler::getJson(CompressionAlgorithmType compression_type,
-                        std::string &body) {
-  nlohmann::json unpacked_body;
+json MessageHandler::getJson(CompressionAlgorithmType compression_type,
+                             std::string &body) {
+  json unpacked_body;
   if (!body.empty()) {
     switch (compression_type) {
     case CompressionAlgorithmType::LZ4: {
@@ -139,8 +138,7 @@ MessageHandler::getJson(CompressionAlgorithmType compression_type,
   return unpacked_body;
 }
 
-std::string MessageHandler::genPackedMsg(MessageHeader &header,
-                                         nlohmann::json &body) {
+std::string MessageHandler::genPackedMsg(MessageHeader &header, json &body) {
   std::string body_dump = body.dump();
 
   switch (header.compression_algo_type) {
@@ -159,7 +157,7 @@ std::string MessageHandler::genPackedMsg(MessageHeader &header,
 }
 
 void MessageHandler::genInternalMsg(MessageType msg_type, std::string &id_b64) {
-  nlohmann::json msg_body;
+  json msg_body;
   switch (msg_type) {
   case MessageType::MSG_LEAVE: {
     msg_body["sID"] = id_b64;

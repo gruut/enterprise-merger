@@ -1,20 +1,21 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <vector>
+#include "json-schema.hpp"
+#include "nlohmann/json.hpp"
 
-#include "../../include/json-schema.hpp"
-#include "../../include/nlohmann/json.hpp"
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
+#include "../utils/safe.hpp"
 #include "../utils/template_singleton.hpp"
 #include "../utils/type_converter.hpp"
 
 #include "easy_logging.hpp"
 
+#include <iostream>
+#include <string>
+#include <vector>
+
 namespace gruut {
-using namespace nlohmann;
 using namespace nlohmann::json_schema_draft4;
 
 struct GruutAuthorityInfo {
@@ -163,25 +164,25 @@ public:
     if (!validateSchema(setting_json))
       return false;
 
-    m_id = getIdFromJson(setting_json["Self"]["id"]);
-    m_address = setting_json["Self"]["address"].get<std::string>();
-    m_port = setting_json["Self"]["port"].get<std::string>();
+    m_id = Safe::getBytesFromB64<id_type>(setting_json["Self"], "id");
+    m_address = Safe::getString(setting_json["Self"], "address");
+    m_port = Safe::getString(setting_json["Self"], "port");
     m_sk = joinMultiLine(setting_json["Self"]["sk"]);
     m_localchain_id = getChainIdFromJson(setting_json["LocalChain"]["id"]);
-    m_localchain_name = setting_json["LocalChain"]["name"].get<std::string>();
-    m_db_path = setting_json["dbpath"].get<string>();
+    m_localchain_name = Safe::getString(setting_json["LocalChain"], "name");
+    m_db_path = Safe::getString(setting_json, "dbpath");
 
-    m_gruut_authority.id = getIdFromJson(setting_json["GA"]["id"]);
-    m_gruut_authority.address =
-        setting_json["GA"]["address"].get<std::string>();
+    m_gruut_authority.id =
+        Safe::getBytesFromB64<id_type>(setting_json["GA"], "id");
+    m_gruut_authority.address = Safe::getString(setting_json["GA"], "address");
     m_gruut_authority.cert = joinMultiLine(setting_json["cert"]);
 
     m_service_endpoints.clear();
     for (size_t i = 0; i < setting_json["SE"].size(); ++i) {
       ServiceEndpointInfo tmp_info;
-      tmp_info.id = getIdFromJson(setting_json["SE"][i]["id"]);
-      tmp_info.address = setting_json["SE"][i]["address"].get<std::string>();
-      tmp_info.port = setting_json["SE"][i]["port"].get<std::string>();
+      tmp_info.id = Safe::getBytesFromB64<id_type>(setting_json["SE"][i], "id");
+      tmp_info.address = Safe::getString(setting_json["SE"][i], "address");
+      tmp_info.port = Safe::getString(setting_json["SE"][i], "port");
       tmp_info.cert = joinMultiLine(setting_json["SE"][i]["cert"]);
       m_service_endpoints.emplace_back(tmp_info);
     }
@@ -189,9 +190,9 @@ public:
     m_mergers.clear();
     for (size_t i = 0; i < setting_json["MG"].size(); ++i) {
       MergerInfo tmp_info;
-      tmp_info.id = getIdFromJson(setting_json["MG"][i]["id"]);
-      tmp_info.address = setting_json["MG"][i]["address"].get<std::string>();
-      tmp_info.port = setting_json["MG"][i]["port"].get<std::string>();
+      tmp_info.id = Safe::getBytesFromB64<id_type>(setting_json["MG"][i], "id");
+      tmp_info.address = Safe::getString(setting_json["MG"][i], "address");
+      tmp_info.port = Safe::getString(setting_json["MG"][i], "port");
       tmp_info.cert = joinMultiLine(setting_json["MG"][i]["cert"]);
 
       if (tmp_info.id == m_id) {
@@ -201,7 +202,7 @@ public:
       m_mergers.emplace_back(tmp_info);
     }
 
-    m_sk_pass = setting_json["pass"];
+    m_sk_pass = Safe::getString(setting_json, "pass");
 
     setting_json.clear();
 
@@ -236,20 +237,16 @@ public:
 
 private:
   local_chain_id_type getChainIdFromJson(json &t_json) {
-    std::string id_b64 = t_json.get<std::string>();
+    std::string id_b64 = Safe::getString(t_json);
     bytes id_bytes = TypeConverter::decodeBase64(id_b64);
     return static_cast<local_chain_id_type>(
         TypeConverter::bytesToArray<CHAIN_ID_TYPE_SIZE>(id_bytes));
   }
 
-  id_type getIdFromJson(json &t_json) {
-    std::string id_b64 = t_json.get<std::string>();
-    return static_cast<id_type>(TypeConverter::decodeBase64(id_b64));
-  }
   std::string joinMultiLine(json &mline_json) {
     std::string ret_str;
     for (size_t i = 0; i < mline_json.size(); ++i) {
-      ret_str += mline_json[i].get<std::string>();
+      ret_str += Safe::getString(mline_json[i]);
       if (i != mline_json.size() - 1) {
         ret_str += "\n";
       }

@@ -36,11 +36,13 @@ public:
     return ret_json;
   }
 
-  static std::string getString(nlohmann::json &&json_obj, const std::string &key) {
-    return getString(json_obj,key);
+  static std::string getString(nlohmann::json &&json_obj,
+                               const std::string &key) {
+    return getString(json_obj, key);
   }
 
-  static std::string getString(nlohmann::json &json_obj, const std::string &key) {
+  static std::string getString(nlohmann::json &json_obj,
+                               const std::string &key) {
     if (json_obj.find(key) != json_obj.end()) {
       return getString(json_obj[key]);
     }
@@ -62,5 +64,42 @@ public:
     }
 
     return ret_str;
+  }
+
+  static uint64_t getInt(nlohmann::json &&json_obj, const std::string &key) {
+    return getInt(json_obj, key);
+  }
+
+  static uint64_t getInt(nlohmann::json &json_obj, const std::string &key) {
+    std::string dec_str = getString(json_obj, key);
+    if (dec_str.empty())
+      return 0;
+    return static_cast<uint64_t>(stoll(dec_str));
+  }
+
+  static gruut::timestamp_type getTime(nlohmann::json &&json_obj,
+                                       const std::string &key) {
+    return getTime(json_obj, key);
+  }
+
+  static gruut::timestamp_type getTime(nlohmann::json &json_obj,
+                                       const std::string &key) {
+    std::string dec_str = getString(json_obj, key);
+    if (dec_str.empty())
+      return 0;
+    return static_cast<gruut::timestamp_type>(stoll(dec_str));
+  }
+
+  template <typename T = gruut::bytes>
+  static T getBytesFromB64(nlohmann::json &&json_obj, const std::string &key) {
+    return getBytesFromB64<T>(json_obj, key);
+  }
+
+  template <typename T = gruut::bytes>
+  static T getBytesFromB64(nlohmann::json &json_obj, const std::string &key) {
+    std::string parse_str = getString(json_obj, key);
+    if (parse_str.empty())
+      return T();
+    return static_cast<T>(TypeConverter::decodeBase64(parse_str));
   }
 };

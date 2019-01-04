@@ -5,7 +5,6 @@
 #include "../../src/utils/sha256.hpp"
 #include "../../src/chain/types.hpp"
 namespace gruut {
-using nlohmann::json;
 using namespace std;
 json block_header_sample1 = {
     {"bID", "bbbbbbbbbID1"},

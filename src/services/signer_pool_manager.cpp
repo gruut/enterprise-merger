@@ -1,32 +1,6 @@
-
-#include <algorithm>
-#include <chrono>
-#include <iostream>
-
-#include <botan-2/botan/pem.h>
-#include <botan-2/botan/pubkey.h>
-#include <botan-2/botan/rsa.h>
-#include <botan-2/botan/x509cert.h>
-
-#include "nlohmann/json.hpp"
-
-#include "../utils/rsa.hpp"
-
-#include "../application.hpp"
-#include "../chain/types.hpp"
-#include "../config/config.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/hmac_key_maker.hpp"
-#include "../utils/random_number_generator.hpp"
-#include "../utils/sha256.hpp"
-#include "../utils/time.hpp"
-#include "../utils/type_converter.hpp"
-
 #include "signer_pool_manager.hpp"
-
+#include "../application.hpp"
 #include "easy_logging.hpp"
-
-using namespace nlohmann;
 
 namespace gruut {
 SignerPoolManager::SignerPoolManager() {
@@ -38,9 +12,8 @@ SignerPoolManager::SignerPoolManager() {
 void SignerPoolManager::handleMessage(MessageType &message_type,
                                       json &message_body_json) {
 
-  string recv_id_b64 = message_body_json["sID"].get<string>();
-  signer_id_type recv_id =
-      TypeConverter::decodeBase64(message_body_json["sID"].get<string>());
+  string recv_id_b64 = Safe::getString(message_body_json, "sID");
+  signer_id_type recv_id = Safe::getBytesFromB64(message_body_json, "sID");
 
   vector<signer_id_type> receiver_list{recv_id};
 

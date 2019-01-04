@@ -1,21 +1,29 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGNATURE_REQUESTER_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGNATURE_REQUESTER_HPP
 
-#include <boost/asio.hpp>
-#include <memory>
-#include <set>
-#include <thread>
-#include <vector>
-
 #include "../chain/block.hpp"
 #include "../chain/merkle_tree.hpp"
 #include "../chain/message.hpp"
 #include "../chain/signer.hpp"
-
+#include "../chain/transaction.hpp"
+#include "../chain/types.hpp"
 #include "../config/config.hpp"
 
+#include "block_generator.hpp"
+#include "message_proxy.hpp"
+#include "signature_requester.hpp"
+#include "signer_pool.hpp"
+
+#include <boost/asio.hpp>
+#include <boost/system/error_code.hpp>
+#include <iostream>
+#include <memory>
+#include <random>
+#include <set>
+#include <thread>
+#include <vector>
+
 namespace gruut {
-class Transaction;
 
 using RandomSignerIndices = std::set<int>;
 using Transactions = std::vector<Transaction>;

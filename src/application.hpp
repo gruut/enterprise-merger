@@ -8,6 +8,12 @@
 #include "modules/message_fetcher/out_message_fetcher.hpp"
 #include "modules/module.hpp"
 
+#include "config/config.hpp"
+
+#include "chain/message.hpp"
+#include "chain/signature.hpp"
+#include "chain/transaction.hpp"
+
 #include "services/block_processor.hpp"
 #include "services/setting.hpp"
 #include "services/signature_pool.hpp"
@@ -16,15 +22,12 @@
 #include "services/transaction_pool.hpp"
 
 #include <boost/asio.hpp>
+
 #include <list>
 #include <queue>
 #include <thread>
 #include <tuple>
 #include <vector>
-
-#include "chain/message.hpp"
-#include "chain/signature.hpp"
-#include "chain/transaction.hpp"
 
 using namespace std;
 

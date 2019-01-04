@@ -1,15 +1,26 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TRANSACTION_COLLECTOR_HPP
 #define GRUUT_ENTERPRISE_MERGER_TRANSACTION_COLLECTOR_HPP
 
-#include <boost/asio.hpp>
-#include <memory>
-#include <nlohmann/json.hpp>
-#include <queue>
+#include "nlohmann/json.hpp"
 
+#include "../chain/transaction.hpp"
 #include "../chain/types.hpp"
 #include "../modules/module.hpp"
+#include "../utils/bytes_builder.hpp"
+#include "../utils/rsa.hpp"
+#include "../utils/type_converter.hpp"
 #include "setting.hpp"
 #include "signature_requester.hpp"
+
+#include <boost/asio.hpp>
+#include <boost/assert.hpp>
+#include <botan-2/botan/base64.h>
+#include <botan-2/botan/data_src.h>
+#include <botan-2/botan/x509_key.h>
+
+#include <iostream>
+#include <memory>
+#include <queue>
 
 namespace gruut {
 
@@ -18,7 +29,7 @@ enum class BpJobStatus { DO, DONT, UNKNOWN };
 class TransactionCollector {
 public:
   TransactionCollector();
-  void handleMessage(nlohmann::json &msg_body_json);
+  void handleMessage(json &msg_body_json);
   void setTxCollectStatus(BpStatus status);
 
 private:

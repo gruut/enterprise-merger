@@ -29,33 +29,17 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
 
   updateTaskTime();
 
-  std::string sender_id_b64 = Safe::getString(msg_block.body["mID"]);
-  std::string block_raw_b64 = Safe::getString(msg_block.body["blockraw"]);
+  std::string sender_id_b64 = Safe::getString(msg_block.body, "mID");
 
-  bytes block_raw_bytes = TypeConverter::decodeBase64(block_raw_b64);
-
-  nlohmann::json block_header_json =
-      BlockValidator::getBlockHeaderJson(block_raw_bytes);
-
-  if (block_header_json.empty()) {
-    CLOG(ERROR, "BSYN") << "Block dropped (empty block)";
+  Block new_block;
+  if (!new_block.initialze(msg_block.body)) {
+    CLOG(ERROR, "BSYN") << "Block dropped (missing information)";
     return false;
   }
 
-  size_t block_height =
-      static_cast<size_t>(stoi(Safe::getString(block_header_json["hgt"])));
+  size_t block_height = new_block.getHeight();
 
-  if (block_height <= m_my_last_height) {
-    CLOG(ERROR, "BSYN") << "Block dropped (old block)";
-    return false;
-  }
-
-  if (!msg_block.body["tx"].is_array()) {
-    CLOG(ERROR, "BSYN") << "Block dropped (TXs are not array)";
-    return false;
-  }
-
-  auto it_map = m_recv_block_list.find(block_height);
+  auto it_map = m_recv_block_list.find(new_block.getHeight());
 
   bool is_new_block = false;
 
@@ -63,30 +47,26 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
     is_new_block = true;
 
   if (m_first_recv_block_height == 0) {
-    m_first_recv_block_height = block_height;
+    m_first_recv_block_height = new_block.getHeight();
     reserveBlockList(m_my_last_height + 1, m_first_recv_block_height);
   }
 
-  RcvBlock recv_block;
-  recv_block.merger_id_b64 = sender_id_b64;
-  recv_block.hash = Sha256::hash(block_raw_bytes);
-  recv_block.block_raw_bytes = std::move(block_raw_bytes);
-  recv_block.block_header_json = std::move(block_header_json);
-  recv_block.txs_json = msg_block.body["tx"];
-  recv_block.merkle_tree = {}; // will be filled after validation
-  recv_block.state = BlockState::RECEIVED;
+  RcvBlockMapItem recv_block_item;
+  recv_block_item.merger_id_b64 = sender_id_b64;
+  recv_block_item.block = std::move(new_block);
+  recv_block_item.state = BlockState::RECEIVED;
 
   if (is_new_block) {
 
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
-    m_recv_block_list.insert(make_pair(block_height, recv_block));
+    m_recv_block_list.insert(make_pair(block_height, recv_block_item));
     m_block_list_mutex.unlock();
 
   } else if (it_map->second.state == BlockState::RETRIED) {
 
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
     m_recv_block_list.erase(block_height);
-    m_recv_block_list.insert(std::make_pair(block_height, recv_block));
+    m_recv_block_list.insert(std::make_pair(block_height, recv_block_item));
     m_block_list_mutex.unlock();
 
   } else {
@@ -108,7 +88,7 @@ void BlockSynchronizer::reserveBlockList(size_t begin, size_t end) {
   CLOG(INFO, "BSYN") << "called reserveBlockList(from=" << begin
                      << ",before=" << end << ")";
 
-  RcvBlock temp;
+  RcvBlockMapItem temp;
   temp.state = BlockState::RESERVED;
 
   std::lock_guard<std::mutex> lock(m_block_list_mutex);
@@ -168,17 +148,7 @@ bool BlockSynchronizer::validateBlock(size_t height) {
   if (it_map == m_recv_block_list.end())
     return false;
 
-  std::vector<sha256> full_merkle_tree;
-  std::vector<transaction_id_type> dummy_txids;
-
-  if (BlockValidator::validateAndGetTree(it_map->second.block_header_json,
-                                         it_map->second.txs_json,
-                                         full_merkle_tree, dummy_txids)) {
-    it_map->second.merkle_tree = full_merkle_tree;
-    return true;
-  }
-
-  return false;
+  return it_map->second.block.isValid();
 }
 
 void BlockSynchronizer::saveBlock(size_t height) {
@@ -190,22 +160,11 @@ void BlockSynchronizer::saveBlock(size_t height) {
     return;
   }
 
-  size_t num_txs = it_map->second.txs_json.size();
+  json block_header = it_map->second.block.getBlockHeaderJson();
+  bytes block_raw = it_map->second.block.getBlockRaw();
+  json block_body = it_map->second.block.getBlockBodyJson();
 
-  std::vector<std::string> mtree_nodes_b64(num_txs);
-
-  for (size_t i = 0; i < num_txs; ++i) { // to save data, we need only digests
-    mtree_nodes_b64[i] =
-        TypeConverter::encodeBase64(it_map->second.merkle_tree[i]);
-  }
-
-  nlohmann::json block_body;
-  block_body["tx"] = it_map->second.txs_json;
-  block_body["txCnt"] = to_string(num_txs);
-  block_body["mtree"] = mtree_nodes_b64;
-
-  m_storage->saveBlock(it_map->second.block_raw_bytes,
-                       it_map->second.block_header_json, block_body);
+  m_storage->saveBlock(block_raw, block_header, block_body);
 
   CLOG(INFO, "BSYN") << "Block saved (height=" << height << ")";
 }
@@ -260,17 +219,14 @@ void BlockSynchronizer::blockSyncControl() {
     if (lowest_block_height == m_my_last_height + 1) {
       auto it_map = m_recv_block_list.find(lowest_block_height);
       if (it_map->second.state == BlockState::RECEIVED) {
-        std::string prev_hash_b64 =
-            Safe::getString(it_map->second.block_header_json["prevH"]);
-        if (prev_hash_b64 == m_my_last_blk_hash_b64) {
+        if (it_map->second.block.getPrevHashB64() == m_my_last_blk_hash_b64) {
           if (validateBlock(it_map->first)) {
 
             std::lock_guard<std::mutex> lock(m_block_list_mutex);
             it_map->second.state = BlockState::TOSAVE;
             m_block_list_mutex.unlock();
 
-            m_my_last_blk_hash_b64 =
-                TypeConverter::encodeBase64(it_map->second.hash);
+            m_my_last_blk_hash_b64 = it_map->second.block.getHashB64();
             m_my_last_height = it_map->first;
 
             updateTaskTime();
@@ -282,9 +238,7 @@ void BlockSynchronizer::blockSyncControl() {
             m_block_list_mutex.unlock();
           }
         } else {
-          CLOG(ERROR, "BSYN")
-              << "Chain is not match (" << m_my_last_blk_hash_b64
-              << " != " << prev_hash_b64 << ")";
+          CLOG(ERROR, "BSYN") << "Chain is not match";
         }
       }
     }
@@ -392,11 +346,10 @@ void BlockSynchronizer::blockSyncControl() {
 
 void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry) {
 
-  if (input_msg_entry.body["sID"].empty())
+  signer_id_type signer_id =
+      Safe::getBytesFromB64<signer_id_type>(input_msg_entry.body, "sID");
+  if (signer_id.empty())
     return;
-
-  std::string signer_id_b64 = Safe::getString(input_msg_entry.body["sID"]);
-  signer_id_type signer_id = TypeConverter::decodeBase64(signer_id_b64);
 
   OutputMsgEntry output_msg;
   output_msg.type = MessageType::MSG_ERROR;
@@ -433,7 +386,7 @@ void BlockSynchronizer::messageFetch() {
     }
 
     if (input_msg_entry.type == MessageType::MSG_ERROR &&
-        Safe::getString(input_msg_entry.body["type"]) ==
+        Safe::getString(input_msg_entry.body, "type") ==
             std::to_string(static_cast<int>(
                 ErrorMsgType::BSYNC_NO_BLOCK))) { // Oh! No block!
       m_sync_done = true;
@@ -485,14 +438,14 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
   blockSyncControl();
 }
 
-bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
+inline bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
   return (
       msg_type == MessageType::MSG_UP || msg_type == MessageType::MSG_PING ||
       msg_type == MessageType::MSG_REQ_BLOCK ||
       msg_type == MessageType::MSG_BLOCK || msg_type == MessageType::MSG_ERROR);
 }
 
-bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type) {
+inline bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type) {
   return (msg_type == MessageType::MSG_JOIN ||
           msg_type == MessageType::MSG_RESPONSE_1 ||
           msg_type == MessageType::MSG_ECHO ||
