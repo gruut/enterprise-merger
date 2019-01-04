@@ -77,6 +77,6 @@ bool SignaturePool::verifySignature(signer_id_type &recv_id,
 
   auto sig_bytes = Safe::getBytesFromB64(msg_body_json, "sig");
 
-  return RSA::doVerify(pk_cert, msg_builder.getBytes(), sig_bytes, true);
+  return ECDSA::doVerify(pk_cert, msg_builder.getBytes(), sig_bytes);
 }
 } // namespace gruut

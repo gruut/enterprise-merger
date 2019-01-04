@@ -8,6 +8,7 @@
 
 #include "../services/storage.hpp"
 #include "../utils/compressor.hpp"
+#include "../utils/ecdsa.hpp"
 
 #include "easy_logging.hpp"
 #include "nlohmann/json.hpp"
@@ -177,10 +178,10 @@ public:
 
     auto setting = Setting::getInstance();
 
-    string rsa_sk = setting->getMySK();
-    string rsa_sk_pass = setting->getMyPass();
+    string ecdsa_sk = setting->getMySK();
+    string ecdsa_sk_pass = setting->getMyPass();
     m_signature =
-        RSA::doSign(rsa_sk, block_meta_comp_header, true, rsa_sk_pass);
+        ECDSA::doSign(ecdsa_sk, block_meta_comp_header, ecdsa_sk_pass);
 
     BytesBuilder block_raw_builder;
     block_raw_builder.append(block_meta_comp_header);
@@ -304,8 +305,8 @@ public:
         return false;
       }
 
-      if (!RSA::doVerify(user_pk_pem, ssig_msg_builder.getBytes(),
-                         each_ssig.signer_signature, true)) {
+      if (!ECDSA::doVerify(user_pk_pem, ssig_msg_builder.getBytes(),
+                           each_ssig.signer_signature)) {
         CLOG(ERROR, "BLOC") << "Invalid support signature";
         return false;
       }
@@ -330,7 +331,7 @@ public:
 
     bytes meta_header_raw = getBlockMetaHeaderRaw(m_block_raw);
 
-    if (!RSA::doVerify(merger_pk_pem, meta_header_raw, m_signature, true)) {
+    if (!ECDSA::doVerify(merger_pk_pem, meta_header_raw, m_signature)) {
       CLOG(ERROR, "BLOC") << "Invalid merger signature";
       return false;
     }

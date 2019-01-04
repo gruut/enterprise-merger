@@ -7,7 +7,7 @@
 #include "../chain/block.hpp"
 #include "../chain/signature.hpp"
 #include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
+#include "../utils/ecdsa.hpp"
 #include "../utils/safe.hpp"
 #include "../utils/type_converter.hpp"
 

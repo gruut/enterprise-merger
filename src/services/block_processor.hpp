@@ -6,7 +6,7 @@
 #include "../chain/types.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/compressor.hpp"
-#include "../utils/rsa.hpp"
+#include "../utils/ecdsa.hpp"
 #include "../utils/sha256.hpp"
 
 #include "input_queue.hpp"
