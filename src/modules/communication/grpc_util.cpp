@@ -80,7 +80,6 @@ int HeaderController::convertU8ToU32BE(uint8_t *len_bytes) {
 }
 
 bool JsonValidator::validateSchema(json json_object, MessageType msg_type) {
-  using nlohmann::json;
   using nlohmann::json_schema_draft4::json_validator;
 
   el::Loggers::getLogger("JVAL");

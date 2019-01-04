@@ -1,9 +1,5 @@
 #include "application.hpp"
-#include "chain/transaction.hpp"
-#include "config/config.hpp"
 #include "easy_logging.hpp"
-#include "modules/message_fetcher/message_fetcher.hpp"
-#include "modules/module.hpp"
 
 namespace gruut {
 boost::asio::io_service &Application::getIoService() { return *m_io_serv; }

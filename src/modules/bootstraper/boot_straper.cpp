@@ -1,6 +1,5 @@
 #include "boot_straper.hpp"
 #include "../../application.hpp"
-
 #include "easy_logging.hpp"
 
 namespace gruut {
@@ -38,8 +37,8 @@ void BootStraper::selfCheckUp() {
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
-    CLOG(INFO, "BOOT") << "2) Waiting communication to check (in 10 sec)";
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    CLOG(INFO, "BOOT") << "2) Waiting communication to check (in 5 sec)";
+    std::this_thread::sleep_for(std::chrono::seconds(5));
 
     // TODO :: do jobs for self check-up
 

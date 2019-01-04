@@ -2,11 +2,20 @@
 #define GRUUT_ENTERPRISE_MERGER_BLOCK_GENERATOR_HPP
 
 #include "../chain/block.hpp"
+#include "../chain/merkle_tree.hpp"
+#include "../chain/signature.hpp"
 #include "../chain/transaction.hpp"
 #include "../chain/types.hpp"
-#include <vector>
+#include "../utils/bytes_builder.hpp"
+#include "../utils/compressor.hpp"
+#include "../utils/rsa.hpp"
+#include "../utils/time.hpp"
+#include "../utils/type_converter.hpp"
 
+#include "message_proxy.hpp"
 #include "signature_requester.hpp"
+
+#include <vector>
 
 using namespace std;
 

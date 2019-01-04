@@ -3,7 +3,6 @@
 #include "../../application.hpp"
 #include <map>
 namespace gruut {
-using nlohmann::json;
 const json SCHEMA_UP = R"({
   "title": "Up",
   "type": "object",

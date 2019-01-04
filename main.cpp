@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include "src/chain/types.hpp"
+
 #include "src/application.hpp"
 #include "src/services/setting.hpp"
 #include "src/services/argv_parser.hpp"
@@ -8,7 +10,6 @@
 
 using namespace std;
 using namespace gruut;
-using namespace nlohmann;
 
 int main(int argc, char *argv[]) {
 

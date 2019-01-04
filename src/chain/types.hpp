@@ -109,6 +109,9 @@ enum class ExitCode {
   ERROR_SKIP_STAGE
 };
 
+using json = nlohmann::json;
+using string = std::string;
+
 using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
 using timestamp_type = uint64_t;
@@ -139,7 +142,7 @@ using proof_type = struct proof_t {
 using read_block_type = struct read_block_t {
   size_t height;
   bytes block_raw;
-  nlohmann::json txs;
+  json txs;
 };
 
 // 아래는 모두 동일한 타입, 문맥에 맞춰서 쓸 것
@@ -152,5 +155,6 @@ using id_type = bytes;
 
 // Message
 using message_version_type = uint8_t;
+
 } // namespace gruut
 #endif

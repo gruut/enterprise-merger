@@ -27,9 +27,8 @@ private:
   bool validateMsgFormat(MessageHeader &header);
   int getMsgBodySize(MessageHeader &header);
   std::string getMsgBody(std::string &packed_msg, int body_size);
-  nlohmann::json getJson(CompressionAlgorithmType compression_type,
-                         std::string &body);
-  std::string genPackedMsg(MessageHeader &header, nlohmann::json &body);
+  json getJson(CompressionAlgorithmType compression_type, std::string &body);
+  std::string genPackedMsg(MessageHeader &header, json &body);
 };
 
 } // namespace gruut

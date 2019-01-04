@@ -1,11 +1,11 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TRANSACTION_POOL_HPP
 #define GRUUT_ENTERPRISE_MERGER_TRANSACTION_POOL_HPP
 
+#include "../chain/transaction.hpp"
+
 #include <algorithm>
 #include <list>
 #include <mutex>
-
-#include "../chain/transaction.hpp"
 
 namespace gruut {
 class TransactionPool {
@@ -16,6 +16,7 @@ public:
   bool pop(Transaction &transaction);
   size_t size();
   void removeDuplicatedTransactions(std::vector<transaction_id_type> &tx_ids);
+  void removeDuplicatedTransactions(std::vector<transaction_id_type> &&tx_ids);
   std::vector<Transaction> fetchLastN(size_t n);
   inline void clear() { m_transaction_pool.clear(); }
 

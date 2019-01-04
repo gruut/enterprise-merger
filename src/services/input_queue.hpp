@@ -1,22 +1,23 @@
 #pragma once
 
+#include "concurrentqueue.hpp"
+#include "nlohmann/json.hpp"
+
 #include "../chain/types.hpp"
 #include "../utils/template_singleton.hpp"
-#include "concurrentqueue.hpp"
 
 #include <deque>
 #include <iostream>
 #include <mutex>
-#include <nlohmann/json.hpp>
 #include <thread>
 
 namespace gruut {
 
 struct InputMsgEntry {
   MessageType type;
-  nlohmann::json body;
+  json body;
   InputMsgEntry() : type(MessageType::MSG_NULL), body(nullptr) {}
-  InputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_)
+  InputMsgEntry(MessageType msg_type_, json &msg_body_)
       : type(msg_type_), body(msg_body_) {}
 };
 
@@ -25,13 +26,13 @@ private:
   moodycamel::ConcurrentQueue<InputMsgEntry> m_input_msg_pool;
 
 public:
-  void push(std::tuple<MessageType, nlohmann::json> &msg_entry_tuple) {
+  void push(std::tuple<MessageType, json> &msg_entry_tuple) {
     InputMsgEntry tmp_msg_entry(std::get<0>(msg_entry_tuple),
                                 std::get<1>(msg_entry_tuple));
     push(tmp_msg_entry);
   }
 
-  void push(MessageType msg_type, nlohmann::json &msg_body) {
+  void push(MessageType msg_type, json &msg_body) {
     InputMsgEntry tmp_msg_entry(msg_type, msg_body);
     push(tmp_msg_entry);
   }

@@ -1,19 +1,8 @@
 #include "transaction_collector.hpp"
 #include "../application.hpp"
-#include "../chain/transaction.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
-#include "../utils/type_converter.hpp"
-#include <boost/assert.hpp>
-#include <botan-2/botan/base64.h>
-#include <botan-2/botan/data_src.h>
-#include <botan-2/botan/x509_key.h>
-#include <iostream>
-
 #include "easy_logging.hpp"
 
 using namespace std;
-using namespace nlohmann;
 
 namespace gruut {
 TransactionCollector::TransactionCollector() {
@@ -31,7 +20,7 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
   }
 
   auto new_txid = TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
-      msg_body_json["txid"].get<string>());
+      Safe::getString(msg_body_json, "txid"));
 
   auto &transaction_pool = Application::app().getTransactionPool();
 
