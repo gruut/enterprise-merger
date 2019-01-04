@@ -256,8 +256,8 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
     p_block.transactions.push_back(test_tx);
 
     vector<Signature> signature;
-    signer_id_type signer_id = TypeConverter::integerToBytes(1);
-    signature.push_back({signer_id, TypeConverter::integerToBytes(1)});
+    Signature tmp_sig(static_cast<signer_id_type>(TypeConverter::integerToBytes(1)),static_cast<signature_type>(TypeConverter::integerToBytes(1)));
+    signature.emplace_back(tmp_sig);
 
     MerkleTree tree;
     vector<Transaction> transactions = {test_tx};

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "nlohmann/json.hpp"
+#include "type_converter.hpp"
 
 class Safe {
 public:
