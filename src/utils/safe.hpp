@@ -36,11 +36,13 @@ public:
     return ret_json;
   }
 
-  static std::string getString(nlohmann::json &&json_obj, const std::string &key) {
-    return getString(json_obj,key);
+  static std::string getString(nlohmann::json &&json_obj,
+                               const std::string &key) {
+    return getString(json_obj, key);
   }
 
-  static std::string getString(nlohmann::json &json_obj, const std::string &key) {
+  static std::string getString(nlohmann::json &json_obj,
+                               const std::string &key) {
     if (json_obj.find(key) != json_obj.end()) {
       return getString(json_obj[key]);
     }

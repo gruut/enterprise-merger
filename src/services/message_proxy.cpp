@@ -24,7 +24,9 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
   auto message_type = input_message.type;
   auto message_body_json = input_message.body;
 
-  if (MessageValidator::validate(message_type, message_body_json)) {
+  MessageValidator validator;
+
+  if (validator.validate(input_message)) {
     switch (message_type) {
     case MessageType::MSG_JOIN:
     case MessageType::MSG_RESPONSE_1:
