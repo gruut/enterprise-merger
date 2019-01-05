@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_RPC_RECEIVER_LIST_HPP
+#define GRUUT_ENTERPRISE_MERGER_RPC_RECEIVER_LIST_HPP
 
 #include "../../utils/template_singleton.hpp"
 #include "../../utils/type_converter.hpp"
@@ -90,3 +91,5 @@ public:
   void clearRpcReceiverList() { m_receiver_list.clear(); }
 };
 } // namespace gruut
+
+#endif

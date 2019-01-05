@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_COMMUNICATION_HPP
+#define GRUUT_ENTERPRISE_MERGER_COMMUNICATION_HPP
 
 #include "../communication/merger_client.hpp"
 #include "../communication/merger_server.hpp"
@@ -19,3 +20,5 @@ private:
   std::string m_port_num;
 };
 } // namespace gruut
+
+#endif

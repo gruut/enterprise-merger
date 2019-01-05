@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_HMAC_HPP
+#define GRUUT_ENTERPRISE_MERGER_HMAC_HPP
 
 #include "sha256.hpp"
 #include <botan-2/botan/mac.h>
@@ -32,3 +33,5 @@ public:
     return mac->verify_mac(hmac);
   }
 };
+
+#endif

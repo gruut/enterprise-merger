@@ -50,8 +50,6 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
     turnOnTimer();
   }
 
-  CLOG(INFO, "TXCO") << "Set status (" << (int)stat << ")";
-
   if (m_current_tx_status == BpStatus::PRIMARY) {
     if (m_next_tx_status == BpStatus::PRIMARY) {
       m_bpjob_sequence[1] = BpJobStatus::DO;
@@ -77,8 +75,6 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
 }
 
 void TransactionCollector::turnOnTimer() {
-
-  // CLOG(INFO, "TXCO") << "called turnOnTimer()";
 
   m_timer_running = true;
 

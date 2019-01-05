@@ -30,6 +30,7 @@ file(GLOB HEADER_FILES
         "src/config/config.hpp"
         "src/modules/communication/protos/*.h"
         "include/*.hpp"
+        "include/*/*.hpp"
         )
 
 add_executable(gruut_enterprise_merger main.cpp ${SOURCE_FILES} ${HEADER_FILES})

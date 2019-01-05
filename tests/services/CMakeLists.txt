@@ -26,6 +26,7 @@ file(GLOB HEADER_FILES
         "../../src/config/config.hpp"
         "../../src/modules/communication/protos/*.h"
         "../../include/*.hpp"
+        "../../include/*/*.hpp"
         )
 
 set(LIB_PREFIX "/usr/local/lib")
@@ -56,7 +57,7 @@ else ()
 endif ()
 
 add_definitions(-DBOOST_TEST_DYN_LINK)
-add_executable(services_test ${UNIT_TEST_SOURCE_FILES})
+add_executable(services_test ${UNIT_TEST_SOURCE_FILES} ${SOURCE_FILES} ${HEADER_FILES})
 set_target_properties(services_test PROPERTIES LINKER_LANGUAGE CXX)
 target_sources(services_test
         PRIVATE

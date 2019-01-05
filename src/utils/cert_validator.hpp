@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_CERT_VALIDATOR_HPP
+#define GRUUT_ENTERPRISE_MERGER_CERT_VALIDATOR_HPP
 
 #include <botan-2/botan/asn1_alt_name.h>
 #include <botan-2/botan/asn1_time.h>
@@ -140,3 +141,5 @@ private:
     return true;
   }
 };
+
+#endif

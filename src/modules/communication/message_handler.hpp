@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_MESSAGE_HANDLER_HPP
+#define GRUUT_ENTERPRISE_MERGER_MESSAGE_HANDLER_HPP
 
 #include "../../../include/nlohmann/json.hpp"
 #include "../../application.hpp"
@@ -32,3 +33,5 @@ private:
 };
 
 } // namespace gruut
+
+#endif

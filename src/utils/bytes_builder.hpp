@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_BYTES_BUILDER_HPP
+#define GRUUT_ENTERPRISE_MERGER_BYTES_BUILDER_HPP
 
 #include <array>
 #include <cstdint>
@@ -165,6 +166,6 @@ public:
     m_bytes.resize(len);
     m_auto_append = false;
   }
-
-private:
 };
+
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_ECDSA_HPP
+#define GRUUT_ENTERPRISE_MERGER_ECDSA_HPP
 
 #include <botan-2/botan/auto_rng.h>
 #include <botan-2/botan/data_src.h>
@@ -116,3 +117,5 @@ private:
     }
   }
 };
+
+#endif

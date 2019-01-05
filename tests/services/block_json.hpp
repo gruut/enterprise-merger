@@ -1,7 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_BLOCK_JSON_HPP
 #define GRUUT_ENTERPRISE_MERGER_BLOCK_JSON_HPP
 
-#include "../../include/nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
 #include "../../src/utils/sha256.hpp"
 #include "../../src/chain/types.hpp"
 namespace gruut {

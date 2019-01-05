@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_OUTPUT_QUEUE_HPP
+#define GRUUT_ENTERPRISE_MERGER_OUTPUT_QUEUE_HPP
 
 #include "nlohmann/json.hpp"
 
@@ -76,3 +77,5 @@ public:
   inline void clearOutputQueue() { m_output_msg_pool.clear(); }
 };
 } // namespace gruut
+
+#endif

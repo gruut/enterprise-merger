@@ -8,37 +8,49 @@ file(GLOB UNIT_TEST_SOURCE_FILES
         "test.cpp"
         )
 
-file(GLOB HEADER_FILES
-        "../../src/*.hpp"
-        "../../src/modules/message_fetcher/*.hpp"
-        "../../src/modules/signer_pool_manager/*.hpp"
-        "../../src/modules/message_fetcher/message_fetcher.hpp"
-        "../../include/*.hpp"
-        "../../utils/*.hpp"
-        "../../src/services/*.hpp"
-        "../../src/modules/communication/msg_schema.hpp"
-        "../../src/modules/communication/grpc_util.hpp"
-        "../../src/modules/communication/http_client.hpp"
-        "../../src/config/config.hpp"
+file(GLOB SOURCE_FILES
+        "../../src/modules/*/*.cpp"
+        "../../src/services/*.cpp"
+        "../../src/application.cpp"
+        "../../src/chain/*.cpp"
+        "../../src/modules/communication/protos/*.cc"
+        "../../include/*.cpp"
         )
 
-file(GLOB SOURCE_FILES
-        "../../src/*.cpp"
-        "../../src/modules/message_fetcher/message_fetcher.cpp"
-        "../../src/modules/*.cpp"
-        "../../src/services/*.cpp"
-        "../../src/modules/communication/grpc_util.cpp"
-        "../../src/modules/communication/http_client.cpp"
-        "../../include/*.cpp"
+file(GLOB HEADER_FILES
+        "../../src/modules/*/*.hpp"
+        "../../src/services/*.hpp"
+        "../../src/application.hpp"
+        "../../src/module.hpp"
+        "../../src/utils/*.hpp"
+        "../../src/chain/*.hpp"
+        "../../src/config/config.hpp"
+        "../../src/modules/communication/protos/*.h"
+        "../../include/*.hpp"
+        "../../include/*/*.hpp"
         )
 
 set(LIB_PREFIX "/usr/local/lib")
 set(LZ4_LIBS "${LIB_PREFIX}/liblz4.a")
-if(APPLE)
-    set(GRPC_LIBS "${LIB_PREFIX}/libgrpc++.dylib")
-else()
-    set(GRPC_LIBS "${LIB_PREFIX}/libgrpc++.so")
-endif()
+if (APPLE)
+    set(GRPC_LIBS
+            "${LIB_PREFIX}/libgrpc++.dylib"
+            "${LIB_PREFIX}/libgrpc.dylib"
+            "${LIB_PREFIX}/libgrpc++_cronet.dylib"
+            "${LIB_PREFIX}/libgrpc++_error_details.dylib"
+            "${LIB_PREFIX}/libgrpc++_reflection.dylib"
+            "${LIB_PREFIX}/libgrpc++_unsecure.dylib"
+            "${LIB_PREFIX}/libgrpcpp_channelz.dylib")
+else ()
+    set(GRPC_LIBS
+            "${LIB_PREFIX}/libgrpc++.so"
+            "${LIB_PREFIX}/libgrpc.so"
+            "${LIB_PREFIX}/libgrpc++_cronet.so"
+            "${LIB_PREFIX}/libgrpc++_error_details.so"
+            "${LIB_PREFIX}/libgrpc++_reflection.so"
+            "${LIB_PREFIX}/libgrpc++_unsecure.so"
+            "${LIB_PREFIX}/libgrpcpp_channelz.so")
+endif ()
 
 IF (CURL_FOUND)
     include_directories(${CURL_INCLUDE_DIR})
@@ -46,7 +58,7 @@ ENDIF (CURL_FOUND)
 
 
 add_definitions(-DBOOST_TEST_DYN_LINK)
-add_executable(modules_test ${UNIT_TEST_SOURCE_FILES})
+add_executable(modules_test ${UNIT_TEST_SOURCE_FILES} ${SOURCE_FILES} ${HEADER_FILES})
 set_target_properties(modules_test PROPERTIES LINKER_LANGUAGE CXX)
 target_sources(modules_test
         PRIVATE

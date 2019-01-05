@@ -44,8 +44,6 @@ void Application::start() {
     return;
   }
 
-  CLOG(INFO, "_APP") << "======================================================"
-                        "=====================";
   CLOG(INFO, "_APP") << "START STAGE #" << m_running_stage;
 
   try {
@@ -73,13 +71,11 @@ void Application::exec() {
 
 void Application::runNextStage(ExitCode exit_code) {
 
+  CLOG(INFO, "_APP") << "END STAGE #" << m_running_stage
+                     << " (exit=" << (int)exit_code << ")";
   if (m_running_stage < m_modules.size()) {
-    CLOG(INFO, "_APP") << "Ended stage (" << (int)exit_code << ")";
     ++m_running_stage;
     start();
-  } else {
-    CLOG(INFO, "_APP") << "Ended stage (" << (int)exit_code
-                       << ") - No more stage";
   }
 }
 
@@ -97,7 +93,7 @@ void Application::setup() {
 
   m_bp_scheduler = make_shared<BpScheduler>();
   m_block_processor = make_shared<BlockProcessor>();
-  m_bootstraper = make_shared<BootStraper>();
+  m_bootstraper = make_shared<Bootstrapper>();
   m_communication = make_shared<Communication>();
   m_out_message_fetcher = make_shared<OutMessageFetcher>();
   m_message_fetcher = make_shared<MessageFetcher>();

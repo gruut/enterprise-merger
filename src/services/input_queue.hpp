@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_INPUT_QUEUE_HPP
+#define GRUUT_ENTERPRISE_MERGER_INPUT_QUEUE_HPP
 
 #include "concurrentqueue.hpp"
 #include "nlohmann/json.hpp"
@@ -50,3 +51,5 @@ public:
   inline bool empty() { return (m_input_msg_pool.size_approx() == 0); }
 };
 } // namespace gruut
+
+#endif

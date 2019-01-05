@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_MERKLE_TREE_HPP
+#define GRUUT_ENTERPRISE_MERGER_MERKLE_TREE_HPP
 
 #include <map>
 #include <vector>
@@ -180,3 +181,5 @@ private:
   std::map<std::string, sha256> m_hash_lookup;
 };
 } // namespace gruut
+
+#endif

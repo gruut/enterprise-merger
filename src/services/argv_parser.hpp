@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_ARGV_PARSER_HPP
+#define GRUUT_ENTERPRISE_MERGER_ARGV_PARSER_HPP
 
 #include <iostream>
 
@@ -9,8 +10,10 @@
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
 #include "../utils/file_io.hpp"
+#include "../utils/safe.hpp"
 
 namespace gruut {
+
 class ArgvParser {
 public:
   ArgvParser() { el::Loggers::getLogger("ARGV"); };
@@ -19,8 +22,7 @@ public:
 
     json setting_json;
 
-    cxxopts::Options options(argv[0],
-                             "Merger for Gruut Enterprise Networks (C++)\n");
+    cxxopts::Options options(argv[0], config::APP_NAME + "\n");
     options.add_options("basic")("help", "Print help description")(
         "in", "Setting file",
         cxxopts::value<string>()->default_value("./setting.json"))(
@@ -32,8 +34,8 @@ public:
         cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH));
 
     if (argc == 1) {
-      cout << options.help({"basic"}) << endl;
-      return setting_json;
+      std::cout << options.help({"", "basic"}) << std::endl;
+      exit(1);
     }
 
     try {
@@ -41,8 +43,8 @@ public:
       auto result = options.parse(argc, argv);
 
       if (result.count("help")) {
-        cout << options.help({"", "basic"}) << endl;
-        return setting_json;
+        std::cout << options.help({"", "basic"}) << std::endl;
+        exit(1);
       }
 
       string setting_json_str = FileIo::file2str(result["in"].as<string>());
@@ -59,7 +61,7 @@ public:
 
       auto parsed_port_num = result["port"].as<string>();
       if (!parsed_port_num.empty() &&
-          parsed_port_num != setting_json["Self"]["port"].get<std::string>()) {
+          parsed_port_num != Safe::getString(setting_json["Self"], "port")) {
         setting_json["Self"]["port"] = parsed_port_num; // override
       }
 
@@ -80,3 +82,5 @@ public:
   }
 };
 } // namespace gruut
+
+#endif

@@ -1,7 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 #define GRUUT_ENTERPRISE_MERGER_APPLICATION_HPP
 
-#include "modules/bootstraper/boot_straper.hpp"
+#include "modules/bootstraper/bootstrapper.hpp"
 #include "modules/bp_scheduler/bp_scheduler.hpp"
 #include "modules/communication/communication.hpp"
 #include "modules/message_fetcher/message_fetcher.hpp"
@@ -84,7 +84,7 @@ private:
   shared_ptr<BlockProcessor> m_block_processor;
   shared_ptr<Communication> m_communication;
   shared_ptr<OutMessageFetcher> m_out_message_fetcher;
-  shared_ptr<BootStraper> m_bootstraper;
+  shared_ptr<Bootstrapper> m_bootstraper;
   shared_ptr<MessageFetcher> m_message_fetcher;
 
   int m_running_stage{0};

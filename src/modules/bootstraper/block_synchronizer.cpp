@@ -25,8 +25,6 @@ BlockSynchronizer::BlockSynchronizer() {
 
 bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
 
-  CLOG(INFO, "BSYN") << "called pushMsgToBlockList()";
-
   updateTaskTime();
 
   std::string sender_id_b64 = Safe::getString(msg_block.body, "mID");
@@ -85,9 +83,6 @@ void BlockSynchronizer::updateTaskTime() {
 
 void BlockSynchronizer::reserveBlockList(size_t begin, size_t end) {
 
-  CLOG(INFO, "BSYN") << "called reserveBlockList(from=" << begin
-                     << ",before=" << end << ")";
-
   RcvBlockMapItem temp;
   temp.state = BlockState::RESERVED;
 
@@ -98,6 +93,9 @@ void BlockSynchronizer::reserveBlockList(size_t begin, size_t end) {
   }
 
   m_block_list_mutex.unlock();
+
+  CLOG(INFO, "BSYN") << "Block slots reserved (from=" << begin
+                     << ",before=" << end << ")";
 }
 
 bool BlockSynchronizer::sendBlockRequest(size_t height) {

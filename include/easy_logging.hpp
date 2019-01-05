@@ -16,18 +16,17 @@
 
 #ifndef EASYLOGGINGPP_H
 #define EASYLOGGINGPP_H
-// Compilers and C++0x/C++11 Evaluation
 
+// added custom macro
 #define AUTO_INITIALIZE_EASYLOGGINGPP
 #define ELPP_THREAD_SAFE
 #define ELPP_FORCE_USE_STD_THREAD
-//disable logging to file
 #define ELPP_NO_LOG_TO_FILE
 #define ELPP_NO_DEFAULT_LOG_FILE
-
-// TODO : 모든 로그 해제하고 싶으면 주석 해제
+#define ELPP_DEFAULT_LOGGING_FLAGS 64
 //#define ELPP_DISABLE_LOGS
 
+// Compilers and C++0x/C++11 Evaluation
 #if __cplusplus >= 201103L
 #  define ELPP_CXX11 1
 #endif  // __cplusplus >= 201103L

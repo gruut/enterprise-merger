@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_MESSAGE_VALIDATOR_HPP
+#define GRUUT_ENTERPRISE_MERGER_MESSAGE_VALIDATOR_HPP
 
 #include "easy_logging.hpp"
 #include "nlohmann/json.hpp"
@@ -182,3 +183,5 @@ private:
   }
 };
 } // namespace gruut
+
+#endif

@@ -22,17 +22,17 @@ enum class BpStatus {
   UNKNOWN
 };
 
-enum class TransactionType { DIGESTS, CERTIFICATE, UNKNOWN };
+enum class TransactionType { DIGESTS, CERTIFICATES, IMMORTALSMS, UNKNOWN };
 
 const std::string TXTYPE_CERTIFICATES = "CERTIFICATES";
 const std::string TXTYPE_DIGESTS = "DIGESTS";
+const std::string TXTYPE_IMMORTALSMS = "IMMORTALSMS";
 
 const std::map<TransactionType, std::string> TX_TYPE_TO_STRING = {
     {TransactionType::DIGESTS, TXTYPE_DIGESTS},
-    {TransactionType::CERTIFICATE, TXTYPE_CERTIFICATES},
+    {TransactionType::CERTIFICATES, TXTYPE_CERTIFICATES},
+    {TransactionType::IMMORTALSMS, TXTYPE_IMMORTALSMS},
     {TransactionType::UNKNOWN, "UNKNOWN"}};
-
-enum class BlockType { PARTIAL, NORMAL };
 
 enum class MessageType : uint8_t {
   MSG_NULL = 0x00,

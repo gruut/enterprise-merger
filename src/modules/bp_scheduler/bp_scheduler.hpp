@@ -1,4 +1,6 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_BP_SCHEDULER_HPP
+#define GRUUT_ENTERPRISE_MERGER_BP_SCHEDULER_HPP
+
 #include "../../chain/types.hpp"
 #include "../../services/input_queue.hpp"
 #include "../../services/message_proxy.hpp"
@@ -67,3 +69,5 @@ private:
 };
 
 } // namespace gruut
+
+#endif

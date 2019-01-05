@@ -8,7 +8,7 @@
 #include "../../src/chain/message.hpp"
 #include "../../src/chain/types.hpp"
 
-#include "../../include/nlohmann/json.hpp"
+#include "nlohmann/json.hpp"
 
 #include "../../src/services/block_generator.hpp"
 #include "../../src/services/input_queue.hpp"
