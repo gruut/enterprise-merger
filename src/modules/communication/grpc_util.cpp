@@ -1,8 +1,8 @@
 #include "grpc_util.hpp"
-#include "../../../include/json-schema.hpp"
 #include "../../config/config.hpp"
 #include "../../services/setting.hpp"
 #include "../../utils/compressor.hpp"
+#include "json-schema.hpp"
 #include "msg_schema.hpp"
 #include <botan-2/botan/hex.h>
 #include <botan-2/botan/mac.h>

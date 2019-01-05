@@ -15,6 +15,10 @@ int main(int argc, char *argv[]) {
 
   el::Loggers::getLogger("MAIN");
 
+  CLOG(INFO, "MAIN") << config::APP_NAME << " (" << config::APP_CODE_NAME << ")";
+  CLOG(INFO, "MAIN") << "build: " << config::APP_BUILD_DATE << " " << config::APP_BUILD_TIME;
+  CLOG(INFO, "MAIN") << "===========================================================================";
+
   ArgvParser argv_parser;
   json setting_json = argv_parser.parse(argc,argv);
   if(setting_json.empty()) {

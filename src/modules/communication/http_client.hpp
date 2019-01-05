@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "../../../include/curlpp.hpp"
+#include "curlpp.hpp"
 #include "easy_logging.hpp"
 
 namespace gruut {

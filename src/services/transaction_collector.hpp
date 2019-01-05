@@ -38,6 +38,9 @@ private:
   void updateStatus();
   void postJob();
 
+  Transaction generateTrasnaction(vector<Signer> &signers);
+  transaction_id_type generateTransactionId();
+
   BpStatus m_current_tx_status{BpStatus::IN_BOOT_WAIT};
   BpStatus m_next_tx_status{BpStatus::UNKNOWN};
   std::unique_ptr<boost::asio::deadline_timer> m_timer;

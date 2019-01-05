@@ -45,8 +45,6 @@ public:
 
   boost::asio::io_service &getIoService();
 
-  SignerPool &getSignerPool();
-
   SignerPoolManager &getSignerPoolManager();
 
   TransactionPool &getTransactionPool();
@@ -70,7 +68,6 @@ private:
   void runNextStage(ExitCode exit_code);
 
   shared_ptr<boost::asio::io_service> m_io_serv;
-  shared_ptr<SignerPool> m_signer_pool;
   shared_ptr<SignerPoolManager> m_signer_pool_manager;
   shared_ptr<TransactionPool> m_transaction_pool;
   shared_ptr<TransactionCollector> m_transaction_collector;

@@ -50,6 +50,7 @@ private:
   // A temporary table for connection establishment.
   unordered_map<string, unique_ptr<JoinTemporaryData>> m_join_temp_table;
 
+  SignerPool *m_signer_pool;
   string m_my_cert;
   merger_id_type m_my_id;
   MessageProxy m_proxy;

@@ -1,9 +1,9 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_GRPC_UTIL_HPP
 #define GRUUT_ENTERPRISE_MERGER_GRPC_UTIL_HPP
 
-#include "../../../include/nlohmann/json.hpp"
 #include "../../application.hpp"
 #include "../../utils/hmac.hpp"
+#include "nlohmann/json.hpp"
 #include <cstring>
 #include <grpcpp/impl/codegen/status.h>
 #include <iostream>

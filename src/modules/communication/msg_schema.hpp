@@ -1,8 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_MSG_SCHEMA_HPP
 #define GRUUT_ENTERPRISE_MERGER_MSG_SCHEMA_HPP
 
-#include "../../../include/nlohmann/json.hpp"
-#include "../../application.hpp"
+#include "nlohmann/json.hpp"
 #include <map>
 namespace gruut {
 const json SCHEMA_UP = R"({
@@ -353,15 +352,7 @@ const json SCHEMA_TX = R"({
   ]
 })"_json;
 
-class MessageSchema {
-public:
-  static json getSchema(MessageType msg_type) { return schema_list[msg_type]; }
-
-private:
-  static std::map<MessageType, json> schema_list;
-};
-
-std::map<MessageType, json> MessageSchema::schema_list = {
+const std::map<MessageType, json> MSG_SCHEMA_MAP = {
     {MessageType::MSG_UP, SCHEMA_UP},
     {MessageType::MSG_PING, SCHEMA_PING},
     {MessageType::MSG_REQ_BLOCK, SCHEMA_REQ_BLOCK},
@@ -375,6 +366,18 @@ std::map<MessageType, json> MessageSchema::schema_list = {
     {MessageType::MSG_SSIG, SCHEMA_SSIG},
     {MessageType::MSG_ERROR, SCHEMA_ERROR},
     {MessageType::MSG_TX, SCHEMA_TX}};
+
+class MessageSchema {
+public:
+  static json getSchema(MessageType msg_type) {
+    auto it_map = MSG_SCHEMA_MAP.find(msg_type);
+    if (it_map == MSG_SCHEMA_MAP.end()) {
+      return json::object();
+    } else {
+      return it_map->second;
+    }
+  }
+};
 
 }; // namespace gruut
 
