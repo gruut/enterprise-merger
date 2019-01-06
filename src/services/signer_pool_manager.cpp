@@ -7,6 +7,7 @@ SignerPoolManager::SignerPoolManager() {
   auto setting = Setting::getInstance();
   m_my_cert = setting->getMyCert();
   m_my_id = setting->getMyId();
+  m_signer_pool = SignerPool::getInstance();
   el::Loggers::getLogger("SMGR");
 }
 void SignerPoolManager::handleMessage(MessageType &message_type,
@@ -67,7 +68,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     }
 
     m_join_temp_table[recv_id_b64]->signer_cert =
-        message_body_json["cert"].get<string>();
+        Safe::getString(message_body_json, "cert");
 
     json message_body;
 
@@ -78,8 +79,8 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     string dhx = public_key.first;
     string dhy = public_key.second;
 
-    auto signer_dhx = message_body_json["dhx"].get<string>();
-    auto signer_dhy = message_body_json["dhy"].get<string>();
+    auto signer_dhx = Safe::getString(message_body_json, "dhx");
+    auto signer_dhy = Safe::getString(message_body_json, "dhy");
 
     auto shared_sk_bytes =
         key_maker.getSharedSecretKey(signer_dhx, signer_dhy, 32);
@@ -110,11 +111,11 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     m_proxy.deliverOutputMessage(output_message);
 
-    auto &signer_pool = Application::app().getSignerPool();
     auto secret_key_vector = TypeConverter::toSecureVector(
         m_join_temp_table[recv_id_b64]->shared_secret_key);
-    signer_pool.pushSigner(recv_id, m_join_temp_table[recv_id_b64]->signer_cert,
-                           secret_key_vector, SignerStatus::TEMPORARY);
+    m_signer_pool->pushSigner(recv_id,
+                              m_join_temp_table[recv_id_b64]->signer_cert,
+                              secret_key_vector, SignerStatus::TEMPORARY);
 
   } break;
   case MessageType::MSG_SUCCESS: {
@@ -131,8 +132,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     m_join_temp_table[recv_id_b64].release();
 
-    auto &signer_pool = Application::app().getSignerPool();
-    signer_pool.updateStatus(recv_id, SignerStatus::GOOD);
+    m_signer_pool->updateStatus(recv_id, SignerStatus::GOOD);
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_ACCEPT;
@@ -145,13 +145,12 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
   } break;
   case MessageType::MSG_LEAVE: {
-    auto &signer_pool = Application::app().getSignerPool();
     if (m_join_temp_table.find(recv_id_b64) != m_join_temp_table.end())
       m_join_temp_table[recv_id_b64].release();
 
-    if (signer_pool.removeSigner(recv_id)) {
-      std::string leave_time = message_body_json["time"].get<string>();
-      std::string leave_msg = message_body_json["msg"].get<string>();
+    if (m_signer_pool->removeSigner(recv_id)) {
+      std::string leave_time = Safe::getString(message_body_json, "time");
+      std::string leave_msg = Safe::getString(message_body_json, "msg");
       CLOG(INFO, "SMGR") << "Signer left (" << recv_id_b64 << ")";
     }
 
@@ -166,19 +165,18 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
                                         json &message_body_json) {
 
-  bytes sig_bytes =
-      TypeConverter::decodeBase64(message_body_json["sig"].get<string>());
+  bytes sig_bytes = Safe::getBytesFromB64(message_body_json, "sig");
 
-  string cert_in = message_body_json["cert"].get<string>();
+  string cert_in = Safe::getString(message_body_json, "cert");
 
   string signer_id_b64 = TypeConverter::encodeBase64(signer_id);
 
   BytesBuilder msg_builder;
   msg_builder.appendB64(m_join_temp_table[signer_id_b64]->merger_nonce);
-  msg_builder.appendB64(message_body_json["sN"].get<string>());
-  msg_builder.appendHex(message_body_json["dhx"].get<string>());
-  msg_builder.appendHex(message_body_json["dhy"].get<string>());
-  msg_builder.appendDec(message_body_json["time"].get<string>());
+  msg_builder.appendB64(Safe::getString(message_body_json, "sN"));
+  msg_builder.appendHex(Safe::getString(message_body_json, "dhx"));
+  msg_builder.appendHex(Safe::getString(message_body_json, "dhy"));
+  msg_builder.appendDec(Safe::getString(message_body_json, "time"));
 
   return ECDSA::doVerify(cert_in, msg_builder.getBytes(), sig_bytes);
 }
@@ -203,7 +201,7 @@ string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
 }
 
 bool SignerPoolManager::isJoinable() {
-  return (config::MAX_SIGNER_NUM > Application::app().getSignerPool().size());
+  return (config::MAX_SIGNER_NUM > m_signer_pool->size());
 }
 
 bool SignerPoolManager::isTimeout(std::string &signer_id_b64) {

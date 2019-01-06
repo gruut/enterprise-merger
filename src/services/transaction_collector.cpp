@@ -120,9 +120,9 @@ void TransactionCollector::postJob() {
     m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
     if (this_job == BpJobStatus::DO &&
         Application::app().getTransactionPool().size() > 0) {
-      Application::app().getSignerPool().createTransactions();
       m_signature_requester.requestSignatures();
     }
   });
 }
+
 } // namespace gruut

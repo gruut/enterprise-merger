@@ -1,11 +1,11 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_MESSAGE_HANDLER_HPP
 #define GRUUT_ENTERPRISE_MERGER_MESSAGE_HANDLER_HPP
 
-#include "../../../include/nlohmann/json.hpp"
 #include "../../application.hpp"
 #include "../../services/input_queue.hpp"
 #include "../../services/output_queue.hpp"
 #include "grpc_util.hpp"
+#include "nlohmann/json.hpp"
 #include <cstring>
 #include <future>
 #include <grpcpp/impl/codegen/status.h>

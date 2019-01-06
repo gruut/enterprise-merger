@@ -37,9 +37,9 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
                                   body_size,
                               packed_msg.end());
 
-    auto &signer_pool = Application::app().getSignerPool();
+    auto signer_pool = SignerPool::getInstance();
     Botan::secure_vector<uint8_t> secure_vector_key =
-        signer_pool.getHmacKey(recv_id);
+        signer_pool->getHmacKey(recv_id);
     std::vector<uint8_t> key = std::vector<uint8_t>(secure_vector_key.begin(),
                                                     secure_vector_key.end());
 
@@ -75,11 +75,11 @@ void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
 
   if (msg_type == MessageType::MSG_ACCEPT ||
       msg_type == MessageType::MSG_REQ_SSIG) {
-    auto &signer_pool = Application::app().getSignerPool();
+    auto signer_pool = SignerPool::getInstance();
 
     for (auto &recv_id : output_msg.receivers) {
       Botan::secure_vector<uint8_t> secure_vector_key =
-          signer_pool.getHmacKey(recv_id);
+          signer_pool->getHmacKey(recv_id);
       std::vector<uint8_t> key(secure_vector_key.begin(),
                                secure_vector_key.end());
       std::vector<uint8_t> hmac = Hmac::generateHMAC(packed_msg, key);

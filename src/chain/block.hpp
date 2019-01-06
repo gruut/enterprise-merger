@@ -18,7 +18,7 @@
 using namespace std;
 
 namespace gruut {
-class PartialBlock {
+class BasicBlockInfo {
 public:
   timestamp_type time;
   merger_id_type merger_id;
@@ -51,14 +51,14 @@ private:
 public:
   Block() { el::Loggers::getLogger("BLOC"); };
 
-  bool initalize(PartialBlock &partial_block,
+  bool initalize(BasicBlockInfo &basic_info,
                  std::vector<sha256> &&merkle_Tree_node = {}) {
-    m_time = partial_block.time;
-    m_merger_id = partial_block.merger_id;
-    m_chain_id = partial_block.chain_id;
-    m_height = partial_block.height;
-    m_tx_root = partial_block.transaction_root;
-    m_transactions = partial_block.transactions;
+    m_time = basic_info.time;
+    m_merger_id = basic_info.merger_id;
+    m_chain_id = basic_info.chain_id;
+    m_height = basic_info.height;
+    m_tx_root = basic_info.transaction_root;
+    m_transactions = basic_info.transactions;
 
     if (merkle_Tree_node.empty())
       m_merkle_tree_node = calcMerkleTreeNode();

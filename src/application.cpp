@@ -4,8 +4,6 @@
 namespace gruut {
 boost::asio::io_service &Application::getIoService() { return *m_io_serv; }
 
-SignerPool &Application::getSignerPool() { return *m_signer_pool; }
-
 BpScheduler &Application::getBpScheduler() { return *m_bp_scheduler; }
 
 SignerPoolManager &Application::getSignerPoolManager() {
@@ -84,7 +82,6 @@ void Application::quit() { m_io_serv->stop(); }
 void Application::setup() {
 
   // step 1 - making objects
-  m_signer_pool = make_shared<SignerPool>();
   m_signer_pool_manager = make_shared<SignerPoolManager>();
   m_transaction_pool = make_shared<TransactionPool>();
   m_transaction_collector = make_shared<TransactionCollector>();

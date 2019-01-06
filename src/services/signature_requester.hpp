@@ -35,27 +35,28 @@ public:
 
   void requestSignatures();
 
-  void checkProcess();
+  void waitCollectDone();
 
 private:
   void startSignatureCollectTimer();
 
-  void stopCollectTimerAndCreateBlock();
+  void doCreateBlock();
 
-  Transactions fetchTransactions();
-
-  PartialBlock makePartialBlock(Transactions &transactions);
-
-  void requestSignature(Signers &signers);
+  void sendRequestMessage(Signers &signers);
 
   Signers selectSigners();
+
+  Transaction generateCertificateTransaction(vector<Signer> &signers);
+  transaction_id_type generateTxId();
+  BasicBlockInfo generateBasicBlockInfo(sha256 &merkle_root,
+                                        vector<Transaction> &transactions);
 
   std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_block_gen_strand;
 
   MerkleTree m_merkle_tree;
-  PartialBlock m_partial_block;
+  BasicBlockInfo m_basic_block_info;
 
   bool m_is_collect_timer_running{false};
   size_t m_max_signers;

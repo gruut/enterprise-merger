@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
   BOOST_AUTO_TEST_CASE(save_block_by_block_object) {
-    PartialBlock p_block;
+    BasicBlockInfo p_block;
     p_block.merger_id = TypeConverter::integerToBytes(1);
     p_block.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(1);
     p_block.height = 1;

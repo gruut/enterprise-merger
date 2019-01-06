@@ -229,9 +229,9 @@ void BpScheduler::postSendPingJob() {
     timestamp_type current_time = Time::now_int();
     size_t current_slot = current_time / config::BP_INTERVAL;
 
-    auto &signer_pool = Application::app().getSignerPool();
+    auto signer_pool = SignerPool::getInstance();
 
-    size_t num_signers = signer_pool.size();
+    size_t num_signers = signer_pool->size();
     if (m_current_status != BpStatus::IN_BOOT_WAIT &&
         num_signers < config::MIN_SIGNATURE_COLLECT_SIZE) {
       m_current_status = BpStatus::ERROR_ON_SIGNERS;
