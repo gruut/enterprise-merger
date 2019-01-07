@@ -446,7 +446,6 @@ inline bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
 inline bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type) {
   return (msg_type == MessageType::MSG_JOIN ||
           msg_type == MessageType::MSG_RESPONSE_1 ||
-          msg_type == MessageType::MSG_ECHO ||
           msg_type == MessageType::MSG_LEAVE);
 }
 }; // namespace gruut

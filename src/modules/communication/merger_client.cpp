@@ -272,7 +272,6 @@ bool MergerClient::checkSignerMsgType(MessageType msg_type) {
   return (msg_type == MessageType::MSG_CHALLENGE ||
           msg_type == MessageType::MSG_RESPONSE_2 ||
           msg_type == MessageType::MSG_ACCEPT ||
-          msg_type == MessageType::MSG_ECHO ||
           msg_type == MessageType::MSG_REQ_SSIG ||
           msg_type == MessageType::MSG_ERROR);
 }
@@ -281,6 +280,7 @@ bool MergerClient::checkSEMsgType(MessageType msg_type) {
   return (msg_type == MessageType::MSG_UP ||
           msg_type == MessageType::MSG_PING ||
           msg_type == MessageType::MSG_HEADER ||
+          msg_type == MessageType::MSG_RES_CHECK ||
           msg_type == MessageType::MSG_ERROR);
 }
 }; // namespace gruut

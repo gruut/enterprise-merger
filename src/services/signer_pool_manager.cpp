@@ -155,8 +155,6 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     }
 
   } break;
-  case MessageType::MSG_ECHO:
-    break;
   default:
     break;
   }
