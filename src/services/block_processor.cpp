@@ -28,7 +28,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   CLOG(INFO, "BPRO") << "called handleMsgReqBlock()";
 
-  size_t req_block_height = Safe::getInt(entry.body, "hgt");
+  block_height_type req_block_height = Safe::getInt(entry.body, "hgt");
 
   if (Safe::getString(entry.body, "mCert").empty() ||
       Safe::getString(entry.body, "mSig").empty()) {
