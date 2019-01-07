@@ -80,22 +80,6 @@ const json SCHEMA_REQ_BLOCK = R"({
     "mSig"
   ]
 })"_json;
-const json SCHEMA_ECHO = R"({
-  "title": "Echo",
-  "type": "object",
-  "properties": {
-    "sender": {
-      "type": "string"
-    },
-    "time": {
-      "type": "string"
-    }
-  },
-  "required": [
-    "sender",
-    "time"
-  ]
-})"_json;
 const json SCHEMA_BLOCK = R"({
   "title": "Block",
   "type": "object",
@@ -229,22 +213,6 @@ const json SCHEMA_SUCCESS = R"({
     "val"
   ]
 })"_json;
-const json SCHEMA_LEAVE = R"({
-  "title": "Echo",
-  "type": "object",
-  "properties": {
-    "sender": {
-      "type": "string"
-    },
-    "time": {
-      "type": "string"
-    }
-  },
-  "required": [
-    "sender",
-    "time"
-  ]
-})"_json;
 const json SCHEMA_REQ_SSIG = R"({
   "title": "Partial Block",
   "type": "object",
@@ -351,21 +319,44 @@ const json SCHEMA_TX = R"({
     "rSig"
   ]
 })"_json;
+const json SCHEMA_REQ_CHECK = R"({
+  "title": "Request Check",
+  "type": "object",
+  "properties": {
+    "sender": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    },
+    "dID": {
+      "type": "string"
+    },
+    "txid": {
+      "type": "string"
+    }
+  },
+  "required": [
+  "sender",
+  "time",
+  "dID",
+  "txid"
+  ]
+})"_json;
 
 const std::map<MessageType, json> MSG_SCHEMA_MAP = {
     {MessageType::MSG_UP, SCHEMA_UP},
     {MessageType::MSG_PING, SCHEMA_PING},
     {MessageType::MSG_REQ_BLOCK, SCHEMA_REQ_BLOCK},
-    {MessageType::MSG_ECHO, SCHEMA_ECHO},
     {MessageType::MSG_BLOCK, SCHEMA_BLOCK},
     {MessageType::MSG_JOIN, SCHEMA_JOIN},
     {MessageType::MSG_RESPONSE_1, SCHEMA_RESPONSE_FIRST},
     {MessageType::MSG_SUCCESS, SCHEMA_SUCCESS},
-    {MessageType::MSG_LEAVE, SCHEMA_LEAVE},
     {MessageType::MSG_REQ_SSIG, SCHEMA_REQ_SSIG},
     {MessageType::MSG_SSIG, SCHEMA_SSIG},
     {MessageType::MSG_ERROR, SCHEMA_ERROR},
-    {MessageType::MSG_TX, SCHEMA_TX}};
+    {MessageType::MSG_TX, SCHEMA_TX},
+    {MessageType::MSG_REQ_CHECK, SCHEMA_REQ_CHECK}};
 
 class MessageSchema {
 public:
