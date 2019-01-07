@@ -29,15 +29,15 @@ using namespace std;
 BOOST_AUTO_TEST_SUITE(Test_BlockGenerator)
 
     BOOST_AUTO_TEST_CASE(generatePartialBlock) {
-        BlockGenerator generator;
-
-        auto tx_digest = Sha256::hash("1");
-
-        vector<Transaction> transactions;
-        transactions.emplace_back(Transaction());
-
-        auto block = generator.generatePartialBlock(tx_digest, transactions);
-        BOOST_TEST(true);
+//        BlockGenerator generator;
+//
+//        auto tx_digest = Sha256::hash("1");
+//
+//        vector<Transaction> transactions;
+//        transactions.emplace_back(Transaction());
+//
+//        auto block = generator.generatePartialBlock(tx_digest, transactions);
+//        BOOST_TEST(true);
     }
 
 BOOST_AUTO_TEST_SUITE_END()

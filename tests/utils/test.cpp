@@ -13,6 +13,7 @@
 #include "../../src/utils/bytes_builder.hpp"
 #include "../../src/utils/type_converter.hpp"
 #include "../../src/utils/time.hpp"
+#include "../../src/utils/crypto.hpp"
 
 using namespace std;
 
@@ -213,6 +214,52 @@ BOOST_AUTO_TEST_SUITE(Test_TypeConverter)
     std::string test_data_re_b64 = TypeConverter::encodeBase64(test_data);
 
     BOOST_CHECK_EQUAL(test_data_b64, test_data_re_b64);
+  }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_EncSecretKey)
+  BOOST_AUTO_TEST_CASE(isEncPemCheck) {
+
+    std::string enc_pem = R"(-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIH0MF8GCSqGSIb3DQEFDTBSMDEGCSqGSIb3DQEFDDAkBAzoqirb4rPgYW6QRk8C
+AwLmMAIBIDAMBggqhkiG9w0CCQUAMB0GCWCGSAFlAwQBKgQQfRgPMemUQHnQCMeG
+TADGRwSBkIVjZDboFhYLuLxeqiuQV82BSXFCdb0ijWwmqvXgEEAZ2OLYTJyZyx9P
+OTOGR4EfDF9KHvHkaJNoP9yV29KkByOkon4GC/q+6e3mNzLWEqipP7krfQTAODww
+tORbJakUcR5/XKOfKvcVhpFlAUBzVKKUnSqgf9kRehxiDcivw0M2YexpHkWcCJ5l
+4QJOr54FAA==
+-----END ENCRYPTED PRIVATE KEY-----)";
+
+    std::string raw_pem = R"(-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgHf0U1xFlPmPAh/XQ
+UvnPcQsTA1Wt++jIJZMaRyJxDeShRANCAARArDI53bXc9WpGYQuFAJndrjoKyWr+
+v1cI3SKQHAm1uJ+42+1M/MSd7Qr1g8e2O8BWXWnhF61ZdkhfM+OyolTd
+-----END PRIVATE KEY-----)";
+
+    BOOST_TEST(GemCrypto::isEncPem(enc_pem));
+    BOOST_TEST(!GemCrypto::isEncPem(raw_pem));
+
+  }
+
+  BOOST_AUTO_TEST_CASE(isValidPass) {
+    std::string enc_pem = R"(-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIH0MF8GCSqGSIb3DQEFDTBSMDEGCSqGSIb3DQEFDDAkBAzoqirb4rPgYW6QRk8C
+AwLmMAIBIDAMBggqhkiG9w0CCQUAMB0GCWCGSAFlAwQBKgQQfRgPMemUQHnQCMeG
+TADGRwSBkIVjZDboFhYLuLxeqiuQV82BSXFCdb0ijWwmqvXgEEAZ2OLYTJyZyx9P
+OTOGR4EfDF9KHvHkaJNoP9yV29KkByOkon4GC/q+6e3mNzLWEqipP7krfQTAODww
+tORbJakUcR5/XKOfKvcVhpFlAUBzVKKUnSqgf9kRehxiDcivw0M2YexpHkWcCJ5l
+4QJOr54FAA==
+-----END ENCRYPTED PRIVATE KEY-----)";
+    std::string raw_pem = R"(-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgHf0U1xFlPmPAh/XQ
+UvnPcQsTA1Wt++jIJZMaRyJxDeShRANCAARArDI53bXc9WpGYQuFAJndrjoKyWr+
+v1cI3SKQHAm1uJ+42+1M/MSd7Qr1g8e2O8BWXWnhF61ZdkhfM+OyolTd
+-----END PRIVATE KEY-----)";
+
+    BOOST_TEST(GemCrypto::isValidPass(enc_pem,"12345678"));
+    BOOST_TEST(!GemCrypto::isValidPass(enc_pem,""));
+    BOOST_TEST(GemCrypto::isValidPass(raw_pem,""));
+    BOOST_TEST(GemCrypto::isValidPass(raw_pem,"12345678"));
   }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -210,9 +210,7 @@ public:
     return true;
   }
 
-  inline void setPass(const std::string &pass){
-    m_sk_pass = pass;
-  }
+  inline void setPass(const std::string &pass) { m_sk_pass = pass; }
 
   inline id_type getMyId() { return m_id; }
 
