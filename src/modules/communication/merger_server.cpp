@@ -3,6 +3,7 @@
 #include "rpc_receiver_list.hpp"
 #include <chrono>
 #include <cstring>
+#include <exception>
 #include <iostream>
 #include <thread>
 namespace gruut {
@@ -10,6 +11,7 @@ namespace gruut {
 void MergerServer::runServer(const std::string &port_num) {
   std::string server_address("0.0.0.0:");
   server_address += port_num;
+  m_port_num = port_num;
   ServerBuilder builder;
 
   EnableDefaultHealthCheckService(true);
@@ -41,20 +43,36 @@ void MergerServer::runServer(const std::string &port_num) {
 void MergerServer::recvMessage() {
   void *tag;
   bool ok;
-  while (true) {
-    if (m_input_queue->size() < config::AVAILABLE_INPUT_SIZE) {
-      GPR_ASSERT(m_completion_queue->Next(&tag, &ok));
-      if (!ok)
-        continue;
-      static_cast<CallData *>(tag)->proceed();
-    } else {
-      CLOG(INFO, "MSVR") << "#InputQueue = " << m_input_queue->size();
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
+  try {
+    while (true) {
+      if (m_input_queue->size() < config::AVAILABLE_INPUT_SIZE) {
+        if (m_completion_queue->Next(&tag, &ok)) {
+          if (ok)
+            static_cast<CallData *>(tag)->proceed();
+        }
+      } else {
+        CLOG(INFO, "MSVR") << "#InputQueue = " << m_input_queue->size();
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+      }
     }
+  } catch (std::exception &e) {
+    CLOG(ERROR, "MSVR") << "RPC Server problem : " << e.what();
+    while (m_completion_queue->Next(&tag, &ok)) {
+      if (tag != nullptr)
+        static_cast<CallData *>(tag)->proceed(false);
+    }
+    m_completion_queue.reset();
+    m_server.reset();
+    CLOG(INFO, "MSVR") << "RPC Server restart";
+    runServer(m_port_num);
   }
 }
 
-void RecvFromMerger::proceed() {
+void RecvFromMerger::proceed(bool st) {
+  if (!st) {
+    delete this;
+    return;
+  }
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::PROCESS;
@@ -83,13 +101,20 @@ void RecvFromMerger::proceed() {
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == RpcCallStatus::FINISH);
+    if (m_receive_status != RpcCallStatus::FINISH) {
+      CLOG(ERROR, "MSVR") << "RecvFromMerger() rpc status : Unknown";
+    }
     delete this;
   } break;
   }
 }
 
-void RecvFromSE::proceed() {
+void RecvFromSE::proceed(bool st) {
+  if (!st) {
+    delete this;
+    return;
+  }
+
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::PROCESS;
@@ -116,15 +141,20 @@ void RecvFromSE::proceed() {
       m_responder.Finish(m_reply, rpc_status, this);
     });
   } break;
-
   default: {
-    GPR_ASSERT(m_receive_status == RpcCallStatus::FINISH);
+    if (m_receive_status != RpcCallStatus::FINISH) {
+      CLOG(ERROR, "MSVR") << "RecvFromSE() rpc status : Unknown";
+    }
     delete this;
   } break;
   }
 }
 
-void OpenChannel::proceed() {
+void OpenChannel::proceed(bool st) {
+  if (!st) {
+    delete this;
+    return;
+  }
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::READ;
@@ -164,7 +194,11 @@ void OpenChannel::proceed() {
   }
 }
 
-void Join::proceed() {
+void Join::proceed(bool st) {
+  if (!st) {
+    delete this;
+    return;
+  }
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::PROCESS;
@@ -197,13 +231,19 @@ void Join::proceed() {
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == RpcCallStatus::FINISH);
+    if (m_receive_status != RpcCallStatus::FINISH) {
+      CLOG(ERROR, "MSVR") << "Join() rpc status : Unknown";
+    }
     delete this;
   } break;
   }
 }
 
-void DHKeyEx::proceed() {
+void DHKeyEx::proceed(bool st) {
+  if (!st) {
+    delete this;
+    return;
+  }
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::PROCESS;
@@ -235,13 +275,19 @@ void DHKeyEx::proceed() {
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == RpcCallStatus::FINISH);
+    if (m_receive_status != RpcCallStatus::FINISH) {
+      CLOG(ERROR, "MSVR") << "DHKeyEx() rpc status : Unknown";
+    }
     delete this;
   } break;
   }
 }
 
-void KeyExFinished::proceed() {
+void KeyExFinished::proceed(bool st) {
+  if (!st) {
+    delete this;
+    return;
+  }
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::PROCESS;
@@ -273,13 +319,19 @@ void KeyExFinished::proceed() {
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == RpcCallStatus::FINISH);
+    if (m_receive_status != RpcCallStatus::FINISH) {
+      CLOG(ERROR, "MSVR") << "KeyExFinished() rpc status : Unknown";
+    }
     delete this;
   } break;
   }
 }
 
-void SigSend::proceed() {
+void SigSend::proceed(bool st) {
+  if (!st) {
+    delete this;
+    return;
+  }
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::PROCESS;
@@ -305,10 +357,11 @@ void SigSend::proceed() {
   } break;
 
   default: {
-    GPR_ASSERT(m_receive_status == RpcCallStatus::FINISH);
+    if (m_receive_status != RpcCallStatus::FINISH) {
+      CLOG(ERROR, "MSVR") << "SigSend() rpc status : Unknown";
+    }
     delete this;
   } break;
   }
 }
-
 } // namespace gruut
