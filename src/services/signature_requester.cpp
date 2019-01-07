@@ -166,7 +166,7 @@ Signers SignatureRequester::selectSigners() {
   auto signer_pool = SignerPool::getInstance();
   size_t num_available_signers =
       signer_pool->getNumSignerBy(SignerStatus::GOOD);
-  if (num_available_signers > config::MIN_SIGNATURE_COLLECT_SIZE) {
+  if (num_available_signers >= config::MIN_SIGNATURE_COLLECT_SIZE) {
     selected_signers = signer_pool->getRandomSigners(
         std::min(config::MAX_SIGNATURE_COLLECT_SIZE, num_available_signers));
   }
