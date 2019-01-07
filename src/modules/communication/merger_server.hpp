@@ -38,13 +38,13 @@ public:
   inline bool isStarted() { return m_is_started; }
 
 private:
+  std::string m_port_num;
   std::unique_ptr<Server> m_server;
   std::unique_ptr<ServerCompletionQueue> m_completion_queue;
   // TODO: protobuf의 변수 명 정리후 namespace ,변수명 들은 바뀔수 있습니다.
   MergerCommunication::AsyncService m_merger_service;
   GruutSeService::AsyncService m_se_service;
   GruutNetworkService::AsyncService m_signer_service;
-  RpcReceiverList *m_rpc_receivers;
   InputQueueAlt *m_input_queue;
   void recvMessage();
   std::atomic<bool> m_is_started{false};
@@ -52,7 +52,7 @@ private:
 
 class CallData {
 public:
-  virtual void proceed() = 0;
+  virtual void proceed(bool st = true) = 0;
 
 protected:
   ServerCompletionQueue *m_completion_queue;
@@ -70,7 +70,7 @@ public:
     m_receive_status = RpcCallStatus::CREATE;
     proceed();
   }
-  void proceed();
+  void proceed(bool st = true);
 
 private:
   MergerCommunication::AsyncService *m_service;
@@ -87,7 +87,7 @@ public:
     m_receive_status = RpcCallStatus::CREATE;
     proceed();
   }
-  void proceed();
+  void proceed(bool st = true);
 
 private:
   GruutSeService::AsyncService *m_service;
@@ -106,7 +106,7 @@ public:
     m_rpc_receiver_list = RpcReceiverList::getInstance();
     proceed();
   }
-  void proceed();
+  void proceed(bool st = true);
 
 private:
   std::string m_signer_id_b64;
@@ -126,7 +126,7 @@ public:
     m_rpc_receiver_list = RpcReceiverList::getInstance();
     proceed();
   }
-  void proceed();
+  void proceed(bool st = true);
 
 private:
   RpcReceiverList *m_rpc_receiver_list;
@@ -145,7 +145,7 @@ public:
     m_rpc_receiver_list = RpcReceiverList::getInstance();
     proceed();
   }
-  void proceed();
+  void proceed(bool st = true);
 
 private:
   RpcReceiverList *m_rpc_receiver_list;
@@ -165,7 +165,7 @@ public:
     m_rpc_receiver_list = RpcReceiverList::getInstance();
     proceed();
   }
-  void proceed();
+  void proceed(bool st = true);
 
 private:
   RpcReceiverList *m_rpc_receiver_list;
@@ -183,7 +183,7 @@ public:
     m_receive_status = RpcCallStatus::CREATE;
     proceed();
   }
-  void proceed();
+  void proceed(bool st = true);
 
 private:
   GruutNetworkService::AsyncService *m_service;
