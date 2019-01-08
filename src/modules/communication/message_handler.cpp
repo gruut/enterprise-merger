@@ -17,7 +17,7 @@ MessageHandler::MessageHandler() {
 void MessageHandler::unpackMsg(std::string &packed_msg,
                                grpc::Status &rpc_status, id_type &recv_id) {
   using namespace grpc;
-  if (packed_msg.size() < config::HEADER_LENGTH) {
+  if (packed_msg.size() < HEADER_LENGTH) {
     rpc_status = Status(StatusCode::INVALID_ARGUMENT,
                         "Wrong Message (MessageHandler::unpackMsg)");
     return;
@@ -32,9 +32,8 @@ void MessageHandler::unpackMsg(std::string &packed_msg,
   std::string recv_str_id = TypeConverter::encodeBase64(recv_id);
 
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
-    std::string msg = packed_msg.substr(0, config::HEADER_LENGTH + body_size);
-    std::vector<uint8_t> hmac(packed_msg.begin() + config::HEADER_LENGTH +
-                                  body_size,
+    std::string msg = packed_msg.substr(0, HEADER_LENGTH + body_size);
+    std::vector<uint8_t> hmac(packed_msg.begin() + HEADER_LENGTH + body_size,
                               packed_msg.end());
 
     auto signer_pool = SignerPool::getInstance();
@@ -98,7 +97,7 @@ void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
 
 bool MessageHandler::validateMsgFormat(MessageHeader &header) {
   // TODO : Message header에서 확인해야 하는 사항이 있을때 추가예정
-  bool check = (header.identifier == config::G);
+  bool check = (header.identifier == G);
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
     check &= (header.message_type == MessageType::MSG_SUCCESS ||
               header.message_type == MessageType::MSG_SSIG);
@@ -108,12 +107,12 @@ bool MessageHandler::validateMsgFormat(MessageHeader &header) {
 
 int MessageHandler::getMsgBodySize(MessageHeader &header) {
   int total_size = HeaderController::convertU8ToU32BE(header.total_length);
-  int body_size = total_size - static_cast<int>(config::HEADER_LENGTH);
+  int body_size = total_size - static_cast<int>(HEADER_LENGTH);
   return body_size;
 }
 
 std::string MessageHandler::getMsgBody(std::string &packed_msg, int body_size) {
-  std::string packed_body = packed_msg.substr(config::HEADER_LENGTH, body_size);
+  std::string packed_body = packed_msg.substr(HEADER_LENGTH, body_size);
   return packed_body;
 }
 
