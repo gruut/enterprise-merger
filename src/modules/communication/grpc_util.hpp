@@ -18,7 +18,7 @@ public:
   attachHeader(std::string &compressed_json, MessageType msg_type,
                CompressionAlgorithmType compression_algo_type);
   static MessageHeader parseHeader(std::string &raw_data);
-  static int convertU8ToU32BE(uint8_t *len_bytes);
+  static int convertU8ToU32BE(std::array<uint8_t, MSG_LENGTH_SIZE> &len_bytes);
 };
 class JsonValidator {
 public:
