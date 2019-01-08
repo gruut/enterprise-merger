@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(parseHeader) {
         MessageHeader compare_hdr;
         compare_hdr.identifier = 'G';
         compare_hdr.version = '1';
-        compare_hdr.message_type = MessageType::MSG_ECHO;
+        compare_hdr.message_type = MessageType::MSG_ERROR;
         compare_hdr.mac_algo_type = MACAlgorithmType::RSA;
         compare_hdr.compression_algo_type = CompressionAlgorithmType::LZ4;
         compare_hdr.dummy = '1';
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_SUITE(Test_JsonValidator)
             "sender":"gruut"
         }
         )"_json;
-        bool true_sample = JsonValidator::validateSchema(sample_true_json, MessageType::MSG_ECHO);
-        bool false_sample = JsonValidator::validateSchema(sample_false_json, MessageType::MSG_ECHO);
+        bool true_sample = JsonValidator::validateSchema(sample_true_json, MessageType::MSG_ERROR);
+        bool false_sample = JsonValidator::validateSchema(sample_false_json, MessageType::MSG_ERROR);
 
         BOOST_TEST(true_sample);
         BOOST_TEST(!false_sample);

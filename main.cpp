@@ -7,17 +7,22 @@
 #include "src/services/argv_parser.hpp"
 
 #include "easy_logging.hpp"
+#include "src/utils/crypto.hpp"
+#include "src/utils/get_pass.hpp"
 
 using namespace std;
 using namespace gruut;
+
+
 
 int main(int argc, char *argv[]) {
 
   el::Loggers::getLogger("MAIN");
 
-  CLOG(INFO, "MAIN") << config::APP_NAME << " (" << config::APP_CODE_NAME << ")";
-  CLOG(INFO, "MAIN") << "build: " << config::APP_BUILD_DATE << " " << config::APP_BUILD_TIME;
-  CLOG(INFO, "MAIN") << "===========================================================================";
+  CLOG(INFO, "MAIN") << "+--------------------------------------------------------------------------";
+  CLOG(INFO, "MAIN") << "| " << config::APP_NAME << " (" << config::APP_CODE_NAME << ")";
+  CLOG(INFO, "MAIN") << "| build: " << config::APP_BUILD_DATE << " " << config::APP_BUILD_TIME;
+  CLOG(INFO, "MAIN") << "+--------------------------------------------------------------------------";
 
   ArgvParser argv_parser;
   json setting_json = argv_parser.parse(argc,argv);
@@ -31,6 +36,38 @@ int main(int argc, char *argv[]) {
   if(!setting->setJson(setting_json)) {
     CLOG(ERROR, "MAIN") << "Setting file is not a valid JSON";
     return -2;
+  }
+
+  if(GemCrypto::isEncPem(setting->getMySK())) {
+
+    if(!setting->getMyPass().empty() && !GemCrypto::isValidPass(setting->getMySK(),setting->getMyPass())) {
+      CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
+      CLOG(INFO, "MAIN") << "| Wrong Password! :(                                                      |";
+      CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
+      CLOG(INFO, "MAIN") << "";
+      return 1;
+    }
+
+    CLOG(INFO, "MAIN") << "";
+    CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
+    CLOG(INFO, "MAIN") << "| Good. Merger's signing key is encrypted.                                |";
+    CLOG(INFO, "MAIN") << "| To run this merger properly, you must provide a valid password.         |";
+    CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
+
+    std::string user_pass;
+    int num_retry = 0;
+    do {
+      user_pass = getPass::get("Enter the password ", true);
+      ++num_retry;
+      std::this_thread::sleep_for(std::chrono::seconds(num_retry*num_retry));
+    }
+    while(!GemCrypto::isValidPass(setting->getMySK(),user_pass));
+    setting->setPass(user_pass);
+
+    CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
+    CLOG(INFO, "MAIN") << "| Password is OK. :)                                                      |";
+    CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
+    CLOG(INFO, "MAIN") << "";
   }
 
   Application::app().setup();

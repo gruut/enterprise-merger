@@ -40,6 +40,8 @@ CMakeFiles
 cmake_install.cmake
 cmake-build-debug/
 cmake-build-release/
+cmake-build-debug-wsl/
+cmake-build-debug-remote-host/
 Makefile
 output.txt
 build
