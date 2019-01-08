@@ -37,6 +37,11 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
 
   size_t block_height = new_block.getHeight();
 
+  if(m_my_last_height >= block_height) {
+    CLOG(INFO, "BSYN") << "Block dropped (old block)";
+    return false;
+  }
+
   auto it_map = m_recv_block_list.find(new_block.getHeight());
 
   bool is_new_block = false;
