@@ -168,6 +168,11 @@ public:
     m_id = Safe::getBytesFromB64<id_type>(setting_json["Self"], "id");
     m_address = Safe::getString(setting_json["Self"], "address");
     m_port = Safe::getString(setting_json["Self"], "port");
+
+    if(m_port.empty()){
+      m_port = config::DEFAULT_PORT_NUM;
+    }
+
     m_sk = joinMultiLine(setting_json["Self"]["sk"]);
     m_localchain_id = getChainIdFromJson(setting_json["LocalChain"]["id"]);
     m_localchain_name = Safe::getString(setting_json["LocalChain"], "name");

@@ -29,7 +29,7 @@ public:
         "pass", "Password to decrypt secret key",
         cxxopts::value<string>()->default_value(""))(
         "port", "Port number",
-        cxxopts::value<string>()->default_value(config::DEFAULT_PORT_NUM))(
+        cxxopts::value<string>()->default_value(""))(
         "dbpath", "DB path",
         cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH));
 
@@ -60,8 +60,8 @@ public:
       setting_json["pass"] = result["pass"].as<string>();
 
       auto parsed_port_num = result["port"].as<string>();
-      if (!parsed_port_num.empty() &&
-          parsed_port_num != Safe::getString(setting_json["Self"], "port")) {
+
+      if (!parsed_port_num.empty()) {
         setting_json["Self"]["port"] = parsed_port_num; // override
       }
 
