@@ -29,30 +29,30 @@ GruutSeService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& cha
   : channel_(channel), rpcmethod_transaction_(GruutSeService_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
-::grpc::Status GruutSeService::Stub::transaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc_se::TxStatus* response) {
+::grpc::Status GruutSeService::Stub::transaction(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc_se::TxReply* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_transaction_, context, request, response);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpc_se::TxStatus>* GruutSeService::Stub::AsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_se::TxStatus>::Create(channel_.get(), cq, rpcmethod_transaction_, context, request, true);
+::grpc::ClientAsyncResponseReader< ::grpc_se::TxReply>* GruutSeService::Stub::AsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_se::TxReply>::Create(channel_.get(), cq, rpcmethod_transaction_, context, request, true);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpc_se::TxStatus>* GruutSeService::Stub::PrepareAsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_se::TxStatus>::Create(channel_.get(), cq, rpcmethod_transaction_, context, request, false);
+::grpc::ClientAsyncResponseReader< ::grpc_se::TxReply>* GruutSeService::Stub::PrepareAsynctransactionRaw(::grpc::ClientContext* context, const ::grpc_se::GrpcMsgTX& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_se::TxReply>::Create(channel_.get(), cq, rpcmethod_transaction_, context, request, false);
 }
 
 GruutSeService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       GruutSeService_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< GruutSeService::Service, ::grpc_se::GrpcMsgTX, ::grpc_se::TxStatus>(
+      new ::grpc::internal::RpcMethodHandler< GruutSeService::Service, ::grpc_se::GrpcMsgTX, ::grpc_se::TxReply>(
           std::mem_fn(&GruutSeService::Service::transaction), this)));
 }
 
 GruutSeService::Service::~Service() {
 }
 
-::grpc::Status GruutSeService::Service::transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::TxStatus* response) {
+::grpc::Status GruutSeService::Service::transaction(::grpc::ServerContext* context, const ::grpc_se::GrpcMsgTX* request, ::grpc_se::TxReply* response) {
   (void) context;
   (void) request;
   (void) response;
