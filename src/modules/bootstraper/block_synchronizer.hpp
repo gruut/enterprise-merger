@@ -47,6 +47,7 @@ private:
 
   size_t m_my_last_height;
   std::string m_my_last_blk_hash_b64;
+  std::string m_my_last_blk_id_b64;
   merger_id_type m_my_id;
   size_t m_first_recv_block_height{0};
 

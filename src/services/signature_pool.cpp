@@ -57,7 +57,7 @@ bool SignaturePool::verifySignature(signer_id_type &recv_id,
   auto pk_cert = SignerPool::getInstance()->getPkCert(recv_id);
   if (pk_cert.empty()) {
     auto storage = Storage::getInstance();
-    pk_cert = storage->findCertificate(recv_id);
+    pk_cert = storage->getCertificate(recv_id);
   }
 
   if (pk_cert.empty()) {

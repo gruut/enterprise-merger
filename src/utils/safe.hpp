@@ -70,7 +70,7 @@ public:
   }
 
   static size_t getSize(const std::string &size_str) {
-    if(size_str.empty())
+    if (size_str.empty())
       return 0;
 
     return static_cast<uint64_t>(stoll(size_str));

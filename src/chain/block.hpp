@@ -264,9 +264,7 @@ public:
 
   std::string getPrevHashB64() { return m_prev_block_hash_b64; }
 
-  std::string getPrevBlockIdB64() {
-    return m_prev_block_id_b64;
-  }
+  std::string getPrevBlockIdB64() { return m_prev_block_id_b64; }
 
   bool isValid() {
 
@@ -299,7 +297,7 @@ public:
       if (it_map != m_user_certs.end()) {
         user_pk_pem = it_map->second;
       } else {
-        user_pk_pem = storage->findCertificate(user_id_b64, m_time);
+        user_pk_pem = storage->getCertificate(user_id_b64, m_time);
       }
 
       if (user_pk_pem.empty()) {

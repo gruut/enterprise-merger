@@ -28,8 +28,7 @@ public:
         cxxopts::value<string>()->default_value("./setting.json"))(
         "pass", "Password to decrypt secret key",
         cxxopts::value<string>()->default_value(""))(
-        "port", "Port number",
-        cxxopts::value<string>()->default_value(""))(
+        "port", "Port number", cxxopts::value<string>()->default_value(""))(
         "dbpath", "DB path",
         cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH));
 

@@ -37,7 +37,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
 
   size_t block_height = new_block.getHeight();
 
-  if(m_my_last_height >= block_height) {
+  if (m_my_last_height >= block_height) {
     CLOG(INFO, "BSYN") << "Block dropped (old block)";
     return false;
   }
@@ -423,14 +423,16 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 
   m_finish_callback = std::move(callback);
 
-  std::pair<std::string, size_t> hash_and_height =
-      m_storage->findLatestHashAndHeight();
-  m_my_last_height = hash_and_height.second; // if 0, no block in DB
+  auto latest_block_info = m_storage->getNthBlockLinkInfo();
+
+  m_my_last_height = latest_block_info.height; // if 0, no block in DB
 
   if (m_my_last_height == 0) {
+    m_my_last_blk_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
     m_my_last_blk_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
   } else {
-    m_my_last_blk_hash_b64 = TypeConverter::encodeBase64(hash_and_height.first);
+    m_my_last_blk_id_b64 = latest_block_info.id_b64;
+    m_my_last_blk_hash_b64 = latest_block_info.hash_b64;
   }
 
   m_recv_block_list.clear();

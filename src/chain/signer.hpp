@@ -16,7 +16,7 @@ struct Signer {
   SignerStatus status{SignerStatus::UNKNOWN};
 
   bool isNew() {
-    auto cert = Storage::getInstance()->findCertificate(user_id);
+    auto cert = Storage::getInstance()->getCertificate(user_id);
     return (cert.empty() || cert != pk_cert);
   }
 };

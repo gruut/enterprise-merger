@@ -104,14 +104,15 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   auto latest_block_link = m_storage->getNthBlockLinkInfo();
 
-  if(recv_block.getHeight() <= latest_block_link.height){
+  if (recv_block.getHeight() <= latest_block_link.height) {
     CLOG(ERROR, "BPRO") << "Block dropped (duplicated block)";
     return false;
   }
 
-  if(recv_block.getHeight() == latest_block_link.height + 1) {
+  if (recv_block.getHeight() == latest_block_link.height + 1) {
 
-    if(recv_block.getPrevBlockIdB64() != latest_block_link.id_b64 && recv_block.getPrevHashB64() != latest_block_link.hash_b64) {
+    if (recv_block.getPrevBlockIdB64() != latest_block_link.id_b64 &&
+        recv_block.getPrevHashB64() != latest_block_link.hash_b64) {
       CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
       return false;
     }
@@ -122,13 +123,15 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
     m_storage->saveBlock(block_raw, block_header, block_body);
 
-    CLOG(INFO, "BPRO") << "Block saved (height=" << recv_block.getHeight() << ")";
+    CLOG(INFO, "BPRO") << "Block saved (height=" << recv_block.getHeight()
+                       << ")";
 
     auto &tx_pool = Application::app().getTransactionPool();
     tx_pool.removeDuplicatedTransactions(recv_block.getTxIds());
   } else {
     // TODO : push this block to unresolved block pool
-    CLOG(ERROR, "BPRO") << "Unable to handle this block due to implementation issue";
+    CLOG(ERROR, "BPRO")
+        << "Unable to handle this block due to implementation issue";
     return false;
   }
 
@@ -140,8 +143,7 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
 
   auto setting = Setting::getInstance();
 
-  proof_type proof =
-      m_storage->findSibling(Safe::getString(entry.body, "txid"));
+  proof_type proof = m_storage->getProof(Safe::getString(entry.body, "txid"));
 
   json proof_json = json::array();
   for (auto &sibling : proof.siblings) {

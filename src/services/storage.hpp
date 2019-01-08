@@ -59,28 +59,28 @@ public:
   bool saveBlock(bytes &block_raw, json &block_header, json &block_body);
   bool saveBlock(const std::string &block_raw_b64, json &block_header,
                  json &block_body);
-  std::pair<std::string, size_t> findLatestHashAndHeight();
+  std::pair<std::string, size_t> getLatestHashAndHeight();
   nth_block_link_type getNthBlockLinkInfo(size_t t_height = 0);
-  std::vector<std::string> findLatestTxIdList();
-  std::string findCertificate(const std::string &user_id,
-                              const timestamp_type &at_this_time = 0);
-  std::string findCertificate(const signer_id_type &user_id,
-                              const timestamp_type &at_this_time = 0);
-  void deleteAllDirectory();
+  std::vector<std::string> getNthTxIdList(size_t t_height = 0);
+  std::string getCertificate(const std::string &user_id_b64,
+                             const timestamp_type &at_this_time = 0);
+  std::string getCertificate(const signer_id_type &user_id,
+                             const timestamp_type &at_this_time = 0);
+  void destroyDB();
   read_block_type readBlock(size_t height);
-  proof_type findSibling(const std::string &txid_b64);
+  proof_type getProof(const std::string &txid_b64);
 
 private:
   bool errorOnCritical(const leveldb::Status &status);
   bool errorOn(const leveldb::Status &status);
   bool addBatch(DBType what, const std::string &key, const std::string &value);
   bool putBlockHeader(json &block_header_json, const std::string &block_id_b64);
-  bool putBlockHeight(json &block_json, const std::string &block_id_b64);
+  bool putBlockHeight(json &block_header_json, const std::string &block_id_b64);
   bool putBlockRaw(bytes &block_raw, const std::string &block_id_b64);
-  bool putLatestBlockHeader(json &block_json);
+  bool putLatestBlockHeader(json &block_header_json);
   bool putBlockBody(json &block_body_json, const std::string &block_id_b64);
-  std::string getDataByKey(DBType what,
-                           const std::string &base_suffix_keys = "");
+  std::string getValueByKey(DBType what,
+                            const std::string &base_suffix_keys = "");
   std::string getPrefix(DBType what);
   std::string parseCert(std::string &pem);
   void rollbackBatchAll();
