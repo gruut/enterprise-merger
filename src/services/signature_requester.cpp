@@ -224,8 +224,7 @@ SignatureRequester::generateBasicBlockInfo(sha256 &merkle_root,
   auto setting = Setting::getInstance();
 
   auto storage = Storage::getInstance();
-  tuple<string, string, size_t> latest_block_info =
-      storage->findLatestBlockBasicInfo();
+  auto latest_block_info = storage->getNthBlockLinkInfo();
 
   BasicBlockInfo partial_block;
 
@@ -233,10 +232,10 @@ SignatureRequester::generateBasicBlockInfo(sha256 &merkle_root,
   partial_block.merger_id = setting->getMyId();
   partial_block.chain_id = setting->getLocalChainId();
 
-  if (std::get<0>(latest_block_info).empty())
+  if (latest_block_info.height == 0)
     partial_block.height = 1; // this is genesis block
   else
-    partial_block.height = std::get<2>(latest_block_info) + 1;
+    partial_block.height = latest_block_info.height + 1;
 
   partial_block.transaction_root = merkle_root;
   partial_block.transactions = transactions;

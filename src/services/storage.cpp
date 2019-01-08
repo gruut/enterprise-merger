@@ -136,27 +136,27 @@ void Storage::clearBatchAll() {
   m_batch_blockid_height.Clear();
 }
 
-bool Storage::putBlockHeader(json &block_json, const string &block_id_b64) {
+bool Storage::putBlockHeader(json &block_header_json, const string &block_id_b64) {
   std::string key, value;
   for (auto &item : DB_BLOCK_HEADER_SUFFIX) {
-    if (item.first == "SSig" && block_json["SSig"].is_array()) {
-      for (size_t i = 0; i < block_json["SSig"].size(); ++i) {
+    if (item.first == "SSig" && block_header_json["SSig"].is_array()) {
+      for (size_t i = 0; i < block_header_json["SSig"].size(); ++i) {
         key = block_id_b64 + item.second + "_sID_" + to_string(i);
-        value = Safe::getString(block_json[item.first][i]["sID"]);
+        value = Safe::getString(block_header_json[item.first][i]["sID"]);
         if (!addBatch(DBType::BLOCK_HEADER, key, value))
           return false;
 
         key = block_id_b64 + item.second + "_sig_" + to_string(i);
-        value = Safe::getString(block_json["SSig"][i]["sig"]);
+        value = Safe::getString(block_header_json["SSig"][i]["sig"]);
         if (!addBatch(DBType::BLOCK_HEADER, key, value))
           return false;
       }
     } else {
       key = block_id_b64 + item.second;
       if (item.first == "txids") {
-        value = block_json[item.first].dump();
+        value = block_header_json[item.first].dump();
       } else
-        value = Safe::getString(block_json[item.first]);
+        value = Safe::getString(block_header_json[item.first]);
       if (!addBatch(DBType::BLOCK_HEADER, key, value))
         return false;
     }
@@ -372,22 +372,22 @@ std::pair<std::string, size_t> Storage::findLatestHashAndHeight() {
     return std::make_pair(hash, static_cast<size_t>(stoll(height)));
 }
 
-std::tuple<std::string, std::string, size_t>
-Storage::findLatestBlockBasicInfo() {
-  std::tuple<std::string, std::string, size_t> ret_tuple;
+nth_block_link_type
+Storage::getNthBlockLinkInfo(size_t t_height) {
+  nth_block_link_type ret_link_info;
+  ret_link_info.height = t_height;
 
-  auto block_id = getDataByKey(DBType::BLOCK_LATEST, "bID");
-  if (!block_id.empty()) {
-    std::get<0>(ret_tuple) = block_id;
-    std::get<1>(ret_tuple) =
-        getDataByKey(DBType::BLOCK_RAW, block_id + "_hash");
-    auto height = getDataByKey(DBType::BLOCK_LATEST, "hgt");
-    if (height.empty())
-      std::get<2>(ret_tuple) = 0;
-    else
-      std::get<2>(ret_tuple) = static_cast<size_t>(stoll(height));
+  std::string t_block_id_b64 = (t_height == 0) ?  getDataByKey(DBType::BLOCK_LATEST, "bID") : getDataByKey(DBType::BLOCK_HEIGHT, to_string(t_height));
+
+  if(!t_block_id_b64.empty()){
+    ret_link_info.id_b64 = t_block_id_b64;
+    ret_link_info.hash_b64 = TypeConverter::encodeBase64(getDataByKey(DBType::BLOCK_RAW, t_block_id_b64 + "_hash"));
+    ret_link_info.prev_id_b64 = getDataByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevbID");
+    ret_link_info.prev_hash_b64 = getDataByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevH");
+    ret_link_info.height = Safe::getSize(getDataByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_hgt"));
   }
-  return ret_tuple;
+
+  return ret_link_info;
 }
 
 std::vector<std::string> Storage::findLatestTxIdList() {

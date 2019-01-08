@@ -60,7 +60,7 @@ public:
   bool saveBlock(const std::string &block_raw_b64, json &block_header,
                  json &block_body);
   std::pair<std::string, size_t> findLatestHashAndHeight();
-  std::tuple<std::string, std::string, size_t> findLatestBlockBasicInfo();
+  nth_block_link_type getNthBlockLinkInfo(size_t t_height = 0);
   std::vector<std::string> findLatestTxIdList();
   std::string findCertificate(const std::string &user_id,
                               const timestamp_type &at_this_time = 0);
@@ -74,7 +74,7 @@ private:
   bool errorOnCritical(const leveldb::Status &status);
   bool errorOn(const leveldb::Status &status);
   bool addBatch(DBType what, const std::string &key, const std::string &value);
-  bool putBlockHeader(json &block_json, const std::string &block_id_b64);
+  bool putBlockHeader(json &block_header_json, const std::string &block_id_b64);
   bool putBlockHeight(json &block_json, const std::string &block_id_b64);
   bool putBlockRaw(bytes &block_raw, const std::string &block_id_b64);
   bool putLatestBlockHeader(json &block_json);

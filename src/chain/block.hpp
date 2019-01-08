@@ -153,16 +153,14 @@ public:
     auto storage = Storage::getInstance();
 
     m_version = config::DEFAULT_VERSION;
-    std::tuple<string, string, size_t> latest_block_info =
-        storage->findLatestBlockBasicInfo();
+    auto latest_block_info = storage->getNthBlockLinkInfo();
 
-    if (std::get<0>(latest_block_info).empty()) { // this is genesis block
+    if (latest_block_info.height == 0) { // this is genesis block
       m_prev_block_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
       m_prev_block_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
     } else {
-      m_prev_block_id_b64 = std::get<0>(latest_block_info);
-      m_prev_block_hash_b64 =
-          TypeConverter::encodeBase64(std::get<1>(latest_block_info));
+      m_prev_block_id_b64 = latest_block_info.id_b64;
+      m_prev_block_hash_b64 = latest_block_info.hash_b64;
     }
 
     BytesBuilder block_id_builder;
@@ -265,6 +263,10 @@ public:
   std::string getHashB64() { return TypeConverter::encodeBase64(m_block_hash); }
 
   std::string getPrevHashB64() { return m_prev_block_hash_b64; }
+
+  std::string getPrevBlockIdB64() {
+    return m_prev_block_id_b64;
+  }
 
   bool isValid() {
 

@@ -91,27 +91,46 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
 bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
-  Block new_block;
-  if (!new_block.initialze(entry.body)) {
+  Block recv_block;
+  if (!recv_block.initialze(entry.body)) {
     CLOG(ERROR, "BPRO") << "Block dropped (missing information)";
     return false;
   }
 
-  if (!new_block.isValid()) {
+  if (!recv_block.isValid()) {
     CLOG(ERROR, "BPRO") << "Block dropped (invalid block)";
     return false;
   }
 
-  json block_header = new_block.getBlockHeaderJson();
-  bytes block_raw = new_block.getBlockRaw();
-  json block_body = new_block.getBlockBodyJson();
+  auto latest_block_link = m_storage->getNthBlockLinkInfo();
 
-  m_storage->saveBlock(block_raw, block_header, block_body);
+  if(recv_block.getHeight() <= latest_block_link.height){
+    CLOG(ERROR, "BPRO") << "Block dropped (duplicated block)";
+    return false;
+  }
 
-  CLOG(INFO, "BPRO") << "Block saved (height=" << new_block.getHeight() << ")";
+  if(recv_block.getHeight() == latest_block_link.height + 1) {
 
-  auto &tx_pool = Application::app().getTransactionPool();
-  tx_pool.removeDuplicatedTransactions(new_block.getTxIds());
+    if(recv_block.getPrevBlockIdB64() != latest_block_link.id_b64 && recv_block.getPrevHashB64() != latest_block_link.hash_b64) {
+      CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
+      return false;
+    }
+
+    json block_header = recv_block.getBlockHeaderJson();
+    bytes block_raw = recv_block.getBlockRaw();
+    json block_body = recv_block.getBlockBodyJson();
+
+    m_storage->saveBlock(block_raw, block_header, block_body);
+
+    CLOG(INFO, "BPRO") << "Block saved (height=" << recv_block.getHeight() << ")";
+
+    auto &tx_pool = Application::app().getTransactionPool();
+    tx_pool.removeDuplicatedTransactions(recv_block.getTxIds());
+  } else {
+    // TODO : push this block to unresolved block pool
+    CLOG(ERROR, "BPRO") << "Unable to handle this block due to implementation issue";
+    return false;
+  }
 
   return true;
 }

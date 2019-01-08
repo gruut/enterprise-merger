@@ -144,6 +144,14 @@ using read_block_type = struct read_block_t {
   json txs;
 };
 
+using nth_block_link_type = struct nth_block_link_t {
+  std::string id_b64;
+  std::string hash_b64;
+  std::string prev_id_b64;
+  std::string prev_hash_b64;
+  size_t height;
+};
+
 // 아래는 모두 동일한 타입, 문맥에 맞춰서 쓸 것
 // 구별이 안되거나 혼용되어 있으면, id_type을 쓸 것
 using requestor_id_type = bytes;

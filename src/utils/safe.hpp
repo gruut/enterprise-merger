@@ -69,6 +69,13 @@ public:
     return ret_str;
   }
 
+  static size_t getSize(const std::string &size_str) {
+    if(size_str.empty())
+      return 0;
+
+    return static_cast<uint64_t>(stoll(size_str));
+  }
+
   static uint64_t getInt(nlohmann::json &&json_obj, const std::string &key) {
     return getInt(json_obj, key);
   }
