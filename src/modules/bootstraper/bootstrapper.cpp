@@ -53,7 +53,7 @@ void Bootstrapper::startSync() {
 }
 
 void Bootstrapper::endSync(ExitCode exit_code) {
-
+  /*
   if (exit_code == ExitCode::NORMAL ||
       exit_code == ExitCode::ERROR_SYNC_ALONE) { // complete done or alone
     sendMsgUp();
@@ -65,6 +65,11 @@ void Bootstrapper::endSync(ExitCode exit_code) {
         std::chrono::seconds(config::BOOTSTRAP_RETRY_TIMEOUT));
     startSync();
   }
+  */
+
+  // TODO : rewrite these codes after fixing boot-hang bug
+  sendMsgUp();
+  stageOver(exit_code);
 }
 
 } // namespace gruut
