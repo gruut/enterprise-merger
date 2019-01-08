@@ -19,9 +19,9 @@ HeaderController::attachHeader(std::string &compressed_json,
   uint32_t total_length =
       static_cast<uint32_t>(HEADER_LENGTH + compressed_json.size());
 
-  header.resize(config::HEADER_LENGTH);
-  header[0] = config::G;
-  header[1] = config::VERSION;
+  header.resize(HEADER_LENGTH);
+  header[0] = G;
+  header[1] = VERSION;
   header[2] = static_cast<uint8_t>(msg_type);
   if (msg_type == MessageType::MSG_ACCEPT ||
       msg_type == MessageType::MSG_REQ_SSIG) {
@@ -43,19 +43,18 @@ HeaderController::attachHeader(std::string &compressed_json,
 
   memcpy(&header[10], &chain_id[0], CHAIN_ID_TYPE_SIZE);
 
-  if (sender_id.size() >= config::SENDER_ID_LENGTH)
-    memcpy(&header[10 + CHAIN_ID_TYPE_SIZE], &sender_id[0],
-           config::SENDER_ID_LENGTH);
+  if (sender_id.size() >= SENDER_ID_LENGTH)
+    memcpy(&header[10 + CHAIN_ID_TYPE_SIZE], &sender_id[0], SENDER_ID_LENGTH);
 
-  memcpy(&header[10 + CHAIN_ID_TYPE_SIZE + config::SENDER_ID_LENGTH],
-         &config::RESERVED[0], config::RESERVED_LENGTH);
+  memcpy(&header[10 + CHAIN_ID_TYPE_SIZE + SENDER_ID_LENGTH], &RESERVED[0],
+         RESERVED_LENGTH);
 
   return header + compressed_json;
 }
 
 MessageHeader HeaderController::parseHeader(std::string &raw_data) {
   MessageHeader msg_header;
-  msg_header.sender_id.resize(config::SENDER_ID_LENGTH);
+  msg_header.sender_id.resize(SENDER_ID_LENGTH);
   msg_header.identifier = static_cast<uint8_t>(raw_data[0]);
   msg_header.version = static_cast<uint8_t>(raw_data[1]);
   msg_header.message_type = static_cast<MessageType>(raw_data[2]);
@@ -63,18 +62,19 @@ MessageHeader HeaderController::parseHeader(std::string &raw_data) {
   msg_header.compression_algo_type =
       static_cast<CompressionAlgorithmType>(raw_data[4]);
   msg_header.dummy = static_cast<uint8_t>(raw_data[5]);
-  memcpy(&msg_header.total_length[0], &raw_data[6], config::MSG_LENGTH_SIZE);
+  memcpy(&msg_header.total_length[0], &raw_data[6], MSG_LENGTH_SIZE);
   memcpy(&msg_header.local_chain_id[0], &raw_data[10], CHAIN_ID_TYPE_SIZE);
   memcpy(&msg_header.sender_id[0], &raw_data[10 + CHAIN_ID_TYPE_SIZE],
-         config::SENDER_ID_LENGTH);
+         SENDER_ID_LENGTH);
   memcpy(&msg_header.reserved_space[0],
-         &raw_data[10 + CHAIN_ID_TYPE_SIZE + config::SENDER_ID_LENGTH],
-         config::RESERVED_LENGTH);
+         &raw_data[10 + CHAIN_ID_TYPE_SIZE + SENDER_ID_LENGTH],
+         RESERVED_LENGTH);
 
   return msg_header;
 }
 
-int HeaderController::convertU8ToU32BE(uint8_t *len_bytes) {
+int HeaderController::convertU8ToU32BE(
+    std::array<uint8_t, MSG_LENGTH_SIZE> &len_bytes) {
   return static_cast<int>(len_bytes[0] << 24 | len_bytes[1] << 16 |
                           len_bytes[2] << 8 | len_bytes[3]);
 }
