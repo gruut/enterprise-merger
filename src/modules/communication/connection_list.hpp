@@ -72,7 +72,7 @@ private:
   std::map<std::string, std::atomic<bool>> m_merger_list;
   std::map<std::string, std::atomic<bool>> m_se_list;
   std::atomic<bool> m_enabled_merger_check{true};
-  std::atomic<bool> m_enabled_se_check{false};
+  std::atomic<bool> m_enabled_se_check{true};
 };
 
 } // namespace gruut
