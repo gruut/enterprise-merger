@@ -4,7 +4,9 @@
 using namespace std;
 
 namespace gruut {
-HttpClient::HttpClient(const string &m_address) : m_address(m_address) {}
+HttpClient::HttpClient(const string &m_address) : m_address(m_address) {
+  el::Loggers::getLogger("HTTP");
+}
 
 CURLcode HttpClient::post(const string &packed_msg) {
   CLOG(INFO, "HTTP") << "POST (" << m_address << ")";
