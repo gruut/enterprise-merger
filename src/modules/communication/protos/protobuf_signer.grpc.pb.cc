@@ -15,150 +15,72 @@
 #include <grpcpp/impl/codegen/sync_stream.h>
 namespace grpc_signer {
 
-static const char* GruutNetworkService_method_names[] = {
-  "/grpc_signer.GruutNetworkService/join",
-  "/grpc_signer.GruutNetworkService/dhKeyEx",
-  "/grpc_signer.GruutNetworkService/keyExFinished",
-  "/grpc_signer.GruutNetworkService/sigSend",
-  "/grpc_signer.GruutNetworkService/openChannel",
+static const char* GruutSignerService_method_names[] = {
+  "/grpc_signer.GruutSignerService/openChannel",
+  "/grpc_signer.GruutSignerService/signerService",
 };
 
-std::unique_ptr< GruutNetworkService::Stub> GruutNetworkService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
+std::unique_ptr< GruutSignerService::Stub> GruutSignerService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
   (void)options;
-  std::unique_ptr< GruutNetworkService::Stub> stub(new GruutNetworkService::Stub(channel));
+  std::unique_ptr< GruutSignerService::Stub> stub(new GruutSignerService::Stub(channel));
   return stub;
 }
 
-GruutNetworkService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
-  : channel_(channel), rpcmethod_join_(GruutNetworkService_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_dhKeyEx_(GruutNetworkService_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_keyExFinished_(GruutNetworkService_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_sigSend_(GruutNetworkService_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_openChannel_(GruutNetworkService_method_names[4], ::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
+GruutSignerService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
+  : channel_(channel), rpcmethod_openChannel_(GruutSignerService_method_names[0], ::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
+  , rpcmethod_signerService_(GruutSignerService_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
-::grpc::Status GruutNetworkService::Stub::join(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc_signer::GrpcMsgChallenge* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_join_, context, request, response);
+::grpc::ClientReaderWriter< ::grpc_signer::Identity, ::grpc_signer::ReplyMsg>* GruutSignerService::Stub::openChannelRaw(::grpc::ClientContext* context) {
+  return ::grpc::internal::ClientReaderWriterFactory< ::grpc_signer::Identity, ::grpc_signer::ReplyMsg>::Create(channel_.get(), rpcmethod_openChannel_, context);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgChallenge>* GruutNetworkService::Stub::AsyncjoinRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::GrpcMsgChallenge>::Create(channel_.get(), cq, rpcmethod_join_, context, request, true);
+::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::ReplyMsg>* GruutSignerService::Stub::AsyncopenChannelRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::grpc_signer::Identity, ::grpc_signer::ReplyMsg>::Create(channel_.get(), cq, rpcmethod_openChannel_, context, true, tag);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgChallenge>* GruutNetworkService::Stub::PrepareAsyncjoinRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgJoin& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::GrpcMsgChallenge>::Create(channel_.get(), cq, rpcmethod_join_, context, request, false);
+::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::ReplyMsg>* GruutSignerService::Stub::PrepareAsyncopenChannelRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::grpc_signer::Identity, ::grpc_signer::ReplyMsg>::Create(channel_.get(), cq, rpcmethod_openChannel_, context, false, nullptr);
 }
 
-::grpc::Status GruutNetworkService::Stub::dhKeyEx(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc_signer::GrpcMsgResponse2* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_dhKeyEx_, context, request, response);
+::grpc::Status GruutSignerService::Stub::signerService(::grpc::ClientContext* context, const ::grpc_signer::RequestMsg& request, ::grpc_signer::MsgStatus* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_signerService_, context, request, response);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgResponse2>* GruutNetworkService::Stub::AsyncdhKeyExRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::GrpcMsgResponse2>::Create(channel_.get(), cq, rpcmethod_dhKeyEx_, context, request, true);
+::grpc::ClientAsyncResponseReader< ::grpc_signer::MsgStatus>* GruutSignerService::Stub::AsyncsignerServiceRaw(::grpc::ClientContext* context, const ::grpc_signer::RequestMsg& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::MsgStatus>::Create(channel_.get(), cq, rpcmethod_signerService_, context, request, true);
 }
 
-::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgResponse2>* GruutNetworkService::Stub::PrepareAsyncdhKeyExRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgResponse1& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::GrpcMsgResponse2>::Create(channel_.get(), cq, rpcmethod_dhKeyEx_, context, request, false);
+::grpc::ClientAsyncResponseReader< ::grpc_signer::MsgStatus>* GruutSignerService::Stub::PrepareAsyncsignerServiceRaw(::grpc::ClientContext* context, const ::grpc_signer::RequestMsg& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::MsgStatus>::Create(channel_.get(), cq, rpcmethod_signerService_, context, request, false);
 }
 
-::grpc::Status GruutNetworkService::Stub::keyExFinished(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc_signer::GrpcMsgAccept* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_keyExFinished_, context, request, response);
-}
-
-::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgAccept>* GruutNetworkService::Stub::AsynckeyExFinishedRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::GrpcMsgAccept>::Create(channel_.get(), cq, rpcmethod_keyExFinished_, context, request, true);
-}
-
-::grpc::ClientAsyncResponseReader< ::grpc_signer::GrpcMsgAccept>* GruutNetworkService::Stub::PrepareAsynckeyExFinishedRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSuccess& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::GrpcMsgAccept>::Create(channel_.get(), cq, rpcmethod_keyExFinished_, context, request, false);
-}
-
-::grpc::Status GruutNetworkService::Stub::sigSend(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc_signer::NoReply* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_sigSend_, context, request, response);
-}
-
-::grpc::ClientAsyncResponseReader< ::grpc_signer::NoReply>* GruutNetworkService::Stub::AsyncsigSendRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::NoReply>::Create(channel_.get(), cq, rpcmethod_sigSend_, context, request, true);
-}
-
-::grpc::ClientAsyncResponseReader< ::grpc_signer::NoReply>* GruutNetworkService::Stub::PrepareAsyncsigSendRaw(::grpc::ClientContext* context, const ::grpc_signer::GrpcMsgSsig& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_signer::NoReply>::Create(channel_.get(), cq, rpcmethod_sigSend_, context, request, false);
-}
-
-::grpc::ClientReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>* GruutNetworkService::Stub::openChannelRaw(::grpc::ClientContext* context) {
-  return ::grpc::internal::ClientReaderWriterFactory< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>::Create(channel_.get(), rpcmethod_openChannel_, context);
-}
-
-::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>* GruutNetworkService::Stub::AsyncopenChannelRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>::Create(channel_.get(), cq, rpcmethod_openChannel_, context, true, tag);
-}
-
-::grpc::ClientAsyncReaderWriter< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>* GruutNetworkService::Stub::PrepareAsyncopenChannelRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>::Create(channel_.get(), cq, rpcmethod_openChannel_, context, false, nullptr);
-}
-
-GruutNetworkService::Service::Service() {
+GruutSignerService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      GruutNetworkService_method_names[0],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< GruutNetworkService::Service, ::grpc_signer::GrpcMsgJoin, ::grpc_signer::GrpcMsgChallenge>(
-          std::mem_fn(&GruutNetworkService::Service::join), this)));
-  AddMethod(new ::grpc::internal::RpcServiceMethod(
-      GruutNetworkService_method_names[1],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< GruutNetworkService::Service, ::grpc_signer::GrpcMsgResponse1, ::grpc_signer::GrpcMsgResponse2>(
-          std::mem_fn(&GruutNetworkService::Service::dhKeyEx), this)));
-  AddMethod(new ::grpc::internal::RpcServiceMethod(
-      GruutNetworkService_method_names[2],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< GruutNetworkService::Service, ::grpc_signer::GrpcMsgSuccess, ::grpc_signer::GrpcMsgAccept>(
-          std::mem_fn(&GruutNetworkService::Service::keyExFinished), this)));
-  AddMethod(new ::grpc::internal::RpcServiceMethod(
-      GruutNetworkService_method_names[3],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< GruutNetworkService::Service, ::grpc_signer::GrpcMsgSsig, ::grpc_signer::NoReply>(
-          std::mem_fn(&GruutNetworkService::Service::sigSend), this)));
-  AddMethod(new ::grpc::internal::RpcServiceMethod(
-      GruutNetworkService_method_names[4],
+      GruutSignerService_method_names[0],
       ::grpc::internal::RpcMethod::BIDI_STREAMING,
-      new ::grpc::internal::BidiStreamingHandler< GruutNetworkService::Service, ::grpc_signer::Identity, ::grpc_signer::GrpcMsgReqSsig>(
-          std::mem_fn(&GruutNetworkService::Service::openChannel), this)));
+      new ::grpc::internal::BidiStreamingHandler< GruutSignerService::Service, ::grpc_signer::Identity, ::grpc_signer::ReplyMsg>(
+          std::mem_fn(&GruutSignerService::Service::openChannel), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      GruutSignerService_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< GruutSignerService::Service, ::grpc_signer::RequestMsg, ::grpc_signer::MsgStatus>(
+          std::mem_fn(&GruutSignerService::Service::signerService), this)));
 }
 
-GruutNetworkService::Service::~Service() {
+GruutSignerService::Service::~Service() {
 }
 
-::grpc::Status GruutNetworkService::Service::join(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgJoin* request, ::grpc_signer::GrpcMsgChallenge* response) {
-  (void) context;
-  (void) request;
-  (void) response;
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-}
-
-::grpc::Status GruutNetworkService::Service::dhKeyEx(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgResponse1* request, ::grpc_signer::GrpcMsgResponse2* response) {
-  (void) context;
-  (void) request;
-  (void) response;
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-}
-
-::grpc::Status GruutNetworkService::Service::keyExFinished(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSuccess* request, ::grpc_signer::GrpcMsgAccept* response) {
-  (void) context;
-  (void) request;
-  (void) response;
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-}
-
-::grpc::Status GruutNetworkService::Service::sigSend(::grpc::ServerContext* context, const ::grpc_signer::GrpcMsgSsig* request, ::grpc_signer::NoReply* response) {
-  (void) context;
-  (void) request;
-  (void) response;
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-}
-
-::grpc::Status GruutNetworkService::Service::openChannel(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::grpc_signer::GrpcMsgReqSsig, ::grpc_signer::Identity>* stream) {
+::grpc::Status GruutSignerService::Service::openChannel(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::grpc_signer::ReplyMsg, ::grpc_signer::Identity>* stream) {
   (void) context;
   (void) stream;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status GruutSignerService::Service::signerService(::grpc::ServerContext* context, const ::grpc_signer::RequestMsg* request, ::grpc_signer::MsgStatus* response) {
+  (void) context;
+  (void) request;
+  (void) response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
