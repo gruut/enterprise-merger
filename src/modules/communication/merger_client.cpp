@@ -215,49 +215,11 @@ void MergerClient::sendToSigner(MessageType msg_type,
   for (size_t i = 0; i < num_of_signer; ++i) {
     SignerRpcInfo signer_rpc_info =
         m_rpc_receiver_list->getSignerRpcInfo(receiver_list[i]);
-    switch (msg_type) {
-    case MessageType::MSG_CHALLENGE: {
-      auto tag = static_cast<Join *>(signer_rpc_info.tag_join);
-      *signer_rpc_info.join_status = RpcCallStatus::FINISH;
 
-      GrpcMsgChallenge reply;
-      reply.set_message(packed_msg_list[i]);
-
-      signer_rpc_info.send_challenge->Finish(reply, Status::OK, tag);
-    } break;
-
-    case MessageType::MSG_RESPONSE_2: {
-      auto tag = static_cast<DHKeyEx *>(signer_rpc_info.tag_dhkeyex);
-      *signer_rpc_info.dhkeyex_status = RpcCallStatus::FINISH;
-
-      GrpcMsgResponse2 reply;
-      reply.set_message(packed_msg_list[i]);
-
-      signer_rpc_info.send_response2->Finish(reply, Status::OK, tag);
-    } break;
-
-    case MessageType::MSG_ACCEPT: {
-      auto tag =
-          static_cast<KeyExFinished *>(signer_rpc_info.tag_keyexfinished);
-      *signer_rpc_info.keyexfinished_status = RpcCallStatus::FINISH;
-
-      GrpcMsgAccept reply;
-      reply.set_message(packed_msg_list[i]);
-
-      signer_rpc_info.send_accept->Finish(reply, Status::OK, tag);
-    } break;
-
-    case MessageType::MSG_REQ_SSIG: {
-      auto tag = static_cast<Identity *>(signer_rpc_info.tag_identity);
-
-      GrpcMsgReqSsig reply;
-      reply.set_message(packed_msg_list[i]);
-      signer_rpc_info.send_req_ssig->Write(reply, tag);
-    } break;
-
-    default:
-      break;
-    }
+    auto tag = static_cast<Identity *>(signer_rpc_info.tag_identity);
+    ReplyMsg reply;
+    reply.set_message(packed_msg_list[i]);
+    signer_rpc_info.send_msg->Write(reply, tag);
   }
 }
 
