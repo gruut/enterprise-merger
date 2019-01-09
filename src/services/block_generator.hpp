@@ -31,7 +31,7 @@ public:
     // step-1) make block
 
     Block new_block;
-    new_block.initalize(basic_info, merkle_tree.getMerkleTree());
+    new_block.initialize(basic_info, merkle_tree.getMerkleTree());
     new_block.setSupportSignatures(support_sigs);
     new_block.linkPreviousBlock();
     new_block.finalize();

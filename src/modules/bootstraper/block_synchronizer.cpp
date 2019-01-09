@@ -30,7 +30,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
   std::string sender_id_b64 = Safe::getString(msg_block.body, "mID");
 
   Block new_block;
-  if (!new_block.initialze(msg_block.body)) {
+  if (!new_block.initialize(msg_block.body)) {
     CLOG(ERROR, "BSYN") << "Block dropped (missing information)";
     return false;
   }

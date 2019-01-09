@@ -92,7 +92,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   Block recv_block;
-  if (!recv_block.initialze(entry.body)) {
+  if (!recv_block.initialize(entry.body)) {
     CLOG(ERROR, "BPRO") << "Block dropped (missing information)";
     return false;
   }

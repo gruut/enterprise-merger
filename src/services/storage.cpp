@@ -491,8 +491,8 @@ read_block_type Storage::readBlock(size_t height) {
     result.height = 0;
   else {
     if (height == 0)
-      result.height =
-          static_cast<size_t>(stoll(getValueByKey(DBType::BLOCK_LATEST, "hgt")));
+      result.height = static_cast<size_t>(
+          stoll(getValueByKey(DBType::BLOCK_LATEST, "hgt")));
 
     result.block_raw = TypeConverter::stringToBytes(
         getValueByKey(DBType::BLOCK_RAW, block_id_b64));

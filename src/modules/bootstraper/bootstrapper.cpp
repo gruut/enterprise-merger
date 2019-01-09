@@ -11,7 +11,10 @@ Bootstrapper::Bootstrapper() {
   el::Loggers::getLogger("BOOT");
 }
 
-void Bootstrapper::start() { selfCheckUp(); }
+void Bootstrapper::start() {
+  auto &io_service = Application::app().getIoService();
+  io_service.post([this]() { selfCheckUp(); });
+}
 
 void Bootstrapper::sendMsgUp() {
 
@@ -28,25 +31,20 @@ void Bootstrapper::sendMsgUp() {
 }
 
 void Bootstrapper::selfCheckUp() {
-  auto &io_service = Application::app().getIoService();
-  io_service.post([this]() {
-    CLOG(INFO, "BOOT") << "1) Waiting server to start";
-    while (!m_communication->isStarted()) {
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+  CLOG(INFO, "BOOT") << "1) Waiting server to start";
+  while (!m_communication->isStarted()) {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
 
-    CLOG(INFO, "BOOT") << "2) Waiting connection check (in 5 sec)";
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+  CLOG(INFO, "BOOT") << "2) Waiting connection check (in 5 sec)";
+  std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    // TODO :: do jobs for self check-up
-
-    startSync();
-  });
+  // TODO :: do jobs for self check-up
 }
 
 void Bootstrapper::startSync() {
 
-  CLOG(INFO, "BOOT") << "3) Starting block synchronization";
+  CLOG(INFO, "BOOT") << "4) Starting block synchronization";
 
   m_block_synchronizer.startBlockSync(
       std::bind(&Bootstrapper::endSync, this, std::placeholders::_1));
