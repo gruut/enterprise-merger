@@ -41,10 +41,9 @@ private:
   std::string m_port_num;
   std::unique_ptr<Server> m_server;
   std::unique_ptr<ServerCompletionQueue> m_completion_queue;
-  // TODO: protobuf의 변수 명 정리후 namespace ,변수명 들은 바뀔수 있습니다.
   MergerCommunication::AsyncService m_merger_service;
   GruutSeService::AsyncService m_se_service;
-  GruutNetworkService::AsyncService m_signer_service;
+  GruutSignerService::AsyncService m_signer_service;
   InputQueueAlt *m_input_queue;
   void recvMessage();
   std::atomic<bool> m_is_started{false};
@@ -97,7 +96,7 @@ private:
 
 class OpenChannel final : public CallData {
 public:
-  OpenChannel(GruutNetworkService::AsyncService *service,
+  OpenChannel(GruutSignerService::AsyncService *service,
               ServerCompletionQueue *cq)
       : m_stream(&m_context) {
     m_service = service;
@@ -111,84 +110,27 @@ public:
 private:
   std::string m_signer_id_b64;
   RpcReceiverList *m_rpc_receiver_list;
-  GruutNetworkService::AsyncService *m_service;
+  GruutSignerService::AsyncService *m_service;
   Identity m_request;
-  ServerAsyncReaderWriter<GrpcMsgReqSsig, Identity> m_stream;
+  ServerAsyncReaderWriter<ReplyMsg, Identity> m_stream;
 };
 
-class Join final : public CallData {
+class SignerService final : public CallData {
 public:
-  Join(GruutNetworkService::AsyncService *service, ServerCompletionQueue *cq)
-      : m_responder(&m_context) {
-    m_service = service;
-    m_completion_queue = cq;
-    m_receive_status = RpcCallStatus::CREATE;
-    m_rpc_receiver_list = RpcReceiverList::getInstance();
-    proceed();
-  }
-  void proceed(bool st = true);
-
-private:
-  RpcReceiverList *m_rpc_receiver_list;
-  GruutNetworkService::AsyncService *m_service;
-  GrpcMsgJoin m_request;
-  ServerAsyncResponseWriter<GrpcMsgChallenge> m_responder;
-};
-
-class DHKeyEx final : public CallData {
-public:
-  DHKeyEx(GruutNetworkService::AsyncService *service, ServerCompletionQueue *cq)
-      : m_responder(&m_context) {
-    m_service = service;
-    m_completion_queue = cq;
-    m_receive_status = RpcCallStatus::CREATE;
-    m_rpc_receiver_list = RpcReceiverList::getInstance();
-    proceed();
-  }
-  void proceed(bool st = true);
-
-private:
-  RpcReceiverList *m_rpc_receiver_list;
-  GruutNetworkService::AsyncService *m_service;
-  GrpcMsgResponse1 m_request;
-  ServerAsyncResponseWriter<GrpcMsgResponse2> m_responder;
-};
-
-class KeyExFinished final : public CallData {
-public:
-  KeyExFinished(GruutNetworkService::AsyncService *service,
+  SignerService(GruutSignerService::AsyncService *service,
                 ServerCompletionQueue *cq)
       : m_responder(&m_context) {
     m_service = service;
     m_completion_queue = cq;
     m_receive_status = RpcCallStatus::CREATE;
-    m_rpc_receiver_list = RpcReceiverList::getInstance();
     proceed();
   }
   void proceed(bool st = true);
 
 private:
-  RpcReceiverList *m_rpc_receiver_list;
-  GruutNetworkService::AsyncService *m_service;
-  GrpcMsgSuccess m_request;
-  ServerAsyncResponseWriter<GrpcMsgAccept> m_responder;
-};
-
-class SigSend final : public CallData {
-public:
-  SigSend(GruutNetworkService::AsyncService *service, ServerCompletionQueue *cq)
-      : m_responder(&m_context) {
-    m_service = service;
-    m_completion_queue = cq;
-    m_receive_status = RpcCallStatus::CREATE;
-    proceed();
-  }
-  void proceed(bool st = true);
-
-private:
-  GruutNetworkService::AsyncService *m_service;
-  GrpcMsgSsig m_request;
-  ServerAsyncResponseWriter<NoReply> m_responder;
+  GruutSignerService::AsyncService *m_service;
+  RequestMsg m_request;
+  ServerAsyncResponseWriter<MsgStatus> m_responder;
 };
 
 } // namespace gruut
