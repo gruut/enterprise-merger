@@ -231,7 +231,7 @@ void BpScheduler::postSendPingJob() {
 
     auto signer_pool = SignerPool::getInstance();
 
-    size_t num_signers = signer_pool->size();
+    size_t num_signers = signer_pool->getNumSignerBy();
     if (m_current_status != BpStatus::IN_BOOT_WAIT &&
         num_signers < config::MIN_SIGNATURE_COLLECT_SIZE) {
       m_current_status = BpStatus::ERROR_ON_SIGNERS;

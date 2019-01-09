@@ -256,6 +256,8 @@ public:
 
   size_t getNumTransactions() { return m_transactions.size(); }
 
+  size_t getNumSSigs() { return m_ssigs.size(); }
+
   block_id_type getBlockId() { return m_block_id; }
 
   sha256 getHash() { return m_block_hash; }
