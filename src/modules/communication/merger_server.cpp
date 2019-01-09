@@ -38,10 +38,6 @@ void MergerServer::runServer(const std::string &port_num) {
   new RecvFromMerger(&m_merger_service, m_completion_queue.get());
   new RecvFromSE(&m_se_service, m_completion_queue.get());
   new OpenChannel(&m_signer_service, m_completion_queue.get());
-  new Join(&m_signer_service, m_completion_queue.get());
-  new DHKeyEx(&m_signer_service, m_completion_queue.get());
-  new KeyExFinished(&m_signer_service, m_completion_queue.get());
-  new SigSend(&m_signer_service, m_completion_queue.get());
 
   recvMessage();
 }
@@ -191,7 +187,7 @@ void OpenChannel::proceed(bool st) {
     m_signer_id_b64 = m_request.sender();
     receiver_id = TypeConverter::decodeBase64(m_signer_id_b64);
     m_receive_status = RpcCallStatus::WAIT;
-    m_rpc_receiver_list->setReqSsig(receiver_id, &m_stream, this);
+    m_rpc_receiver_list->setReplyMsg(receiver_id, &m_stream, this);
 
   } break;
 
@@ -210,7 +206,7 @@ void OpenChannel::proceed(bool st) {
   }
 }
 
-void Join::proceed(bool st) {
+void SignerService::proceed(bool st) {
   if (!st) {
     delete this;
     return;
@@ -218,163 +214,44 @@ void Join::proceed(bool st) {
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::PROCESS;
-    m_service->Requestjoin(&m_context, &m_request, &m_responder,
-                           m_completion_queue, m_completion_queue, this);
-  } break;
-
-  case RpcCallStatus::PROCESS: {
-    new Join(m_service, m_completion_queue);
-
-    auto &io_service = Application::app().getIoService();
-    io_service.post([this]() {
-      std::string packed_msg = m_request.message();
-
-      Status rpc_status;
-      id_type receiver_id;
-
-      MessageHandler message_handler;
-      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
-
-      if (!rpc_status.ok()) {
-        GrpcMsgChallenge m_reply;
-        m_responder.Finish(m_reply, rpc_status, this);
-        m_receive_status = RpcCallStatus::FINISH;
-      } else {
-        m_rpc_receiver_list->setChanllenge(receiver_id, &m_responder, this,
-                                           &m_receive_status);
-      }
-    });
-  } break;
-
-  default: {
-    if (m_receive_status != RpcCallStatus::FINISH) {
-      CLOG(ERROR, "MSVR") << "Join() rpc status : Unknown";
-    }
-    delete this;
-  } break;
-  }
-}
-
-void DHKeyEx::proceed(bool st) {
-  if (!st) {
-    delete this;
-    return;
-  }
-  switch (m_receive_status) {
-  case RpcCallStatus::CREATE: {
-    m_receive_status = RpcCallStatus::PROCESS;
-    m_service->RequestdhKeyEx(&m_context, &m_request, &m_responder,
-                              m_completion_queue, m_completion_queue, this);
-  } break;
-
-  case RpcCallStatus::PROCESS: {
-    new DHKeyEx(m_service, m_completion_queue);
-
-    auto &io_service = Application::app().getIoService();
-    io_service.post([this]() {
-      std::string packed_msg = m_request.message();
-      Status rpc_status;
-      id_type receiver_id;
-
-      MessageHandler message_handler;
-      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
-
-      if (!rpc_status.ok()) {
-        GrpcMsgResponse2 m_reply;
-        m_responder.Finish(m_reply, rpc_status, this);
-      } else {
-        m_rpc_receiver_list->setResponse2(receiver_id, &m_responder, this,
-                                          &m_receive_status);
-      }
-      m_receive_status = RpcCallStatus::FINISH;
-    });
-  } break;
-
-  default: {
-    if (m_receive_status != RpcCallStatus::FINISH) {
-      CLOG(ERROR, "MSVR") << "DHKeyEx() rpc status : Unknown";
-    }
-    delete this;
-  } break;
-  }
-}
-
-void KeyExFinished::proceed(bool st) {
-  if (!st) {
-    delete this;
-    return;
-  }
-  switch (m_receive_status) {
-  case RpcCallStatus::CREATE: {
-    m_receive_status = RpcCallStatus::PROCESS;
-    m_service->RequestkeyExFinished(&m_context, &m_request, &m_responder,
+    m_service->RequestsignerService(&m_context, &m_request, &m_responder,
                                     m_completion_queue, m_completion_queue,
                                     this);
   } break;
 
   case RpcCallStatus::PROCESS: {
-    new KeyExFinished(m_service, m_completion_queue);
+    new SignerService(m_service, m_completion_queue);
 
     auto &io_service = Application::app().getIoService();
     io_service.post([this]() {
-      std::string packed_msg = m_request.message();
       Status rpc_status;
       id_type receiver_id;
+      MsgStatus m_reply;
+      try {
+        std::string packed_msg = m_request.message();
+        MessageHandler message_handler;
+        message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
 
-      MessageHandler message_handler;
-      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
-      if (!rpc_status.ok()) {
-        GrpcMsgAccept m_reply;
-        m_responder.Finish(m_reply, rpc_status, this);
-      } else {
-        m_rpc_receiver_list->setAccept(receiver_id, &m_responder, this,
-                                       &m_receive_status);
+        if (rpc_status.ok()) {
+          m_reply.set_status(MsgStatus_Status_SUCCESS);
+          m_reply.set_message("OK");
+        } else {
+          m_reply.set_status(MsgStatus_Status_INVALID);
+          m_reply.set_message(rpc_status.error_message());
+        }
+      } catch (std::exception &e) {
+        m_reply.set_status(MsgStatus_Status_INTERNAL);
+        m_reply.set_message("Merger internal error");
+        CLOG(INFO, "MSVR") << e.what();
       }
       m_receive_status = RpcCallStatus::FINISH;
-    });
-  } break;
-
-  default: {
-    if (m_receive_status != RpcCallStatus::FINISH) {
-      CLOG(ERROR, "MSVR") << "KeyExFinished() rpc status : Unknown";
-    }
-    delete this;
-  } break;
-  }
-}
-
-void SigSend::proceed(bool st) {
-  if (!st) {
-    delete this;
-    return;
-  }
-  switch (m_receive_status) {
-  case RpcCallStatus::CREATE: {
-    m_receive_status = RpcCallStatus::PROCESS;
-    m_service->RequestsigSend(&m_context, &m_request, &m_responder,
-                              m_completion_queue, m_completion_queue, this);
-  } break;
-
-  case RpcCallStatus::PROCESS: {
-    new SigSend(m_service, m_completion_queue);
-
-    auto &io_service = Application::app().getIoService();
-    io_service.post([this]() {
-      std::string packed_msg = m_request.message();
-      Status rpc_status;
-      id_type receiver_id;
-
-      MessageHandler message_handler;
-      message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
-      NoReply m_reply;
       m_responder.Finish(m_reply, rpc_status, this);
-      m_receive_status = RpcCallStatus::FINISH;
     });
   } break;
 
   default: {
     if (m_receive_status != RpcCallStatus::FINISH) {
-      CLOG(ERROR, "MSVR") << "SigSend() rpc status : Unknown";
+      CLOG(ERROR, "MSVR") << "Signer rpc status : Unknown";
     }
     delete this;
   } break;
