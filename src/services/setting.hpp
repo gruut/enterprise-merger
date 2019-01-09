@@ -169,7 +169,7 @@ public:
     m_address = Safe::getString(setting_json["Self"], "address");
     m_port = Safe::getString(setting_json["Self"], "port");
 
-    if(m_port.empty()){
+    if (m_port.empty()) {
       m_port = config::DEFAULT_PORT_NUM;
     }
 
