@@ -48,7 +48,8 @@ public:
     storage->saveBlock(block_raw, block_header, block_body);
 
     CLOG(INFO, "BGEN") << "BLOCK GENERATED (height=" << new_block.getHeight()
-                       << ",#tx=" << new_block.getNumTransactions() << ")";
+                       << ",#tx=" << new_block.getNumTransactions()
+                       << ",#ssig=" << new_block.getNumSSigs() << ")";
 
     // setp-3) send blocks to others
 
