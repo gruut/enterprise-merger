@@ -38,6 +38,7 @@ void MergerServer::runServer(const std::string &port_num) {
   new RecvFromMerger(&m_merger_service, m_completion_queue.get());
   new RecvFromSE(&m_se_service, m_completion_queue.get());
   new OpenChannel(&m_signer_service, m_completion_queue.get());
+  new SignerService(&m_signer_service, m_completion_queue.get());
 
   recvMessage();
 }
