@@ -90,7 +90,7 @@ public:
     m_prev_block_id_b64 = Safe::getString(block_header_json, "prevbID");
     m_block_id = Safe::getBytesFromB64<block_id_type>(block_header_json, "bID");
 
-    if (!setSupportSignatures(block_header_json["SSig"]))
+    if (!setSupportSignaturesFromJson(block_header_json["SSig"]))
       return false;
 
     if (!setTransactions(msg_body["tx"]))
@@ -133,7 +133,7 @@ public:
     return true;
   }
 
-  bool setSupportSignatures(json &ssigs) {
+  bool setSupportSignaturesFromJson(json &ssigs) {
     if (!ssigs.is_array())
       return false;
 
