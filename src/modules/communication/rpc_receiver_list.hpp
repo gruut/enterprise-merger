@@ -27,13 +27,18 @@ private:
   std::mutex m_mutex;
 
 public:
-  void setReplyMsg(id_type &recv_id,
+  void setReplyMsg(std::string &recv_id_b64,
                    ServerAsyncReaderWriter<ReplyMsg, Identity> *reply_rpc,
                    void *tag) {
-    string recv_id_b64 = TypeConverter::encodeBase64(recv_id);
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list[recv_id_b64].send_msg = reply_rpc;
     m_receiver_list[recv_id_b64].tag_identity = tag;
+    m_mutex.unlock();
+  }
+
+  void eraseRpcInfo(std::string &recv_id_b64){
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_receiver_list.erase(recv_id_b64);
     m_mutex.unlock();
   }
 

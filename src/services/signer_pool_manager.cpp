@@ -29,7 +29,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     auto current_time = Time::now_int();
 
     m_join_temp_table[recv_id_b64].reset(new JoinTemporaryData());
-
+    m_join_temp_table[recv_id_b64]->join_lock = true;
     m_join_temp_table[recv_id_b64]->start_time =
         static_cast<timestamp_type>(current_time);
     m_join_temp_table[recv_id_b64]->merger_nonce =
@@ -54,7 +54,6 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     if (isTimeout(recv_id_b64)) {
       CLOG(ERROR, "SMGR") << "Join timeout (" << recv_id_b64 << ")";
-      m_join_temp_table[recv_id_b64].release();
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_TIMEOUT,
                        "too late MSG_RESPONSE_1");
       return;
@@ -62,7 +61,6 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     if (!verifySignature(recv_id, message_body_json)) {
       CLOG(ERROR, "SMGR") << "Invalid Signature";
-      m_join_temp_table[recv_id_b64].release();
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_INVALID_SIG);
       return;
     }
@@ -87,7 +85,6 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     if (shared_sk_bytes.empty()) {
       CLOG(ERROR, "SMGR") << "Failed to generate SSK (invalid PK)";
-      m_join_temp_table[recv_id_b64].release();
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_INVALID_PK, "");
       return;
     }
@@ -116,7 +113,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     m_signer_pool->pushSigner(recv_id,
                               m_join_temp_table[recv_id_b64]->signer_cert,
                               secret_key_vector, SignerStatus::TEMPORARY);
-
+    m_join_temp_table[recv_id_b64]->join_lock = false;
   } break;
   case MessageType::MSG_SUCCESS: {
     // OK! This signer has passed HMAC on MesssageHandler.
@@ -124,15 +121,13 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     if (isTimeout(recv_id_b64)) {
       CLOG(ERROR, "SMGR") << "Join timeout (" << recv_id_b64 << ")";
-      m_join_temp_table[recv_id_b64].release();
       sendErrorMessage(receiver_list, ErrorMsgType::ECDH_TIMEOUT,
                        "too late MSG_SUCCESS");
       return;
     }
 
-    m_join_temp_table[recv_id_b64].release();
-
     m_signer_pool->updateStatus(recv_id, SignerStatus::GOOD);
+    m_join_temp_table.erase(recv_id_b64);
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_ACCEPT;
@@ -145,9 +140,10 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
   } break;
   case MessageType::MSG_LEAVE: {
-    if (m_join_temp_table.find(recv_id_b64) != m_join_temp_table.end())
-      m_join_temp_table[recv_id_b64].release();
-
+    if (m_join_temp_table.find(recv_id_b64) != m_join_temp_table.end()) {
+      if(!m_join_temp_table[recv_id_b64]->join_lock)
+        m_join_temp_table.erase(recv_id_b64);
+    }
     if (m_signer_pool->removeSigner(recv_id)) {
       std::string leave_time = Safe::getString(message_body_json, "time");
       std::string leave_msg = Safe::getString(message_body_json, "msg");

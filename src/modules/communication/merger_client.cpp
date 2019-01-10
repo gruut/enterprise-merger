@@ -219,7 +219,8 @@ void MergerClient::sendToSigner(MessageType msg_type,
     auto tag = static_cast<Identity *>(signer_rpc_info.tag_identity);
     ReplyMsg reply;
     reply.set_message(packed_msg_list[i]);
-    signer_rpc_info.send_msg->Write(reply, tag);
+    if(signer_rpc_info.send_msg != nullptr)
+      signer_rpc_info.send_msg->Write(reply, tag);
   }
 }
 

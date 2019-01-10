@@ -183,12 +183,9 @@ void OpenChannel::proceed(bool st) {
   } break;
 
   case RpcCallStatus::PROCESS: {
-    id_type receiver_id;
-
     m_signer_id_b64 = m_request.sender();
-    receiver_id = TypeConverter::decodeBase64(m_signer_id_b64);
     m_receive_status = RpcCallStatus::WAIT;
-    m_rpc_receiver_list->setReplyMsg(receiver_id, &m_stream, this);
+    m_rpc_receiver_list->setReplyMsg(m_signer_id_b64, &m_stream, this);
 
   } break;
 
@@ -198,6 +195,7 @@ void OpenChannel::proceed(bool st) {
                          << ")";
       MessageHandler msg_handler;
       msg_handler.genInternalMsg(MessageType::MSG_LEAVE, m_signer_id_b64);
+      m_rpc_receiver_list->eraseRpcInfo(m_signer_id_b64);
       delete this;
     }
   } break;
