@@ -88,6 +88,7 @@ void BlockHealthChecker::startHealthCheck() {
       // clang-format on
 
       endCheck(ExitCode::ERROR_BLOCK_HEALTH_SKIP);
+      return;
 
     } else if (commend == "del") {
 
@@ -101,6 +102,7 @@ void BlockHealthChecker::startHealthCheck() {
       // clang-format on
 
       endCheck(ExitCode::ERROR_ABORT);
+      return;
     }
 
   } else {
