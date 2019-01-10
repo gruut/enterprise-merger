@@ -42,7 +42,7 @@ void Application::start() {
     return;
   }
 
-  CLOG(INFO, "_APP") << "START STAGE #" << m_running_stage;
+  CLOG(INFO, "_APP") << "STAGE #" << m_running_stage << " ---- START";
 
   try {
     for (auto &module : m_modules[m_running_stage]) {
@@ -69,8 +69,12 @@ void Application::exec() {
 
 void Application::runNextStage(ExitCode exit_code) {
 
-  CLOG(INFO, "_APP") << "END STAGE #" << m_running_stage
-                     << " (exit=" << (int)exit_code << ")";
+  if (exit_code == ExitCode::ERROR_ABORT) {
+    quit();
+  }
+
+  CLOG(INFO, "_APP") << "STAGE #" << m_running_stage
+                     << " ---- END (exit=" << (int)exit_code << ")";
   if (m_running_stage < m_modules.size()) {
     ++m_running_stage;
     start();
@@ -91,16 +95,18 @@ void Application::setup() {
   m_bp_scheduler = make_shared<BpScheduler>();
   m_block_processor = make_shared<BlockProcessor>();
   m_bootstraper = make_shared<Bootstrapper>();
+  m_block_health_checker = make_shared<BlockHealthChecker>();
   m_communication = make_shared<Communication>();
   m_out_message_fetcher = make_shared<OutMessageFetcher>();
   m_message_fetcher = make_shared<MessageFetcher>();
 
   // step 2 - running scenario
-  registerModule(m_communication, 0);
-  registerModule(m_out_message_fetcher, 0);
-  registerModule(m_bootstraper, 0, true);
-  registerModule(m_message_fetcher, 1);
-  registerModule(m_bp_scheduler, 1);
+  registerModule(m_block_health_checker, 0, true);
+  registerModule(m_communication, 1);
+  registerModule(m_out_message_fetcher, 1);
+  registerModule(m_bootstraper, 1, true);
+  registerModule(m_message_fetcher, 2);
+  registerModule(m_bp_scheduler, 2);
 
   // setp 3 - link services
 

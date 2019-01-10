@@ -103,7 +103,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     output_message.body["dhy"] = dhy;
     output_message.body["sig"] = signMessage(
         m_join_temp_table[recv_id_b64]->merger_nonce,
-        message_body_json["sN"].get<string>(), dhx, dhy, current_time);
+        Safe::getString(message_body_json, "sN"), dhx, dhy, current_time);
     output_message.receivers = receiver_list;
 
     m_proxy.deliverOutputMessage(output_message);

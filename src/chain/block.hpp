@@ -51,8 +51,8 @@ private:
 public:
   Block() { el::Loggers::getLogger("BLOC"); };
 
-  bool initalize(BasicBlockInfo &basic_info,
-                 std::vector<sha256> &&merkle_Tree_node = {}) {
+  bool initialize(BasicBlockInfo &basic_info,
+                  std::vector<sha256> &&merkle_Tree_node = {}) {
     m_time = basic_info.time;
     m_merger_id = basic_info.merger_id;
     m_chain_id = basic_info.chain_id;
@@ -70,9 +70,19 @@ public:
     return true;
   }
 
-  bool initialze(json &msg_body) {
+  bool initialize(read_block_type &read_block) {
+    return initialize(read_block.block_raw, read_block.txs);
+  }
 
+  bool initialize(json &msg_body) {
     bytes block_raw_bytes = Safe::getBytesFromB64(msg_body, "blockraw");
+    return initialize(block_raw_bytes, msg_body["tx"]);
+  }
+
+  bool initialize(bytes &block_raw_bytes, json &block_txs) {
+
+    if (block_raw_bytes.empty())
+      return false;
 
     json block_header_json = getBlockHeader(block_raw_bytes);
     if (block_header_json.empty())
@@ -93,7 +103,7 @@ public:
     if (!setSupportSignatures(block_header_json["SSig"]))
       return false;
 
-    if (!setTransactions(msg_body["tx"]))
+    if (!setTransactions(block_txs))
       return false;
 
     m_merkle_tree_node = calcMerkleTreeNode();
@@ -259,6 +269,10 @@ public:
   size_t getNumSSigs() { return m_ssigs.size(); }
 
   block_id_type getBlockId() { return m_block_id; }
+
+  std::string getBlockIdB64() {
+    return TypeConverter::encodeBase64(m_block_id);
+  }
 
   sha256 getHash() { return m_block_hash; }
 
@@ -454,13 +468,16 @@ private:
 
   json getBlockHeader(bytes &block_raw_bytes) {
 
-    json block_header_json;
+    if (block_raw_bytes.empty()) {
+      CLOG(ERROR, "BLOC") << "Empty bytes";
+      return json::object();
+    }
 
     size_t header_end = getHeaderEnd(block_raw_bytes);
 
     if (header_end == 0) {
       CLOG(ERROR, "BLOC") << "Empty header end";
-      return bytes();
+      return json::object();
     }
 
     std::string block_header_comp(block_raw_bytes.begin() + 5,
@@ -468,6 +485,8 @@ private:
 
     auto compression_algo =
         static_cast<CompressionAlgorithmType>(block_raw_bytes[0]);
+
+    json block_header_json;
 
     switch (compression_algo) {
     case CompressionAlgorithmType::LZ4: {

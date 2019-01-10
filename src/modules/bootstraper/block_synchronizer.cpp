@@ -30,7 +30,7 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
   std::string sender_id_b64 = Safe::getString(msg_block.body, "mID");
 
   Block new_block;
-  if (!new_block.initialze(msg_block.body)) {
+  if (!new_block.initialize(msg_block.body)) {
     CLOG(ERROR, "BSYN") << "Block dropped (missing information)";
     return false;
   }
@@ -174,19 +174,20 @@ void BlockSynchronizer::saveBlock(size_t height) {
 
 void BlockSynchronizer::syncFinish() {
 
-  CLOG(INFO, "BSYN") << "END BLOCK SYNCHRONIZATION "
-                        "=================================================";
+  std::call_once(m_end_sync_call_flag, [this]() {
+    CLOG(INFO, "BSYN") << "BLOCK SYNCHRONIZATION ---- END";
 
-  m_msg_fetching_timer->cancel();
-  m_sync_ctrl_timer->cancel();
+    m_msg_fetching_timer->cancel();
+    m_sync_ctrl_timer->cancel();
 
-  if (m_sync_fail) {
-    if (m_sync_alone)
-      m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
-    else
-      m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
-  } else
-    m_finish_callback(ExitCode::NORMAL);
+    if (m_sync_fail) {
+      if (m_sync_alone)
+        m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
+      else
+        m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
+    } else
+      m_finish_callback(ExitCode::NORMAL);
+  });
 }
 
 void BlockSynchronizer::blockSyncControl() {
@@ -397,6 +398,7 @@ void BlockSynchronizer::messageFetch() {
       m_sync_fail = false;
 
       syncFinish();
+
     } else if (input_msg_entry.type == MessageType::MSG_BLOCK) {
       pushMsgToBlockList(input_msg_entry);
     }
@@ -418,8 +420,7 @@ void BlockSynchronizer::messageFetch() {
 
 void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 
-  CLOG(INFO, "BSYN") << "START BLOCK SYNCHRONIZATION "
-                        "===============================================";
+  CLOG(INFO, "BSYN") << "BLOCK SYNCHRONIZATION ---- START";
 
   m_finish_callback = std::move(callback);
 

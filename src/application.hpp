@@ -4,6 +4,7 @@
 #include "modules/bootstraper/bootstrapper.hpp"
 #include "modules/bp_scheduler/bp_scheduler.hpp"
 #include "modules/communication/communication.hpp"
+#include "modules/health_checker/block_health_checker.hpp"
 #include "modules/message_fetcher/message_fetcher.hpp"
 #include "modules/message_fetcher/out_message_fetcher.hpp"
 #include "modules/module.hpp"
@@ -82,6 +83,7 @@ private:
   shared_ptr<Communication> m_communication;
   shared_ptr<OutMessageFetcher> m_out_message_fetcher;
   shared_ptr<Bootstrapper> m_bootstraper;
+  shared_ptr<BlockHealthChecker> m_block_health_checker;
   shared_ptr<MessageFetcher> m_message_fetcher;
 
   int m_running_stage{0};
