@@ -65,20 +65,15 @@ void BlockHealthChecker::startHealthCheck() {
   }
 
   if (!is_healthy) {
-    CLOG(ERROR, "BHCH") << "+--------------------------------------------------"
-                           "-----------------------+";
-    CLOG(ERROR, "BHCH") << "| DB health check has been failed.                 "
-                           "                       |";
-    CLOG(ERROR, "BHCH") << "| It is strongly recommended to stop running and "
-                           "repair DB.               |";
-    CLOG(ERROR, "BHCH") << "| To run anyway, input 'run'.                      "
-                           "                       |";
-    CLOG(ERROR, "BHCH") << "| To run after deleting blocks from corrupted one, "
-                           "input 'del'.           |";
-    CLOG(ERROR, "BHCH") << "| To abort run, press ctrl+C or input others       "
-                           "                       |";
-    CLOG(ERROR, "BHCH") << "+--------------------------------------------------"
-                           "-----------------------+";
+    // clang-format off
+    CLOG(ERROR, "BHCH") << "+-------------------------------------------------------------------------+";
+    CLOG(ERROR, "BHCH") << "| DB health check has been failed.                                        |";
+    CLOG(ERROR, "BHCH") << "| It is strongly recommended to stop running and repair DB.               |";
+    CLOG(ERROR, "BHCH") << "| To run anyway, input 'run'.                                             |";
+    CLOG(ERROR, "BHCH") << "| To run after deleting blocks from corrupted one, input 'del'.           |";
+    CLOG(ERROR, "BHCH") << "| To abort run, press ctrl+C or input others                              |";
+    CLOG(ERROR, "BHCH") << "+-------------------------------------------------------------------------+";
+    // clang-format on
 
     std::string commend;
     std::cout << "run / del / [quit] : ";
@@ -86,12 +81,11 @@ void BlockHealthChecker::startHealthCheck() {
     std::transform(commend.begin(), commend.end(), commend.begin(), ::tolower);
 
     if (commend == "run") {
-      CLOG(ERROR, "BHCH") << "+------------------------------------------------"
-                             "-------------------------+";
-      CLOG(ERROR, "BHCH") << "| Warning! No guarantee to work correctly. :(    "
-                             "                         |";
-      CLOG(ERROR, "BHCH") << "+------------------------------------------------"
-                             "-------------------------+";
+      // clang-format off
+      CLOG(ERROR, "BHCH") << "+-------------------------------------------------------------------------+";
+      CLOG(ERROR, "BHCH") << "| Warning! No guarantee to work correctly. :(                             |";
+      CLOG(ERROR, "BHCH") << "+-------------------------------------------------------------------------+";
+      // clang-format on
 
       endCheck(ExitCode::ERROR_BLOCK_HEALTH_SKIP);
 
@@ -100,29 +94,29 @@ void BlockHealthChecker::startHealthCheck() {
       // TODO : delete blocks in the storage
 
     } else {
-      CLOG(INFO, "BHCH") << "+-------------------------------------------------"
-                            "------------------------+";
-      CLOG(INFO, "BHCH") << "| Bye.                                            "
-                            "                        |";
-      CLOG(INFO, "BHCH") << "+-------------------------------------------------"
-                            "------------------------+";
+      // clang-format off
+      CLOG(INFO, "BHCH") << "+-------------------------------------------------------------------------+";
+      CLOG(INFO, "BHCH") << "| Bye.                                                                    |";
+      CLOG(INFO, "BHCH") << "+-------------------------------------------------------------------------+";
+      // clang-format on
 
       endCheck(ExitCode::ERROR_ABORT);
     }
 
   } else {
-    CLOG(INFO, "BHCH") << "+---------------------------------------------------"
-                          "----------------------+";
-    CLOG(INFO, "BHCH") << "| All blocks are clear. :)                          "
-                          "                      |";
-    CLOG(INFO, "BHCH") << "+---------------------------------------------------"
-                          "----------------------+";
+    // clang-format off
+    CLOG(INFO, "BHCH") << "+-------------------------------------------------------------------------+";
+    CLOG(INFO, "BHCH") << "| All blocks are clear. :)                                                |";
+    CLOG(INFO, "BHCH") << "+-------------------------------------------------------------------------+";
     CLOG(INFO, "BHCH") << "BLOCK HEALTH CHECKING ---- END";
+    // clang-format on
   }
 
   endCheck(ExitCode::NORMAL);
 }
 
-void BlockHealthChecker::endCheck(ExitCode exit_code) { stageOver(exit_code); }
+void BlockHealthChecker::endCheck(ExitCode exit_code) {
+  stageOver(exit_code);
+} // keep running post handler
 
 } // namespace gruut

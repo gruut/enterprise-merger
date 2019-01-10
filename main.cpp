@@ -21,10 +21,12 @@ int main(int argc, char *argv[]) {
 
   el::Loggers::getLogger("MAIN");
 
+  // clang-format off
   CLOG(INFO, "MAIN") << "+--------------------------------------------------------------------------";
   CLOG(INFO, "MAIN") << "| " << config::APP_NAME << " (" << config::APP_CODE_NAME << ")";
   CLOG(INFO, "MAIN") << "| build: " << config::APP_BUILD_DATE << " " << config::APP_BUILD_TIME;
   CLOG(INFO, "MAIN") << "+--------------------------------------------------------------------------";
+  // clang-format on
 
   ArgvParser argv_parser;
   json setting_json = argv_parser.parse(argc,argv);
@@ -45,18 +47,22 @@ int main(int argc, char *argv[]) {
   if(GemCrypto::isEncPem(setting->getMySK())) {
 
     if(!setting->getMyPass().empty() && !GemCrypto::isValidPass(setting->getMySK(),setting->getMyPass())) {
+      // clang-format off
       CLOG(ERROR, "MAIN") << "+-------------------------------------------------------------------------+";
       CLOG(ERROR, "MAIN") << "| Wrong Password! :(                                                      |";
       CLOG(ERROR, "MAIN") << "+-------------------------------------------------------------------------+";
       CLOG(ERROR, "MAIN") << "";
+      // clang-format on
       return 1;
     }
 
+    // clang-format off
     CLOG(INFO, "MAIN") << "";
     CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
     CLOG(INFO, "MAIN") << "| Good. Merger's signing key is encrypted.                                |";
     CLOG(INFO, "MAIN") << "| To run this merger properly, you must provide a valid password.         |";
     CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
+    // clang-format on
 
     std::string user_pass;
     int num_retry = 0;
@@ -68,10 +74,12 @@ int main(int argc, char *argv[]) {
     while(!GemCrypto::isValidPass(setting->getMySK(),user_pass));
     setting->setPass(user_pass);
 
+    // clang-format off
     CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
     CLOG(INFO, "MAIN") << "| Password is OK. :)                                                      |";
     CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
     CLOG(INFO, "MAIN") << "";
+    // clang-format on
   }
 
   if(clear_db) {
