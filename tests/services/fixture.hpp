@@ -68,7 +68,7 @@ public:
     */
   }
   ~StorageFixture(){
-    m_storage->deleteAllDirectory();
+    m_storage->destroyDB();
   }
 };
 #endif

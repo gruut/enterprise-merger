@@ -153,16 +153,14 @@ public:
     auto storage = Storage::getInstance();
 
     m_version = config::DEFAULT_VERSION;
-    std::tuple<string, string, size_t> latest_block_info =
-        storage->findLatestBlockBasicInfo();
+    auto latest_block_info = storage->getNthBlockLinkInfo();
 
-    if (std::get<0>(latest_block_info).empty()) { // this is genesis block
+    if (latest_block_info.height == 0) { // this is genesis block
       m_prev_block_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
       m_prev_block_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
     } else {
-      m_prev_block_id_b64 = std::get<0>(latest_block_info);
-      m_prev_block_hash_b64 =
-          TypeConverter::encodeBase64(std::get<1>(latest_block_info));
+      m_prev_block_id_b64 = latest_block_info.id_b64;
+      m_prev_block_hash_b64 = latest_block_info.hash_b64;
     }
 
     BytesBuilder block_id_builder;
@@ -268,6 +266,8 @@ public:
 
   std::string getPrevHashB64() { return m_prev_block_hash_b64; }
 
+  std::string getPrevBlockIdB64() { return m_prev_block_id_b64; }
+
   bool isValid() {
 
     if (m_block_raw.empty() || m_signature.empty()) {
@@ -299,7 +299,7 @@ public:
       if (it_map != m_user_certs.end()) {
         user_pk_pem = it_map->second;
       } else {
-        user_pk_pem = storage->findCertificate(user_id_b64, m_time);
+        user_pk_pem = storage->getCertificate(user_id_b64, m_time);
       }
 
       if (user_pk_pem.empty()) {

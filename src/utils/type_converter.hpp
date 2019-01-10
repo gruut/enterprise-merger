@@ -94,6 +94,14 @@ public:
     return vec;
   }
 
+  inline static std::string bytesToString(std::vector<uint8_t> &&input) {
+    return bytesToString(input);
+  }
+
+  inline static std::string bytesToString(std::vector<uint8_t> &input) {
+    return std::string(input.begin(), input.end());
+  }
+
   inline static std::vector<uint8_t> stringToBytes(const std::string &input) {
     return std::vector<uint8_t>(input.cbegin(), input.cend());
   }
@@ -141,13 +149,11 @@ public:
 
   template <typename T> inline static std::string encodeBase64(T &&t) {
     try {
-      std::string ret_str =
-          Botan::base64_encode(vector<uint8_t>(begin(t), end(t)));
-      return ret_str;
+      return Botan::base64_encode(vector<uint8_t>(begin(t), end(t)));
     } catch (Botan::Exception &e) {
       std::cout << e.what() << std::endl;
+      return std::string("");
     }
-    return std::string("");
   }
 
   template <typename T>

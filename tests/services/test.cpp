@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_SUITE(Test_MessageIOQueues)
 
   BOOST_AUTO_TEST_CASE(delete_all_directory_for_test) {
     auto storage = Storage::getInstance();
-    storage->deleteAllDirectory();
+  storage->destroyDB();
 
     BOOST_TEST(true);
   }
@@ -168,15 +168,15 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
 
   BOOST_AUTO_TEST_CASE(find_latest_hash_and_height) {
     StorageFixture storage_fixture;
-    pair<string, int> hash_and_height = storage_fixture.m_storage->findLatestHashAndHeight();
+    pair<string, int> hash_and_height = storage_fixture.m_storage->getLatestHashAndHeight();
 
-    BOOST_TEST(TypeConverter::encodeBase64(hash_and_height.first) == TypeConverter::encodeBase64(block_hash_2));
+    BOOST_TEST(hash_and_height.first == TypeConverter::encodeBase64(block_hash_2));
     BOOST_TEST(hash_and_height.second == 2);
   }
 
   BOOST_AUTO_TEST_CASE(find_latest_txid_list) {
     StorageFixture storage_fixture;
-    vector<string> tx_ids_list = storage_fixture.m_storage->findLatestTxIdList();
+    vector<string> tx_ids_list = storage_fixture.m_storage->getNthTxIdList();
 
     BOOST_TEST(tx_ids_list[0] == "Qa");
     BOOST_TEST(tx_ids_list[1] == "Qb");
@@ -187,10 +187,10 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
     // 1번째로 등록된 certificates sample - a1 : 20171210~20181210, a2 : 20160303~20170303
     // 2번째로 등록된 certificates sample - a1 : 20180201~20190201, a2 : 20170505~20180505
     StorageFixture storage_fixture;
-    auto certificate1 = storage_fixture.m_storage->findCertificate("a1"); // 최신(20180201에 등록) 인증서
-    auto certificate2 = storage_fixture.m_storage->findCertificate("a2"); // 최신(20170505에 등록) 인증서
-    auto certificate3 = storage_fixture.m_storage->findCertificate("a1", 1530409054); // 20180701
-    auto certificate4 = storage_fixture.m_storage->findCertificate("a2", 1491874654); // 20170411
+    auto certificate1 = storage_fixture.m_storage->getCertificate("a1"); // 최신(20180201에 등록) 인증서
+    auto certificate2 = storage_fixture.m_storage->getCertificate("a2"); // 최신(20170505에 등록) 인증서
+    auto certificate3 = storage_fixture.m_storage->getCertificate("a1", 1530409054); // 20180701
+    auto certificate4 = storage_fixture.m_storage->getCertificate("a2", 1491874654); // 20170411
 
     BOOST_TEST(certificate1 == block_body_sample2["tx"][0]["content"][1].get<string>());
     BOOST_TEST(certificate2 == block_body_sample2["tx"][0]["content"][3].get<string>());
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_SUITE(Test_Storage_Service)
 
   BOOST_AUTO_TEST_CASE(find_sibling) {
     StorageFixture storage_fixture;
-    proof_type proof = storage_fixture.m_storage->findSibling("c");
+    proof_type proof = storage_fixture.m_storage->getProof("c");
 
     if(!proof.block_id_b64.empty() || !proof.siblings.empty()){
 
@@ -268,15 +268,15 @@ BOOST_AUTO_TEST_SUITE(Test_BlockGenerator_for_storage)
 
     auto storage = Storage::getInstance();
 
-    auto hash_and_height = storage->findLatestHashAndHeight();
+    auto hash_and_height = storage->getLatestHashAndHeight();
     BOOST_CHECK_EQUAL(hash_and_height.second, 1);
 
-    auto latest_list = storage->findLatestTxIdList();
+    auto latest_list = storage->getNthTxIdList();
     auto tx_id = latest_list[0];
     string encoded_tx_id = TypeConverter::encodeBase64(test_tx.getId());
     BOOST_CHECK_EQUAL(tx_id, encoded_tx_id);
 
-    storage->deleteAllDirectory();
+  storage->destroyDB();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

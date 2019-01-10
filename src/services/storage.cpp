@@ -136,27 +136,28 @@ void Storage::clearBatchAll() {
   m_batch_blockid_height.Clear();
 }
 
-bool Storage::putBlockHeader(json &block_json, const string &block_id_b64) {
+bool Storage::putBlockHeader(json &block_header_json,
+                             const string &block_id_b64) {
   std::string key, value;
   for (auto &item : DB_BLOCK_HEADER_SUFFIX) {
-    if (item.first == "SSig" && block_json["SSig"].is_array()) {
-      for (size_t i = 0; i < block_json["SSig"].size(); ++i) {
+    if (item.first == "SSig" && block_header_json["SSig"].is_array()) {
+      for (size_t i = 0; i < block_header_json["SSig"].size(); ++i) {
         key = block_id_b64 + item.second + "_sID_" + to_string(i);
-        value = Safe::getString(block_json[item.first][i]["sID"]);
+        value = Safe::getString(block_header_json[item.first][i]["sID"]);
         if (!addBatch(DBType::BLOCK_HEADER, key, value))
           return false;
 
         key = block_id_b64 + item.second + "_sig_" + to_string(i);
-        value = Safe::getString(block_json["SSig"][i]["sig"]);
+        value = Safe::getString(block_header_json["SSig"][i]["sig"]);
         if (!addBatch(DBType::BLOCK_HEADER, key, value))
           return false;
       }
     } else {
       key = block_id_b64 + item.second;
       if (item.first == "txids") {
-        value = block_json[item.first].dump();
+        value = block_header_json[item.first].dump();
       } else
-        value = Safe::getString(block_json[item.first]);
+        value = Safe::getString(block_header_json[item.first]);
       if (!addBatch(DBType::BLOCK_HEADER, key, value))
         return false;
     }
@@ -164,8 +165,9 @@ bool Storage::putBlockHeader(json &block_json, const string &block_id_b64) {
   return true;
 }
 
-bool Storage::putBlockHeight(json &block_json, const string &block_id_b64) {
-  std::string key = Safe::getString(block_json["hgt"]);
+bool Storage::putBlockHeight(json &block_header_json,
+                             const string &block_id_b64) {
+  std::string key = Safe::getString(block_header_json["hgt"]);
   return addBatch(DBType::BLOCK_HEIGHT, key, block_id_b64);
 }
 
@@ -176,38 +178,44 @@ bool Storage::putBlockRaw(bytes &block_raw, const string &block_id_b64) {
   if (!addBatch(DBType::BLOCK_RAW, block_raw_key, block_raw_str))
     return false;
 
-  sha256 block_hash = Sha256::hash(block_raw);
+  std::string block_hash =
+      TypeConverter::bytesToString(Sha256::hash(block_raw));
 
   std::string hash_key = block_raw_key + "_hash";
-  std::string hash_value(block_hash.begin(), block_hash.end());
-  if (!addBatch(DBType::BLOCK_RAW, hash_key, hash_value))
+  if (!addBatch(DBType::BLOCK_RAW, hash_key, block_hash))
     return false;
 
   return true;
 }
 
-bool Storage::putLatestBlockHeader(json &block_json) {
+bool Storage::putLatestBlockHeader(json &block_header_json) {
+
+  auto latest_block_info = getNthBlockLinkInfo();
+
+  if (latest_block_info.height >=
+      Safe::getInt(block_header_json, "hgt")) // do not overwrite lower block
+    return true;
+
   std::string key, value;
-  // TODO : 복잡한 if-else 패턴을 단순화 시켜야 함
   for (auto &item : DB_BLOCK_HEADER_SUFFIX) {
-    if (item.first == "SSig" && block_json["SSig"].is_array()) {
-      for (size_t i = 0; i < block_json["SSig"].size(); ++i) {
+    if (item.first == "SSig" && block_header_json["SSig"].is_array()) {
+      for (size_t i = 0; i < block_header_json["SSig"].size(); ++i) {
         key = item.first + "_sID_" + to_string(i);
-        value = Safe::getString(block_json[item.first][i]["sID"]);
+        value = Safe::getString(block_header_json[item.first][i]["sID"]);
         if (!addBatch(DBType::BLOCK_LATEST, key, value))
           return false;
 
         key = item.first + "_sig_" + to_string(i);
-        value = Safe::getString(block_json["SSig"][i]["sig"]);
+        value = Safe::getString(block_header_json["SSig"][i]["sig"]);
         if (!addBatch(DBType::BLOCK_LATEST, key, value))
           return false;
       }
     } else {
       key = item.first;
       if (item.first == "txids")
-        value = block_json[item.first].dump();
+        value = block_header_json[item.first].dump();
       else
-        value = Safe::getString(block_json[item.first]);
+        value = Safe::getString(block_header_json[item.first]);
       if (!addBatch(DBType::BLOCK_LATEST, key, value))
         return false;
     }
@@ -236,7 +244,7 @@ bool Storage::putBlockBody(json &block_body_json, const string &block_id_b64) {
           Safe::getString(tx_json[item.first]) == TXTYPE_CERTIFICATES) {
         for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
           string user_id_b64 = Safe::getString(content[c_idx]);
-          string cert_idx = getDataByKey(DBType::BLOCK_CERT, user_id_b64);
+          string cert_idx = getValueByKey(DBType::BLOCK_CERT, user_id_b64);
 
           // User ID에 해당하는 Certification Size 저장
           key = user_id_b64;
@@ -305,7 +313,8 @@ std::string Storage::parseCert(std::string &pem) {
   return json_str;
 }
 
-std::string Storage::getDataByKey(DBType what, const string &base_suffix_keys) {
+std::string Storage::getValueByKey(DBType what,
+                                   const string &base_suffix_keys) {
   std::string key = getPrefix(what) + base_suffix_keys;
   std::string value;
 
@@ -359,46 +368,60 @@ bool Storage::errorOn(const leveldb::Status &status) {
   return false;
 }
 
-std::pair<std::string, size_t> Storage::findLatestHashAndHeight() {
-  auto block_id = getDataByKey(DBType::BLOCK_LATEST, "bID");
+std::pair<std::string, size_t> Storage::getLatestHashAndHeight() {
+  auto block_id = getValueByKey(DBType::BLOCK_LATEST, "bID");
   if (block_id.empty())
     return make_pair("", 0);
 
-  auto hash = getDataByKey(DBType::BLOCK_RAW, block_id + "_hash");
-  auto height = getDataByKey(DBType::BLOCK_LATEST, "hgt");
+  auto hash_b64 = TypeConverter::encodeBase64(
+      getValueByKey(DBType::BLOCK_RAW, block_id + "_hash"));
+  auto height = getValueByKey(DBType::BLOCK_LATEST, "hgt");
   if (height.empty())
-    return std::make_pair(hash, 0);
+    return std::make_pair(hash_b64, 0);
   else
-    return std::make_pair(hash, static_cast<size_t>(stoll(height)));
+    return std::make_pair(hash_b64, static_cast<size_t>(stoll(height)));
 }
 
-std::tuple<std::string, std::string, size_t>
-Storage::findLatestBlockBasicInfo() {
-  std::tuple<std::string, std::string, size_t> ret_tuple;
+nth_block_link_type Storage::getNthBlockLinkInfo(size_t t_height) {
+  nth_block_link_type ret_link_info;
+  ret_link_info.height = t_height;
 
-  auto block_id = getDataByKey(DBType::BLOCK_LATEST, "bID");
-  if (!block_id.empty()) {
-    std::get<0>(ret_tuple) = block_id;
-    std::get<1>(ret_tuple) =
-        getDataByKey(DBType::BLOCK_RAW, block_id + "_hash");
-    auto height = getDataByKey(DBType::BLOCK_LATEST, "hgt");
-    if (height.empty())
-      std::get<2>(ret_tuple) = 0;
-    else
-      std::get<2>(ret_tuple) = static_cast<size_t>(stoll(height));
+  std::string t_block_id_b64 =
+      (t_height == 0)
+          ? getValueByKey(DBType::BLOCK_LATEST, "bID")
+          : getValueByKey(DBType::BLOCK_HEIGHT, to_string(t_height));
+
+  if (!t_block_id_b64.empty()) {
+    ret_link_info.id_b64 = t_block_id_b64;
+    ret_link_info.hash_b64 = TypeConverter::encodeBase64(
+        getValueByKey(DBType::BLOCK_RAW, t_block_id_b64 + "_hash"));
+    ret_link_info.prev_id_b64 =
+        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevbID");
+    ret_link_info.prev_hash_b64 =
+        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevH");
+    ret_link_info.height = Safe::getSize(
+        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_hgt"));
+  } else {
+    ret_link_info.height = 0;
   }
-  return ret_tuple;
+
+  return ret_link_info;
 }
 
-std::vector<std::string> Storage::findLatestTxIdList() {
+std::vector<std::string> Storage::getNthTxIdList(size_t t_height) {
   std::vector<std::string> tx_ids_list;
 
-  auto block_id_b64 = getDataByKey(DBType::BLOCK_LATEST, "bID");
-  if (!block_id_b64.empty()) {
+  std::string t_block_id_b64 =
+      (t_height == 0)
+          ? getValueByKey(DBType::BLOCK_LATEST, "bID")
+          : getValueByKey(DBType::BLOCK_HEIGHT, to_string(t_height));
+
+  if (!t_block_id_b64.empty()) {
     auto tx_ids_json_str =
-        getDataByKey(DBType::BLOCK_HEADER, block_id_b64 + "_txids");
+        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_txids");
+
     if (!tx_ids_json_str.empty()) {
-      json tx_ids_json = Safe::parseJson(tx_ids_json_str);
+      json tx_ids_json = Safe::parseJsonAsArray(tx_ids_json_str);
       if (!tx_ids_json.empty() && tx_ids_json.is_array()) {
         for (auto &tx_id_json : tx_ids_json) {
           tx_ids_list.emplace_back(Safe::getString(tx_id_json));
@@ -409,15 +432,15 @@ std::vector<std::string> Storage::findLatestTxIdList() {
   return tx_ids_list;
 }
 
-std::string Storage::findCertificate(const std::string &user_id,
-                                     const timestamp_type &at_this_time) {
+std::string Storage::getCertificate(const std::string &user_id_b64,
+                                    const timestamp_type &at_this_time) {
   std::string cert;
-  std::string cert_size = getDataByKey(DBType::BLOCK_CERT, user_id);
+  std::string cert_size = getValueByKey(DBType::BLOCK_CERT, user_id_b64);
   if (!cert_size.empty()) {
     int num_certs = stoi(cert_size);
     if (at_this_time == 0) {
-      std::string latest_cert = getDataByKey(
-          DBType::BLOCK_CERT, user_id + "_" + to_string(num_certs - 1));
+      std::string latest_cert = getValueByKey(
+          DBType::BLOCK_CERT, user_id_b64 + "_" + to_string(num_certs - 1));
 
       json latest_cert_json = Safe::parseJson(latest_cert);
       if (!latest_cert_json.empty())
@@ -427,7 +450,7 @@ std::string Storage::findCertificate(const std::string &user_id,
       timestamp_type max_start_date = 0;
       for (int i = 0; i < num_certs; ++i) {
         std::string nth_cert =
-            getDataByKey(DBType::BLOCK_CERT, user_id + "_" + to_string(i));
+            getValueByKey(DBType::BLOCK_CERT, user_id_b64 + "_" + to_string(i));
 
         json cert_json = Safe::parseJson(nth_cert);
         if (cert_json.empty())
@@ -450,7 +473,7 @@ std::string Storage::findCertificate(const std::string &user_id,
   return cert;
 }
 
-void Storage::deleteAllDirectory() {
+void Storage::destroyDB() {
   boost::filesystem::remove_all(m_db_path + "/block_header");
   boost::filesystem::remove_all(m_db_path + "/block_raw");
   boost::filesystem::remove_all(m_db_path + "/certificate");
@@ -462,20 +485,20 @@ void Storage::deleteAllDirectory() {
 read_block_type Storage::readBlock(size_t height) {
   read_block_type result;
   std::string block_id_b64 =
-      (height == 0) ? getDataByKey(DBType::BLOCK_LATEST, "bID")
-                    : getDataByKey(DBType::BLOCK_HEIGHT, to_string(height));
+      (height == 0) ? getValueByKey(DBType::BLOCK_LATEST, "bID")
+                    : getValueByKey(DBType::BLOCK_HEIGHT, to_string(height));
   if (block_id_b64.empty())
     result.height = 0;
   else {
     if (height == 0)
       result.height =
-          static_cast<size_t>(stoll(getDataByKey(DBType::BLOCK_LATEST, "hgt")));
+          static_cast<size_t>(stoll(getValueByKey(DBType::BLOCK_LATEST, "hgt")));
 
     result.block_raw = TypeConverter::stringToBytes(
-        getDataByKey(DBType::BLOCK_RAW, block_id_b64));
+        getValueByKey(DBType::BLOCK_RAW, block_id_b64));
 
     std::string txids_json_str =
-        getDataByKey(DBType::BLOCK_HEADER, block_id_b64 + "_txids");
+        getValueByKey(DBType::BLOCK_HEADER, block_id_b64 + "_txids");
 
     json txs_json = json::array();
 
@@ -488,13 +511,14 @@ read_block_type Storage::readBlock(size_t height) {
 
           json tx_json = json(
               {{"txid", txid_b64},
-               {"time", getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_time")},
-               {"rID", getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_rID")},
-               {"rSig", getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_rSig")},
-               {"type", getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_type")}});
+               {"time", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_time")},
+               {"rID", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_rID")},
+               {"rSig", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_rSig")},
+               {"type",
+                getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_type")}});
 
           tx_json["content"] = Safe::parseJsonAsArray(
-              getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_content"));
+              getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_content"));
 
           txs_json.push_back(tx_json);
         }
@@ -507,10 +531,10 @@ read_block_type Storage::readBlock(size_t height) {
   return result;
 }
 
-proof_type Storage::findSibling(const std::string &txid_b64) {
-  int base_offset = stoi(getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_mPos"));
+proof_type Storage::getProof(const std::string &txid_b64) {
+  int base_offset = stoi(getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_mPos"));
   std::string block_id_b64 =
-      getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_bID");
+      getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_bID");
   proof_type proof;
 
   if (!block_id_b64.empty()) {
@@ -518,7 +542,7 @@ proof_type Storage::findSibling(const std::string &txid_b64) {
     proof.block_id_b64 = block_id_b64;
 
     std::string mtree_json_str =
-        getDataByKey(DBType::BLOCK_BODY, block_id_b64 + "_mtree");
+        getValueByKey(DBType::BLOCK_BODY, block_id_b64 + "_mtree");
 
     if (!mtree_json_str.empty()) {
       json mtree_json = Safe::parseJson(mtree_json_str);
@@ -577,9 +601,9 @@ proof_type Storage::findSibling(const std::string &txid_b64) {
   return proof;
 }
 
-std::string Storage::findCertificate(const signer_id_type &user_id,
-                                     const timestamp_type &at_this_time) {
+std::string Storage::getCertificate(const signer_id_type &user_id,
+                                    const timestamp_type &at_this_time) {
   std::string user_id_b64 = TypeConverter::encodeBase64(user_id);
-  return findCertificate(user_id_b64);
+  return getCertificate(user_id_b64);
 }
 } // namespace gruut
