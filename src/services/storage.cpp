@@ -582,4 +582,9 @@ std::string Storage::findCertificate(const signer_id_type &user_id,
   std::string user_id_b64 = TypeConverter::encodeBase64(user_id);
   return findCertificate(user_id_b64);
 }
+
+bool Storage::isDuplicatedTx(const std::string &txid_b64){
+  std::string block_id_b64 = getDataByKey(DBType::BLOCK_BODY, txid_b64 + "_bID");
+  return !block_id_b64.empty();
+}
 } // namespace gruut
