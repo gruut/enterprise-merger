@@ -403,6 +403,8 @@ nth_block_link_type Storage::getNthBlockLinkInfo(size_t t_height) {
         getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_hgt"));
   } else {
     ret_link_info.height = 0;
+    ret_link_info.hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
+    ret_link_info.id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
   }
 
   return ret_link_info;

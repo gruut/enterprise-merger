@@ -21,6 +21,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <queue>
 #include <random>
 #include <tuple>
@@ -56,6 +57,8 @@ private:
   std::mutex m_block_list_mutex;
 
   timestamp_type m_last_task_time{0};
+
+  std::once_flag m_end_sync_call_flag;
 
   bool m_sync_alone{true};
 
