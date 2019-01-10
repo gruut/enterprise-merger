@@ -42,7 +42,7 @@ void Application::start() {
     return;
   }
 
-  CLOG(INFO, "_APP") << "START STAGE #" << m_running_stage;
+  CLOG(INFO, "_APP") << "STAGE #" << m_running_stage << " ---- START";
 
   try {
     for (auto &module : m_modules[m_running_stage]) {
@@ -69,8 +69,12 @@ void Application::exec() {
 
 void Application::runNextStage(ExitCode exit_code) {
 
-  CLOG(INFO, "_APP") << "END STAGE #" << m_running_stage
-                     << " (exit=" << (int)exit_code << ")";
+  if (exit_code == ExitCode::ERROR_ABORT) {
+    quit();
+  }
+
+  CLOG(INFO, "_APP") << "STAGE #" << m_running_stage
+                     << " ---- END (exit=" << (int)exit_code << ")";
   if (m_running_stage < m_modules.size()) {
     ++m_running_stage;
     start();

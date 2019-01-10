@@ -9,6 +9,7 @@
 
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
+#include "../services/storage.hpp"
 #include "../utils/file_io.hpp"
 #include "../utils/safe.hpp"
 
@@ -24,13 +25,14 @@ public:
 
     cxxopts::Options options(argv[0], config::APP_NAME + "\n");
     options.add_options("basic")("help", "Print help description")(
-        "in", "Setting file",
+        "in", "Location of setting file",
         cxxopts::value<string>()->default_value("./setting.json"))(
         "pass", "Password to decrypt secret key",
         cxxopts::value<string>()->default_value(""))(
         "port", "Port number", cxxopts::value<string>()->default_value(""))(
-        "dbpath", "DB path",
-        cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH));
+        "dbpath", "Location where LevelDB stores data",
+        cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH))(
+        "dbclear", "To wipe out the existing LevelDB");
 
     if (argc == 1) {
       std::cout << options.help({"", "basic"}) << std::endl;
@@ -69,7 +71,10 @@ public:
         setting_json["dbpath"] = result["dbpath"].as<std::string>(); // override
       }
 
-      // boost::filesystem::create_directories(parsed_db_path);
+      if (result.count("dbclear"))
+        setting_json["dbclear"] = true;
+      else
+        setting_json["dbclear"] = false;
 
     } catch (json::parse_error &e) {
       CLOG(ERROR, "ARGV") << "Failed to pars setting files - " << e.what();

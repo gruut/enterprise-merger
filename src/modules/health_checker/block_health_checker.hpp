@@ -8,8 +8,10 @@
 
 #include "../module.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <memory>
+#include <string>
 
 namespace gruut {
 
@@ -21,7 +23,7 @@ public:
 
 private:
   void startHealthCheck();
-  void endCheck();
+  void endCheck(ExitCode exit_code);
 };
 
 } // namespace gruut

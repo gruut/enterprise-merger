@@ -270,6 +270,10 @@ public:
 
   block_id_type getBlockId() { return m_block_id; }
 
+  std::string getBlockIdB64() {
+    return TypeConverter::encodeBase64(m_block_id);
+  }
+
   sha256 getHash() { return m_block_hash; }
 
   std::string getHashB64() { return TypeConverter::encodeBase64(m_block_hash); }

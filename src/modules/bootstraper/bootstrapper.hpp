@@ -44,7 +44,6 @@ public:
 private:
   void sendMsgUp();
   void selfCheckUp();
-  void startSync();
   void endSync(ExitCode exit_code);
 };
 } // namespace gruut

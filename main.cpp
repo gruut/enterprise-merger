@@ -5,10 +5,12 @@
 #include "src/application.hpp"
 #include "src/services/setting.hpp"
 #include "src/services/argv_parser.hpp"
+#include "src/services/storage.hpp"
 
 #include "easy_logging.hpp"
 #include "src/utils/crypto.hpp"
 #include "src/utils/get_pass.hpp"
+#include "src/utils/safe.hpp"
 
 using namespace std;
 using namespace gruut;
@@ -31,6 +33,8 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  bool clear_db = Safe::getBoolean(setting_json,"dbclear");
+
   auto setting = Setting::getInstance();
 
   if(!setting->setJson(setting_json)) {
@@ -41,10 +45,10 @@ int main(int argc, char *argv[]) {
   if(GemCrypto::isEncPem(setting->getMySK())) {
 
     if(!setting->getMyPass().empty() && !GemCrypto::isValidPass(setting->getMySK(),setting->getMyPass())) {
-      CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
-      CLOG(INFO, "MAIN") << "| Wrong Password! :(                                                      |";
-      CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
-      CLOG(INFO, "MAIN") << "";
+      CLOG(ERROR, "MAIN") << "+-------------------------------------------------------------------------+";
+      CLOG(ERROR, "MAIN") << "| Wrong Password! :(                                                      |";
+      CLOG(ERROR, "MAIN") << "+-------------------------------------------------------------------------+";
+      CLOG(ERROR, "MAIN") << "";
       return 1;
     }
 
@@ -68,6 +72,12 @@ int main(int argc, char *argv[]) {
     CLOG(INFO, "MAIN") << "| Password is OK. :)                                                      |";
     CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
     CLOG(INFO, "MAIN") << "";
+  }
+
+  if(clear_db) {
+    auto storage = Storage::getInstance();
+    storage->destroyDB();
+    CLOG(INFO, "MAIN") << "THE EXISTING DB HAS BEEN CLEARED.";
   }
 
   Application::app().setup();

@@ -40,11 +40,8 @@ void Bootstrapper::selfCheckUp() {
   std::this_thread::sleep_for(std::chrono::seconds(5));
 
   // TODO :: do jobs for self check-up
-}
 
-void Bootstrapper::startSync() {
-
-  CLOG(INFO, "BOOT") << "4) Starting block synchronization";
+  CLOG(INFO, "BOOT") << "3) Starting block synchronization";
 
   m_block_synchronizer.startBlockSync(
       std::bind(&Bootstrapper::endSync, this, std::placeholders::_1));

@@ -174,8 +174,7 @@ void BlockSynchronizer::saveBlock(size_t height) {
 
 void BlockSynchronizer::syncFinish() {
 
-  CLOG(INFO, "BSYN") << "END BLOCK SYNCHRONIZATION "
-                        "=================================================";
+  CLOG(INFO, "BSYN") << "BLOCK SYNCHRONIZATION ---- END";
 
   m_msg_fetching_timer->cancel();
   m_sync_ctrl_timer->cancel();
@@ -418,8 +417,7 @@ void BlockSynchronizer::messageFetch() {
 
 void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 
-  CLOG(INFO, "BSYN") << "START BLOCK SYNCHRONIZATION "
-                        "===============================================";
+  CLOG(INFO, "BSYN") << "BLOCK SYNCHRONIZATION ---- START";
 
   m_finish_callback = std::move(callback);
 

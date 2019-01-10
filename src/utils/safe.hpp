@@ -100,6 +100,22 @@ public:
     return static_cast<gruut::timestamp_type>(stoll(dec_str));
   }
 
+  static bool getBoolean(nlohmann::json &&json_obj, const std::string &key) {
+    return getBoolean(json_obj, key);
+  }
+
+  static bool getBoolean(nlohmann::json &json_obj, const std::string &key) {
+    if (json_obj.find(key) != json_obj.end()) {
+      if (!json_obj[key].is_boolean()) {
+        return false;
+      }
+
+      return json_obj[key].get<bool>();
+    }
+
+    return false;
+  }
+
   template <typename T = gruut::bytes>
   static T getBytesFromB64(nlohmann::json &&json_obj, const std::string &key) {
     return getBytesFromB64<T>(json_obj, key);
