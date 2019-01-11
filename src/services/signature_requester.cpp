@@ -16,8 +16,7 @@ void SignatureRequester::waitCollectDone() {
   if (!m_is_collect_timer_running)
     return;
 
-  auto &signature_pool = Application::app().getSignaturePool();
-  if (signature_pool.size() >= m_max_signers) {
+  if (Application::app().getSignaturePool().size() >= m_max_signers) {
     doCreateBlock();
   }
 
@@ -52,24 +51,26 @@ void SignatureRequester::requestSignatures() {
     }
   }
 
+  auto &transaction_pool = Application::app().getTransactionPool();
+
   if (!new_signers.empty()) {
     Transaction new_transaction = generateCertificateTransaction(new_signers);
-    Application::app().getTransactionPool().push(new_transaction);
+    transaction_pool.push(new_transaction);
   }
 
   m_max_signers = target_signers.size();
 
   // step 2 - fetching transactions and making partial block
 
-  auto &transaction_pool = Application::app().getTransactionPool();
   Transactions transactions = transaction_pool.fetchLastN(
       std::min(transaction_pool.size(), config::MAX_COLLECT_TRANSACTION_SIZE));
   transaction_pool.clear();
 
   m_merkle_tree.generate(transactions);
 
-  m_basic_block_info = generateBasicBlockInfo(
-      m_merkle_tree.getMerkleTree().back(), transactions);
+  m_basic_block_info = generateBasicBlockInfo();
+  m_basic_block_info.transaction_root = m_merkle_tree.getMerkleTree().back();
+  m_basic_block_info.transactions = std::move(transactions);
 
   // step 3 - setup SignaturePool
 
@@ -218,8 +219,7 @@ transaction_id_type SignatureRequester::generateTxId() {
 }
 
 BasicBlockInfo
-SignatureRequester::generateBasicBlockInfo(sha256 &merkle_root,
-                                           vector<Transaction> &transactions) {
+SignatureRequester::generateBasicBlockInfo() {
 
   auto setting = Setting::getInstance();
 
@@ -237,9 +237,6 @@ SignatureRequester::generateBasicBlockInfo(sha256 &merkle_root,
     partial_block.height = 1; // this is genesis block
   else
     partial_block.height = std::get<2>(latest_block_info) + 1;
-
-  partial_block.transaction_root = merkle_root;
-  partial_block.transactions = transactions;
 
   return partial_block;
 }

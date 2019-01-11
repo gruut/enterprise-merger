@@ -52,20 +52,21 @@ void MergerServer::recvMessage() {
   try {
     while (true) {
       if (m_input_queue->size() < config::AVAILABLE_INPUT_SIZE) {
-        if (m_completion_queue->Next(&tag, &ok)) {
-          if (ok)
-            static_cast<CallData *>(tag)->proceed();
-        }
+        GPR_ASSERT(m_completion_queue->Next(&tag, &ok));
+        if (ok)
+          static_cast<CallData *>(tag)->proceed();
       } else {
-        CLOG(INFO, "MSVR") << "#InputQueue = " << m_input_queue->size();
+        // CLOG(INFO, "MSVR") << "#InputQueue = " << m_input_queue->size();
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
       }
     }
   } catch (std::exception &e) {
     CLOG(ERROR, "MSVR") << "RPC Server problem : " << e.what();
-    while (m_completion_queue->Next(&tag, &ok)) {
-      if (tag != nullptr)
-        static_cast<CallData *>(tag)->proceed(false);
+    if (m_completion_queue != nullptr) {
+      while (m_completion_queue->Next(&tag, &ok)) {
+        if (tag != nullptr)
+          static_cast<CallData *>(tag)->proceed(false);
+      }
     }
     m_completion_queue.reset();
     m_server.reset();
@@ -237,8 +238,8 @@ void Join::proceed(bool st) {
 
       if (!rpc_status.ok()) {
         GrpcMsgChallenge m_reply;
-        m_responder.Finish(m_reply, rpc_status, this);
         m_receive_status = RpcCallStatus::FINISH;
+        m_responder.Finish(m_reply, rpc_status, this);
       } else {
         m_rpc_receiver_list->setChanllenge(receiver_id, &m_responder, this,
                                            &m_receive_status);
@@ -278,15 +279,14 @@ void DHKeyEx::proceed(bool st) {
 
       MessageHandler message_handler;
       message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
-
       if (!rpc_status.ok()) {
         GrpcMsgResponse2 m_reply;
+        m_receive_status = RpcCallStatus::FINISH;
         m_responder.Finish(m_reply, rpc_status, this);
       } else {
         m_rpc_receiver_list->setResponse2(receiver_id, &m_responder, this,
                                           &m_receive_status);
       }
-      m_receive_status = RpcCallStatus::FINISH;
     });
   } break;
 
@@ -325,12 +325,12 @@ void KeyExFinished::proceed(bool st) {
       message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
       if (!rpc_status.ok()) {
         GrpcMsgAccept m_reply;
+        m_receive_status = RpcCallStatus::FINISH;
         m_responder.Finish(m_reply, rpc_status, this);
       } else {
         m_rpc_receiver_list->setAccept(receiver_id, &m_responder, this,
                                        &m_receive_status);
       }
-      m_receive_status = RpcCallStatus::FINISH;
     });
   } break;
 
@@ -360,15 +360,19 @@ void SigSend::proceed(bool st) {
 
     auto &io_service = Application::app().getIoService();
     io_service.post([this]() {
+      RpcReceiverList *signer_rpc_list = RpcReceiverList::getInstance();
+
       std::string packed_msg = m_request.message();
       Status rpc_status;
       id_type receiver_id;
 
       MessageHandler message_handler;
       message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
+      signer_rpc_list->setWriteFlag(receiver_id, true);
+
       NoReply m_reply;
-      m_responder.Finish(m_reply, rpc_status, this);
       m_receive_status = RpcCallStatus::FINISH;
+      m_responder.Finish(m_reply, rpc_status, this);
     });
   } break;
 

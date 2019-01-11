@@ -22,6 +22,7 @@
 #include <set>
 #include <thread>
 #include <vector>
+#include <atomic>
 
 namespace gruut {
 
@@ -48,8 +49,7 @@ private:
 
   Transaction generateCertificateTransaction(vector<Signer> &signers);
   transaction_id_type generateTxId();
-  BasicBlockInfo generateBasicBlockInfo(sha256 &merkle_root,
-                                        vector<Transaction> &transactions);
+  BasicBlockInfo generateBasicBlockInfo();
 
   std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
@@ -58,7 +58,7 @@ private:
   MerkleTree m_merkle_tree;
   BasicBlockInfo m_basic_block_info;
 
-  bool m_is_collect_timer_running{false};
+  std::atomic<bool> m_is_collect_timer_running{false};
   size_t m_max_signers;
 };
 } // namespace gruut

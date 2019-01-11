@@ -252,7 +252,14 @@ void MergerClient::sendToSigner(MessageType msg_type,
 
       GrpcMsgReqSsig reply;
       reply.set_message(packed_msg_list[i]);
-      signer_rpc_info.send_req_ssig->Write(reply, tag);
+      if (signer_rpc_info.write_flag) {
+        signer_rpc_info.send_req_ssig->Write(reply, tag);
+        m_rpc_receiver_list->setWriteFlag(receiver_list[i], false);
+      } else {
+        CLOG(ERROR, "MCLN")
+            << "Cannot send to signer(ID : "
+            << TypeConverter::encodeBase64(receiver_list[i]) << ")";
+      }
     } break;
 
     default:

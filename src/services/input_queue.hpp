@@ -1,7 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_INPUT_QUEUE_HPP
 #define GRUUT_ENTERPRISE_MERGER_INPUT_QUEUE_HPP
 
-#include "concurrentqueue.hpp"
+#include "blockconcurrentqueue.hpp"
 #include "nlohmann/json.hpp"
 
 #include "../chain/types.hpp"
@@ -24,7 +24,7 @@ struct InputMsgEntry {
 
 class InputQueueAlt : public TemplateSingleton<InputQueueAlt> {
 private:
-  moodycamel::ConcurrentQueue<InputMsgEntry> m_input_msg_pool;
+  moodycamel::BlockingConcurrentQueue<InputMsgEntry> m_input_msg_pool;
 
 public:
   void push(std::tuple<MessageType, json> &msg_entry_tuple) {
@@ -44,6 +44,13 @@ public:
     InputMsgEntry ret_msg;
     m_input_msg_pool.try_dequeue(ret_msg);
     return ret_msg;
+  }
+
+  std::vector<InputMsgEntry> fetchBulk(size_t cnt = 5){
+    std::vector<InputMsgEntry> res(cnt);
+    size_t num_fetch = m_input_msg_pool.try_dequeue_bulk(res.begin(), cnt);
+    res.resize(num_fetch);
+    return res;
   }
 
   inline size_t size() { return m_input_msg_pool.size_approx(); }
