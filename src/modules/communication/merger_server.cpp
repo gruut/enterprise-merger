@@ -52,17 +52,17 @@ void MergerServer::recvMessage() {
   try {
     while (true) {
       if (m_input_queue->size() < config::AVAILABLE_INPUT_SIZE) {
-          GPR_ASSERT(m_completion_queue->Next(&tag, &ok));
-          if (ok)
-            static_cast<CallData *>(tag)->proceed();
+        GPR_ASSERT(m_completion_queue->Next(&tag, &ok));
+        if (ok)
+          static_cast<CallData *>(tag)->proceed();
       } else {
-        //CLOG(INFO, "MSVR") << "#InputQueue = " << m_input_queue->size();
+        // CLOG(INFO, "MSVR") << "#InputQueue = " << m_input_queue->size();
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
       }
     }
   } catch (std::exception &e) {
     CLOG(ERROR, "MSVR") << "RPC Server problem : " << e.what();
-    if(m_completion_queue != nullptr) {
+    if (m_completion_queue != nullptr) {
       while (m_completion_queue->Next(&tag, &ok)) {
         if (tag != nullptr)
           static_cast<CallData *>(tag)->proceed(false);
@@ -361,12 +361,16 @@ void SigSend::proceed(bool st) {
 
     auto &io_service = Application::app().getIoService();
     io_service.post([this]() {
+      RpcReceiverList *signer_rpc_list = RpcReceiverList::getInstance();
+
       std::string packed_msg = m_request.message();
       Status rpc_status;
       id_type receiver_id;
 
       MessageHandler message_handler;
       message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
+      signer_rpc_list->setWriteFlag(receiver_id, true);
+
       NoReply m_reply;
       m_responder.Finish(m_reply, rpc_status, this);
       m_receive_status = RpcCallStatus::FINISH;

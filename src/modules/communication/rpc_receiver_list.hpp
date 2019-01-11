@@ -28,6 +28,7 @@ struct SignerRpcInfo {
   RpcCallStatus *join_status;
   RpcCallStatus *dhkeyex_status;
   RpcCallStatus *keyexfinished_status;
+  bool write_flag;
 };
 
 class RpcReceiverList : public TemplateSingleton<RpcReceiverList> {
@@ -42,6 +43,7 @@ public:
              void *tag) {
     string recv_id_b64 = TypeConverter::encodeBase64(recv_id);
     std::lock_guard<std::mutex> lock(m_mutex);
+    m_receiver_list[recv_id_b64].write_flag = true;
     m_receiver_list[recv_id_b64].send_req_ssig = req_sig_rpc;
     m_receiver_list[recv_id_b64].tag_identity = tag;
     m_mutex.unlock();
@@ -77,6 +79,13 @@ public:
     m_receiver_list[recv_id_b64].send_accept = accept;
     m_receiver_list[recv_id_b64].tag_keyexfinished = tag;
     m_receiver_list[recv_id_b64].keyexfinished_status = status;
+    m_mutex.unlock();
+  }
+
+  void setWriteFlag(id_type &recv_id, bool flag) {
+    string recv_id_b64 = TypeConverter::encodeBase64(recv_id);
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_receiver_list[recv_id_b64].write_flag = flag;
     m_mutex.unlock();
   }
 
