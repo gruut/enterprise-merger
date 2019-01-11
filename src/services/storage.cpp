@@ -11,6 +11,7 @@ Storage::Storage() {
   auto setting = Setting::getInstance();
   m_db_path = setting->getMyDbPath();
 
+  m_options.block_cache = leveldb::NewLRUCache(100 * 1048576); // 100MB cache
   m_options.create_if_missing = true;
   m_write_options.sync = true;
 
