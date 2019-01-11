@@ -309,7 +309,7 @@ public:
 
       if (!ECDSA::doVerify(user_pk_pem, ssig_msg_builder.getBytes(),
                            each_ssig.signer_signature)) {
-        CLOG(ERROR, "BLOC") << "Invalid support signature";
+        CLOG(ERROR, "BLOC") << "Invalid support signature. " << user_id_b64 << ", " << user_pk_pem << ", " << TypeConverter::encodeBase64(each_ssig.signer_signature);
         return false;
       }
     }
