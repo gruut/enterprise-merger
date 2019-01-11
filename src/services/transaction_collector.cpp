@@ -9,6 +9,20 @@ TransactionCollector::TransactionCollector() {
 
   el::Loggers::getLogger("TXCO");
 
+  m_storage = Storage::getInstance();
+  auto setting = Setting::getInstance();
+
+  std::vector<ServiceEndpointInfo> service_endpoints =
+      setting->getServiceEndpointInfo();
+  for (auto &srv_point : service_endpoints) {
+    m_cert_map.insert({srv_point.id, srv_point.cert});
+  }
+
+  std::vector<MergerInfo> mergers = setting->getMergerInfo();
+  for (auto &merger : mergers) {
+    m_cert_map.insert({merger.id, merger.cert});
+  }
+
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
 }
@@ -19,20 +33,34 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
     return;
   }
 
-  auto new_txid = TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
-      Safe::getString(msg_body_json, "txid"));
+  std::string txid_b64 = Safe::getString(msg_body_json, "txid");
+  auto new_txid =
+      TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(txid_b64);
 
   auto &transaction_pool = Application::app().getTransactionPool();
 
   if (transaction_pool.isDuplicated(new_txid)) {
-    CLOG(ERROR, "TXCO") << "TX dropped (duplicated)";
+    CLOG(ERROR, "TXCO") << "TX dropped (duplicated in pool)";
+    return;
+  }
+
+  if (m_storage->isDuplicatedTx(txid_b64)) {
+    CLOG(ERROR, "TXCO") << "TX dropped (duplicated in storage)";
     return;
   }
 
   Transaction new_tx;
   new_tx.setJson(msg_body_json);
 
-  if (new_tx.isValid()) {
+  id_type requester_id = Safe::getBytesFromB64(msg_body_json, "rID");
+
+  auto it_result = m_cert_map.find(requester_id);
+  if (it_result == m_cert_map.end()) {
+    CLOG(ERROR, "TXCO") << "TX dropped (unknown requester)";
+    return;
+  }
+
+  if (new_tx.isValid(it_result->second)) {
     transaction_pool.push(new_tx);
   } else {
     CLOG(ERROR, "TXCO") << "TX dropped (invalid)";

@@ -182,7 +182,7 @@ SignatureRequester::generateCertificateTransaction(vector<Signer> &signers) {
 
     auto setting = Setting::getInstance();
 
-    new_transaction.setId(generateTxId());
+    //    new_transaction.setId(generateTxId());
     new_transaction.setTime(static_cast<timestamp_type>(Time::now_int()));
     new_transaction.setRequestorId(setting->getMyId());
     new_transaction.setTransactionType(TransactionType::CERTIFICATES);
@@ -197,24 +197,13 @@ SignatureRequester::generateCertificateTransaction(vector<Signer> &signers) {
     }
 
     new_transaction.setContents(content_list);
-    new_transaction.refreshSignature();
+
+    new_transaction.genNewTxId();
+
+    new_transaction.refreshSignature(setting->getMySK(), setting->getMyPass());
   }
 
   return new_transaction;
-}
-
-transaction_id_type SignatureRequester::generateTxId() {
-  mt19937 mt;
-  mt.seed(random_device()());
-
-  std::uniform_int_distribution<std::mt19937::result_type> dist;
-  auto random_number = dist(mt);
-
-  auto bytes = TypeConverter::integerToBytes(random_number);
-  transaction_id_type tx_id =
-      TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(bytes);
-
-  return tx_id;
 }
 
 BasicBlockInfo

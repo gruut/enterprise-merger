@@ -18,6 +18,7 @@
 #include <botan-2/botan/data_src.h>
 #include <botan-2/botan/x509_key.h>
 
+#include <atomic>
 #include <iostream>
 #include <memory>
 #include <queue>
@@ -38,16 +39,17 @@ private:
   void updateStatus();
   void postJob();
 
-  Transaction generateTrasnaction(vector<Signer> &signers);
-  transaction_id_type generateTransactionId();
-
   BpStatus m_current_tx_status{BpStatus::IN_BOOT_WAIT};
   BpStatus m_next_tx_status{BpStatus::UNKNOWN};
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   SignatureRequester m_signature_requester;
   std::deque<BpJobStatus> m_bpjob_sequence;
 
-  bool m_timer_running{false};
+  Storage *m_storage;
+
+  std::map<id_type, std::string> m_cert_map;
+
+  std::atomic<bool> m_timer_running{false};
 };
 } // namespace gruut
 #endif
