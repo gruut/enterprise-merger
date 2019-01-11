@@ -14,6 +14,7 @@
 #include "signature_requester.hpp"
 #include "signer_pool.hpp"
 
+#include <atomic>
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 #include <iostream>
@@ -22,7 +23,6 @@
 #include <set>
 #include <thread>
 #include <vector>
-#include <atomic>
 
 namespace gruut {
 

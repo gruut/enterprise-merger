@@ -76,7 +76,7 @@ void SignatureRequester::requestSignatures() {
 
   Application::app().getSignaturePool().setupSigPool(
       m_basic_block_info.height, m_basic_block_info.time,
-      m_basic_block_info.transaction_root);
+      m_basic_block_info.transaction_root); // auto enable pool
 
   // step 4 - collect signatures
 
@@ -94,6 +94,8 @@ void SignatureRequester::doCreateBlock() {
   m_collect_timer->cancel();
   m_check_timer->cancel();
 
+  Application::app().getSignaturePool().disablePool(); // disable pool now!
+
   auto &io_service = Application::app().getIoService();
 
   io_service.post(m_block_gen_strand->wrap([this]() { // should work one-by-one
@@ -104,7 +106,8 @@ void SignatureRequester::doCreateBlock() {
 
       auto signatures_size =
           min(signature_pool.size(), config::MAX_SIGNATURE_COLLECT_SIZE);
-      auto signatures = signature_pool.fetchN(signatures_size);
+      auto signatures =
+          signature_pool.fetchN(signatures_size, m_basic_block_info.height);
       signature_pool.clear(); // last signatures are useless.
 
       BlockGenerator generator;
@@ -218,8 +221,7 @@ transaction_id_type SignatureRequester::generateTxId() {
   return tx_id;
 }
 
-BasicBlockInfo
-SignatureRequester::generateBasicBlockInfo() {
+BasicBlockInfo SignatureRequester::generateBasicBlockInfo() {
 
   auto setting = Setting::getInstance();
 

@@ -46,7 +46,7 @@ public:
     return ret_msg;
   }
 
-  std::vector<InputMsgEntry> fetchBulk(size_t cnt = 5){
+  std::vector<InputMsgEntry> fetchBulk(size_t cnt = 5) {
     std::vector<InputMsgEntry> res(cnt);
     size_t num_fetch = m_input_msg_pool.try_dequeue_bulk(res.begin(), cnt);
     res.resize(num_fetch);

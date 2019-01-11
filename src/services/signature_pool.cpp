@@ -14,18 +14,24 @@ SignaturePool::SignaturePool() {
 }
 
 void SignaturePool::handleMessage(json &msg_body_json) {
+  if (!m_enabled) {
+    CLOG(ERROR, "SPOL") << "Support Signature dropped (disabled pool)";
+    return;
+  }
+
   signer_id_type signer_id = Safe::getBytesFromB64(msg_body_json, "sID");
 
   if (verifySignature(signer_id, msg_body_json)) {
     Signature ssig;
 
     ssig.signer_id = signer_id;
+    ssig.height = m_height;
     ssig.signer_signature = Safe::getBytesFromB64(msg_body_json, "sig");
 
     push(ssig);
 
   } else {
-    CLOG(ERROR, "SPOL") << "Invalid Support Signature";
+    CLOG(ERROR, "SPOL") << "Invalid Support Signature for This Block";
   }
 }
 
@@ -34,6 +40,8 @@ void SignaturePool::setupSigPool(block_height_type chain_height,
   m_height = chain_height;
   m_block_time = block_time;
   m_tx_root = tx_root;
+
+  enablePool();
 }
 
 void SignaturePool::push(Signature &signature) {
@@ -41,9 +49,16 @@ void SignaturePool::push(Signature &signature) {
   m_signature_pool.emplace_back(signature);
 }
 
-Signatures SignaturePool::fetchN(size_t n) {
+Signatures SignaturePool::fetchN(size_t n, block_height_type t_height) {
   Signatures signatures;
-  copy_n(m_signature_pool.begin(), n, back_inserter(signatures));
+  for (auto &ssig : m_signature_pool) {
+    if (ssig.height == t_height) {
+      signatures.emplace_back(ssig);
+    }
+
+    if (signatures.size() >= n)
+      break;
+  }
 
   return signatures;
 }

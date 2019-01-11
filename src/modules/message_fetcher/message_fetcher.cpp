@@ -27,7 +27,7 @@ void MessageFetcher::fetch() {
     std::vector<InputMsgEntry> input_messages = m_input_queue->fetchBulk();
 
     MessageProxy message_proxy;
-    for(auto &msg : input_messages)
+    for (auto &msg : input_messages)
       message_proxy.deliverInputMessage(msg);
   });
 

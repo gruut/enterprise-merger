@@ -47,7 +47,7 @@ private:
   SignatureRequester m_signature_requester;
   std::deque<BpJobStatus> m_bpjob_sequence;
 
-  Storage* m_storage;
+  Storage *m_storage;
 
   bool m_timer_running{false};
 };
