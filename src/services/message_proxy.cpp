@@ -12,7 +12,7 @@ MessageProxy::MessageProxy() {
 void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
 
   if (input_message.type != MessageType::MSG_TX)
-    CLOG(INFO, "MPRX") << "MSG IN: " << (int)input_message.type;
+    CLOG(INFO, "MPRX") << "MSG IN: " << std::hex << (int)input_message.type;
 
   auto message_type = input_message.type;
   auto message_body_json = input_message.body;
@@ -54,7 +54,7 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
 
 void MessageProxy::deliverOutputMessage(OutputMsgEntry &output_message) {
 
-  CLOG(INFO, "MPRX") << "MSG OUT: " << (int)output_message.type;
+  CLOG(INFO, "MPRX") << "MSG OUT: " << std::hex << (int)output_message.type;
 
   m_output_queue->push(output_message);
 }
