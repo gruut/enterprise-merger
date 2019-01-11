@@ -17,7 +17,7 @@ TransactionCollector::TransactionCollector() {
 
 void TransactionCollector::handleMessage(json &msg_body_json) {
   if (!isRunnable()) {
-    CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
+    //CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
     return;
   }
 

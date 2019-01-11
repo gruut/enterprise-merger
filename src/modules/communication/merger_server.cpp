@@ -238,8 +238,8 @@ void Join::proceed(bool st) {
 
       if (!rpc_status.ok()) {
         GrpcMsgChallenge m_reply;
-        m_responder.Finish(m_reply, rpc_status, this);
         m_receive_status = RpcCallStatus::FINISH;
+        m_responder.Finish(m_reply, rpc_status, this);
       } else {
         m_rpc_receiver_list->setChanllenge(receiver_id, &m_responder, this,
                                            &m_receive_status);
@@ -279,15 +279,14 @@ void DHKeyEx::proceed(bool st) {
 
       MessageHandler message_handler;
       message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
-
       if (!rpc_status.ok()) {
         GrpcMsgResponse2 m_reply;
+        m_receive_status = RpcCallStatus::FINISH;
         m_responder.Finish(m_reply, rpc_status, this);
       } else {
         m_rpc_receiver_list->setResponse2(receiver_id, &m_responder, this,
                                           &m_receive_status);
       }
-      m_receive_status = RpcCallStatus::FINISH;
     });
   } break;
 
@@ -326,12 +325,12 @@ void KeyExFinished::proceed(bool st) {
       message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
       if (!rpc_status.ok()) {
         GrpcMsgAccept m_reply;
+        m_receive_status = RpcCallStatus::FINISH;
         m_responder.Finish(m_reply, rpc_status, this);
       } else {
         m_rpc_receiver_list->setAccept(receiver_id, &m_responder, this,
                                        &m_receive_status);
       }
-      m_receive_status = RpcCallStatus::FINISH;
     });
   } break;
 
@@ -372,8 +371,8 @@ void SigSend::proceed(bool st) {
       signer_rpc_list->setWriteFlag(receiver_id, true);
 
       NoReply m_reply;
-      m_responder.Finish(m_reply, rpc_status, this);
       m_receive_status = RpcCallStatus::FINISH;
+      m_responder.Finish(m_reply, rpc_status, this);
     });
   } break;
 
