@@ -9,7 +9,7 @@ namespace gruut {
 namespace config {
 
 const std::string APP_NAME = "Merger for Gruut Enterprise Networks (C++)";
-const std::string APP_CODE_NAME = "Super-Koopa";
+const std::string APP_CODE_NAME = "Chicken Egg";
 const std::string APP_BUILD_DATE = __DATE__;
 const std::string APP_BUILD_TIME = __TIME__;
 

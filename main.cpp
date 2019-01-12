@@ -8,9 +8,6 @@
 #include "src/services/storage.hpp"
 
 #include "easy_logging.hpp"
-#include "src/utils/crypto.hpp"
-#include "src/utils/get_pass.hpp"
-#include "src/utils/safe.hpp"
 
 using namespace std;
 using namespace gruut;
@@ -29,64 +26,22 @@ int main(int argc, char *argv[]) {
   // clang-format on
 
   ArgvParser argv_parser;
-  json setting_json = argv_parser.parse(argc,argv);
-  if(setting_json.empty()) {
-    CLOG(ERROR, "MAIN") << "Setting file is empty or invalid path was given";
+  if(!argv_parser.parse(argc,argv)) {
+    CLOG(ERROR, "MAIN") << "Error on loading system";
     return -1;
   }
 
-  bool clear_db = Safe::getBoolean(setting_json,"dbclear");
-
   auto setting = Setting::getInstance();
 
-  if(!setting->setJson(setting_json)) {
-    CLOG(ERROR, "MAIN") << "Setting file is not a valid JSON";
-    return -2;
-  }
+  // clang-format off
+  CLOG(INFO, "MAIN") << "+--------------------------------------------------------------------------";
+  CLOG(INFO, "MAIN") << "| ID : " << TypeConverter::encodeBase64(setting->getMyId());
+  CLOG(INFO, "MAIN") << "| Local Chain : " << TypeConverter::encodeBase64(setting->getLocalChainId());
+  CLOG(INFO, "MAIN") << "| Address : " << setting->getMyAddress() << ":" << setting->getMyPort();
+  CLOG(INFO, "MAIN") << "| DB Path : " << setting->getMyDbPath();
+  CLOG(INFO, "MAIN") << "+--------------------------------------------------------------------------";
+  // clang-format on
 
-  if(GemCrypto::isEncPem(setting->getMySK())) {
-
-    if(!setting->getMyPass().empty() && !GemCrypto::isValidPass(setting->getMySK(),setting->getMyPass())) {
-      // clang-format off
-      CLOG(ERROR, "MAIN") << "+-------------------------------------------------------------------------+";
-      CLOG(ERROR, "MAIN") << "| Wrong Password! :(                                                      |";
-      CLOG(ERROR, "MAIN") << "+-------------------------------------------------------------------------+";
-      CLOG(ERROR, "MAIN") << "";
-      // clang-format on
-      return 1;
-    }
-
-    // clang-format off
-    CLOG(INFO, "MAIN") << "";
-    CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
-    CLOG(INFO, "MAIN") << "| Good. Merger's signing key is encrypted.                                |";
-    CLOG(INFO, "MAIN") << "| To run this merger properly, you must provide a valid password.         |";
-    CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
-    // clang-format on
-
-    std::string user_pass;
-    int num_retry = 0;
-    do {
-      user_pass = getPass::get("Enter the password ", true);
-      ++num_retry;
-      std::this_thread::sleep_for(std::chrono::seconds(num_retry*num_retry));
-    }
-    while(!GemCrypto::isValidPass(setting->getMySK(),user_pass));
-    setting->setPass(user_pass);
-
-    // clang-format off
-    CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
-    CLOG(INFO, "MAIN") << "| Password is OK. :)                                                      |";
-    CLOG(INFO, "MAIN") << "+-------------------------------------------------------------------------+";
-    CLOG(INFO, "MAIN") << "";
-    // clang-format on
-  }
-
-  if(clear_db) {
-    auto storage = Storage::getInstance();
-    storage->destroyDB();
-    CLOG(INFO, "MAIN") << "THE EXISTING DB HAS BEEN CLEARED.";
-  }
 
   Application::app().setup();
   Application::app().start();

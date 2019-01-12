@@ -9,8 +9,11 @@
 
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
+#include "../services/setting.hpp"
 #include "../services/storage.hpp"
+#include "../utils/crypto.hpp"
 #include "../utils/file_io.hpp"
+#include "../utils/get_pass.hpp"
 #include "../utils/safe.hpp"
 
 namespace gruut {
@@ -19,7 +22,7 @@ class ArgvParser {
 public:
   ArgvParser() { el::Loggers::getLogger("ARGV"); };
 
-  json parse(int argc, char *argv[]) {
+  bool parse(int argc, char *argv[]) {
 
     json setting_json;
 
@@ -71,18 +74,66 @@ public:
         setting_json["dbpath"] = result["dbpath"].as<std::string>(); // override
       }
 
-      if (result.count("dbclear"))
-        setting_json["dbclear"] = true;
-      else
-        setting_json["dbclear"] = false;
+      auto setting = Setting::getInstance();
+
+      if (!setting->setJson(setting_json)) {
+        CLOG(ERROR, "ARGV") << "Setting file is not a valid JSON";
+        return false;
+      }
+
+      if (GemCrypto::isEncPem(setting->getMySK())) {
+
+        if (!setting->getMyPass().empty() &&
+            !GemCrypto::isValidPass(setting->getMySK(), setting->getMyPass())) {
+          // clang-format off
+          CLOG(ERROR, "ARGV") << "+-------------------------------------------------------------------------+";
+          CLOG(ERROR, "ARGV") << "| Wrong Password! :(                                                      |";
+          CLOG(ERROR, "ARGV") << "+-------------------------------------------------------------------------+";
+          CLOG(ERROR, "ARGV") << "";
+          // clang-format on
+          return false;
+        }
+
+        // clang-format off
+        CLOG(INFO, "ARGV") << "";
+        CLOG(INFO, "ARGV") << "+-------------------------------------------------------------------------+";
+        CLOG(INFO, "ARGV") << "| Good. Merger's signing key is encrypted.                                |";
+        CLOG(INFO, "ARGV") << "| To run this merger properly, you must provide a valid password.         |";
+        CLOG(INFO, "ARGV") << "+-------------------------------------------------------------------------+";
+        // clang-format on
+
+        std::string user_pass;
+        int num_retry = 0;
+        do {
+          user_pass = getPass::get("Enter the password ", true);
+          ++num_retry;
+          std::this_thread::sleep_for(
+              std::chrono::seconds(num_retry * num_retry));
+        } while (!GemCrypto::isValidPass(setting->getMySK(), user_pass));
+        setting->setPass(user_pass);
+
+        // clang-format off
+        CLOG(INFO, "ARGV") << "+-------------------------------------------------------------------------+";
+        CLOG(INFO, "ARGV") << "| Password is OK. :)                                                      |";
+        CLOG(INFO, "ARGV") << "+-------------------------------------------------------------------------+";
+        CLOG(INFO, "ARGV") << "";
+        // clang-format on
+      }
+
+      if (result.count("dbclear")) {
+        Storage::getInstance()->destroyDB();
+        CLOG(INFO, "ARGV") << "THE EXISTING DB HAS BEEN CLEARED.";
+      }
 
     } catch (json::parse_error &e) {
       CLOG(ERROR, "ARGV") << "Failed to pars setting files - " << e.what();
+      return false;
     } catch (const cxxopts::OptionException &e) {
       CLOG(ERROR, "ARGV") << "Failed to parse arguments - " << e.what();
+      return false;
     }
 
-    return setting_json;
+    return true;
   }
 };
 } // namespace gruut
