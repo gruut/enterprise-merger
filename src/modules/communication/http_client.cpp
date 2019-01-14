@@ -30,6 +30,29 @@ CURLcode HttpClient::post(const string &packed_msg) {
   return CURLE_OK;
 }
 
+CURLcode HttpClient::postAndGetReply(const std::string &msg, json &json_data) {
+  try {
+    m_curl.setOpt(CURLOPT_URL, m_address.data());
+    m_curl.setOpt(CURLOPT_POST, 1L);
+    m_curl.setOpt(CURLOPT_POSTFIELDS, msg.data());
+    m_curl.setOpt(CURLOPT_POSTFIELDSIZE, msg.size());
+
+    string http_data;
+
+    m_curl.setOpt(CURLOPT_WRITEFUNCTION, writeCallback);
+    m_curl.setOpt(CURLOPT_WRITEDATA, &http_data);
+
+    m_curl.perform();
+    json_data = json::parse(http_data);
+
+  } catch (curlpp::EasyException &err) {
+    CLOG(ERROR, "HTTP") << err.what();
+    return err.getErrorId();
+  }
+
+  return CURLE_OK;
+}
+
 bool HttpClient::checkServStatus() {
   try {
     m_curl.setOpt(CURLOPT_URL, m_address.data());
@@ -46,4 +69,12 @@ std::string HttpClient::getPostField(const string &key, const string &value) {
   const string post_field = key + "=" + value;
   return post_field;
 }
+
+size_t HttpClient::writeCallback(const char *in, size_t size, size_t num,
+                                 string *out) {
+  const std::size_t total_bytes(size * num);
+  out->append(in, total_bytes);
+  return total_bytes;
+}
+
 } // namespace gruut
