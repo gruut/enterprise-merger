@@ -81,7 +81,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   msg_block.body["tx"] = saved_block.txs;
   msg_block.receivers = {recv_id};
 
-  CLOG(INFO, "BPRO") << "Send MSG_BLOCK (height=" << req_block_height
+  CLOG(INFO, "BPRO") << "Send MSG_BLOCK (height=" << saved_block.height
                      << ", #TX=" << saved_block.txs.size() << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_block);

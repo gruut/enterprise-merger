@@ -33,6 +33,7 @@ struct RcvBlockMapItem {
   std::string merger_id_b64;
   Block block;
   int num_retry{0};
+  timestamp_type req_time;
   BlockState state{BlockState::RECEIVED};
 };
 

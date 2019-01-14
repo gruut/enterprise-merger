@@ -30,7 +30,7 @@ public:
     std::lock_guard<std::mutex> guard(m_push_mutex);
     auto insert_result = m_cert_map.insert({TypeConverter::encodeBase64(t_id),cert});
     if(!insert_result.second)
-      insert_result.frist->second = cert; // update
+      insert_result.first->second = cert; // update
     m_push_mutex.unlock();
   }
 
