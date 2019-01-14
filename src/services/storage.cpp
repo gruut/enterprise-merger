@@ -11,6 +11,7 @@ Storage::Storage() {
   auto setting = Setting::getInstance();
   m_db_path = setting->getMyDbPath();
 
+  m_options.block_cache = leveldb::NewLRUCache(100 * 1048576); // 100MB cache
   m_options.create_if_missing = true;
   m_write_options.sync = true;
 
@@ -49,7 +50,7 @@ Storage::~Storage() {
 
 bool Storage::saveBlock(bytes &block_raw, json &block_header,
                         json &block_body) {
-  string block_id_b64 = Safe::getString(block_header["bID"]);
+  string block_id_b64 = Safe::getString(block_header, "bID");
 
   if (putBlockHeader(block_header, block_id_b64) &&
       putBlockHeight(block_header, block_id_b64) &&
@@ -143,12 +144,12 @@ bool Storage::putBlockHeader(json &block_header_json,
     if (item.first == "SSig" && block_header_json["SSig"].is_array()) {
       for (size_t i = 0; i < block_header_json["SSig"].size(); ++i) {
         key = block_id_b64 + item.second + "_sID_" + to_string(i);
-        value = Safe::getString(block_header_json[item.first][i]["sID"]);
+        value = Safe::getString(block_header_json[item.first][i], "sID");
         if (!addBatch(DBType::BLOCK_HEADER, key, value))
           return false;
 
         key = block_id_b64 + item.second + "_sig_" + to_string(i);
-        value = Safe::getString(block_header_json["SSig"][i]["sig"]);
+        value = Safe::getString(block_header_json["SSig"][i], "sig");
         if (!addBatch(DBType::BLOCK_HEADER, key, value))
           return false;
       }
@@ -157,7 +158,7 @@ bool Storage::putBlockHeader(json &block_header_json,
       if (item.first == "txids") {
         value = block_header_json[item.first].dump();
       } else
-        value = Safe::getString(block_header_json[item.first]);
+        value = Safe::getString(block_header_json, item.first);
       if (!addBatch(DBType::BLOCK_HEADER, key, value))
         return false;
     }
@@ -167,7 +168,7 @@ bool Storage::putBlockHeader(json &block_header_json,
 
 bool Storage::putBlockHeight(json &block_header_json,
                              const string &block_id_b64) {
-  std::string key = Safe::getString(block_header_json["hgt"]);
+  std::string key = Safe::getString(block_header_json, "hgt");
   return addBatch(DBType::BLOCK_HEIGHT, key, block_id_b64);
 }
 
@@ -201,12 +202,12 @@ bool Storage::putLatestBlockHeader(json &block_header_json) {
     if (item.first == "SSig" && block_header_json["SSig"].is_array()) {
       for (size_t i = 0; i < block_header_json["SSig"].size(); ++i) {
         key = item.first + "_sID_" + to_string(i);
-        value = Safe::getString(block_header_json[item.first][i]["sID"]);
+        value = Safe::getString(block_header_json[item.first][i], "sID");
         if (!addBatch(DBType::BLOCK_LATEST, key, value))
           return false;
 
         key = item.first + "_sig_" + to_string(i);
-        value = Safe::getString(block_header_json["SSig"][i]["sig"]);
+        value = Safe::getString(block_header_json["SSig"][i], "sig");
         if (!addBatch(DBType::BLOCK_LATEST, key, value))
           return false;
       }
@@ -215,7 +216,7 @@ bool Storage::putLatestBlockHeader(json &block_header_json) {
       if (item.first == "txids")
         value = block_header_json[item.first].dump();
       else
-        value = Safe::getString(block_header_json[item.first]);
+        value = Safe::getString(block_header_json, item.first);
       if (!addBatch(DBType::BLOCK_LATEST, key, value))
         return false;
     }
@@ -241,7 +242,7 @@ bool Storage::putBlockBody(json &block_body_json, const string &block_id_b64) {
     for (auto &item : DB_TX_SUFFIX) {
       // To save user certificates
       if (item.first == "type" &&
-          Safe::getString(tx_json[item.first]) == TXTYPE_CERTIFICATES) {
+          Safe::getString(tx_json, item.first) == TXTYPE_CERTIFICATES) {
         for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
           string user_id_b64 = Safe::getString(content[c_idx]);
           string cert_idx = getValueByKey(DBType::BLOCK_CERT, user_id_b64);
@@ -263,12 +264,12 @@ bool Storage::putBlockBody(json &block_body_json, const string &block_id_b64) {
         }
       }
 
-      std::string txid_b64 = Safe::getString(tx_json["txid"]);
+      std::string txid_b64 = Safe::getString(tx_json, "txid");
       key = txid_b64 + item.second;
       if (item.first == "content") {
         value = tx_json[item.first].dump();
       } else
-        value = Safe::getString(tx_json[item.first]);
+        value = Safe::getString(tx_json, item.first);
       if (!addBatch(DBType::BLOCK_BODY, key, value))
         return false;
     }
@@ -282,7 +283,7 @@ bool Storage::putBlockBody(json &block_body_json, const string &block_id_b64) {
     return false;
 
   key = block_id_b64 + "_txCnt";
-  value = Safe::getString(block_body_json["txCnt"]);
+  value = Safe::getString(block_body_json, "txCnt");
   if (!addBatch(DBType::BLOCK_BODY, key, value))
     return false;
 
@@ -299,12 +300,13 @@ std::string Storage::parseCert(std::string &pem) {
     Botan::DataSource_Memory cert_datasource(pem);
     Botan::X509_Certificate cert(cert_datasource);
 
-    json tmp_cert;
-    tmp_cert[0] =
-        to_string(Botan::X509_Time(cert.not_before()).time_since_epoch());
-    tmp_cert[1] =
-        to_string(Botan::X509_Time(cert.not_after()).time_since_epoch());
-    tmp_cert[2] = pem;
+    json tmp_cert = json::array();
+    tmp_cert.push_back(
+        to_string(Botan::X509_Time(cert.not_before()).time_since_epoch()));
+    tmp_cert.push_back(
+        to_string(Botan::X509_Time(cert.not_after()).time_since_epoch()));
+    tmp_cert.push_back(pem);
+
     json_str = tmp_cert.dump();
   } catch (...) {
     // do nothing
@@ -444,7 +446,7 @@ std::string Storage::getCertificate(const std::string &user_id_b64,
       std::string latest_cert = getValueByKey(
           DBType::BLOCK_CERT, user_id_b64 + "_" + to_string(num_certs - 1));
 
-      json latest_cert_json = Safe::parseJson(latest_cert);
+      json latest_cert_json = Safe::parseJsonAsArray(latest_cert);
       if (!latest_cert_json.empty())
         cert = Safe::getString(latest_cert_json[2]);
 
@@ -505,25 +507,21 @@ read_block_type Storage::readBlock(size_t height) {
     json txs_json = json::array();
 
     if (!txids_json_str.empty()) {
-      json txids_json = Safe::parseJson(txids_json_str);
+      json txids_json = Safe::parseJsonAsArray(txids_json_str);
+      for (auto &each_txid : txids_json) {
+        std::string txid_b64 = Safe::getString(each_txid);
 
-      if (txids_json.is_array()) {
-        for (auto &each_txid : txids_json) {
-          std::string txid_b64 = Safe::getString(each_txid);
+        json tx_json = json(
+            {{"txid", txid_b64},
+             {"time", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_time")},
+             {"rID", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_rID")},
+             {"rSig", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_rSig")},
+             {"type", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_type")}});
 
-          json tx_json = json(
-              {{"txid", txid_b64},
-               {"time", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_time")},
-               {"rID", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_rID")},
-               {"rSig", getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_rSig")},
-               {"type",
-                getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_type")}});
+        tx_json["content"] = Safe::parseJsonAsArray(
+            getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_content"));
 
-          tx_json["content"] = Safe::parseJsonAsArray(
-              getValueByKey(DBType::BLOCK_BODY, txid_b64 + "_content"));
-
-          txs_json.push_back(tx_json);
-        }
+        txs_json.push_back(tx_json);
       }
     }
 

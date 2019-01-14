@@ -33,14 +33,18 @@ public:
 
   size_t size();
 
-  Signatures fetchN(size_t n);
+  Signatures fetchN(size_t n, block_height_type t_height);
 
   inline void clear() {
     std::lock_guard<std::mutex> guard(m_mutex);
     m_signature_pool.clear();
   }
 
+  void disablePool() { m_enabled = false; }
+
 private:
+  void enablePool() { m_enabled = true; }
+
   bool verifySignature(signer_id_type &, json &);
 
   std::list<Signature> m_signature_pool;
@@ -52,6 +56,8 @@ private:
   timestamp_type m_block_time;
 
   std::mutex m_mutex;
+
+  std::atomic<bool> m_enabled{false};
 };
 }; // namespace gruut
 #endif

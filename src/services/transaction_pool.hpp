@@ -18,13 +18,13 @@ public:
   void removeDuplicatedTransactions(std::vector<transaction_id_type> &tx_ids);
   void removeDuplicatedTransactions(std::vector<transaction_id_type> &&tx_ids);
   std::vector<Transaction> fetchLastN(size_t n);
-  inline void clear() { m_transaction_pool.clear(); }
+  void clear();
 
 private:
   std::list<Transaction> m_transaction_pool;
 
   std::mutex m_push_mutex;
-  // std::mutex m_check_mutex;
+  std::mutex m_check_mutex;
 };
 } // namespace gruut
 #endif

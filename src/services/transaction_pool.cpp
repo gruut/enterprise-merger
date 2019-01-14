@@ -10,10 +10,16 @@ bool TransactionPool::push(Transaction &transaction) {
   return false;
 }
 
+void TransactionPool::clear() {
+  std::lock_guard<std::mutex> guard(m_check_mutex);
+  m_transaction_pool.clear();
+}
+
 bool TransactionPool::isDuplicated(transaction_id_type &&tx_id) {
   return isDuplicated(tx_id);
 }
 bool TransactionPool::isDuplicated(transaction_id_type &tx_id) {
+  std::lock_guard<std::mutex> guard(m_check_mutex);
   auto start_pos = m_transaction_pool.begin();
   auto end_pos = m_transaction_pool.end();
   auto find_pos = std::find_if(

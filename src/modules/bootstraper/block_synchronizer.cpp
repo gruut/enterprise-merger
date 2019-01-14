@@ -372,6 +372,8 @@ void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry) {
   output_msg.body["info"] = "Merger is in bootstrapping. Please, wait.";
   output_msg.receivers = {signer_id};
 
+  CLOG(INFO, "BSYN") << "send MSG_ERROR";
+
   m_msg_proxy.deliverOutputMessage(output_msg);
 }
 
@@ -389,7 +391,7 @@ void BlockSynchronizer::messageFetch() {
     if (input_msg_entry.type == MessageType::MSG_NULL)
       return;
 
-    CLOG(INFO, "BSYN") << "MSG IN: " << (int)input_msg_entry.type;
+    CLOG(INFO, "BSYN") << "MSG IN: 0x" << std::hex << (int)input_msg_entry.type;
 
     if (checkMsgFromOtherMerger(input_msg_entry.type)) {
       m_sync_alone = false; // Wow! I am not alone!

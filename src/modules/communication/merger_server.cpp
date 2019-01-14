@@ -49,20 +49,21 @@ void MergerServer::recvMessage() {
   try {
     while (true) {
       if (m_input_queue->size() < config::AVAILABLE_INPUT_SIZE) {
-        if (m_completion_queue->Next(&tag, &ok)) {
-          if (ok)
-            static_cast<CallData *>(tag)->proceed();
-        }
+        GPR_ASSERT(m_completion_queue->Next(&tag, &ok));
+        if (ok)
+          static_cast<CallData *>(tag)->proceed();
       } else {
-        CLOG(INFO, "MSVR") << "#InputQueue = " << m_input_queue->size();
+        // CLOG(INFO, "MSVR") << "#InputQueue = " << m_input_queue->size();
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
       }
     }
   } catch (std::exception &e) {
     CLOG(ERROR, "MSVR") << "RPC Server problem : " << e.what();
-    while (m_completion_queue->Next(&tag, &ok)) {
-      if (tag != nullptr)
-        static_cast<CallData *>(tag)->proceed(false);
+    if (m_completion_queue != nullptr) {
+      while (m_completion_queue->Next(&tag, &ok)) {
+        if (tag != nullptr)
+          static_cast<CallData *>(tag)->proceed(false);
+      }
     }
     m_completion_queue.reset();
     m_server.reset();

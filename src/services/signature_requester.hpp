@@ -14,6 +14,7 @@
 #include "signature_requester.hpp"
 #include "signer_pool.hpp"
 
+#include <atomic>
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 #include <iostream>
@@ -47,8 +48,7 @@ private:
   Signers selectSigners();
 
   Transaction generateCertificateTransaction(vector<Signer> &signers);
-  BasicBlockInfo generateBasicBlockInfo(sha256 &merkle_root,
-                                        vector<Transaction> &transactions);
+  BasicBlockInfo generateBasicBlockInfo();
 
   std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
@@ -57,7 +57,7 @@ private:
   MerkleTree m_merkle_tree;
   BasicBlockInfo m_basic_block_info;
 
-  bool m_is_collect_timer_running{false};
+  std::atomic<bool> m_is_collect_timer_running{false};
   size_t m_max_signers;
 };
 } // namespace gruut
