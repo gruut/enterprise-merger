@@ -12,6 +12,7 @@
 namespace gruut {
 class TransactionPool {
 public:
+  TransactionPool();
   bool push(Transaction &transaction);
   bool isDuplicated(transaction_id_type &&tx_id);
   bool isDuplicated(transaction_id_type &tx_id);
@@ -23,8 +24,8 @@ public:
   void clear();
 
 private:
-  std::list<Transaction> m_transaction_pool;
-  omp_hash_map<std::string, int> m_txid_pool;
+  std::vector<Transaction> m_transaction_pool;
+  omp_hash_map<std::string, bool> m_txid_pool;
 
   std::mutex m_push_mutex;
 };

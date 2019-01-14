@@ -90,8 +90,18 @@ public:
   inline static std::vector<uint8_t>
   arrayToVector(std::array<uint8_t, S> &arr) {
     vector<uint8_t> vec(arr.begin(), arr.end());
-
     return vec;
+  }
+
+  template <size_t S>
+  inline static std::string arrayToString(std::array<uint8_t, S> &&arr) {
+    return arrayToString(arr);
+  }
+
+  template <size_t S>
+  inline static std::string arrayToString(std::array<uint8_t, S> &arr) {
+    std::string str(arr.begin(), arr.end());
+    return str;
   }
 
   inline static std::vector<uint8_t> stringToBytes(const std::string &input) {
