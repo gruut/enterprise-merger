@@ -69,6 +69,7 @@ public:
   void destroyDB();
   read_block_type readBlock(size_t height);
   proof_type getProof(const std::string &txid_b64);
+  bool isDuplicatedTx(const std::string &txid_b64);
 
 private:
   bool errorOnCritical(const leveldb::Status &status);

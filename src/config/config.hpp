@@ -9,7 +9,7 @@ namespace gruut {
 namespace config {
 
 const std::string APP_NAME = "Merger for Gruut Enterprise Networks (C++)";
-const std::string APP_CODE_NAME = "Super-Koopa";
+const std::string APP_CODE_NAME = "Chicken Egg";
 const std::string APP_BUILD_DATE = __DATE__;
 const std::string APP_BUILD_TIME = __TIME__;
 
@@ -44,6 +44,7 @@ constexpr size_t SIGNATURE_COLLECTION_CHECK_INTERVAL = 500;
 constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 10;
 constexpr size_t BOOTSTRAP_MAX_REQ_BLOCK_RETRY = 5;
 constexpr size_t BOOTSTRAP_MAX_TASK_WAIT_TIME = 10;
+constexpr size_t BSYNC_RETRY_TIME_INTERVAL = 2;
 
 constexpr size_t MAX_WAIT_TIME = 120;
 

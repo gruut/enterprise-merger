@@ -62,14 +62,13 @@ bool BlockSynchronizer::pushMsgToBlockList(InputMsgEntry &msg_block) {
   if (is_new_block) {
 
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
-    m_recv_block_list.insert(make_pair(block_height, recv_block_item));
+    m_recv_block_list.insert({block_height, recv_block_item});
     m_block_list_mutex.unlock();
 
   } else if (it_map->second.state == BlockState::RETRIED) {
 
     std::lock_guard<std::mutex> lock(m_block_list_mutex);
-    m_recv_block_list.erase(block_height);
-    m_recv_block_list.insert(std::make_pair(block_height, recv_block_item));
+    it_map->second = recv_block_item;
     m_block_list_mutex.unlock();
 
   } else {
@@ -109,9 +108,18 @@ bool BlockSynchronizer::sendBlockRequest(size_t height) {
 
   if (height != 0) { // unicast
 
-    if (m_recv_block_list.empty()) { // but, no body
+    auto it_map = m_recv_block_list.find(height);
+    if (it_map == m_recv_block_list.end()) {
       return false;
     }
+
+    timestamp_type current_time = Time::now_int();
+    if (current_time - it_map->second.req_time <
+        config::BSYNC_RETRY_TIME_INTERVAL) { // within RETRY_TIME_INTERVAL
+      return false;
+    }
+
+    it_map->second.req_time = current_time;
 
     std::vector<std::string> ans_merger_list;
 

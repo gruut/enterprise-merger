@@ -3,15 +3,12 @@
 
 #include "nlohmann/json.hpp"
 
-#include "../services/setting.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/ecdsa.hpp"
 #include "../utils/safe.hpp"
 #include "../utils/sha256.hpp"
 #include "../utils/type_converter.hpp"
 #include "types.hpp"
-
-#include <boost/assert.hpp>
 
 #include <array>
 #include <string>
@@ -46,8 +43,8 @@ public:
 
     auto new_txid_bytes = Safe::getBytesFromB64(tx_json, "txid");
 
-    BOOST_ASSERT_MSG(new_txid_bytes.size() == 32,
-                     "The size of the transaction is not 32 bytes");
+    if (new_txid_bytes.size() != 32)
+      return false;
 
     setId(
         TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(new_txid_bytes));
@@ -56,7 +53,7 @@ public:
     setTransactionType(strToTxType(Safe::getString(tx_json, "type")));
 
     if (tx_json["content"].is_array())
-      setContents(tx_json["content"]);
+      setContentsFromJson(tx_json["content"]);
 
     setSignature(Safe::getBytesFromB64(tx_json, "rSig"));
 
@@ -72,7 +69,7 @@ public:
                  {"content", m_content_list}});
   }
 
-  void setId(transaction_id_type transaction_id) {
+  template <typename T = transaction_id_type> void setId(T &&transaction_id) {
     m_transaction_id = transaction_id;
   }
 
@@ -80,11 +77,8 @@ public:
 
   void setTime(timestamp_type sent_time) { m_sent_time = sent_time; }
 
-  void setRequestorId(requestor_id_type &&requestor_id) {
-    m_requestor_id = requestor_id;
-  }
-
-  void setRequestorId(requestor_id_type &requestor_id) {
+  template <typename T = requestor_id_type>
+  void setRequestorId(T &&requestor_id) {
     m_requestor_id = requestor_id;
   }
 
@@ -92,11 +86,11 @@ public:
     m_transaction_type = transaction_type;
   }
 
-  void setSignature(signature_type &&signature) { m_signature = signature; }
+  template <typename T = signature_type> void setSignature(T &&signature) {
+    m_signature = signature;
+  }
 
-  void setSignature(signature_type &signature) { m_signature = signature; }
-
-  void setContents(json &content_list) {
+  template <typename T = json> void setContentsFromJson(T &&content_list) {
     m_content_list.clear();
     if (content_list.is_array()) {
       for (auto &cont_item : content_list) {
@@ -104,11 +98,9 @@ public:
       }
     }
   }
-  void setContents(std::vector<content_type> &&content_list) {
-    setContents(content_list);
-  }
 
-  void setContents(std::vector<content_type> &content_list) {
+  template <typename T = std::vector<content_type>>
+  void setContents(T &&content_list) {
     m_content_list = content_list;
   }
 
@@ -123,56 +115,25 @@ public:
     return ret_certs;
   }
 
-  bool isValid(const std::string &pk_pem_instant = "") {
+  id_type getRequesterId() { return m_requestor_id; }
 
-    if (m_content_list.empty() || m_signature.empty()) {
+  void genNewTxId() { setId(buildTxId()); }
+
+  template <typename T = std::string> bool isValid(T &&pk_pem) {
+
+    if (m_content_list.empty() || m_signature.empty() || pk_pem.empty()) {
       return false;
     }
 
-    std::string pk_pem = pk_pem_instant;
-
-    if (pk_pem.empty()) {
-      std::vector<ServiceEndpointInfo> service_endpoints =
-          Setting::getInstance()->getServiceEndpointInfo();
-      for (auto &srv_point : service_endpoints) {
-        if (srv_point.id == m_requestor_id) {
-          pk_pem = srv_point.cert;
-          break;
-        }
-      }
-    }
-
-    if (pk_pem.empty()) { // not in service endpoint
-      std::vector<MergerInfo> mergers = Setting::getInstance()->getMergerInfo();
-      for (auto &merger : mergers) {
-        if (merger.id == m_requestor_id) {
-          pk_pem = merger.cert;
-          break;
-        }
-      }
-    }
-
-    if (pk_pem.empty()) {
+    if (m_transaction_id != buildTxId()) {
       return false;
     }
 
     return ECDSA::doVerify(pk_pem, getBeforeDigestByte(), m_signature);
   }
 
-  void refreshSignature(const std::string &pem_sk_instant = "",
-                        const std::string &pem_pass_instant = "") {
-
-    std::string pem_sk, pem_pass;
-
-    if (pem_sk_instant.empty()) {
-      auto setting = Setting::getInstance();
-      pem_sk = setting->getMySK();
-      pem_pass = setting->getMyPass();
-    } else {
-      pem_sk = pem_sk_instant;
-      pem_pass = pem_pass_instant;
-    }
-
+  template <typename T = std::string>
+  void refreshSignature(T &&pem_sk, T &&pem_pass) {
     m_signature = ECDSA::doSign(pem_sk, getBeforeDigestByte(), pem_pass);
   }
 
@@ -195,16 +156,15 @@ private:
     return ret_str;
   }
 
+  template <typename T = std::string>
   TransactionType strToTxType(std::string &&tx_type_str) {
-    return strToTxType(tx_type_str);
-  }
-
-  TransactionType strToTxType(std::string &tx_type_str) {
     TransactionType ret_type;
     if (tx_type_str == TXTYPE_DIGESTS)
       ret_type = TransactionType::DIGESTS;
     else if (tx_type_str == TXTYPE_CERTIFICATES)
       ret_type = TransactionType::CERTIFICATES;
+    else if (tx_type_str == TXTYPE_IMMORTALSMS)
+      ret_type = TransactionType::IMMORTALSMS;
     else
       ret_type = TransactionType::UNKNOWN;
 
@@ -223,6 +183,22 @@ private:
     }
 
     return msg_builder.getBytes();
+  }
+
+  transaction_id_type buildTxId() {
+
+    BytesBuilder txid_builder;
+    txid_builder.append(m_sent_time);
+    txid_builder.append(m_requestor_id);
+    txid_builder.append(txTypeToStr(m_transaction_type));
+
+    for (auto &content : m_content_list) {
+      txid_builder.append(content);
+    }
+
+    return static_cast<transaction_id_type>(
+        TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(
+            Sha256::hash(txid_builder.getBytes())));
   }
 };
 

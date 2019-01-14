@@ -9,6 +9,9 @@ TransactionCollector::TransactionCollector() {
 
   el::Loggers::getLogger("TXCO");
 
+  m_cert_pool = CertificatePool::getInstance();
+  m_storage = Storage::getInstance();
+
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
 }
@@ -19,20 +22,35 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
     return;
   }
 
-  auto new_txid = TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
-      Safe::getString(msg_body_json, "txid"));
+  std::string txid_b64 = Safe::getString(msg_body_json, "txid");
+  auto new_txid =
+      TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(txid_b64);
 
   auto &transaction_pool = Application::app().getTransactionPool();
 
   if (transaction_pool.isDuplicated(new_txid)) {
-    CLOG(ERROR, "TXCO") << "TX dropped (duplicated)";
+    CLOG(ERROR, "TXCO") << "TX dropped (duplicated in pool)";
+    return;
+  }
+
+  if (m_storage->isDuplicatedTx(txid_b64)) {
+    CLOG(ERROR, "TXCO") << "TX dropped (duplicated in storage)";
     return;
   }
 
   Transaction new_tx;
   new_tx.setJson(msg_body_json);
 
-  if (new_tx.isValid()) {
+  id_type requester_id = Safe::getBytesFromB64(msg_body_json, "rID");
+
+  std::string pk_cert = m_cert_pool->getCert(requester_id);
+
+  if (pk_cert.empty()) {
+    CLOG(ERROR, "TXCO") << "TX dropped (unknown requester)";
+    return;
+  }
+
+  if (new_tx.isValid(pk_cert)) {
     transaction_pool.push(new_tx);
   } else {
     CLOG(ERROR, "TXCO") << "TX dropped (invalid)";

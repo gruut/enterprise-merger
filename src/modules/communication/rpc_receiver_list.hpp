@@ -36,7 +36,7 @@ public:
     m_mutex.unlock();
   }
 
-  void eraseRpcInfo(std::string &recv_id_b64){
+  void eraseRpcInfo(std::string &recv_id_b64) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_receiver_list.erase(recv_id_b64);
     m_mutex.unlock();

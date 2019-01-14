@@ -141,7 +141,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   } break;
   case MessageType::MSG_LEAVE: {
     if (m_join_temp_table.find(recv_id_b64) != m_join_temp_table.end()) {
-      if(!m_join_temp_table[recv_id_b64]->join_lock)
+      if (!m_join_temp_table[recv_id_b64]->join_lock)
         m_join_temp_table.erase(recv_id_b64);
     }
     if (m_signer_pool->removeSigner(recv_id)) {

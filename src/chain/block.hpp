@@ -6,6 +6,7 @@
 #include "transaction.hpp"
 #include "types.hpp"
 
+#include "../services/certificate_pool.hpp"
 #include "../services/storage.hpp"
 #include "../utils/compressor.hpp"
 #include "../utils/ecdsa.hpp"
@@ -328,26 +329,31 @@ public:
       }
     }
 
+    // step - transactions
+
+    auto cert_pool = CertificatePool::getInstance();
+
+    for (auto &each_tx : m_transactions) {
+      id_type requster_id = each_tx.getRequesterId();
+      std::string pk_cert = cert_pool->getCert(requster_id);
+      if (!each_tx.isValid(pk_cert)) {
+        CLOG(ERROR, "BLOC") << "Invalid transaction";
+        return false;
+      }
+    }
+
     // step - check merger's signature
 
-    auto setting = Setting::getInstance();
+    std::string merger_pk_cert = cert_pool->getCert(m_merger_id);
 
-    std::vector<MergerInfo> merger_list = setting->getMergerInfo();
-
-    auto pk_it =
-        std::find_if(merger_list.begin(), merger_list.end(),
-                     [&](MergerInfo &t) { return t.id == m_merger_id; });
-
-    if (pk_it == merger_list.end()) {
+    if (merger_pk_cert.empty()) {
       CLOG(ERROR, "BLOC") << "No suitable merger certificate";
       return false;
     }
 
-    std::string merger_pk_pem = pk_it->cert;
-
     bytes meta_header_raw = getBlockMetaHeaderRaw(m_block_raw);
 
-    if (!ECDSA::doVerify(merger_pk_pem, meta_header_raw, m_signature)) {
+    if (!ECDSA::doVerify(merger_pk_cert, meta_header_raw, m_signature)) {
       CLOG(ERROR, "BLOC") << "Invalid merger signature";
       return false;
     }

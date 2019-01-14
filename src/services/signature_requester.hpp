@@ -47,7 +47,6 @@ private:
   Signers selectSigners();
 
   Transaction generateCertificateTransaction(vector<Signer> &signers);
-  transaction_id_type generateTxId();
   BasicBlockInfo generateBasicBlockInfo(sha256 &merkle_root,
                                         vector<Transaction> &transactions);
 
