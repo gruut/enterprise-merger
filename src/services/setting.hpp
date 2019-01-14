@@ -10,6 +10,8 @@
 #include "../utils/template_singleton.hpp"
 #include "../utils/type_converter.hpp"
 
+#include "certificate_pool.hpp"
+
 #include "easy_logging.hpp"
 
 #include <iostream>
@@ -173,6 +175,9 @@ public:
       m_port = config::DEFAULT_PORT_NUM;
     }
 
+    auto cert_pool =
+        CertificatePool::getInstance(); // to push certificates to cert_pool
+
     m_sk = joinMultiLine(setting_json["Self"]["sk"]);
     m_localchain_id = getChainIdFromJson(setting_json["LocalChain"]["id"]);
     m_localchain_name = Safe::getString(setting_json["LocalChain"], "name");
@@ -183,6 +188,8 @@ public:
     m_gruut_authority.address = Safe::getString(setting_json["GA"], "address");
     m_gruut_authority.cert = joinMultiLine(setting_json["cert"]);
 
+    cert_pool->pushCert(m_gruut_authority.id, m_gruut_authority.cert);
+
     m_service_endpoints.clear();
     for (size_t i = 0; i < setting_json["SE"].size(); ++i) {
       ServiceEndpointInfo tmp_info;
@@ -191,6 +198,7 @@ public:
       tmp_info.port = Safe::getString(setting_json["SE"][i], "port");
       tmp_info.cert = joinMultiLine(setting_json["SE"][i]["cert"]);
       m_service_endpoints.emplace_back(tmp_info);
+      cert_pool->pushCert(tmp_info.id, tmp_info.cert);
     }
 
     m_mergers.clear();
@@ -206,6 +214,7 @@ public:
       }
 
       m_mergers.emplace_back(tmp_info);
+      cert_pool->pushCert(tmp_info.id, tmp_info.cert);
     }
 
     m_sk_pass = Safe::getString(setting_json, "pass");

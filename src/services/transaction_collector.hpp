@@ -9,6 +9,7 @@
 #include "../utils/bytes_builder.hpp"
 #include "../utils/rsa.hpp"
 #include "../utils/type_converter.hpp"
+#include "certificate_pool.hpp"
 #include "setting.hpp"
 #include "signature_requester.hpp"
 
@@ -46,6 +47,7 @@ private:
   std::deque<BpJobStatus> m_bpjob_sequence;
 
   Storage *m_storage;
+  CertificatePool *m_cert_pool;
 
   std::map<id_type, std::string> m_cert_map;
 

@@ -115,6 +115,8 @@ public:
     return ret_certs;
   }
 
+  id_type getRequesterId() { return m_requestor_id; }
+
   void genNewTxId() { setId(buildTxId()); }
 
   template <typename T = std::string> bool isValid(T &&pk_pem) {
