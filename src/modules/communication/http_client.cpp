@@ -9,14 +9,15 @@ HttpClient::HttpClient(const string &m_address) : m_address(m_address) {
 }
 
 CURLcode HttpClient::post(const string &packed_msg) {
-  //CLOG(INFO, "HTTP") << "POST (" << m_address << ")";
+  // CLOG(INFO, "HTTP") << "POST (" << m_address << ")";
   try {
     m_curl.setOpt(CURLOPT_URL, m_address.data());
     m_curl.setOpt(CURLOPT_POST, 1L);
 
     const auto escaped_field_data = m_curl.escape(packed_msg);
     const string post_field = getPostField("message", escaped_field_data);
-	CLOG(INFO, "HTTP") << "POST (" << m_address << ", "<<post_field.size()<<"bytes )";
+    CLOG(INFO, "HTTP") << "POST (" << m_address << ", " << post_field.size()
+                       << "bytes )";
 
     m_curl.setOpt(CURLOPT_POSTFIELDS, post_field.data());
     m_curl.setOpt(CURLOPT_POSTFIELDSIZE, post_field.size());

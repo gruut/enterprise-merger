@@ -5,37 +5,34 @@ bool TransactionPool::push(Transaction &transaction) {
   std::lock_guard<std::mutex> guard(m_push_mutex);
   if (!isDuplicated(transaction.getId())) {
     m_transaction_pool.emplace_back(transaction);
+    m_txid_pool.set(TypeConverter::encodeBase64(transaction.getId()), 0);
     return true;
   }
   return false;
 }
 
 void TransactionPool::clear() {
-  std::lock_guard<std::mutex> guard(m_check_mutex);
   m_transaction_pool.clear();
+  m_txid_pool.clear();
 }
 
 bool TransactionPool::isDuplicated(transaction_id_type &&tx_id) {
   return isDuplicated(tx_id);
 }
 bool TransactionPool::isDuplicated(transaction_id_type &tx_id) {
-  std::lock_guard<std::mutex> guard(m_check_mutex);
-  auto start_pos = m_transaction_pool.begin();
-  auto end_pos = m_transaction_pool.end();
-  auto find_pos = std::find_if(
-      start_pos, end_pos, [&](Transaction &tx) { return tx.getId() == tx_id; });
-
-  return (find_pos != end_pos);
+  return m_txid_pool.has(TypeConverter::encodeBase64(tx_id));
 }
 
 bool TransactionPool::pop(Transaction &transaction) {
-  std::lock_guard<std::mutex> guard(m_push_mutex);
-  if (m_transaction_pool.empty())
+  if (m_txid_pool.get_n_keys() == 0)
     return false;
 
+  std::lock_guard<std::mutex> guard(m_push_mutex);
   transaction = m_transaction_pool.back();
   m_transaction_pool.pop_back();
   m_push_mutex.unlock();
+
+  m_txid_pool.unset(TypeConverter::encodeBase64(transaction.getId()));
 
   return true;
 }
@@ -43,10 +40,12 @@ bool TransactionPool::pop(Transaction &transaction) {
 std::vector<Transaction> TransactionPool::fetchLastN(size_t n) {
   std::vector<Transaction> transactions;
   std::lock_guard<std::mutex> guard(m_push_mutex);
-  size_t len = std::min(n, m_transaction_pool.size());
+  size_t len = std::min(n, m_txid_pool.get_n_keys());
   for (size_t i = 0; i < len; ++i) {
-    transactions.emplace_back(m_transaction_pool.back());
+    Transaction transaction = m_transaction_pool.back();
+    transactions.emplace_back(transaction);
     m_transaction_pool.pop_back();
+    m_txid_pool.unset(TypeConverter::encodeBase64(transaction.getId()));
   }
   m_push_mutex.unlock();
 
@@ -65,11 +64,12 @@ void TransactionPool::removeDuplicatedTransactions(
 
   std::lock_guard<std::mutex> guard(m_push_mutex);
   for (auto &tx_id : tx_ids) {
+    m_txid_pool.unset(TypeConverter::encodeBase64(tx_id));
     m_transaction_pool.remove_if(
         [&](Transaction &tx) { return (tx.getId() == tx_id); });
   }
   m_push_mutex.unlock();
 }
 
-size_t TransactionPool::size() { return m_transaction_pool.size(); }
+size_t TransactionPool::size() { return m_txid_pool.get_n_keys(); }
 } // namespace gruut

@@ -1,10 +1,10 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 #define GRUUT_ENTERPRISE_MERGER_STORAGE_HPP
 
+#include "leveldb/cache.h"
 #include "leveldb/db.h"
 #include "leveldb/options.h"
 #include "leveldb/write_batch.h"
-#include "leveldb/cache.h"
 #include "nlohmann/json.hpp"
 
 #include "../chain/merkle_tree.hpp"

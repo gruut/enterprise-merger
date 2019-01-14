@@ -2,8 +2,10 @@
 #define GRUUT_ENTERPRISE_MERGER_TRANSACTION_POOL_HPP
 
 #include "../chain/transaction.hpp"
+#include "omp_hash_map.h"
 
 #include <algorithm>
+#include <atomic>
 #include <list>
 #include <mutex>
 
@@ -22,9 +24,9 @@ public:
 
 private:
   std::list<Transaction> m_transaction_pool;
+  omp_hash_map<std::string, int> m_txid_pool;
 
   std::mutex m_push_mutex;
-  std::mutex m_check_mutex;
 };
 } // namespace gruut
 #endif
