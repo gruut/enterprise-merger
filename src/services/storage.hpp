@@ -39,7 +39,7 @@ using namespace std;
 const map<DBType, std::string> DB_PREFIX = {
     {DBType::BLOCK_HEADER, "b_"}, {DBType::BLOCK_HEIGHT, "h_"},
     {DBType::BLOCK_RAW, "r_"},    {DBType::BLOCK_LATEST, "l_"},
-    {DBType::BLOCK_BODY, "o_"},   {DBType::BLOCK_CERT, "c_"}};
+    {DBType::TRANSACTION, "t_"},   {DBType::CERTIFICATE, "c_"}};
 
 const vector<pair<string, string>> DB_BLOCK_HEADER_SUFFIX = {
     {"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
@@ -47,19 +47,14 @@ const vector<pair<string, string>> DB_BLOCK_HEADER_SUFFIX = {
     {"mID", "_mID"},   {"prevbID", "_prevbID"}, {"prevH", "_prevH"},
     {"txrt", "_txrt"}, {"txids", "_txids"}};
 
-const vector<pair<string, string>> DB_TX_SUFFIX = {
-    {"time", "_time"}, {"rID", "_rID"},         {"rSig", "_rSig"},
-    {"type", "_type"}, {"content", "_content"}, {"bID", "_bID"},
-    {"mPos", "_mPos"}};
-
 class Storage : public TemplateSingleton<Storage> {
 public:
   Storage();
   ~Storage();
 
-  bool saveBlock(bytes &block_raw, json &block_header, json &block_body);
+  bool saveBlock(bytes &block_raw, json &block_header, json &block_transaction);
   bool saveBlock(const std::string &block_raw_b64, json &block_header,
-                 json &block_body);
+                 json &block_transaction);
   std::pair<std::string, size_t> getLatestHashAndHeight();
   nth_block_link_type getNthBlockLinkInfo(size_t t_height = 0);
   std::vector<std::string> getNthTxIdList(size_t t_height = 0);
@@ -80,7 +75,7 @@ private:
   bool putBlockHeight(json &block_header_json, const std::string &block_id_b64);
   bool putBlockRaw(bytes &block_raw, const std::string &block_id_b64);
   bool putLatestBlockHeader(json &block_header_json);
-  bool putBlockBody(json &block_body_json, const std::string &block_id_b64);
+  bool putTransaction(json &block_body_json, const std::string &block_id_b64);
   std::string getValueByKey(DBType what,
                             const std::string &base_suffix_keys = "");
   std::string getPrefix(DBType what);
@@ -99,14 +94,14 @@ private:
   leveldb::DB *m_db_block_header;
   leveldb::DB *m_db_block_raw;
   leveldb::DB *m_db_latest_block_header;
-  leveldb::DB *m_db_block_body;
+  leveldb::DB *m_db_transaction;
   leveldb::DB *m_db_certificate;
   leveldb::DB *m_db_blockid_height;
 
   leveldb::WriteBatch m_batch_block_header;
   leveldb::WriteBatch m_batch_block_raw;
   leveldb::WriteBatch m_batch_latest_block_header;
-  leveldb::WriteBatch m_batch_block_body;
+  leveldb::WriteBatch m_batch_transaction;
   leveldb::WriteBatch m_batch_certificate;
   leveldb::WriteBatch m_batch_blockid_height;
 };
