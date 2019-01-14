@@ -24,14 +24,11 @@ void MessageFetcher::start() { fetch(); }
 void MessageFetcher::fetch() {
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
-    for (int i = 0; i < 5; i++) {
-      if (!m_input_queue->empty()) {
-        auto input_message = m_input_queue->fetch();
+    std::vector<InputMsgEntry> input_messages = m_input_queue->fetchBulk();
 
-        MessageProxy message_proxy;
-        message_proxy.deliverInputMessage(input_message);
-      }
-    }
+    MessageProxy message_proxy;
+    for (auto &msg : input_messages)
+      message_proxy.deliverInputMessage(msg);
   });
 
   m_timer->expires_from_now(

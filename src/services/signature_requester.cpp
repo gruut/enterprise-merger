@@ -16,8 +16,7 @@ void SignatureRequester::waitCollectDone() {
   if (!m_is_collect_timer_running)
     return;
 
-  auto &signature_pool = Application::app().getSignaturePool();
-  if (signature_pool.size() >= m_max_signers) {
+  if (Application::app().getSignaturePool().size() >= m_max_signers) {
     doCreateBlock();
   }
 
@@ -52,30 +51,32 @@ void SignatureRequester::requestSignatures() {
     }
   }
 
+  auto &transaction_pool = Application::app().getTransactionPool();
+
   if (!new_signers.empty()) {
     Transaction new_transaction = generateCertificateTransaction(new_signers);
-    Application::app().getTransactionPool().push(new_transaction);
+    transaction_pool.push(new_transaction);
   }
 
   m_max_signers = target_signers.size();
 
   // step 2 - fetching transactions and making partial block
 
-  auto &transaction_pool = Application::app().getTransactionPool();
   Transactions transactions = transaction_pool.fetchLastN(
       std::min(transaction_pool.size(), config::MAX_COLLECT_TRANSACTION_SIZE));
   transaction_pool.clear();
 
   m_merkle_tree.generate(transactions);
 
-  m_basic_block_info = generateBasicBlockInfo(
-      m_merkle_tree.getMerkleTree().back(), transactions);
+  m_basic_block_info = generateBasicBlockInfo();
+  m_basic_block_info.transaction_root = m_merkle_tree.getMerkleTree().back();
+  m_basic_block_info.transactions = std::move(transactions);
 
   // step 3 - setup SignaturePool
 
   Application::app().getSignaturePool().setupSigPool(
       m_basic_block_info.height, m_basic_block_info.time,
-      m_basic_block_info.transaction_root);
+      m_basic_block_info.transaction_root); // auto enable pool
 
   // step 4 - collect signatures
 
@@ -93,6 +94,8 @@ void SignatureRequester::doCreateBlock() {
   m_collect_timer->cancel();
   m_check_timer->cancel();
 
+  Application::app().getSignaturePool().disablePool(); // disable pool now!
+
   auto &io_service = Application::app().getIoService();
 
   io_service.post(m_block_gen_strand->wrap([this]() { // should work one-by-one
@@ -103,7 +106,8 @@ void SignatureRequester::doCreateBlock() {
 
       auto signatures_size =
           min(signature_pool.size(), config::MAX_SIGNATURE_COLLECT_SIZE);
-      auto signatures = signature_pool.fetchN(signatures_size);
+      auto signatures =
+          signature_pool.fetchN(signatures_size, m_basic_block_info.height);
       signature_pool.clear(); // last signatures are useless.
 
       BlockGenerator generator;
@@ -206,9 +210,7 @@ SignatureRequester::generateCertificateTransaction(vector<Signer> &signers) {
   return new_transaction;
 }
 
-BasicBlockInfo
-SignatureRequester::generateBasicBlockInfo(sha256 &merkle_root,
-                                           vector<Transaction> &transactions) {
+BasicBlockInfo SignatureRequester::generateBasicBlockInfo() {
 
   auto setting = Setting::getInstance();
 
@@ -225,9 +227,6 @@ SignatureRequester::generateBasicBlockInfo(sha256 &merkle_root,
     partial_block.height = 1; // this is genesis block
   else
     partial_block.height = latest_block_info.height + 1;
-
-  partial_block.transaction_root = merkle_root;
-  partial_block.transactions = transactions;
 
   return partial_block;
 }
