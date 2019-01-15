@@ -1,7 +1,6 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_MANAGE_CONNECTION_HPP
 #define GRUUT_ENTERPRISE_MERGER_MANAGE_CONNECTION_HPP
 
-
 #include "../../services/setting.hpp"
 #include "../../utils/template_singleton.hpp"
 #include "../../utils/type_converter.hpp"
@@ -17,82 +16,85 @@ class ConnManager : public TemplateSingleton<ConnManager> {
 public:
   ConnManager() = default;
 
-  void setMergerInfo(MergerInfo &merger_info, bool conn_status = false){
-	std::string merger_id_b64 = TypeConverter::encodeBase64(merger_info.id);
-	std::lock_guard<std::mutex> lock(m_merger_mutex);
-	m_merger_info[merger_id_b64] = merger_info;
-	m_merger_info[merger_id_b64].conn_status = conn_status;
-	m_merger_mutex.unlock();
+  void setMergerInfo(MergerInfo &merger_info, bool conn_status = false) {
+    std::string merger_id_b64 = TypeConverter::encodeBase64(merger_info.id);
+    std::lock_guard<std::mutex> lock(m_merger_mutex);
+    m_merger_info[merger_id_b64] = merger_info;
+    m_merger_info[merger_id_b64].conn_status = conn_status;
+    m_merger_mutex.unlock();
   }
 
-  void setSeInfo(ServiceEndpointInfo &se_info, bool conn_status = false){
-	std::string se_id_b64 = TypeConverter::encodeBase64(se_info.id);
-	std::lock_guard<std::mutex> lock(m_se_mutex);
-	m_se_info[se_id_b64] = se_info;
-	m_se_info[se_id_b64].conn_status = conn_status;
-	m_se_mutex.unlock();
+  void setSeInfo(ServiceEndpointInfo &se_info, bool conn_status = false) {
+    std::string se_id_b64 = TypeConverter::encodeBase64(se_info.id);
+    std::lock_guard<std::mutex> lock(m_se_mutex);
+    m_se_info[se_id_b64] = se_info;
+    m_se_info[se_id_b64].conn_status = conn_status;
+    m_se_mutex.unlock();
   }
 
   void setMergerStatus(merger_id_type &merger_id, bool status) {
-	if (!m_enabled_merger_check)
-	  return;
+    if (!m_enabled_merger_check)
+      return;
 
-	std::string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
-	std::lock_guard<std::mutex> lock(m_merger_mutex);
-	m_merger_info[merger_id_b64].conn_status = status;
-	m_merger_mutex.unlock();
+    std::string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
+    std::lock_guard<std::mutex> lock(m_merger_mutex);
+    m_merger_info[merger_id_b64].conn_status = status;
+    m_merger_mutex.unlock();
   }
 
   void setSeStatus(servend_id_type &se_id, bool status) {
-	if (!m_enabled_se_check)
-	  return;
+    if (!m_enabled_se_check)
+      return;
 
-	std::string se_id_b64 = TypeConverter::encodeBase64(se_id);
-	std::lock_guard<std::mutex> lock(m_se_mutex);
-	m_se_info[se_id_b64].conn_status = status;
-	m_se_mutex.unlock();
+    std::string se_id_b64 = TypeConverter::encodeBase64(se_id);
+    std::lock_guard<std::mutex> lock(m_se_mutex);
+    m_se_info[se_id_b64].conn_status = status;
+    m_se_mutex.unlock();
   }
 
-  MergerInfo getMergerInfo(merger_id_type &merger_id){
+  MergerInfo getMergerInfo(merger_id_type &merger_id) {
     string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
 
     return m_merger_info[merger_id_b64];
   }
 
-  ServiceEndpointInfo getSeInfo(servend_id_type &se_id){
+  ServiceEndpointInfo getSeInfo(servend_id_type &se_id) {
     string se_id_64 = TypeConverter::encodeBase64(se_id);
 
     return m_se_info[se_id_64];
   }
 
-  std::vector<MergerInfo> getAllMergerInfo(){
+  std::vector<MergerInfo> getAllMergerInfo() {
     std::vector<MergerInfo> merger_list;
-    std::transform(m_merger_info.begin(), m_merger_info.end(), back_inserter(merger_list),
-    	[] (std::pair<string, MergerInfo> const &p) { return p.second; });
+    std::transform(
+        m_merger_info.begin(), m_merger_info.end(), back_inserter(merger_list),
+        [](std::pair<string, MergerInfo> const &p) { return p.second; });
     return merger_list;
   }
 
-  std::vector<ServiceEndpointInfo> getAllSeInfo(){
+  std::vector<ServiceEndpointInfo> getAllSeInfo() {
     std::vector<ServiceEndpointInfo> se_list;
     std::transform(m_se_info.begin(), m_se_info.end(), back_inserter(se_list),
-    	[] (std::pair<string, ServiceEndpointInfo> const &p) { return p.second; });
+                   [](std::pair<string, ServiceEndpointInfo> const &p) {
+                     return p.second;
+                   });
     return se_list;
   }
 
   bool getMergerStatus(merger_id_type &merger_id) {
-	if (!m_enabled_merger_check)
-	  return true;
+    if (!m_enabled_merger_check)
+      return true;
 
-	std::string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
-	return m_merger_info[merger_id_b64].conn_status;
+    std::string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
+    return m_merger_info[merger_id_b64].conn_status;
   }
 
   bool getSeStatus(servend_id_type &se_id) {
-	if (!m_enabled_se_check)
-	  return true;
+    if (!m_enabled_se_check)
+      return true;
 
-	std::string se_id_b64 = TypeConverter::encodeBase64(se_id);
-	return m_se_info[se_id_b64].conn_status;
+    std::string se_id_b64 = TypeConverter::encodeBase64(se_id);
+    return m_se_info[se_id_b64].conn_status;
   }
 
   void disableMergerCheck() { m_enabled_merger_check = false; }
@@ -111,4 +113,4 @@ private:
 
 } // namespace gruut
 
-#endif //GRUUT_ENTERPRISE_MERGER_MANAGE_CONNECTION_HPP
+#endif // GRUUT_ENTERPRISE_MERGER_MANAGE_CONNECTION_HPP

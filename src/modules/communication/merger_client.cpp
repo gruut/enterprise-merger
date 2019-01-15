@@ -13,9 +13,7 @@ namespace gruut {
 
 MergerClient::MergerClient() {
   m_rpc_receiver_list = RpcReceiverList::getInstance();
-  m_connection_list = ConnectionList::getInstance();
-  m_setting = Setting::getInstance();
-  m_my_id = m_setting->getMyId();
+  m_conn_manager = ConnManager::getInstance();
 
   el::Loggers::getLogger("MCLN");
 }
@@ -33,13 +31,13 @@ void MergerClient::checkHttpConnection() {
   auto &io_service = Application::app().getIoService();
 
   io_service.post(m_http_check_strand->wrap([this]() {
-    auto se_list = m_setting->getServiceEndpointInfo();
+    auto se_list = m_conn_manager->getAllSeInfo();
 
     for (auto &se_info : se_list) {
       HttpClient http_client(se_info.address + ":" + se_info.port);
       bool status = http_client.checkServStatus();
 
-      m_connection_list->setSeStatus(se_info.id, status);
+      m_conn_manager->setSeStatus(se_info.id, status);
     }
   }));
 
@@ -61,11 +59,8 @@ void MergerClient::checkRpcConnection() {
   auto &io_service = Application::app().getIoService();
 
   io_service.post(m_rpc_check_strand->wrap([this]() {
-    auto merger_list = m_setting->getMergerInfo();
-
+    auto merger_list = m_conn_manager->getAllMergerInfo();
     for (auto &merger_info : merger_list) {
-      if (m_my_id == merger_info.id)
-        continue;
 
       HealthCheckRequest request;
       request.set_service("healthy_service");
@@ -80,7 +75,7 @@ void MergerClient::checkRpcConnection() {
           health::v1::Health::NewStub(channel);
 
       Status st = hc_stub->Check(&context, request, &response);
-      m_connection_list->setMergerStatus(merger_info.id, st.ok());
+      m_conn_manager->setMergerStatus(merger_info.id, st.ok());
     }
   }));
 
@@ -120,14 +115,12 @@ void MergerClient::sendMessage(MessageType msg_type,
 
 void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
                             OutputMsgEntry &output_msg) {
-  auto service_endpoints_list = m_setting->getServiceEndpointInfo();
-
   std::string send_msg = output_msg.body.dump();
 
   if (receiver_list.empty()) {
+    auto service_endpoints_list = m_conn_manager->getAllSeInfo();
     for (auto &service_endpoint : service_endpoints_list) {
-      bool status = m_connection_list->getSeStatus(service_endpoint.id);
-      if (status) {
+      if (service_endpoint.conn_status) {
         std::string address = service_endpoint.address + ":" +
                               service_endpoint.port + "/api/blocks";
         HttpClient http_client(address);
@@ -136,15 +129,14 @@ void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
     }
   } else {
     for (auto &receiver_id : receiver_list) {
-      for (auto &service_endpoint : service_endpoints_list) {
-        bool status = m_connection_list->getSeStatus(service_endpoint.id);
-        if (status && service_endpoint.id == receiver_id) {
-          std::string address = service_endpoint.address + ":" +
-                                service_endpoint.port + "/api/blocks";
-          HttpClient http_client(address);
-          http_client.post(send_msg);
-          break;
-        }
+      auto service_endpoint = m_conn_manager->getSeInfo(receiver_id);
+
+      if (service_endpoint.conn_status) {
+        std::string address = service_endpoint.address + ":" +
+                              service_endpoint.port + "/api/blocks";
+        HttpClient http_client(address);
+        http_client.post(send_msg);
+        break;
       }
     }
   }
@@ -161,22 +153,20 @@ void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
   bool sent_somewhere = false;
 
   if (receiver_list.empty()) {
-    for (auto &merger_info : m_setting->getMergerInfo()) {
-      bool status = m_connection_list->getMergerStatus(merger_info.id);
-      if (status && m_my_id != merger_info.id) {
+    auto merger_list = m_conn_manager->getAllMergerInfo();
+    for (auto &merger_info : merger_list) {
+      if (merger_info.conn_status) {
         sendMsgToMerger(merger_info, request);
         sent_somewhere = true;
       }
     }
   } else {
     for (auto &receiver_id : receiver_list) {
-      for (auto &merger_info : m_setting->getMergerInfo()) {
-        bool status = m_connection_list->getMergerStatus(merger_info.id);
-        if (status && merger_info.id == receiver_id) {
-          sendMsgToMerger(merger_info, request);
-          sent_somewhere = true;
-          break;
-        }
+      MergerInfo merger_info = m_conn_manager->getMergerInfo(receiver_id);
+      if (merger_info.conn_status) {
+        sendMsgToMerger(merger_info, request);
+        sent_somewhere = true;
+        break;
       }
     }
   }

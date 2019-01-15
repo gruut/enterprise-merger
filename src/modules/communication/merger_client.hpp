@@ -3,6 +3,7 @@
 
 #include "../../services/output_queue.hpp"
 #include "connection_list.hpp"
+#include "manage_connection.hpp"
 #include "protos/health.grpc.pb.h"
 #include "protos/protobuf_merger.grpc.pb.h"
 #include "protos/protobuf_se.grpc.pb.h"
@@ -34,9 +35,7 @@ public:
 
 private:
   RpcReceiverList *m_rpc_receiver_list;
-  ConnectionList *m_connection_list;
-  Setting *m_setting;
-  merger_id_type m_my_id;
+  ConnManager *m_conn_manager;
 
   std::unique_ptr<boost::asio::deadline_timer> m_rpc_check_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_rpc_check_strand;
