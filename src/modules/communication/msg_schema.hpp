@@ -19,13 +19,25 @@ const json SCHEMA_UP = R"({
     },
     "cID": {
        "type": "string"
+    },
+    "ip": {
+       "type": "string"
+    },
+    "port": {
+       "type": "string"
+    },
+    "mCert": {
+       "type": "string"
     }
   },
   "required": [
     "mID",
     "time",
     "ver",
-    "cID"
+    "cID",
+    "ip",
+    "port",
+    "mCert"
   ]
 })"_json;
 const json SCHEMA_PING = R"({
@@ -78,6 +90,26 @@ const json SCHEMA_REQ_BLOCK = R"({
     "mCert",
     "hgt",
     "mSig"
+  ]
+})"_json;
+const json SCHEMA_WELCOME = R"({
+  "title": "welcome",
+  "type": "object",
+  "properties": {
+    "mID": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    },
+    "val": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "mID",
+    "time",
+    "val"
   ]
 })"_json;
 const json SCHEMA_BLOCK = R"({

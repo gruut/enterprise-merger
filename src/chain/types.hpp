@@ -39,6 +39,8 @@ enum class MessageType : uint8_t {
   MSG_UP = 0x30,
   MSG_PING = 0x31,
   MSG_REQ_BLOCK = 0x32,
+  // TODO: MSG_WELCOME type 번호는 변경 될 수 있습니다.
+  MSG_WELCOME = 0x33,
   MSG_JOIN = 0x54,
   MSG_CHALLENGE = 0x55,
   MSG_RESPONSE_1 = 0x56,
