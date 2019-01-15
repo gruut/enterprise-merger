@@ -117,7 +117,7 @@ using string = std::string;
 using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
 using timestamp_type = uint64_t;
-using block_height_type = uint64_t;
+using block_height_type = size_t;
 
 constexpr auto TRANSACTION_ID_TYPE_SIZE = 32;
 using transaction_id_type = std::array<uint8_t, TRANSACTION_ID_TYPE_SIZE>;

@@ -263,7 +263,7 @@ public:
                  {"tx", txs}});
   }
 
-  size_t getHeight() { return m_height; }
+  block_height_type getHeight() { return m_height; }
 
   size_t getNumTransactions() { return m_transactions.size(); }
 
