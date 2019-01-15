@@ -61,10 +61,9 @@ private:
 
   std::once_flag m_end_sync_call_flag;
 
-  bool m_sync_alone{true};
-
-  bool m_sync_done{false};
-  bool m_sync_fail{false};
+  std::atomic<bool> m_sync_alone{true};
+  std::atomic<bool> m_sync_done{false};
+  std::atomic<bool> m_sync_fail{false};
 
 public:
   BlockSynchronizer();

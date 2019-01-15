@@ -383,6 +383,9 @@ void BlockSynchronizer::messageFetch() {
 
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
+    if (m_sync_done)
+      return;
+
     if (m_inputQueue->empty())
       return;
 

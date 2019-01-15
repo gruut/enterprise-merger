@@ -36,16 +36,16 @@
 namespace gruut {
 using namespace std;
 
-const map<DBType, std::string> DB_PREFIX = {
-    {DBType::BLOCK_HEADER, "b_"}, {DBType::BLOCK_HEIGHT, "h_"},
-    {DBType::BLOCK_RAW, "r_"},    {DBType::BLOCK_LATEST, "l_"},
-    {DBType::TRANSACTION, "t_"},   {DBType::CERTIFICATE, "c_"}};
+const std::map<DBType, std::string> DB_PREFIX = {
+    {DBType::BLOCK_HEADER, "B"}, {DBType::BLOCK_HEIGHT, "H"},
+    {DBType::BLOCK_RAW, "R"},    {DBType::BLOCK_LATEST, "L"},
+    {DBType::TRANSACTION, "T"},  {DBType::CERTIFICATE, "C"}};
 
-const vector<pair<string, string>> DB_BLOCK_HEADER_SUFFIX = {
-    {"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
-    {"time", "_time"}, {"hgt", "_hgt"},         {"SSig", "_SSig"},
-    {"mID", "_mID"},   {"prevbID", "_prevbID"}, {"prevH", "_prevH"},
-    {"txrt", "_txrt"}, {"txids", "_txids"}};
+const std::vector<std::pair<std::string, std::string>> DB_BLOCK_HEADER_SUFFIX =
+    {{"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
+     {"time", "_time"}, {"hgt", "_hgt"},         {"SSig", "_ssig"},
+     {"mID", "_mID"},   {"prevbID", "_prevbID"}, {"prevH", "_prevH"},
+     {"txrt", "_txrt"}, {"txids", "_txids"}};
 
 class Storage : public TemplateSingleton<Storage> {
 public:
