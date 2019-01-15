@@ -2,6 +2,7 @@
 #define GRUUT_ENTERPRISE_MERGER_TRANSACTION_POOL_HPP
 
 #include "../chain/transaction.hpp"
+#include "../config/config.hpp"
 #include "omp_hash_map.h"
 
 #include <algorithm>
