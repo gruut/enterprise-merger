@@ -7,6 +7,7 @@
 #include "../../services/setting.hpp"
 #include "../../utils/time.hpp"
 #include "../../utils/type_converter.hpp"
+#include "../communication/manage_connection.hpp"
 #include "../module.hpp"
 
 #include "boost/date_time/local_time/local_time.hpp"
@@ -65,6 +66,7 @@ private:
   std::unique_ptr<boost::asio::deadline_timer> m_lock_timer;
 
   MessageProxy m_msg_proxy;
+  ConnManager *m_conn_manager;
   Setting *m_setting;
 };
 
