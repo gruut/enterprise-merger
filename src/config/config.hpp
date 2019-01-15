@@ -62,6 +62,14 @@ const std::string GENESIS_BLOCK_PREV_HASH_B64 =
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 const std::string GENESIS_BLOCK_PREV_ID_B64 =
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+
+const std::string DB_SUB_DIR_HEADER = "block_header";
+const std::string DB_SUB_DIR_RAW = "block_raw";
+const std::string DB_SUB_DIR_CERT = "certificate";
+const std::string DB_SUB_DIR_LATEST = "latest_block_header";
+const std::string DB_SUB_DIR_TRANSACTION = "transaction";
+const std::string DB_SUB_DIR_IDHEIGHT = "blockid_height";
+
 } // namespace config
 } // namespace gruut
 #endif
