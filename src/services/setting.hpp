@@ -32,6 +32,7 @@ struct ServiceEndpointInfo {
   std::string address;
   std::string port;
   std::string cert;
+  bool conn_status;
 };
 
 struct MergerInfo {
@@ -39,6 +40,7 @@ struct MergerInfo {
   std::string address;
   std::string port;
   std::string cert;
+  bool conn_status;
 };
 
 const json SCHEMA_SETTING = R"(
