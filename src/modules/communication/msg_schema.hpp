@@ -379,6 +379,7 @@ const json SCHEMA_REQ_CHECK = R"({
 const std::map<MessageType, json> MSG_SCHEMA_MAP = {
     {MessageType::MSG_UP, SCHEMA_UP},
     {MessageType::MSG_PING, SCHEMA_PING},
+    {MessageType::MSG_WELCOME, SCHEMA_WELCOME},
     {MessageType::MSG_REQ_BLOCK, SCHEMA_REQ_BLOCK},
     {MessageType::MSG_BLOCK, SCHEMA_BLOCK},
     {MessageType::MSG_JOIN, SCHEMA_JOIN},

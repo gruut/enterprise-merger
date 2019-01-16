@@ -52,6 +52,10 @@ public:
     m_se_mutex.unlock();
   }
 
+  void setMergerBlockHgt(merger_id_type &merger_id, uint64_t block_height) {
+    m_init_block_hgt_list.push_back({block_height, merger_id});
+  }
+
   MergerInfo getMergerInfo(merger_id_type &merger_id) {
     string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
 
@@ -81,6 +85,20 @@ public:
     return se_list;
   }
 
+  std::vector<merger_id_type> getMaxBlockHgtMergers() {
+    std::vector<merger_id_type> merger_list;
+    auto max_height = std::max_element(m_init_block_hgt_list.begin(),
+                                       m_init_block_hgt_list.end());
+
+    for (auto &info : m_init_block_hgt_list) {
+      if (info.first == max_height->first) {
+        merger_list.emplace_back(info.second);
+      }
+    }
+
+    return merger_list;
+  }
+
   bool getMergerStatus(merger_id_type &merger_id) {
     if (!m_enabled_merger_check)
       return true;
@@ -101,9 +119,12 @@ public:
 
   void disableSECheck() { m_enabled_se_check = false; }
 
+  void clearBlockHgtList() { m_init_block_hgt_list.clear(); }
+
 private:
   std::map<string, MergerInfo> m_merger_info;
   std::map<string, ServiceEndpointInfo> m_se_info;
+  std::vector<pair<uint64_t, merger_id_type>> m_init_block_hgt_list;
   std::mutex m_merger_mutex;
   std::mutex m_se_mutex;
 
