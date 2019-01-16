@@ -29,6 +29,7 @@ public:
                    std::vector<std::string> &packed_msg_list,
                    OutputMsgEntry &output_msg);
 
+  void accessToTracker();
   void checkRpcConnection();
   void checkHttpConnection();
   void setup();

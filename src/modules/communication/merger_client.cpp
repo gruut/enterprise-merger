@@ -18,6 +18,50 @@ MergerClient::MergerClient() {
   el::Loggers::getLogger("MCLN");
 }
 
+void MergerClient::accessToTracker() {
+  auto setting = Setting::getInstance();
+  json request_msg;
+  request_msg["mID"] = TypeConverter::encodeBase64(setting->getMyId());
+  request_msg["ip"] = setting->getMyAddress();
+  request_msg["port"] = setting->getMyPort();
+  request_msg["mCert"] = setting->getMyCert();
+
+  // ToDO: 현재 local주소, setting에 tracker 정보 세팅 필요.
+  CLOG(INFO, "MCLN") << "Access to tracker";
+  json response_msg;
+  HttpClient http_client("127.0.0.1:80/src/JoinMerger.php");
+  CURLcode status = http_client.postAndGetReply(request_msg.dump(), response_msg);
+
+  if(status != CURLE_OK) {
+	CLOG(ERROR, "MCLN") << "Could not get Merger info from Tracker";
+    return;
+  }
+
+  if (response_msg.find("merger") != response_msg.end() &&
+      response_msg.find("se") != response_msg.end()) {
+    for (auto &merger : response_msg["merger"]) {
+      MergerInfo merger_info;
+      string m_id_b64 = Safe::getString(merger, "mID");
+      merger_info.id = TypeConverter::decodeBase64(m_id_b64);
+      merger_info.address = Safe::getString(merger, "ip");
+      merger_info.port = Safe::getString(merger, "port");
+      merger_info.cert = Safe::getString(merger, "mCert");
+
+      m_conn_manager->setMergerInfo(merger_info);
+    }
+    for (auto &se : response_msg["se"]) {
+      ServiceEndpointInfo se_info;
+      string se_id_b64 = Safe::getString(se, "seID");
+      se_info.id = TypeConverter::decodeBase64(se_id_b64);
+      se_info.address = Safe::getString(se, "ip");
+      se_info.port = Safe::getString(se, "port");
+      se_info.cert = Safe::getString(se, "seCert");
+
+      m_conn_manager->setSeInfo(se_info);
+    }
+  }
+}
+
 void MergerClient::setup() {
   auto &io_service = Application::app().getIoService();
   m_rpc_check_strand.reset(new boost::asio::io_service::strand(io_service));
