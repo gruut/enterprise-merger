@@ -30,10 +30,11 @@ void MergerClient::accessToTracker() {
   CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";
   json response_msg;
   HttpClient http_client("127.0.0.1:80/src/JoinMerger.php");
-  CURLcode status = http_client.postAndGetReply(request_msg.dump(), response_msg);
+  CURLcode status =
+      http_client.postAndGetReply(request_msg.dump(), response_msg);
 
-  if(status != CURLE_OK) {
-	CLOG(ERROR, "MCLN") << "Could not get Merger infomations from Tracker";
+  if (status != CURLE_OK) {
+    CLOG(ERROR, "MCLN") << "Could not get Merger infomations from Tracker";
     return;
   }
 
@@ -47,6 +48,9 @@ void MergerClient::accessToTracker() {
       merger_info.port = Safe::getString(merger, "port");
       merger_info.cert = Safe::getString(merger, "mCert");
 
+      auto block_height = Safe::getInt(merger, "hgt");
+
+      m_conn_manager->setMergerBlockHgt(merger_info.id, block_height);
       m_conn_manager->setMergerInfo(merger_info);
     }
     for (auto &se : response_msg["se"]) {
@@ -155,6 +159,18 @@ void MergerClient::sendMessage(MessageType msg_type,
   if (checkSEMsgType(msg_type)) {
     sendToSE(receiver_list, output_msg);
   }
+
+  if (checkTrackerMsgType(msg_type)) {
+    sendToTracker(output_msg);
+  }
+}
+
+void MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
+  std::string send_msg = output_msg.body.dump();
+  // TODO : setting에서 tracker 정보 받아 올 수 있도록 수정 필요.
+  std::string address = "127.0.0.1:80/block_height";
+  HttpClient http_client(address);
+  http_client.post(send_msg);
 }
 
 void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
@@ -279,5 +295,9 @@ bool MergerClient::checkSEMsgType(MessageType msg_type) {
           msg_type == MessageType::MSG_HEADER ||
           msg_type == MessageType::MSG_RES_CHECK ||
           msg_type == MessageType::MSG_ERROR);
+}
+
+bool MergerClient::checkTrackerMsgType(gruut::MessageType msg_type) {
+  return (msg_type == MessageType::MSG_BLOCK_HGT);
 }
 }; // namespace gruut
