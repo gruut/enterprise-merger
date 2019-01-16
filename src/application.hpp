@@ -15,7 +15,7 @@
 #include "chain/signature.hpp"
 #include "chain/transaction.hpp"
 
-#include "services/block_processor.hpp"
+#include "modules/block_processor/block_processor.hpp"
 #include "services/setting.hpp"
 #include "services/signature_pool.hpp"
 #include "services/signer_pool_manager.hpp"

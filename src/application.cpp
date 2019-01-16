@@ -107,6 +107,7 @@ void Application::setup() {
   registerModule(m_bootstraper, 1, true);
   registerModule(m_message_fetcher, 2);
   registerModule(m_bp_scheduler, 2);
+  registerModule(m_block_processor, 2);
 
   // setp 3 - link services
 
