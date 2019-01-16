@@ -27,7 +27,7 @@ void Bootstrapper::sendMsgUp() {
   output_msg.body["time"] = Time::now();
   output_msg.body["ver"] = to_string(1);
   output_msg.body["cID"] = TypeConverter::encodeBase64(m_my_localchain_id);
-  output_msg.body["ip"] = setting->getMyId();
+  output_msg.body["ip"] = setting->getMyAddress();
   output_msg.body["port"] = setting->getMyPort();
   output_msg.body["mCert"] = setting->getMyCert();
 
