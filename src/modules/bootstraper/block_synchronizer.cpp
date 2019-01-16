@@ -134,7 +134,6 @@ bool BlockSynchronizer::sendBlockRequest(size_t height) {
         TypeConverter::decodeBase64(ans_merger_id_b64);
     receivers.emplace_back(ans_merger_id);
   }
-
   OutputMsgEntry msg_req_block;
 
   msg_req_block.type = MessageType::MSG_REQ_BLOCK;
@@ -145,10 +144,25 @@ bool BlockSynchronizer::sendBlockRequest(size_t height) {
   msg_req_block.body["mSig"] = "";
   msg_req_block.receivers = receivers;
 
+  auto conn_manager = ConnManager::getInstance();
+  auto max_hgt_merger_list = conn_manager->getMaxBlockHgtMergers();
+
+  // TODO : MAX BLOCK HEIGHT 를 가진 Merger들과 연결 될 수 있을때, loop를 빠져
+  // 나간다. 사용자로 부터 입력을 받아 처리 할 수 도 있도록 수정 될 수 있음.
+  bool conn_check = false;
+  while (!conn_check) {
+    for (auto &merger_id : max_hgt_merger_list) {
+      conn_check |= conn_manager->getMergerStatus(merger_id);
+    }
+    // TODO: 500ms 임시값.
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  }
+
   CLOG(INFO, "BSYN") << "send MSG_REQ_BLOCK (" << height << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_req_block);
 
+  conn_manager->clearBlockHgtList();
   updateTaskTime();
 
   return true;

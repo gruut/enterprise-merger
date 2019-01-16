@@ -65,9 +65,16 @@ public:
     msg_block_msg.body["tx"] = block_body["tx"];
     msg_block_msg.receivers = std::vector<id_type>{};
 
+    OutputMsgEntry msg_block_hgt;
+    msg_block_hgt.type = MessageType::MSG_BLOCK_HGT; // MSG_BLOCK_HGT = 0xB6
+    msg_block_hgt.body["mID"] = msg_block_msg.body["mID"];
+    msg_block_hgt.body["time"] = Time::now();
+    msg_block_hgt.body["hgt"] = to_string(new_block.getHeight());
+
     MessageProxy proxy;
     proxy.deliverOutputMessage(msg_header_msg);
     proxy.deliverOutputMessage(msg_block_msg);
+    proxy.deliverOutputMessage(msg_block_hgt);
   }
 };
 } // namespace gruut
