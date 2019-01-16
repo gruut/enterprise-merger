@@ -36,6 +36,7 @@ private:
   std::string m_last_block_id_b64;
   std::string m_last_hash_b64;
   block_height_type m_last_height;
+  timestamp_type m_last_time;
 
 public:
   UnresolvedBlockPool(){
@@ -43,25 +44,30 @@ public:
   };
 
   UnresolvedBlockPool(std::string &last_block_id_b64, std::string &last_hash_b64,
-                      block_height_type last_height) {
-    setPool(last_block_id_b64,last_hash_b64,last_height);
+                      block_height_type last_height, timestamp_type last_time) {
+    setPool(last_block_id_b64,last_hash_b64,last_height, last_time);
     el::Loggers::getLogger("URBK");
   }
 
   void setPool(std::string &last_block_id_b64, std::string &last_hash_b64,
-               block_height_type last_height) {
+               block_height_type last_height, timestamp_type last_time) {
     m_last_block_id_b64 = last_block_id_b64;
     m_last_hash_b64 = last_hash_b64;
     m_last_height = last_height;
+    m_last_time = last_time;
   }
 
-  bool push(Block &block) {
+  bool push(Block &block) { // we assume this block has valid signatures at least
 
     block_height_type block_height = block.getHeight();
 
     std::lock_guard<std::mutex> guard(m_push_mutex);
 
-    if(m_last_height <= block_height) {
+    if((Time::now_int() - m_last_time) < (block.getHeight() - m_last_height - 1) * config::BP_INTERVAL) {
+      return false;
+    }
+
+    if(m_last_height >= block_height) {
       return false;
     }
 
@@ -158,6 +164,17 @@ public:
     return unresolved_lowest_height + m_last_height;
   }
 
+  nth_block_link_type getMostPossibleLink(){
+    nth_block_link_type ret_link;
+    ret_link.height = m_last_height;
+    ret_link.id_b64 = m_last_block_id_b64;
+    ret_link.hash_b64 = m_last_hash_b64;
+
+    // TODO : find most possible link
+
+    return ret_link;
+  }
+
 private:
 
   void resolveBlocksStepByStep(std::vector<Block> &resolved_blocks){
@@ -203,7 +220,7 @@ private:
             if(each_block.block.getPrevBlockIdB64() == m_last_block_id_b64 && each_block.block.getPrevHashB64() == m_last_hash_b64) {
               each_block.prev_queue_idx = 0;
             } else {
-              each_block.prev_queue_idx = -1; // this block is unlinkable
+              each_block.prev_queue_idx = -1; // this block is unlinkable => to be deleted
             }
           }
 

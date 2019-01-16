@@ -11,7 +11,7 @@ BlockProcessor::BlockProcessor() {
 
   auto last_block_info = m_storage->getNthBlockLinkInfo();
 
-  m_unresolved_block_pool.setPool(last_block_info.id_b64,last_block_info.hash_b64,last_block_info.height);
+  m_unresolved_block_pool.setPool(last_block_info.id_b64,last_block_info.hash_b64,last_block_info.height, last_block_info.time);
 
   m_timer.reset(new boost::asio::deadline_timer(Application::app().getIoService()));
   el::Loggers::getLogger("BPRO");
@@ -67,6 +67,10 @@ void BlockProcessor::periodicTask(){
       // throw;
     }
   });
+}
+
+nth_block_link_type BlockProcessor::getMostPossibleLink(){
+  return m_unresolved_block_pool.getMostPossibleLink();
 }
 
 bool BlockProcessor::handleMessage(InputMsgEntry &entry) {

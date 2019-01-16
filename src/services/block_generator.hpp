@@ -15,6 +15,8 @@
 #include "message_proxy.hpp"
 #include "signature_requester.hpp"
 
+#include "easy_logging.hpp"
+
 #include <vector>
 
 using namespace std;
@@ -33,7 +35,7 @@ public:
     Block new_block;
     new_block.initialize(basic_info, merkle_tree.getMerkleTree());
     new_block.setSupportSignatures(support_sigs);
-    new_block.linkPreviousBlock();
+    new_block.linkPreviousBlock(basic_info.prev_id_b64, basic_info.prev_hash_b64);
     new_block.finalize();
 
     json block_header = new_block.getBlockHeaderJson();

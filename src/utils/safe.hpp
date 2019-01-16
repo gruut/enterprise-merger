@@ -76,27 +76,24 @@ public:
     return static_cast<uint64_t>(stoll(size_str));
   }
 
-  static uint64_t getInt(nlohmann::json &&json_obj, const std::string &key) {
-    return getInt(json_obj, key);
-  }
-
-  static uint64_t getInt(nlohmann::json &json_obj, const std::string &key) {
+  template <typename T=nlohmann::json, typename K=std::string>
+  static uint64_t getInt(T&& json_obj, K&& key) {
     std::string dec_str = getString(json_obj, key);
     if (dec_str.empty())
       return 0;
     return static_cast<uint64_t>(stoll(dec_str));
   }
 
-  static gruut::timestamp_type getTime(nlohmann::json &&json_obj,
-                                       const std::string &key) {
-    return getTime(json_obj, key);
+  template <typename T=nlohmann::json, typename K=std::string>
+  static gruut::timestamp_type getTime(T&& json_obj, K&& key) {
+    return getTime(getString(json_obj, key));
   }
 
-  static gruut::timestamp_type getTime(nlohmann::json &json_obj,
-                                       const std::string &key) {
-    std::string dec_str = getString(json_obj, key);
-    if (dec_str.empty())
+  template <typename T=std::string>
+  static gruut::timestamp_type getTime(T&& dec_str) {
+    if(dec_str.empty()) {
       return 0;
+    }
     return static_cast<gruut::timestamp_type>(stoll(dec_str));
   }
 

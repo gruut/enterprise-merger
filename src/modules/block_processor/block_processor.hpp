@@ -39,15 +39,16 @@ private:
 
 public:
   BlockProcessor();
-  ~BlockProcessor() {}
+  ~BlockProcessor() = default;
 
   void start() override;
 
   bool handleMessage(InputMsgEntry &entry);
 
-  void periodicTask();
+  nth_block_link_type getMostPossibleLink();
 
 private:
+  void periodicTask();
   bool handleMsgReqBlock(InputMsgEntry &entry);
   bool handleMsgBlock(InputMsgEntry &entry);
   bool handleMsgReqCheck(InputMsgEntry &entry);
