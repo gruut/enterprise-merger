@@ -27,13 +27,13 @@ void MergerClient::accessToTracker() {
   request_msg["mCert"] = setting->getMyCert();
 
   // ToDO: 현재 local주소, setting에 tracker 정보 세팅 필요.
-  CLOG(INFO, "MCLN") << "Access to tracker";
+  CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";
   json response_msg;
   HttpClient http_client("127.0.0.1:80/src/JoinMerger.php");
   CURLcode status = http_client.postAndGetReply(request_msg.dump(), response_msg);
 
   if(status != CURLE_OK) {
-	CLOG(ERROR, "MCLN") << "Could not get Merger info from Tracker";
+	CLOG(ERROR, "MCLN") << "Could not get Merger infomations from Tracker";
     return;
   }
 

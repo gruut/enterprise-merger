@@ -13,6 +13,8 @@ Communication::Communication() {
 };
 
 void Communication::start() {
+  //TODO : Tracker에 접속하지 못하였을때 처리 필요.
+  m_merger_client.accessToTracker();
   m_merger_client.checkRpcConnection();
   m_merger_client.checkHttpConnection();
 
