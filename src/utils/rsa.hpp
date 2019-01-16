@@ -1,5 +1,5 @@
-#ifndef GRUUT_ENTERPRISE_MERGER_SIGMANAGER_HPP
-#define GRUUT_ENTERPRISE_MERGER_SIGMANAGER_HPP
+#ifndef GRUUT_ENTERPRISE_MERGER_RSA_HPP
+#define GRUUT_ENTERPRISE_MERGER_RSA_HPP
 
 #include <botan-2/botan/auto_rng.h>
 #include <botan-2/botan/data_src.h>
@@ -121,4 +121,4 @@ private:
   }
 };
 
-#endif // GRUUT_ENTERPRISE_MERGER_SIGMANAGER_HPP
+#endif

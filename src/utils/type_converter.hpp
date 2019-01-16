@@ -90,8 +90,18 @@ public:
   inline static std::vector<uint8_t>
   arrayToVector(std::array<uint8_t, S> &arr) {
     vector<uint8_t> vec(arr.begin(), arr.end());
-
     return vec;
+  }
+
+  template <size_t S>
+  inline static std::string arrayToString(std::array<uint8_t, S> &&arr) {
+    return arrayToString(arr);
+  }
+
+  template <size_t S>
+  inline static std::string arrayToString(std::array<uint8_t, S> &arr) {
+    std::string str(arr.begin(), arr.end());
+    return str;
   }
 
   inline static std::vector<uint8_t> stringToBytes(const std::string &input) {
@@ -139,8 +149,15 @@ public:
     return to_string(num);
   }
 
-  template <typename T> inline static std::string toBase64Str(T &&t) {
-    return Botan::base64_encode(vector<uint8_t>(begin(t), end(t)));
+  template <typename T> inline static std::string encodeBase64(T &&t) {
+    try {
+      std::string ret_str =
+          Botan::base64_encode(vector<uint8_t>(begin(t), end(t)));
+      return ret_str;
+    } catch (Botan::Exception &e) {
+      std::cout << e.what() << std::endl;
+    }
+    return std::string("");
   }
 
   template <typename T>

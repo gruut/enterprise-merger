@@ -1,6 +1,8 @@
 #include "bp_scheduler.hpp"
 #include "../../application.hpp"
 
+#include "easy_logging.hpp"
+
 namespace gruut {
 
 BpScheduler::BpScheduler() {
@@ -9,12 +11,14 @@ BpScheduler::BpScheduler() {
   m_my_mid = m_setting->getMyId();
   m_my_cid = m_setting->getLocalChainId();
 
-  m_my_mid_b64 = TypeConverter::toBase64Str(m_my_mid);
-  m_my_cid_b64 = TypeConverter::toBase64Str(m_my_cid);
+  m_my_mid_b64 = TypeConverter::encodeBase64(m_my_mid);
+  m_my_cid_b64 = TypeConverter::encodeBase64(m_my_cid);
 
   auto &io_service = Application::app().getIoService();
   m_timer.reset(new boost::asio::deadline_timer(io_service));
   m_lock_timer.reset(new boost::asio::deadline_timer(io_service));
+
+  el::Loggers::getLogger("BPSC");
 }
 
 void BpScheduler::start() {
@@ -55,65 +59,108 @@ void BpScheduler::reschedule() {
 
   BpRecvStatusInfo my_bp_status;
   for (BpRecvStatusInfo &item : m_recv_status) {
-    if (m_my_mid_b64 == get<0>(item)) {
+    if (m_my_mid_b64 == std::get<0>(item)) {
       my_bp_status = item;
       break;
     }
   }
 
   size_t current_time_slot = Time::now_int() / BP_INTERVAL;
-  BpStatus my_prev_status = get<2>(my_bp_status);
+  BpStatus my_prev_status = std::get<2>(my_bp_status);
 
-  if (my_prev_status == BpStatus::SECONDARY) {
-    m_current_status = BpStatus::PRIMARY;
-  } else if (my_prev_status == BpStatus::IN_BOOT_WAIT) {
+  if (my_prev_status == BpStatus::IN_BOOT_WAIT) {
     m_current_status = BpStatus::IDLE;
-  } else {
-    size_t my_pos = 0;
-    std::vector<BpRecvStatusInfo> possible_bp_list;
-    for (BpRecvStatusInfo &item : m_recv_status) {
-      size_t time_slot = get<1>(item);
-      BpStatus status = get<2>(item);
-      if (time_slot == current_time_slot &&
-          (status == BpStatus::IDLE || status == BpStatus::PRIMARY ||
-           status == BpStatus::SECONDARY))
-        possible_bp_list.emplace_back(item);
+    return;
+  }
 
-      if (m_my_mid_b64 == get<0>(item)) {
-        my_pos = possible_bp_list.size() - 1;
-      }
+  size_t my_pos = 0;
+  std::vector<std::tuple<std::string, BpStatus, BpStatus>> possible_merger_list;
+  bool is_all_idle = true;
+  for (BpRecvStatusInfo &item : m_recv_status) {
+    size_t time_slot = std::get<1>(item);
+    BpStatus status = std::get<2>(item);
+    if (time_slot == current_time_slot &&
+        (status == BpStatus::IDLE || status == BpStatus::PRIMARY ||
+         status == BpStatus::SECONDARY))
+      possible_merger_list.emplace_back(
+          std::make_tuple(std::get<0>(item), status, BpStatus::UNKNOWN));
+
+    if (status != BpStatus::IDLE) {
+      is_all_idle = false;
     }
 
-    size_t list_size = possible_bp_list.size();
+    if (m_my_mid_b64 == std::get<0>(item)) {
+      my_pos = possible_merger_list.size() - 1;
+    }
+  }
 
-    if (my_prev_status == BpStatus::PRIMARY) {
-      if (list_size > 2)
-        m_current_status = BpStatus::IDLE;
-      else if (list_size == 2) {
-        size_t others_pos = (my_pos + 1) % 2;
-        BpStatus others_status = get<2>(possible_bp_list[others_pos]);
-        if (others_status == BpStatus::IDLE)
-          m_current_status = BpStatus::PRIMARY;
-        else
-          m_current_status = BpStatus::SECONDARY;
-      } else
-        m_current_status = BpStatus::PRIMARY;
-    } else {
-      if (list_size == 0) {
-        /* do nothing */
-      } else if (list_size == 1) {
-        m_current_status = BpStatus::PRIMARY;
-      } else {
-        size_t prev_pos = (list_size + my_pos - 1) % list_size;
-        BpStatus others_status = get<2>(possible_bp_list[prev_pos]);
-        if (others_status == BpStatus::SECONDARY ||
-            others_status == BpStatus::PRIMARY)
-          m_current_status = BpStatus::SECONDARY;
-        else
-          m_current_status = BpStatus::IDLE;
+  size_t num_possible_mergers = possible_merger_list.size();
+
+  if (num_possible_mergers ==
+      0) { // in this case, we cannot determine current status
+    return;
+  }
+
+  if (num_possible_mergers == 1) { // I am the only merger
+    m_current_status = BpStatus::PRIMARY;
+    return;
+  }
+
+  if (is_all_idle) { // All mergers were IDLE
+
+    if (my_pos == 0)
+      m_current_status = BpStatus::PRIMARY;
+    else if (my_pos == 1)
+      m_current_status = BpStatus::SECONDARY;
+    else
+      m_current_status = BpStatus::IDLE;
+
+    return;
+  }
+
+  // step 1) find PRIMARY
+
+  size_t primary_pos = 0;
+
+  bool found_primary = false;
+
+  for (size_t i = 0; i < num_possible_mergers; ++i) {
+    if (std::get<1>(possible_merger_list[i]) == BpStatus::SECONDARY) {
+      found_primary = true;
+      std::get<2>(possible_merger_list[i]) = BpStatus::PRIMARY;
+      primary_pos = i;
+      break;
+    }
+  }
+
+  if (!found_primary) { // no secondary, in this case, primary becomes primary
+                        // again
+    for (size_t i = 0; i < num_possible_mergers; ++i) {
+      if (std::get<1>(possible_merger_list[i]) == BpStatus::PRIMARY) {
+        std::get<2>(possible_merger_list[i]) = BpStatus::PRIMARY;
+        primary_pos = i;
+        break;
       }
     }
   }
+
+  // step 2) find SECONDARY
+
+  size_t secondary_pos = (primary_pos + 1) % num_possible_mergers;
+  std::get<2>(possible_merger_list[secondary_pos]) = BpStatus::SECONDARY;
+
+  // step 3) all others will be IDLE
+
+  for (auto &possible_bp : possible_merger_list) {
+    if (std::get<2>(possible_bp) == BpStatus::PRIMARY ||
+        std::get<2>(possible_bp) == BpStatus::SECONDARY) {
+      continue;
+    }
+    std::get<2>(possible_bp) = BpStatus::IDLE;
+  }
+
+  // setp 4) update my status
+  m_current_status = std::get<2>(possible_merger_list[my_pos]);
 }
 
 void BpScheduler::lockStatusloop() {
@@ -128,16 +175,18 @@ void BpScheduler::lockStatusloop() {
   boost::posix_time::ptime lock_time =
       boost::posix_time::from_time_t(next_lock_time);
 
-  cout << "BPS: lockStatus(" << next_lock_time << ")" << endl << flush;
+  // CLOG(INFO, "BPSC") << "called lockStatus (time=" << next_lock_time << ")";
 
   m_lock_timer->expires_at(lock_time);
   m_lock_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
+      CLOG(INFO, "BPSC") << "LockTimer ABORTED";
     } else if (ec.value() == 0) {
       postLockJob();
       lockStatusloop();
     } else {
-      throw;
+      CLOG(ERROR, "BPSC") << ec.message();
+      // throw;
     }
   });
 }
@@ -162,11 +211,13 @@ void BpScheduler::sendPingloop() {
   m_timer->expires_at(ping_time);
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
+      CLOG(INFO, "BPSC") << "PingTimer ABORTED";
     } else if (ec.value() == 0) {
       postSendPingJob();
       sendPingloop();
     } else {
-      throw;
+      CLOG(ERROR, "BPSC") << ec.message();
+      // throw;
     }
   });
 }
@@ -178,9 +229,9 @@ void BpScheduler::postSendPingJob() {
     timestamp_type current_time = Time::now_int();
     size_t current_slot = current_time / config::BP_INTERVAL;
 
-    auto &signer_pool = Application::app().getSignerPool();
+    auto signer_pool = SignerPool::getInstance();
 
-    size_t num_signers = signer_pool.size();
+    size_t num_signers = signer_pool->getNumSignerBy();
     if (m_current_status != BpStatus::IN_BOOT_WAIT &&
         num_signers < config::MIN_SIGNATURE_COLLECT_SIZE) {
       m_current_status = BpStatus::ERROR_ON_SIGNERS;
@@ -192,8 +243,9 @@ void BpScheduler::postSendPingJob() {
           BpStatus::IDLE; // It was IDLE, even I said ERROR_ON_SIGNERS.
     }
 
-    cout << "BPS: sendPing(" << m_my_mid_b64 << "," << num_signers << ","
-         << statusToString(m_current_status) << ")" << endl;
+    CLOG(INFO, "BPSC") << "Send MSG_PING (" << m_my_mid_b64 << ","
+                       << num_signers << "," << statusToString(m_current_status)
+                       << ")";
 
     OutputMsgEntry output_msg;
     output_msg.type = MessageType::MSG_PING;
@@ -240,9 +292,8 @@ void BpScheduler::updateRecvStatus(const std::string &id_b64, size_t timeslot,
 
 void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
-  std::string merger_id_b64 = msg.body["mID"].get<std::string>();
-  timestamp_type merger_time =
-      (timestamp_type)std::stoll(msg.body["time"].get<std::string>());
+  std::string merger_id_b64 = Safe::getString(msg.body, "mID");
+  timestamp_type merger_time = Safe::getTime(msg.body, "time");
   size_t timeslot = merger_time / config::BP_INTERVAL;
 
   if (abs((int64_t)merger_time - (int64_t)Time::now_int()) >
@@ -253,10 +304,9 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
   switch (msg.type) {
   case MessageType::MSG_PING: {
 
-    std::string num_signers_str = msg.body["sCnt"].get<std::string>();
-    auto num_singers = static_cast<size_t>(std::stoll(num_signers_str));
+    auto num_singers = Safe::getInt(msg.body, "sCnt");
 
-    BpStatus status = stringToStatus(msg.body["stat"].get<std::string>());
+    BpStatus status = stringToStatus(Safe::getString(msg.body, "stat"));
     if (num_singers < config::MIN_SIGNATURE_COLLECT_SIZE)
       status = BpStatus::ERROR_ON_SIGNERS;
     updateRecvStatus(merger_id_b64, timeslot, status);
@@ -264,7 +314,7 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
   } break;
   case MessageType::MSG_UP: {
     // std::string ver = msg.body["ver"].get<std::string>();
-    if (msg.body["cID"].get<std::string>() != m_my_cid_b64) {
+    if (Safe::getString(msg.body, "cID") != m_my_cid_b64) {
       break;
     }
     updateRecvStatus(merger_id_b64, timeslot, BpStatus::IN_BOOT_WAIT);

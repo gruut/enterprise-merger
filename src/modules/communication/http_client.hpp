@@ -4,15 +4,18 @@
 #include <memory>
 #include <string>
 
-#include "../../../include/curlpp.hpp"
+#include "curlpp.hpp"
+#include "easy_logging.hpp"
 
 namespace gruut {
 class HttpClient {
 public:
-  HttpClient() = delete;
+  HttpClient() { el::Loggers::getLogger("HTTP"); }
   HttpClient(const std::string &m_address);
 
   CURLcode post(const std::string &packed_msg);
+
+  bool checkServStatus();
 
 private:
   std::string getPostField(const std::string &key, const std::string &value);

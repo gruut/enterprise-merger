@@ -2,7 +2,7 @@
 #define GRUUT_ENTERPRISE_MERGER_FIXTURE_HPP
 
 #include "../../src/chain/types.hpp"
-#include "../../src/services/signer_pool.hpp"
+//#include "../../src/services/signer_pool.hpp"
 #include "block_json.hpp"
 using namespace gruut;
 
@@ -16,12 +16,14 @@ struct SignerPoolFixture {
   }
 
   void push() {
+    /*
     signer_pool.pushSigner(id, test_cert, secret_key_vector, SignerStatus::GOOD);
     ++id_int;
     id = TypeConverter::integerToBytes(id_int);
+    */
   }
 
-  SignerPool signer_pool;
+  //SignerPool signer_pool;
 
   signer_id_type id;
   uint64_t id_int;
@@ -34,14 +36,36 @@ public:
   Storage *m_storage;
   bool m_save_status1;
   bool m_save_status2;
+  std::vector<sha256> m_mtree_nodes_1;
+  std::vector<sha256> m_mtree_nodes_2;
+  sha256 m_mtree_root_1;
+  sha256 m_mtree_root_2;
   StorageFixture() {
+    std::vector<sha256> mtree_digests_1;
+    std::vector<sha256> mtree_digests_2;
+
+    for(auto &tx_digest : block_body_sample1["mtree"]){
+      mtree_digests_1.emplace_back(TypeConverter::decodeBase64(tx_digest.get<std::string>()));
+    }
+
+    for(auto &tx_digest : block_body_sample2["mtree"]){
+      mtree_digests_2.emplace_back(TypeConverter::decodeBase64(tx_digest.get<std::string>()));
+    }
+
+    MerkleTree merkle_tree_1(mtree_digests_1);
+    MerkleTree merkle_tree_2(mtree_digests_2);
+    m_mtree_root_1 = merkle_tree_1.getMerkleTree().back();
+    m_mtree_root_2 = merkle_tree_2.getMerkleTree().back();
+
     m_storage = Storage::getInstance();
-    m_save_status1 = m_storage->saveBlock(block_raw_sample1, block_header_sample1, block_body_sample1);
-    m_save_status2 = m_storage->saveBlock(block_raw_sample2, block_header_sample2, block_body_sample2);
+    m_save_status1 = m_storage->saveBlock(block_raw_sample1_b64, block_header_sample1, block_body_sample1);
+    m_save_status2 = m_storage->saveBlock(block_raw_sample2_b64, block_header_sample2, block_body_sample2);
+    /*
     if(m_save_status1&&m_save_status2)
       cout<<"DB 저장 성공"<<endl;
     else
       cout<<"DB 저장 실패"<<endl;
+    */
   }
   ~StorageFixture(){
     m_storage->deleteAllDirectory();

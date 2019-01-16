@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_OUT_MESSAGE_FETCHER_HPP
+#define GRUUT_ENTERPRISE_MERGER_OUT_MESSAGE_FETCHER_HPP
 
 #include "../../services/output_queue.hpp"
 #include "../module.hpp"
@@ -19,3 +20,5 @@ private:
 };
 
 } // namespace gruut
+
+#endif

@@ -1,37 +1,40 @@
 #include "transaction_collector.hpp"
 #include "../application.hpp"
-#include "../chain/transaction.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
-#include "../utils/type_converter.hpp"
-#include <boost/assert.hpp>
-#include <botan-2/botan/base64.h>
-#include <botan-2/botan/data_src.h>
-#include <botan-2/botan/x509_key.h>
-#include <iostream>
+#include "easy_logging.hpp"
 
 using namespace std;
-using namespace nlohmann;
 
 namespace gruut {
 TransactionCollector::TransactionCollector() {
+
+  el::Loggers::getLogger("TXCO");
+
+  m_storage = Storage::getInstance();
+
   m_timer.reset(
       new boost::asio::deadline_timer(Application::app().getIoService()));
 }
 
 void TransactionCollector::handleMessage(json &msg_body_json) {
   if (!isRunnable()) {
-    cout << "TXC: TX drop (not timing)" << endl << flush;
+    // CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
     return;
   }
 
-  auto new_txid = TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(
-      msg_body_json["txid"].get<string>());
+  std::string txid_b64 = Safe::getString(msg_body_json, "txid");
+
+  auto new_txid =
+      TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(txid_b64);
 
   auto &transaction_pool = Application::app().getTransactionPool();
 
   if (transaction_pool.isDuplicated(new_txid)) {
-    cout << "TXC: TX drop (duplicated)" << endl << flush;
+    CLOG(ERROR, "TXCO") << "TX dropped (duplicated in pool)";
+    return;
+  }
+
+  if (m_storage->isDuplicatedTx(txid_b64)) {
+    CLOG(ERROR, "TXCO") << "TX dropped (duplicated in storage)";
     return;
   }
 
@@ -41,7 +44,7 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
   if (new_tx.isValid()) {
     transaction_pool.push(new_tx);
   } else {
-    cout << "TXC: TX drop (invalid)" << endl << flush;
+    CLOG(ERROR, "TXCO") << "TX dropped (invalid)";
   }
 }
 
@@ -55,8 +58,6 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
   if (!m_timer_running) {
     turnOnTimer();
   }
-
-  cout << "TXC: setTxCollectStatus(" << (int)stat << ")" << endl << flush;
 
   if (m_current_tx_status == BpStatus::PRIMARY) {
     if (m_next_tx_status == BpStatus::PRIMARY) {
@@ -84,8 +85,6 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
 
 void TransactionCollector::turnOnTimer() {
 
-  cout << "TXC: turnOnTimer()" << endl;
-
   m_timer_running = true;
 
   m_bpjob_sequence.push_back(BpJobStatus::DONT);
@@ -97,7 +96,7 @@ void TransactionCollector::turnOnTimer() {
 
 void TransactionCollector::updateStatus() {
 
-  cout << "TXC: updateStatus()" << endl;
+  // CLOG(INFO, "TXCO") << "called updateStatus()";
 
   size_t current_slot = Time::now_int() / BP_INTERVAL;
   time_t next_slot_begin = (current_slot + 1) * BP_INTERVAL;
@@ -130,9 +129,9 @@ void TransactionCollector::postJob() {
     m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
     if (this_job == BpJobStatus::DO &&
         Application::app().getTransactionPool().size() > 0) {
-      Application::app().getSignerPool().createTransactions();
       m_signature_requester.requestSignatures();
     }
   });
 }
+
 } // namespace gruut

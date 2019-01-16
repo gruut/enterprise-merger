@@ -1,22 +1,24 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGNER_POOL_HPP
 
+#include "../chain/signer.hpp"
+#include "../chain/types.hpp"
+#include "../utils/template_singleton.hpp"
+#include "../utils/time.hpp"
+
+#include <algorithm>
 #include <list>
 #include <mutex>
+#include <random>
 #include <string>
 #include <vector>
 
-#include "../chain/signer.hpp"
-#include "../chain/types.hpp"
-
 namespace gruut {
-class SignerPool {
+class SignerPool : public TemplateSingleton<SignerPool> {
 public:
   void pushSigner(signer_id_type &user_id, std::string &pk_cert,
                   Botan::secure_vector<uint8_t> &hmac_key,
                   SignerStatus stat = SignerStatus::UNKNOWN);
-
-  void createTransactions();
 
   bool updatePkCert(signer_id_type &user_id, std::string &pk_cert);
 
@@ -40,8 +42,6 @@ public:
   const size_t size();
 
   bool isFull();
-
-  // TODO: May be we should do more operation
 
   std::vector<Signer> getRandomSigners(size_t number);
 

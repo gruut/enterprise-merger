@@ -1,11 +1,7 @@
 #include "../application.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
-#include "../utils/type_converter.hpp"
+#include "easy_logging.hpp"
+#include "signer_pool.hpp"
 
-#include <string>
-
-using namespace nlohmann;
 using namespace std;
 
 namespace gruut {
@@ -14,29 +10,38 @@ SignaturePool::SignaturePool() {
   auto setting = Setting::getInstance();
   m_my_id = setting->getMyId();
   m_my_chain_id = setting->getLocalChainId();
+  el::Loggers::getLogger("SPOL");
 }
 
-void SignaturePool::handleMessage(json &message_body_json) {
-  signer_id_type receiver_id =
-      TypeConverter::decodeBase64(message_body_json["sID"].get<string>());
+void SignaturePool::handleMessage(json &msg_body_json) {
+  if (!m_enabled) {
+    CLOG(ERROR, "SPOL") << "Support Signature dropped (disabled pool)";
+    return;
+  }
 
-  if (verifySignature(receiver_id, message_body_json)) {
-    Signature s;
+  signer_id_type signer_id = Safe::getBytesFromB64(msg_body_json, "sID");
 
-    s.signer_id = receiver_id;
+  if (verifySignature(signer_id, msg_body_json)) {
+    Signature ssig;
 
-    string signer_sig = message_body_json["sig"].get<string>();
-    auto decoded_signer_sig = TypeConverter::decodeBase64(signer_sig);
-    s.signer_signature = decoded_signer_sig;
+    ssig.signer_id = signer_id;
+    ssig.height = m_height;
+    ssig.signer_signature = Safe::getBytesFromB64(msg_body_json, "sig");
 
-    push(s);
+    push(ssig);
+
+  } else {
+    CLOG(ERROR, "SPOL") << "Invalid Support Signature for This Block";
   }
 }
 
 void SignaturePool::setupSigPool(block_height_type chain_height,
-                                 sha256 &tx_root) {
-  m_chain_height = chain_height;
+                                 timestamp_type block_time, sha256 &tx_root) {
+  m_height = chain_height;
+  m_block_time = block_time;
   m_tx_root = tx_root;
+
+  enablePool();
 }
 
 void SignaturePool::push(Signature &signature) {
@@ -44,9 +49,16 @@ void SignaturePool::push(Signature &signature) {
   m_signature_pool.emplace_back(signature);
 }
 
-Signatures SignaturePool::fetchN(size_t n) {
+Signatures SignaturePool::fetchN(size_t n, block_height_type t_height) {
   Signatures signatures;
-  copy_n(m_signature_pool.begin(), n, back_inserter(signatures));
+  for (auto &ssig : m_signature_pool) {
+    if (ssig.height == t_height) {
+      signatures.emplace_back(ssig);
+    }
+
+    if (signatures.size() >= n)
+      break;
+  }
 
   return signatures;
 }
@@ -55,35 +67,31 @@ size_t SignaturePool::size() { return m_signature_pool.size(); }
 
 bool SignaturePool::empty() { return size() == 0; }
 
-bool SignaturePool::verifySignature(signer_id_type &receiver_id,
-                                    json &message_body_json) {
-  auto pk_cert = Application::app().getSignerPool().getPkCert(receiver_id);
+bool SignaturePool::verifySignature(signer_id_type &recv_id,
+                                    json &msg_body_json) {
+  auto pk_cert = SignerPool::getInstance()->getPkCert(recv_id);
   if (pk_cert.empty()) {
     auto storage = Storage::getInstance();
-    pk_cert = storage->findCertificate(receiver_id);
+    pk_cert = storage->findCertificate(recv_id);
   }
 
   if (pk_cert.empty()) {
+    CLOG(ERROR, "SPOL") << "Empty user certificate";
     return false;
   }
 
-  auto signer_id_b64 = message_body_json["sID"].get<string>();
-  signer_id_type signer_id = TypeConverter::decodeBase64(signer_id_b64);
-
-  auto timestamp = static_cast<timestamp_type>(
-      stoll(message_body_json["time"].get<string>()));
+  signer_id_type signer_id = Safe::getBytesFromB64(msg_body_json, "sID");
 
   BytesBuilder msg_builder;
   msg_builder.append(signer_id);
-  msg_builder.append(timestamp);
+  msg_builder.append(m_block_time);
   msg_builder.append(m_my_id);
   msg_builder.append(m_my_chain_id);
-  msg_builder.append(m_chain_height);
+  msg_builder.append(m_height);
   msg_builder.append(m_tx_root);
 
-  auto sig_b64 = message_body_json["sig"].get<string>();
-  auto sig_bytes = TypeConverter::decodeBase64(sig_b64);
+  auto sig_bytes = Safe::getBytesFromB64(msg_body_json, "sig");
 
-  return RSA::doVerify(pk_cert, msg_builder.getBytes(), sig_bytes, true);
+  return ECDSA::doVerify(pk_cert, msg_builder.getBytes(), sig_bytes);
 }
 } // namespace gruut

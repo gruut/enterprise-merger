@@ -1,8 +1,9 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_BLOCK_SYNCHRONIZER_HPP
+#define GRUUT_ENTERPRISE_MERGER_BLOCK_SYNCHRONIZER_HPP
 
+#include "../../chain/block.hpp"
 #include "../../chain/types.hpp"
 #include "../../config/config.hpp"
-#include "../../services/block_validator.hpp"
 #include "../../services/input_queue.hpp"
 #include "../../services/message_proxy.hpp"
 #include "../../services/storage.hpp"
@@ -27,13 +28,9 @@
 
 namespace gruut {
 
-struct RcvBlock {
-  sha256 hash;
-  nlohmann::json block_json;
-  nlohmann::json txs;
-  bytes block_raw;
-  std::vector<sha256> mtree;
+struct RcvBlockMapItem {
   std::string merger_id_b64;
+  Block block;
   int num_retry{0};
   BlockState state{BlockState::RECEIVED};
 };
@@ -51,10 +48,10 @@ private:
   size_t m_my_last_height;
   std::string m_my_last_blk_hash_b64;
   merger_id_type m_my_id;
-  int m_first_recv_block_height{-1};
+  size_t m_first_recv_block_height{0};
 
   std::function<void(ExitCode)> m_finish_callback;
-  std::map<size_t, RcvBlock> m_recv_block_list;
+  std::map<size_t, RcvBlockMapItem> m_recv_block_list;
   std::mutex m_block_list_mutex;
 
   timestamp_type m_last_task_time{0};
@@ -70,22 +67,19 @@ public:
   void startBlockSync(std::function<void(ExitCode)> callback);
 
 private:
-  bool pushMsgToBlockList(InputMsgEntry &input_msg_entry);
-
-  bool sendBlockRequest(int height);
-
+  void reserveBlockList(size_t begin, size_t end);
+  bool pushMsgToBlockList(InputMsgEntry &msg_block);
+  bool sendBlockRequest(size_t height);
   void sendErrorToSigner(InputMsgEntry &input_msg_entry);
-
-  bool validateBlock(int height);
-
-  void saveBlock(int height);
-
+  bool validateBlock(size_t height);
+  void saveBlock(size_t height);
+  void syncFinish();
   void blockSyncControl();
-
   void messageFetch();
-
   bool checkMsgFromOtherMerger(MessageType msg_type);
-
   bool checkMsgFromSigner(MessageType msg_type);
+  void updateTaskTime();
 };
 } // namespace gruut
+
+#endif

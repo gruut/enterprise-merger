@@ -1,13 +1,8 @@
 #include "application.hpp"
-#include "chain/transaction.hpp"
-#include "config/config.hpp"
-#include "modules/message_fetcher/message_fetcher.hpp"
-#include "modules/module.hpp"
+#include "easy_logging.hpp"
 
 namespace gruut {
 boost::asio::io_service &Application::getIoService() { return *m_io_serv; }
-
-SignerPool &Application::getSignerPool() { return *m_signer_pool; }
 
 BpScheduler &Application::getBpScheduler() { return *m_bp_scheduler; }
 
@@ -42,12 +37,12 @@ void Application::registerModule(shared_ptr<Module> module, int stage,
 
 void Application::start() {
 
-  cout << "APP: start() - stage " << m_running_stage << endl << flush;
-
   if (m_modules[m_running_stage].empty()) {
     runNextStage(ExitCode::ERROR_SKIP_STAGE);
     return;
   }
+
+  CLOG(INFO, "_APP") << "START STAGE #" << m_running_stage;
 
   try {
     for (auto &module : m_modules[m_running_stage]) {
@@ -74,14 +69,11 @@ void Application::exec() {
 
 void Application::runNextStage(ExitCode exit_code) {
 
+  CLOG(INFO, "_APP") << "END STAGE #" << m_running_stage
+                     << " (exit=" << (int)exit_code << ")";
   if (m_running_stage < m_modules.size()) {
-    cout << "APP: runNextStage(" << (int)exit_code << ")" << endl << flush;
     ++m_running_stage;
     start();
-  } else {
-    cout << "APP: runNextStage(" << (int)exit_code << ") - No more stage"
-         << endl
-         << flush;
   }
 }
 
@@ -90,7 +82,6 @@ void Application::quit() { m_io_serv->stop(); }
 void Application::setup() {
 
   // step 1 - making objects
-  m_signer_pool = make_shared<SignerPool>();
   m_signer_pool_manager = make_shared<SignerPoolManager>();
   m_transaction_pool = make_shared<TransactionPool>();
   m_transaction_collector = make_shared<TransactionCollector>();
@@ -99,7 +90,7 @@ void Application::setup() {
 
   m_bp_scheduler = make_shared<BpScheduler>();
   m_block_processor = make_shared<BlockProcessor>();
-  m_bootstraper = make_shared<BootStraper>();
+  m_bootstraper = make_shared<Bootstrapper>();
   m_communication = make_shared<Communication>();
   m_out_message_fetcher = make_shared<OutMessageFetcher>();
   m_message_fetcher = make_shared<MessageFetcher>();
@@ -110,10 +101,15 @@ void Application::setup() {
   registerModule(m_bootstraper, 0, true);
   registerModule(m_message_fetcher, 1);
   registerModule(m_bp_scheduler, 1);
+
+  // setp 3 - link services
+
+  m_bootstraper->setCommunication(m_communication);
 }
 
 Application::Application() {
   m_io_serv = make_shared<boost::asio::io_service>();
+  el::Loggers::getLogger("_APP");
 }
 
 } // namespace gruut

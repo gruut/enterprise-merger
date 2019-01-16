@@ -1,8 +1,4 @@
 #include "signer_pool.hpp"
-#include "../utils/time.hpp"
-#include "transaction_generator.hpp"
-#include <algorithm>
-#include <random>
 
 using namespace gruut::config;
 
@@ -127,7 +123,7 @@ std::vector<Signer> SignerPool::getRandomSigners(size_t number) {
   std::for_each(m_signer_pool.begin(), m_signer_pool.end(),
                 [&signers](Signer &signer) {
                   if (signer.status == SignerStatus::GOOD)
-                    signers.push_back(signer);
+                    signers.emplace_back(signer);
                 });
 
   std::shuffle(signers.begin(), signers.end(),
@@ -150,20 +146,4 @@ Signer SignerPool::getSigner(int index) {
   return *it;
 }
 
-void SignerPool::createTransactions() {
-
-  cout << "SIP: createTransactions()" << endl;
-
-  TransactionGenerator generator;
-
-  vector<Signer> signers;
-  for (auto &signer : m_signer_pool) {
-    if (signer.status == SignerStatus::GOOD && signer.isNew()) {
-      signers.emplace_back(signer);
-    }
-  }
-
-  if (!signers.empty())
-    generator.generate(signers);
-}
 } // namespace gruut

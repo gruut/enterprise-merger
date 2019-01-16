@@ -1,9 +1,15 @@
 #include "block_processor.hpp"
 #include "../application.hpp"
+#include "easy_logging.hpp"
 
 namespace gruut {
 
-BlockProcessor::BlockProcessor() { m_storage = Storage::getInstance(); }
+BlockProcessor::BlockProcessor() {
+  m_storage = Storage::getInstance();
+  auto setting = Setting::getInstance();
+  m_my_id = setting->getMyId();
+  el::Loggers::getLogger("BPRO");
+}
 
 bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
   switch (entry.type) {
@@ -19,40 +25,64 @@ bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
 }
 
 bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
-  if (entry.body["mCert"].get<std::string>().empty() ||
-      entry.body["mSig"].get<std::string>().empty()) {
+
+  CLOG(INFO, "BPRO") << "called handleMsgReqBlock()";
+
+  block_height_type req_block_height = Safe::getInt(entry.body, "hgt");
+
+  if (Safe::getString(entry.body, "mCert").empty() ||
+      Safe::getString(entry.body, "mSig").empty()) {
     // TODO : check whether the requester is trustworthy or not
   } else {
     BytesBuilder msg_builder;
-    msg_builder.appendB64(entry.body["mID"].get<std::string>());
-    msg_builder.appendDec(entry.body["time"].get<std::string>());
-    msg_builder.append(entry.body["mCert"].get<std::string>());
-    msg_builder.appendDec(entry.body["hgt"].get<std::string>());
+    msg_builder.appendB64(Safe::getString(entry.body, "mID"));
+    msg_builder.appendDec(Safe::getString(entry.body, "time"));
+    msg_builder.append(Safe::getString(entry.body, "mCert"));
+    msg_builder.append(req_block_height);
 
-    BytesBuilder sig_builder;
-    sig_builder.appendB64(entry.body["mSig"].get<std::string>());
+    if (!ECDSA::doVerify(Safe::getString(entry.body, "mCert"),
+                         msg_builder.getBytes(),
+                         Safe::getBytesFromB64(entry.body, "mSig"))) {
 
-    if (!RSA::doVerify(entry.body["mCert"].get<std::string>(),
-                       msg_builder.getString(), sig_builder.getBytes(), true)) {
+      CLOG(ERROR, "BPRO") << "Invalid mSig on MSG_REQ_BLOCK";
+
       return false;
     }
   }
 
-  auto saved_block =
-      m_storage->readBlock(stoi(entry.body["hgt"].get<std::string>()));
+  read_block_type saved_block = m_storage->readBlock(req_block_height);
 
-  if (std::get<0>(saved_block) < 0) {
+  id_type recv_id = Safe::getBytesFromB64<id_type>(entry.body, "mID");
+
+  if (saved_block.height <= 0) {
+
+    OutputMsgEntry output_message;
+    output_message.type = MessageType::MSG_ERROR;
+    output_message.body["sender"] =
+        TypeConverter::encodeBase64(m_my_id); // my_id
+    output_message.body["time"] = Time::now();
+    output_message.body["type"] =
+        std::to_string(static_cast<int>(ErrorMsgType::BSYNC_NO_BLOCK));
+    output_message.body["info"] = "no block!";
+    output_message.receivers = {recv_id};
+
+    CLOG(INFO, "BPRO") << "Send MSG_ERROR (no block)";
+
+    m_msg_proxy.deliverOutputMessage(output_message);
+
     return false;
   }
 
-  std::string recv_id_b64 = entry.body["mID"].get<std::string>();
-  id_type recv_id = TypeConverter::decodeBase64(recv_id_b64);
-
   OutputMsgEntry msg_block;
   msg_block.type = MessageType::MSG_BLOCK;
-  msg_block.body["blockraw"] = std::get<1>(saved_block);
-  msg_block.body["tx"] = std::get<2>(saved_block);
+  msg_block.body["mID"] = TypeConverter::encodeBase64(m_my_id);
+  msg_block.body["blockraw"] =
+      TypeConverter::encodeBase64(saved_block.block_raw);
+  msg_block.body["tx"] = saved_block.txs;
   msg_block.receivers = {recv_id};
+
+  CLOG(INFO, "BPRO") << "Send MSG_BLOCK (height=" << req_block_height
+                     << ", #TX=" << saved_block.txs.size() << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_block);
 
@@ -60,37 +90,28 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 }
 
 bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
-  std::string block_raw_str = entry.body["blockraw"].get<std::string>();
-  bytes block_raw = TypeConverter::decodeBase64(block_raw_str);
 
-  nlohmann::json block_json = BlockValidator::getBlockJson(block_raw);
-
-  if (block_json.empty())
+  Block new_block;
+  if (!new_block.initialze(entry.body)) {
+    CLOG(ERROR, "BPRO") << "Block dropped (missing information)";
     return false;
-
-  std::vector<sha256> mtree_nodes;
-  std::vector<transaction_id_type> tx_ids;
-
-  if (!BlockValidator::validate(block_json, entry.body["tx"], mtree_nodes,
-                                tx_ids))
-    return false;
-
-  std::vector<std::string> mtree_nodes_b64;
-
-  for (size_t i = 0; i < mtree_nodes.size(); ++i) {
-    mtree_nodes_b64[i] = TypeConverter::toBase64Str(mtree_nodes[i]);
   }
 
-  nlohmann::json block_secret;
-  block_secret["tx"] = entry.body["tx"];
-  block_secret["txCnt"] = entry.body["tx"].size();
-  block_secret["mtree"] = mtree_nodes_b64;
+  if (!new_block.isValid()) {
+    CLOG(ERROR, "BPRO") << "Block dropped (invalid block)";
+    return false;
+  }
 
-  m_storage->saveBlock(entry.body["blockraw"].get<std::string>(), block_json,
-                       block_secret);
+  json block_header = new_block.getBlockHeaderJson();
+  bytes block_raw = new_block.getBlockRaw();
+  json block_body = new_block.getBlockBodyJson();
+
+  m_storage->saveBlock(block_raw, block_header, block_body);
+
+  CLOG(INFO, "BPRO") << "Block saved (height=" << new_block.getHeight() << ")";
 
   auto &tx_pool = Application::app().getTransactionPool();
-  tx_pool.removeDuplicatedTransactions(tx_ids);
+  tx_pool.removeDuplicatedTransactions(new_block.getTxIds());
 
   return true;
 }
@@ -99,15 +120,21 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   OutputMsgEntry msg_res_check;
 
   auto setting = Setting::getInstance();
-  merger_id_type my_mid = setting->getMyId();
-  timestamp_type timestamp = Time::now_int();
+
+  proof_type proof =
+      m_storage->findSibling(Safe::getString(entry.body, "txid"));
+
+  json proof_json = json::array();
+  for (auto &sibling : proof.siblings) {
+    proof_json.push_back(
+        json{{"side", sibling.first}, {"val", sibling.second}});
+  }
 
   msg_res_check.type = MessageType::MSG_RES_CHECK;
-  msg_res_check.body["mID"] = TypeConverter::toBase64Str(my_mid);
-  msg_res_check.body["time"] = to_string(timestamp);
-  msg_res_check.body["proof"] = m_storage->findSibling(
-      entry.body["txid"].get<std::string>()); // even if sibilings is empty, do
-                                              // not send error message
+  msg_res_check.body["mID"] = TypeConverter::encodeBase64(setting->getMyId());
+  msg_res_check.body["time"] = to_string(Time::now_int());
+  msg_res_check.body["blockID"] = proof.block_id_b64;
+  msg_res_check.body["proof"] = proof_json;
 
   m_msg_proxy.deliverOutputMessage(msg_res_check);
 

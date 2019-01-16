@@ -24,7 +24,7 @@ target_sources(chain_test
         ${HEADER_FILES}
         )
 
-target_include_directories(chain_test PRIVATE ${Boost_INCLUDE_DIR} /usr/local/include)
+target_include_directories(chain_test PRIVATE ${Boost_INCLUDE_DIR} ../../include /usr/local/include)
 target_link_libraries(chain_test
         PRIVATE
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}

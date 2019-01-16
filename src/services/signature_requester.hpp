@@ -1,21 +1,30 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SIGNATURE_REQUESTER_HPP
 #define GRUUT_ENTERPRISE_MERGER_SIGNATURE_REQUESTER_HPP
 
-#include <boost/asio.hpp>
-#include <memory>
-#include <set>
-#include <thread>
-#include <vector>
-
 #include "../chain/block.hpp"
 #include "../chain/merkle_tree.hpp"
 #include "../chain/message.hpp"
 #include "../chain/signer.hpp"
-
+#include "../chain/transaction.hpp"
+#include "../chain/types.hpp"
 #include "../config/config.hpp"
 
+#include "block_generator.hpp"
+#include "message_proxy.hpp"
+#include "signature_requester.hpp"
+#include "signer_pool.hpp"
+
+#include <atomic>
+#include <boost/asio.hpp>
+#include <boost/system/error_code.hpp>
+#include <iostream>
+#include <memory>
+#include <random>
+#include <set>
+#include <thread>
+#include <vector>
+
 namespace gruut {
-class Transaction;
 
 using RandomSignerIndices = std::set<int>;
 using Transactions = std::vector<Transaction>;
@@ -27,29 +36,29 @@ public:
 
   void requestSignatures();
 
-  void checkProcess();
+  void waitCollectDone();
 
 private:
   void startSignatureCollectTimer();
 
-  void stopCollectTimerAndCreateBlock();
+  void doCreateBlock();
 
-  Transactions fetchTransactions();
-
-  PartialBlock makePartialBlock(Transactions &transactions);
-
-  void requestSignature(Signers &signers);
+  void sendRequestMessage(Signers &signers);
 
   Signers selectSigners();
+
+  Transaction generateCertificateTransaction(vector<Signer> &signers);
+  transaction_id_type generateTxId();
+  BasicBlockInfo generateBasicBlockInfo();
 
   std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_block_gen_strand;
 
   MerkleTree m_merkle_tree;
-  PartialBlock m_partial_block;
+  BasicBlockInfo m_basic_block_info;
 
-  bool m_is_collect_timer_running{false};
+  std::atomic<bool> m_is_collect_timer_running{false};
   size_t m_max_signers;
 };
 } // namespace gruut

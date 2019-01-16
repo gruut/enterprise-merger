@@ -1,61 +1,62 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_INPUT_QUEUE_HPP
+#define GRUUT_ENTERPRISE_MERGER_INPUT_QUEUE_HPP
+
+#include "blockconcurrentqueue.hpp"
+#include "nlohmann/json.hpp"
 
 #include "../chain/types.hpp"
 #include "../utils/template_singleton.hpp"
+
 #include <deque>
 #include <iostream>
 #include <mutex>
-#include <nlohmann/json.hpp>
 #include <thread>
 
 namespace gruut {
 
 struct InputMsgEntry {
   MessageType type;
-  nlohmann::json body;
+  json body;
   InputMsgEntry() : type(MessageType::MSG_NULL), body(nullptr) {}
-  InputMsgEntry(MessageType msg_type_, nlohmann::json &msg_body_)
+  InputMsgEntry(MessageType msg_type_, json &msg_body_)
       : type(msg_type_), body(msg_body_) {}
 };
 
 class InputQueueAlt : public TemplateSingleton<InputQueueAlt> {
 private:
-  std::deque<InputMsgEntry> m_input_msg_pool;
-  std::mutex m_queue_mutex;
+  moodycamel::BlockingConcurrentQueue<InputMsgEntry> m_input_msg_pool;
 
 public:
-  void push(std::tuple<MessageType, nlohmann::json> &msg_entry_tuple) {
+  void push(std::tuple<MessageType, json> &msg_entry_tuple) {
     InputMsgEntry tmp_msg_entry(std::get<0>(msg_entry_tuple),
                                 std::get<1>(msg_entry_tuple));
     push(tmp_msg_entry);
   }
 
-  void push(MessageType msg_type, nlohmann::json &msg_body) {
+  void push(MessageType msg_type, json &msg_body) {
     InputMsgEntry tmp_msg_entry(msg_type, msg_body);
     push(tmp_msg_entry);
   }
 
-  void push(InputMsgEntry &msg_entry) {
-    std::lock_guard<std::mutex> lock(m_queue_mutex);
-    m_input_msg_pool.emplace_back(msg_entry);
-    m_queue_mutex.unlock();
-  }
+  void push(InputMsgEntry &msg_entry) { m_input_msg_pool.enqueue(msg_entry); }
 
   InputMsgEntry fetch() {
     InputMsgEntry ret_msg;
-    std::lock_guard<std::mutex> lock(m_queue_mutex);
-    if (!m_input_msg_pool.empty()) {
-      ret_msg = m_input_msg_pool.front();
-      m_input_msg_pool.pop_front();
-    }
-    m_queue_mutex.unlock();
+    m_input_msg_pool.try_dequeue(ret_msg);
     return ret_msg;
   }
 
-  inline size_t size() { return m_input_msg_pool.size(); }
+  std::vector<InputMsgEntry> fetchBulk(size_t cnt = 5) {
+    std::vector<InputMsgEntry> res(cnt);
+    size_t num_fetch = m_input_msg_pool.try_dequeue_bulk(res.begin(), cnt);
+    res.resize(num_fetch);
+    return res;
+  }
 
-  inline bool empty() { return m_input_msg_pool.empty(); }
+  inline size_t size() { return m_input_msg_pool.size_approx(); }
 
-  inline void clearInputQueue() { m_input_msg_pool.clear(); }
+  inline bool empty() { return (m_input_msg_pool.size_approx() == 0); }
 };
 } // namespace gruut
+
+#endif

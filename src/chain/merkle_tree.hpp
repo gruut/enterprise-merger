@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_MERKLE_TREE_HPP
+#define GRUUT_ENTERPRISE_MERGER_MERKLE_TREE_HPP
 
 #include <map>
 #include <vector>
@@ -7,6 +8,7 @@
 #include "../config/config.hpp"
 #include "../utils/bytes_builder.hpp"
 #include "../utils/sha256.hpp"
+#include "../utils/type_converter.hpp"
 #include "types.hpp"
 
 using namespace std;
@@ -53,13 +55,11 @@ const std::map<std::string, std::string> HASH_LOOKUP = {
 
 class MerkleTree {
 public:
-  MerkleTree() {
-    m_merkle_tree.resize(MAX_MERKLE_LEAVES * 2 - 1);
-    for (auto &hash_entry : HASH_LOOKUP) {
-      sha256 hash_val =
-          static_cast<sha256>(TypeConverter::decodeBase64(hash_entry.second));
-      m_hash_lookup.emplace(hash_entry.first, hash_val);
-    }
+  MerkleTree() { prepareLookUpTable(); }
+
+  MerkleTree(vector<sha256> &tx_digests) {
+    prepareLookUpTable();
+    generate(tx_digests);
   }
 
   void generate(vector<sha256> &tx_digests) {
@@ -89,10 +89,78 @@ public:
 
   vector<sha256> getMerkleTree() { return m_merkle_tree; }
 
+  static bool isValidSiblings(proof_type &proof,
+                              const std::string &root_val_b64) {
+    return isValidSiblings(proof.siblings, proof.siblings[0].second,
+                           root_val_b64);
+  }
+
+  static bool
+  isValidSiblings(std::vector<std::pair<bool, std::string>> &siblings_b64,
+                  const std::string &my_val_b64,
+                  const std::string &root_val_b64) {
+
+    if (siblings_b64.empty() || my_val_b64.empty() || root_val_b64.empty())
+      return false;
+
+    if (siblings_b64[0].second != my_val_b64)
+      return false;
+
+    std::vector<std::pair<bool, bytes>> siblings;
+    for (auto &sibling_b64 : siblings_b64) {
+      siblings.emplace_back(std::make_pair(
+          sibling_b64.first, TypeConverter::decodeBase64(sibling_b64.second)));
+    }
+
+    bytes my_val = TypeConverter::decodeBase64(my_val_b64);
+    bytes root_val = TypeConverter::decodeBase64(root_val_b64);
+
+    return isValidSiblings(siblings, my_val, root_val);
+  }
+
+  static bool isValidSiblings(std::vector<std::pair<bool, bytes>> &siblings,
+                              bytes &my_val, bytes &root_val) {
+
+    if (siblings.empty() || my_val.empty() || root_val.empty())
+      return false;
+
+    if (siblings[0].second != my_val)
+      return false;
+
+    sha256 mtree_root;
+    for (size_t i = 0; i < siblings.size(); ++i) {
+      if (i == 0) {
+        mtree_root = static_cast<sha256>(siblings[i].second);
+        continue;
+      }
+
+      if (siblings[i].first) { // true = right
+        mtree_root.insert(mtree_root.end(), siblings[i].second.begin(),
+                          siblings[i].second.end());
+      } else {
+        mtree_root.insert(mtree_root.begin(), siblings[i].second.begin(),
+                          siblings[i].second.end());
+      }
+
+      mtree_root = Sha256::hash(mtree_root);
+    }
+
+    return (root_val == mtree_root);
+  }
+
 private:
+  void prepareLookUpTable() {
+    m_merkle_tree.resize(MAX_MERKLE_LEAVES * 2 - 1);
+    for (auto &hash_entry : HASH_LOOKUP) {
+      sha256 hash_val =
+          static_cast<sha256>(TypeConverter::decodeBase64(hash_entry.second));
+      m_hash_lookup.emplace(hash_entry.first, hash_val);
+    }
+  }
+
   sha256 makeParent(sha256 left, sha256 &right) {
     left.insert(left.cend(), right.cbegin(), right.cend());
-    std::string lookup_key = TypeConverter::toBase64Str(left);
+    std::string lookup_key = TypeConverter::encodeBase64(left);
 
     auto it_map = m_hash_lookup.find(lookup_key);
     if (it_map != m_hash_lookup.end()) {
@@ -113,3 +181,5 @@ private:
   std::map<std::string, sha256> m_hash_lookup;
 };
 } // namespace gruut
+
+#endif

@@ -1,10 +1,14 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 #define GRUUT_ENTERPRISE_MERGER_TYPES_HPP
 
-#include <array>
+#include "nlohmann/json.hpp"
+
 #include <botan-2/botan/secmem.h>
+
+#include <array>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace gruut {
@@ -18,17 +22,17 @@ enum class BpStatus {
   UNKNOWN
 };
 
-enum class TransactionType { DIGESTS, CERTIFICATE, UNKNOWN };
+enum class TransactionType { DIGESTS, CERTIFICATES, IMMORTALSMS, UNKNOWN };
 
 const std::string TXTYPE_CERTIFICATES = "CERTIFICATES";
 const std::string TXTYPE_DIGESTS = "DIGESTS";
+const std::string TXTYPE_IMMORTALSMS = "IMMORTALSMS";
 
 const std::map<TransactionType, std::string> TX_TYPE_TO_STRING = {
     {TransactionType::DIGESTS, TXTYPE_DIGESTS},
-    {TransactionType::CERTIFICATE, TXTYPE_CERTIFICATES},
+    {TransactionType::CERTIFICATES, TXTYPE_CERTIFICATES},
+    {TransactionType::IMMORTALSMS, TXTYPE_IMMORTALSMS},
     {TransactionType::UNKNOWN, "UNKNOWN"}};
-
-enum class BlockType { PARTIAL, NORMAL };
 
 enum class MessageType : uint8_t {
   MSG_NULL = 0x00,
@@ -41,7 +45,6 @@ enum class MessageType : uint8_t {
   MSG_RESPONSE_2 = 0x57,
   MSG_SUCCESS = 0x58,
   MSG_ACCEPT = 0x59,
-  MSG_ECHO = 0x5A,
   MSG_LEAVE = 0x5B,
   MSG_TX = 0xB1,
   MSG_REQ_SSIG = 0xB2,
@@ -65,15 +68,23 @@ enum class MACAlgorithmType : uint8_t {
 };
 
 enum class ErrorMsgType : int {
-  MERGER_BOOTSTRAP = 3,
-  ECDH_ILLEGAL_ACCESS,
-  ECDH_MAX_SIGNER_POOL,
-  ECDH_TIMEOUT,
-  ECDH_INVALID_SIG,
-  ECDH_INVALID_PK
+  UNKNOWN = 0,
+  MERGER_BOOTSTRAP = 11,
+  ECDH_ILLEGAL_ACCESS = 21,
+  ECDH_MAX_SIGNER_POOL = 22,
+  ECDH_TIMEOUT = 23,
+  ECDH_INVALID_SIG = 24,
+  ECDH_INVALID_PK = 25,
+  TIME_SYNC = 61,
+  BSYNC_NO_BLOCK = 88
 };
 
-enum class CompressionAlgorithmType : uint8_t { LZ4 = 0x04, NONE = 0xFF };
+enum class CompressionAlgorithmType : uint8_t {
+  LZ4 = 0x04,
+  MessagePack = 0x05,
+  CBOR = 0x06,
+  NONE = 0xFF
+};
 
 enum class SignerStatus { UNKNOWN, TEMPORARY, ERROR, GOOD };
 
@@ -87,7 +98,7 @@ enum class DBType : int {
   BLOCK_CERT
 };
 
-enum class BlockState { RECEIVED, TOSAVE, TODELETE, RETRIED };
+enum class BlockState { RECEIVED, TOSAVE, TODELETE, RETRIED, RESERVED };
 
 enum class ExitCode {
   NORMAL,
@@ -96,6 +107,9 @@ enum class ExitCode {
   ERROR_SYNC_FAIL,
   ERROR_SKIP_STAGE
 };
+
+using json = nlohmann::json;
+using string = std::string;
 
 using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
@@ -119,6 +133,17 @@ using content_type = std::string;
 
 using hmac_key_type = Botan::secure_vector<uint8_t>;
 
+using proof_type = struct proof_t {
+  std::string block_id_b64;
+  std::vector<std::pair<bool, std::string>> siblings;
+};
+
+using read_block_type = struct read_block_t {
+  size_t height;
+  bytes block_raw;
+  json txs;
+};
+
 // 아래는 모두 동일한 타입, 문맥에 맞춰서 쓸 것
 // 구별이 안되거나 혼용되어 있으면, id_type을 쓸 것
 using requestor_id_type = bytes;
@@ -129,5 +154,6 @@ using id_type = bytes;
 
 // Message
 using message_version_type = uint8_t;
+
 } // namespace gruut
 #endif

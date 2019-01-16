@@ -9,7 +9,14 @@ include(cmake/clang-cxx-dev-tools.cmake)
 find_package(Boost REQUIRED COMPONENTS system thread filesystem)
 find_package(CURL REQUIRED)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_executable(gruut_enterprise_merger main.cpp)
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
+
 
 file(GLOB SOURCE_FILES
         "src/modules/*/*.cpp"
@@ -30,7 +37,10 @@ file(GLOB HEADER_FILES
         "src/config/config.hpp"
         "src/modules/communication/protos/*.h"
         "include/*.hpp"
+        "include/*/*.hpp"
         )
+
+add_executable(gruut_enterprise_merger main.cpp ${SOURCE_FILES} ${HEADER_FILES})
 
 target_sources(gruut_enterprise_merger
         PRIVATE
