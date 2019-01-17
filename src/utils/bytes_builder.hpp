@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GRUUT_ENTERPRISE_MERGER_BYTES_BUILDER_HPP
+#define GRUUT_ENTERPRISE_MERGER_BYTES_BUILDER_HPP
 
 #include <array>
 #include <cstdint>
@@ -9,7 +10,6 @@
 
 #include <iostream>
 
-#include "../../include/base64.hpp"
 #include "../../src/utils/type_converter.hpp"
 
 class BytesBuilder {
@@ -53,7 +53,7 @@ public:
   template <size_t S>
   void append(std::array<uint8_t, S> &bytes_val, int len = -1) {
     auto vec = TypeConverter::arrayToVector<S>(bytes_val);
-    append(vec);
+    append(vec, len);
   }
 
   void append(time_t time_val, size_t len = 8) {
@@ -65,7 +65,13 @@ public:
     append(int_val, len);
   }
 
-  void append(uint32_t int_val) {
+  void append(uint8_t byte) {
+    std::vector<uint8_t> v(1, byte);
+    append(v);
+  }
+
+  void append(uint32_t int_val, size_t len = 4) {
+    /*
     std::vector<uint8_t> v;
     v.reserve(sizeof(int_val));
 
@@ -73,8 +79,9 @@ public:
       v.push_back(int_val & 0xFF);
       int_val >>= 8;
     }
+     */
 
-    append(v);
+    append((uint64_t)int_val, len);
   }
 
   void append(uint64_t int_val, size_t len = 8) {
@@ -122,8 +129,8 @@ public:
   }
 
   void appendB64(const std::string &b64_str_val, int len = -1) {
-    std::string str_val = macaron::Base64::Decode(b64_str_val);
-    append(str_val, len);
+    std::vector<uint8_t> bytes_val = TypeConverter::decodeBase64(b64_str_val);
+    append(bytes_val, len);
   }
 
   std::vector<uint8_t> getBytes() {
@@ -159,6 +166,6 @@ public:
     m_bytes.resize(len);
     m_auto_append = false;
   }
-
-private:
 };
+
+#endif

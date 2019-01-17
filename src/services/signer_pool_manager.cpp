@@ -1,242 +1,226 @@
-#include <algorithm>
-#include <botan/pem.h>
-#include <botan/pubkey.h>
-#include <botan/rsa.h>
-#include <botan/x509cert.h>
-#include <chrono>
-#include <iostream>
-#include <nlohmann/json.hpp>
-
-#include "../utils/rsa.hpp"
-
-#include "../application.hpp"
-#include "../chain/types.hpp"
-#include "../config/config.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/hmac_key_maker.hpp"
-#include "../utils/random_number_generator.hpp"
-#include "../utils/sha256.hpp"
-#include "../utils/time.hpp"
-#include "../utils/type_converter.hpp"
-#include "message_proxy.hpp"
 #include "signer_pool_manager.hpp"
-
-using namespace nlohmann;
+#include "../application.hpp"
+#include "easy_logging.hpp"
 
 namespace gruut {
+SignerPoolManager::SignerPoolManager() {
+  auto setting = Setting::getInstance();
+  m_my_cert = setting->getMyCert();
+  m_my_id = setting->getMyId();
+  m_signer_pool = SignerPool::getInstance();
+  el::Loggers::getLogger("SMGR");
+}
 void SignerPoolManager::handleMessage(MessageType &message_type,
-                                      signer_id_type receiver_id,
-                                      json message_body_json) {
-  MessageProxy proxy;
-  vector<uint64_t> receiver_list{receiver_id};
-  // TODO: 설정파일이 없어서 하드코딩(MERGER-1 => base64 => TUVSR0VSLTE)
-  merger_id_type merger_id = TypeConverter::integerToBytes(1);
+                                      json &message_body_json) {
 
-  auto now = std::chrono::duration_cast<std::chrono::seconds>(
-                 std::chrono::system_clock::now().time_since_epoch())
-                 .count();
-  string timestamp = to_string(now);
+  string recv_id_b64 = Safe::getString(message_body_json, "sID");
+  signer_id_type recv_id = Safe::getBytesFromB64(message_body_json, "sID");
+
+  vector<signer_id_type> receiver_list{recv_id};
+
   switch (message_type) {
   case MessageType::MSG_JOIN: {
     if (!isJoinable()) {
-      deliverErrorMessage(receiver_list);
-    } else {
-      m_join_temporary_table[receiver_id].reset(new JoinTemporaryData());
-      m_join_temporary_table[receiver_id]->expires_at =
-          Time::from_now(config::JOIN_TIMEOUT_SEC);
-
-      json message_body;
-      message_body["sender"] = TypeConverter::toBase64Str(merger_id);
-      message_body["time"] = timestamp;
-
-      m_join_temporary_table[receiver_id]->merger_nonce =
-          RandomNumGenerator::toString(RandomNumGenerator::randomize(32));
-      message_body["mN"] = m_join_temporary_table[receiver_id]->merger_nonce;
-
-      OutputMessage output_message =
-          make_tuple(MessageType::MSG_CHALLENGE, receiver_list, message_body);
-      proxy.deliverOutputMessage(output_message);
+      CLOG(ERROR, "SMGR") << "Merger is full";
+      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_MAX_SIGNER_POOL);
+      return;
     }
+
+    auto current_time = Time::now_int();
+
+    m_join_temp_table[recv_id_b64].reset(new JoinTemporaryData());
+
+    m_join_temp_table[recv_id_b64]->start_time =
+        static_cast<timestamp_type>(current_time);
+    m_join_temp_table[recv_id_b64]->merger_nonce =
+        PRNG::toString(PRNG::randomize(32));
+
+    OutputMsgEntry output_message;
+    output_message.type = MessageType::MSG_CHALLENGE;
+    output_message.body["mID"] = TypeConverter::encodeBase64(m_my_id);
+    output_message.body["time"] = to_string(current_time);
+    output_message.body["mN"] = m_join_temp_table[recv_id_b64]->merger_nonce;
+    output_message.receivers = receiver_list;
+
+    m_proxy.deliverOutputMessage(output_message);
+
   } break;
   case MessageType::MSG_RESPONSE_1: {
-    if (isTimeout(receiver_id)) {
-      m_join_temporary_table[receiver_id].release();
-      deliverErrorMessage(receiver_list);
+    if (m_join_temp_table.find(recv_id_b64) == m_join_temp_table.end()) {
+      CLOG(ERROR, "SMGR") << "Illegal Trial";
+      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_ILLEGAL_ACCESS);
       return;
     }
 
-    OutputMessage output_message;
-    if (verifySignature(receiver_id, message_body_json)) {
-      std::cout << "Validation success!" << std::endl;
-
-      auto signer_pk_cert = message_body_json["cert"].get<string>();
-      auto cert_vector = TypeConverter::decodeBase64(signer_pk_cert);
-      string decoded_cert_str(cert_vector.begin(), cert_vector.end());
-      m_join_temporary_table[receiver_id]->signer_cert = decoded_cert_str;
-
-      json message_body;
-      message_body["sender"] = TypeConverter::toBase64Str(merger_id);
-      message_body["time"] = timestamp;
-      message_body["cert"] = getCertificate();
-
-      HmacKeyMaker key_maker;
-      key_maker.genRandomSecretKey();
-      auto public_key = key_maker.getPublicKey();
-
-      string dhx = public_key.first;
-      string dhy = public_key.second;
-      message_body["dhx"] = dhx;
-      message_body["dhy"] = dhy;
-
-      auto signer_dhx = message_body_json["dhx"].get<string>();
-      auto signer_dhy = message_body_json["dhy"].get<string>();
-
-      auto shared_secret_key_vector =
-          key_maker.getSharedSecretKey(signer_dhx, signer_dhy, 32);
-      m_join_temporary_table[receiver_id]->shared_secret_key = vector<uint8_t>(
-          shared_secret_key_vector.begin(), shared_secret_key_vector.end());
-
-      message_body["sig"] =
-          signMessage(m_join_temporary_table[receiver_id]->merger_nonce,
-                      message_body_json["sN"].get<string>(), dhx, dhy, now);
-
-      auto &signer_pool = Application::app().getSignerPool();
-      auto secret_key_vector = TypeConverter::toSecureVector(
-          m_join_temporary_table[receiver_id]->shared_secret_key);
-      signer_pool.pushSigner(receiver_id,
-                             m_join_temporary_table[receiver_id]->signer_cert,
-                             secret_key_vector, SignerStatus::TEMPORARY);
-
-      output_message =
-          make_tuple(MessageType::MSG_RESPONSE_2, receiver_list, message_body);
-    } else {
-      m_join_temporary_table[receiver_id].release();
-      output_message =
-          make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
-    }
-    //    message_body[]
-    proxy.deliverOutputMessage(output_message);
-  } break;
-  case MessageType::MSG_SUCCESS: {
-    auto &signer_pool = Application::app().getSignerPool();
-
-    if (isTimeout(receiver_id)) {
-      m_join_temporary_table[receiver_id].release();
-      signer_pool.removeSigner(receiver_id);
-      deliverErrorMessage(receiver_list);
+    if (isTimeout(recv_id_b64)) {
+      CLOG(ERROR, "SMGR") << "Join timeout (" << recv_id_b64 << ")";
+      m_join_temp_table[recv_id_b64].release();
+      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_TIMEOUT,
+                       "too late MSG_RESPONSE_1");
       return;
     }
 
-    signer_pool.updateStatus(receiver_id, SignerStatus::GOOD);
+    if (!verifySignature(recv_id, message_body_json)) {
+      CLOG(ERROR, "SMGR") << "Invalid Signature";
+      m_join_temp_table[recv_id_b64].release();
+      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_INVALID_SIG);
+      return;
+    }
+
+    m_join_temp_table[recv_id_b64]->signer_cert =
+        Safe::getString(message_body_json, "cert");
 
     json message_body;
-    message_body["sender"] = TypeConverter::toBase64Str(merger_id);
-    message_body["time"] = timestamp;
-    message_body["val"] = true;
 
-    OutputMessage output_message;
-    output_message =
-        make_tuple(MessageType::MSG_ACCEPT, receiver_list, message_body);
+    HmacKeyMaker key_maker;
+    key_maker.genRandomSecretKey();
+    auto public_key = key_maker.getPublicKey();
 
-    proxy.deliverOutputMessage(output_message);
+    string dhx = public_key.first;
+    string dhy = public_key.second;
+
+    auto signer_dhx = Safe::getString(message_body_json, "dhx");
+    auto signer_dhy = Safe::getString(message_body_json, "dhy");
+
+    auto shared_sk_bytes =
+        key_maker.getSharedSecretKey(signer_dhx, signer_dhy, 32);
+
+    if (shared_sk_bytes.empty()) {
+      CLOG(ERROR, "SMGR") << "Failed to generate SSK (invalid PK)";
+      m_join_temp_table[recv_id_b64].release();
+      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_INVALID_PK, "");
+      return;
+    }
+
+    m_join_temp_table[recv_id_b64]->shared_secret_key =
+        vector<uint8_t>(shared_sk_bytes.begin(), shared_sk_bytes.end());
+
+    timestamp_type current_time = static_cast<timestamp_type>(Time::now_int());
+
+    OutputMsgEntry output_message;
+    output_message.type = MessageType::MSG_RESPONSE_2;
+    output_message.body["mID"] = TypeConverter::encodeBase64(m_my_id);
+    output_message.body["time"] = to_string(current_time);
+    output_message.body["cert"] = m_my_cert;
+    output_message.body["dhx"] = dhx;
+    output_message.body["dhy"] = dhy;
+    output_message.body["sig"] = signMessage(
+        m_join_temp_table[recv_id_b64]->merger_nonce,
+        message_body_json["sN"].get<string>(), dhx, dhy, current_time);
+    output_message.receivers = receiver_list;
+
+    m_proxy.deliverOutputMessage(output_message);
+
+    auto secret_key_vector = TypeConverter::toSecureVector(
+        m_join_temp_table[recv_id_b64]->shared_secret_key);
+    m_signer_pool->pushSigner(recv_id,
+                              m_join_temp_table[recv_id_b64]->signer_cert,
+                              secret_key_vector, SignerStatus::TEMPORARY);
+
   } break;
-  case MessageType::MSG_ECHO:
-    break;
-  case MessageType::MSG_LEAVE:
-    break;
+  case MessageType::MSG_SUCCESS: {
+    // OK! This signer has passed HMAC on MesssageHandler.
+    // If the merger is ok, it does not need check m_join_temp_table.
+
+    if (isTimeout(recv_id_b64)) {
+      CLOG(ERROR, "SMGR") << "Join timeout (" << recv_id_b64 << ")";
+      m_join_temp_table[recv_id_b64].release();
+      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_TIMEOUT,
+                       "too late MSG_SUCCESS");
+      return;
+    }
+
+    m_join_temp_table[recv_id_b64].release();
+
+    m_signer_pool->updateStatus(recv_id, SignerStatus::GOOD);
+
+    OutputMsgEntry output_message;
+    output_message.type = MessageType::MSG_ACCEPT;
+    output_message.body["mID"] = TypeConverter::encodeBase64(m_my_id);
+    output_message.body["time"] = Time::now();
+    output_message.body["val"] = true;
+    output_message.receivers = receiver_list;
+
+    m_proxy.deliverOutputMessage(output_message);
+
+  } break;
+  case MessageType::MSG_LEAVE: {
+    if (m_join_temp_table.find(recv_id_b64) != m_join_temp_table.end())
+      m_join_temp_table[recv_id_b64].release();
+
+    if (m_signer_pool->removeSigner(recv_id)) {
+      std::string leave_time = Safe::getString(message_body_json, "time");
+      std::string leave_msg = Safe::getString(message_body_json, "msg");
+      CLOG(INFO, "SMGR") << "Signer left (" << recv_id_b64 << ")";
+    }
+
+  } break;
   default:
     break;
   }
 }
 
-bool SignerPoolManager::verifySignature(signer_id_type signer_id,
-                                        json message_body_json) {
-  const auto decoded_signer_signature =
-      Botan::base64_decode(message_body_json["sig"].get<string>());
-  const auto cert_vector =
-      Botan::base64_decode(message_body_json["cert"].get<string>());
+bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
+                                        json &message_body_json) {
 
-  const string cert_in(cert_vector.begin(), cert_vector.end());
-  const vector<uint8_t> signer_signature(decoded_signer_signature.begin(),
-                                         decoded_signer_signature.end());
+  bytes sig_bytes = Safe::getBytesFromB64(message_body_json, "sig");
 
-  BytesBuilder sig_builder;
-  sig_builder.appendB64(m_join_temporary_table[signer_id]->merger_nonce);
-  sig_builder.appendB64(message_body_json["sN"].get<string>());
-  sig_builder.appendHex(message_body_json["dhx"].get<string>());
-  sig_builder.appendHex(message_body_json["dhy"].get<string>());
-  sig_builder.appendDec(message_body_json["time"].get<string>());
+  string cert_in = Safe::getString(message_body_json, "cert");
 
-  const bytes message_bytes = sig_builder.getBytes();
+  string signer_id_b64 = TypeConverter::encodeBase64(signer_id);
 
-  return RSA::doVerify(cert_in, message_bytes, signer_signature, true);
-}
+  BytesBuilder msg_builder;
+  msg_builder.appendB64(m_join_temp_table[signer_id_b64]->merger_nonce);
+  msg_builder.appendB64(Safe::getString(message_body_json, "sN"));
+  msg_builder.appendHex(Safe::getString(message_body_json, "dhx"));
+  msg_builder.appendHex(Safe::getString(message_body_json, "dhy"));
+  msg_builder.appendDec(Safe::getString(message_body_json, "time"));
 
-string SignerPoolManager::getCertificate() {
-  // TODO: config 파일 만들어서 하드코딩 된 것 처리할 것.
-  const string tmp_cert =
-      "-----BEGIN CERTIFICATE-----\n"
-      "MIIC2jCCAcKgAwIBAgIBATANBgkqhkiG9w0BAQsFADBhMRQwEgYDVQQDEwt0aGVW\n"
-      "YXVsdGVyczELMAkGA1UEBhMCS1IxCTAHBgNVBAgTADEQMA4GA1UEBxMHSW5jaGVv\n"
-      "bjEUMBIGA1UEChMLdGhlVmF1bHRlcnMxCTAHBgNVBAsTADAeFw0xODExMjkwMTI5\n"
-      "MzhaFw0xOTExMjkwMTI5MzhaMAAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK\n"
-      "AoIBAQCKWX3bNHseiGPQMSzoJt0kGmPlhp7BYj2LLPEexBl2RNFPyqhpmgROlY91\n"
-      "GbQTUB9B5/wR+agn/bMF6jKtNH27HqWXeiJxtlDCknOjJZLbdhhwynyWxmzgHDG3\n"
-      "4beuHK8rYQYzcXuOcGPKKP0impIzs8jQZQfJu64bU9GjY7ElVvQNBzOHODBpCzpv\n"
-      "6AQ2UXfXt57T/vNAG6UMfuB+uTrW8q4d3raHsy7VPEUG3os9wteny5OZdIQMaeSi\n"
-      "xtUMJjH0BeaTaEg3GuzxLV/YkZzCJ7HOXmU1DlXWCk/L0/w1sseKwIohS3WPXzsd\n"
-      "TbU3zfQzvHKgCR3wkkUTS5csmTxpAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAEOx\n"
-      "14/mmitlmxmOl5PK5PJNtotbyZJ5KttMWtBV5jizElJ8JzBGEz4goiz50Y/KGVbP\n"
-      "4tNUCs0XADaJrC7KmmxDUJZUU2iIkK27hqexpwFCsqAdQUAa7kvBe4C+cE5hqVIa\n"
-      "1aMkoufdmUR98VNQkatKuWtrqJRtWIwMeUj0lO6rxnY4HSlv56/h6lJGJJAleiyF\n"
-      "mE8QW35n2uPz//RDV0J3Rj5xzu6tmHNJp+vdibQeqIiESak2vlkRD/7I4mrx7hf4\n"
-      "Ghu7BKUmzhIPAzZR/jp/AEzWeiLisnWZeoj7l6dSRrBBiCcMF+RccxAaWd4abJxg\n"
-      "5PMxcZ8IUhvjaHsIO5U=\n"
-      "-----END CERTIFICATE-----";
-
-  return tmp_cert;
+  return ECDSA::doVerify(cert_in, msg_builder.getBytes(), sig_bytes);
 }
 
 string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
                                       string dhx, string dhy,
-                                      uint64_t timestamp) {
-  // TODO: 임시 rsa_sk_pem
-  string rsa_sk_pem = "";
+                                      timestamp_type timestamp) {
 
-  BytesBuilder builder;
-  builder.appendB64(merger_nonce);
-  builder.appendB64(signer_nonce);
-  builder.appendHex(dhx);
-  builder.appendHex(dhy);
-  builder.append(timestamp);
+  auto setting = Setting::getInstance();
+  string ecdsa_sk_pem = setting->getMySK();
+  string ecdsa_sk_pass = setting->getMyPass();
 
-  auto message_bytes = builder.getBytes();
-  auto signature = RSA::doSign(rsa_sk_pem, message_bytes, true);
+  BytesBuilder msg_builder;
+  msg_builder.appendB64(merger_nonce);
+  msg_builder.appendB64(signer_nonce);
+  msg_builder.appendHex(dhx);
+  msg_builder.appendHex(dhy);
+  msg_builder.append(timestamp);
 
-  return Botan::base64_encode(signature);
+  return TypeConverter::encodeBase64(
+      ECDSA::doSign(ecdsa_sk_pem, msg_builder.getBytes(), ecdsa_sk_pass));
 }
 
 bool SignerPoolManager::isJoinable() {
-  // TODO: 현재 100명 정도 가입할 수 있다. Config 관련 코드 구현하면 제거할 것
-  return true;
+  return (config::MAX_SIGNER_NUM > m_signer_pool->size());
 }
 
-bool SignerPoolManager::isTimeout(signer_id_type signer_id) {
-  if (m_join_temporary_table[signer_id]) {
-    auto expires_at = m_join_temporary_table[signer_id]->expires_at;
-    auto timeout = expires_at < Time::now_int();
-    // TODO: Logger
-    if (timeout)
-      std::cout << "Signer " << signer_id << " is expired" << std::endl;
-    return timeout;
-  }
-  return false;
+bool SignerPoolManager::isTimeout(std::string &signer_id_b64) {
+  // Dont't call this function unless checking m_join_temp_table
+  return (static_cast<timestamp_type>(Time::now_int()) -
+              m_join_temp_table[signer_id_b64]->start_time >
+          config::JOIN_TIMEOUT_SEC);
 }
 
-void SignerPoolManager::deliverErrorMessage(vector<uint64_t> &receiver_list) {
-  MessageProxy proxy;
-  OutputMessage output_message =
-      make_tuple(MessageType::MSG_ERROR, receiver_list, json({}));
-  proxy.deliverOutputMessage(output_message);
+void SignerPoolManager::sendErrorMessage(vector<signer_id_type> &receiver_list,
+                                         ErrorMsgType error_type,
+                                         const std::string &info) {
+
+  OutputMsgEntry output_message;
+  output_message.type = MessageType::MSG_ERROR;
+  output_message.body["sender"] = TypeConverter::encodeBase64(m_my_id); // my_id
+  output_message.body["time"] = Time::now();
+  output_message.body["type"] = std::to_string(static_cast<int>(error_type));
+  output_message.body["info"] = info;
+  output_message.receivers = receiver_list;
+
+  m_proxy.deliverOutputMessage(output_message);
 }
 } // namespace gruut

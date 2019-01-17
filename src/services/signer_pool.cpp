@@ -1,13 +1,9 @@
 #include "signer_pool.hpp"
-#include "../utils/time.hpp"
-#include "transaction_generator.hpp"
-#include <algorithm>
-#include <random>
 
 using namespace gruut::config;
 
 namespace gruut {
-void SignerPool::pushSigner(signer_id_type user_id, std::string &pk_cert,
+void SignerPool::pushSigner(signer_id_type &user_id, std::string &pk_cert,
                             Botan::secure_vector<uint8_t> &hmac_key,
                             SignerStatus status) {
   Signer new_signer;
@@ -29,7 +25,7 @@ void SignerPool::pushSigner(signer_id_type user_id, std::string &pk_cert,
   }
 }
 
-bool SignerPool::updatePkCert(signer_id_type user_id, std::string &pk_cert) {
+bool SignerPool::updatePkCert(signer_id_type &user_id, std::string &pk_cert) {
   auto signer_iter = find(user_id);
 
   if (signer_iter == m_signer_pool.end()) {
@@ -43,7 +39,7 @@ bool SignerPool::updatePkCert(signer_id_type user_id, std::string &pk_cert) {
   }
 }
 
-bool SignerPool::updateHmacKey(signer_id_type user_id,
+bool SignerPool::updateHmacKey(signer_id_type &user_id,
                                hmac_key_type &hmac_key) {
   auto signer_iter = find(user_id);
 
@@ -59,7 +55,7 @@ bool SignerPool::updateHmacKey(signer_id_type user_id,
   }
 }
 
-bool SignerPool::updateStatus(uint64_t user_id, SignerStatus status) {
+bool SignerPool::updateStatus(signer_id_type &user_id, SignerStatus status) {
   auto signer_iter = find(user_id);
 
   if (signer_iter == m_signer_pool.end()) {
@@ -74,7 +70,7 @@ bool SignerPool::updateStatus(uint64_t user_id, SignerStatus status) {
   }
 }
 
-bool SignerPool::removeSigner(uint64_t user_id) {
+bool SignerPool::removeSigner(signer_id_type &user_id) {
   auto signer_iter = find(user_id);
 
   if (signer_iter == m_signer_pool.end()) {
@@ -88,7 +84,7 @@ bool SignerPool::removeSigner(uint64_t user_id) {
   }
 }
 
-hmac_key_type SignerPool::getHmacKey(uint64_t user_id) {
+hmac_key_type SignerPool::getHmacKey(signer_id_type &user_id) {
   auto signer_iter = find(user_id);
   if (signer_iter == m_signer_pool.end())
     return hmac_key_type();
@@ -96,7 +92,7 @@ hmac_key_type SignerPool::getHmacKey(uint64_t user_id) {
   return (*signer_iter).hmac_key;
 }
 
-std::string SignerPool::getPkCert(signer_id_type user_id) {
+std::string SignerPool::getPkCert(signer_id_type &user_id) {
   auto signer_iter = find(user_id);
   if (signer_iter == m_signer_pool.end())
     return "";
@@ -127,7 +123,7 @@ std::vector<Signer> SignerPool::getRandomSigners(size_t number) {
   std::for_each(m_signer_pool.begin(), m_signer_pool.end(),
                 [&signers](Signer &signer) {
                   if (signer.status == SignerStatus::GOOD)
-                    signers.push_back(signer);
+                    signers.emplace_back(signer);
                 });
 
   std::shuffle(signers.begin(), signers.end(),
@@ -136,7 +132,7 @@ std::vector<Signer> SignerPool::getRandomSigners(size_t number) {
   return vector<Signer>(signers.begin(), signers.begin() + number);
 }
 
-std::list<Signer>::iterator SignerPool::find(signer_id_type user_id) {
+std::list<Signer>::iterator SignerPool::find(signer_id_type &user_id) {
   auto it = std::find_if(
       m_signer_pool.begin(), m_signer_pool.end(),
       [this, &user_id](Signer &signer) { return signer.user_id == user_id; });
@@ -150,13 +146,4 @@ Signer SignerPool::getSigner(int index) {
   return *it;
 }
 
-void SignerPool::createTransactions() {
-  TransactionGenerator generator;
-
-  for (auto &signer : m_signer_pool) {
-    if (signer.status == SignerStatus::GOOD && signer.isNew()) {
-      generator.generate(signer);
-    }
-  }
-}
 } // namespace gruut

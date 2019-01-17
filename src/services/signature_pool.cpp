@@ -1,27 +1,47 @@
 #include "../application.hpp"
-#include "../utils/bytes_builder.hpp"
-#include "../utils/rsa.hpp"
-#include "../utils/type_converter.hpp"
+#include "easy_logging.hpp"
+#include "signer_pool.hpp"
 
-#include <string>
-
-using namespace nlohmann;
 using namespace std;
 
 namespace gruut {
-void SignaturePool::handleMessage(signer_id_type receiver_id,
-                                  json message_body_json) {
-  if (verifySignature(receiver_id, message_body_json)) {
-    Signature s;
 
-    s.signer_id = receiver_id;
+SignaturePool::SignaturePool() {
+  auto setting = Setting::getInstance();
+  m_my_id = setting->getMyId();
+  m_my_chain_id = setting->getLocalChainId();
+  el::Loggers::getLogger("SPOL");
+}
 
-    string signer_sig = message_body_json["sig"].get<string>();
-    auto decoded_signer_sig = TypeConverter::decodeBase64(signer_sig);
-    s.signer_signature = decoded_signer_sig;
-
-    push(s);
+void SignaturePool::handleMessage(json &msg_body_json) {
+  if (!m_enabled) {
+    CLOG(ERROR, "SPOL") << "Support Signature dropped (disabled pool)";
+    return;
   }
+
+  signer_id_type signer_id = Safe::getBytesFromB64(msg_body_json, "sID");
+
+  if (verifySignature(signer_id, msg_body_json)) {
+    Signature ssig;
+
+    ssig.signer_id = signer_id;
+    ssig.height = m_height;
+    ssig.signer_signature = Safe::getBytesFromB64(msg_body_json, "sig");
+
+    push(ssig);
+
+  } else {
+    CLOG(ERROR, "SPOL") << "Invalid Support Signature for This Block";
+  }
+}
+
+void SignaturePool::setupSigPool(block_height_type chain_height,
+                                 timestamp_type block_time, sha256 &tx_root) {
+  m_height = chain_height;
+  m_block_time = block_time;
+  m_tx_root = tx_root;
+
+  enablePool();
 }
 
 void SignaturePool::push(Signature &signature) {
@@ -29,9 +49,16 @@ void SignaturePool::push(Signature &signature) {
   m_signature_pool.emplace_back(signature);
 }
 
-Signatures SignaturePool::fetchN(size_t n) {
+Signatures SignaturePool::fetchN(size_t n, block_height_type t_height) {
   Signatures signatures;
-  copy_n(m_signature_pool.begin(), n, back_inserter(signatures));
+  for (auto &ssig : m_signature_pool) {
+    if (ssig.height == t_height) {
+      signatures.emplace_back(ssig);
+    }
+
+    if (signatures.size() >= n)
+      break;
+  }
 
   return signatures;
 }
@@ -40,41 +67,31 @@ size_t SignaturePool::size() { return m_signature_pool.size(); }
 
 bool SignaturePool::empty() { return size() == 0; }
 
-bool SignaturePool::verifySignature(signer_id_type receiver_id,
-                                    json message_body_json) {
-  auto pk_cert = Application::app().getSignerPool().getPkCert(receiver_id);
-  if (pk_cert != "") {
-    BytesBuilder bytes_builder;
-
-    auto not_decoded_id = message_body_json["sID"].get<string>();
-    auto signer_id_str =
-        TypeConverter::toString(TypeConverter::decodeBase64(not_decoded_id));
-    auto signer_id_vector = TypeConverter::digitStringToBytes(signer_id_str);
-    bytes_builder.append(signer_id_vector);
-
-    auto timestamp = message_body_json["time"].get<string>();
-    auto timestamp_bytes = TypeConverter::digitStringToBytes(timestamp);
-    bytes_builder.append(timestamp_bytes);
-
-    PartialBlock &partial_block = Application::app().getTemporaryPartialBlock();
-    bytes_builder.append(partial_block.merger_id);
-
-    bytes_builder.append(partial_block.height);
-
-    auto tx_root = partial_block.transaction_root;
-    bytes_builder.append(tx_root);
-
-    auto signer_signature_str = message_body_json["sig"].get<string>();
-    auto signer_signature_bytes =
-        TypeConverter::decodeBase64(signer_signature_str);
-    auto signature_message_bytes = bytes_builder.getBytes();
-
-    bool verify_result = RSA::doVerify(pk_cert, signature_message_bytes,
-                                       signer_signature_bytes, true);
-
-    return verify_result;
+bool SignaturePool::verifySignature(signer_id_type &recv_id,
+                                    json &msg_body_json) {
+  auto pk_cert = SignerPool::getInstance()->getPkCert(recv_id);
+  if (pk_cert.empty()) {
+    auto storage = Storage::getInstance();
+    pk_cert = storage->findCertificate(recv_id);
   }
 
-  return false;
+  if (pk_cert.empty()) {
+    CLOG(ERROR, "SPOL") << "Empty user certificate";
+    return false;
+  }
+
+  signer_id_type signer_id = Safe::getBytesFromB64(msg_body_json, "sID");
+
+  BytesBuilder msg_builder;
+  msg_builder.append(signer_id);
+  msg_builder.append(m_block_time);
+  msg_builder.append(m_my_id);
+  msg_builder.append(m_my_chain_id);
+  msg_builder.append(m_height);
+  msg_builder.append(m_tx_root);
+
+  auto sig_bytes = Safe::getBytesFromB64(msg_body_json, "sig");
+
+  return ECDSA::doVerify(pk_cert, msg_builder.getBytes(), sig_bytes);
 }
 } // namespace gruut

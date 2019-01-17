@@ -1,5 +1,6 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_SHA_256_HPP
 #define GRUUT_ENTERPRISE_MERGER_SHA_256_HPP
+
 #include <botan/base64.h>
 #include <botan/hash.h>
 #include <sstream>
@@ -29,6 +30,8 @@ public:
   static string toString(sha256 hashed_list) {
     return base64_encode(hashed_list);
   }
+
+  static sha256 hash(std::vector<uint8_t> &&data) { return hash(data); }
 
   static sha256 hash(std::vector<uint8_t> &data) {
     std::unique_ptr<Botan::HashFunction> hash_function(

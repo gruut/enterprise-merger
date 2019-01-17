@@ -1,19 +1,96 @@
 #include "transaction_pool.hpp"
 
 namespace gruut {
-void TransactionPool::push(Transaction &transaction) {
-  std::lock_guard<std::mutex> guard(m_mutex);
-  m_transaction_pool.emplace_back(transaction);
+TransactionPool::TransactionPool() {
+  m_transaction_pool.reserve(config::MAX_COLLECT_TRANSACTION_SIZE * 2);
 }
 
-Transaction TransactionPool::pop() {
-  std::lock_guard<std::mutex> guard(m_mutex);
-  auto transaction = m_transaction_pool.front();
-  m_transaction_pool.pop_front();
-  m_mutex.unlock();
+bool TransactionPool::push(Transaction &transaction) {
 
-  return transaction;
+  std::string tx_id_str =
+      TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
+          transaction.getId());
+  if (!m_txid_pool.has(tx_id_str)) {
+    m_txid_pool.set(tx_id_str, true);
+
+    std::lock_guard<std::mutex> lock(m_push_mutex);
+    m_transaction_pool.emplace_back(transaction);
+    m_push_mutex.unlock();
+
+    return true;
+  }
+  return false;
 }
 
-size_t TransactionPool::size() { return m_transaction_pool.size(); }
+void TransactionPool::clear() {
+  m_txid_pool.clear();
+
+  std::lock_guard<std::mutex> lock(m_push_mutex);
+  m_transaction_pool.clear();
+  m_push_mutex.unlock();
+}
+
+bool TransactionPool::isDuplicated(transaction_id_type &&tx_id) {
+  return isDuplicated(tx_id);
+}
+bool TransactionPool::isDuplicated(transaction_id_type &tx_id) {
+  return m_txid_pool.has(
+      TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(tx_id));
+}
+
+bool TransactionPool::pop(Transaction &transaction) {
+  if (m_txid_pool.get_n_keys() == 0)
+    return false;
+
+  bool success = false;
+  for (size_t i = m_transaction_pool.size() - 1; i >= 0; --i) {
+    std::string tx_id_str =
+        TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
+            m_transaction_pool[i].getId());
+    if (m_txid_pool.get_copy_or_default(tx_id_str, false)) {
+      transaction = m_transaction_pool[i];
+      m_txid_pool.unset(tx_id_str);
+      success = true;
+      break;
+    }
+  }
+
+  return success;
+}
+
+std::vector<Transaction> TransactionPool::fetchLastN(size_t n) {
+  std::vector<Transaction> transactions;
+
+  for (size_t i = m_transaction_pool.size() - 1; i >= 0; --i) {
+    std::string tx_id_str =
+        TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
+            m_transaction_pool[i].getId());
+    if (m_txid_pool.get_copy_or_default(tx_id_str, false)) {
+      transactions.emplace_back(m_transaction_pool[i]);
+      m_txid_pool.unset(tx_id_str);
+      if (transactions.size() >= n)
+        break;
+    }
+  }
+
+  return transactions;
+}
+
+void TransactionPool::removeDuplicatedTransactions(
+    std::vector<transaction_id_type> &&tx_ids) {
+  removeDuplicatedTransactions(tx_ids);
+}
+
+void TransactionPool::removeDuplicatedTransactions(
+    std::vector<transaction_id_type> &tx_ids) {
+  if (tx_ids.empty())
+    return;
+
+  for (auto &tx_id : tx_ids) {
+    m_txid_pool.unset(
+        TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(tx_id));
+  }
+}
+
+size_t TransactionPool::size() { return m_txid_pool.get_n_keys(); }
 } // namespace gruut

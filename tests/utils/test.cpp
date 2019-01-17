@@ -13,6 +13,7 @@
 #include "../../src/utils/bytes_builder.hpp"
 #include "../../src/utils/type_converter.hpp"
 #include "../../src/utils/time.hpp"
+#include "../../src/utils/crypto.hpp"
 
 using namespace std;
 
@@ -42,8 +43,8 @@ BOOST_AUTO_TEST_SUITE(Test_Compressor)
         string original = "2013-01-07 00:00:04,0.98644,0.98676 2013-01-07 00:01:19,0.98654,0.98676 2013-01-07 00:01:38,0.98644,0.98696";
         string compressed_data, decompressed_data;
 
-        int compressed_size = Compressor::compressData(original, compressed_data);
-        Compressor::decompressData(compressed_data, decompressed_data, compressed_size);
+        compressed_data = Compressor::compressData(original);
+        decompressed_data = Compressor::decompressData(compressed_data);
 
         BOOST_TEST(decompressed_data == original);
     }
@@ -201,10 +202,64 @@ BOOST_AUTO_TEST_SUITE(Test_TypeConverter)
 
   BOOST_AUTO_TEST_CASE(digitBytesToIntegerStr) {
     uint64_t original_val = 19999;
-    auto bytes = TypeConverter::integerToBytes(19999);
-    auto value = TypeConverter::digitBytesToIntegerStr(bytes);
+    auto bytes_val = TypeConverter::integerToBytes(19999);
+    auto value = TypeConverter::digitBytesToIntegerStr(bytes_val);
 
     BOOST_CHECK_EQUAL(to_string(original_val), value);
+  }
+
+  BOOST_AUTO_TEST_CASE(base64_encode_and_decode) {
+    std::string test_data_b64 = "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw=";
+    std::vector<uint8_t> test_data = TypeConverter::decodeBase64(test_data_b64);
+    std::string test_data_re_b64 = TypeConverter::encodeBase64(test_data);
+
+    BOOST_CHECK_EQUAL(test_data_b64, test_data_re_b64);
+  }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_EncSecretKey)
+  BOOST_AUTO_TEST_CASE(isEncPemCheck) {
+
+    std::string enc_pem = R"(-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIH0MF8GCSqGSIb3DQEFDTBSMDEGCSqGSIb3DQEFDDAkBAzoqirb4rPgYW6QRk8C
+AwLmMAIBIDAMBggqhkiG9w0CCQUAMB0GCWCGSAFlAwQBKgQQfRgPMemUQHnQCMeG
+TADGRwSBkIVjZDboFhYLuLxeqiuQV82BSXFCdb0ijWwmqvXgEEAZ2OLYTJyZyx9P
+OTOGR4EfDF9KHvHkaJNoP9yV29KkByOkon4GC/q+6e3mNzLWEqipP7krfQTAODww
+tORbJakUcR5/XKOfKvcVhpFlAUBzVKKUnSqgf9kRehxiDcivw0M2YexpHkWcCJ5l
+4QJOr54FAA==
+-----END ENCRYPTED PRIVATE KEY-----)";
+
+    std::string raw_pem = R"(-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgHf0U1xFlPmPAh/XQ
+UvnPcQsTA1Wt++jIJZMaRyJxDeShRANCAARArDI53bXc9WpGYQuFAJndrjoKyWr+
+v1cI3SKQHAm1uJ+42+1M/MSd7Qr1g8e2O8BWXWnhF61ZdkhfM+OyolTd
+-----END PRIVATE KEY-----)";
+
+    BOOST_TEST(GemCrypto::isEncPem(enc_pem));
+    BOOST_TEST(!GemCrypto::isEncPem(raw_pem));
+
+  }
+
+  BOOST_AUTO_TEST_CASE(isValidPass) {
+    std::string enc_pem = R"(-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIH0MF8GCSqGSIb3DQEFDTBSMDEGCSqGSIb3DQEFDDAkBAzoqirb4rPgYW6QRk8C
+AwLmMAIBIDAMBggqhkiG9w0CCQUAMB0GCWCGSAFlAwQBKgQQfRgPMemUQHnQCMeG
+TADGRwSBkIVjZDboFhYLuLxeqiuQV82BSXFCdb0ijWwmqvXgEEAZ2OLYTJyZyx9P
+OTOGR4EfDF9KHvHkaJNoP9yV29KkByOkon4GC/q+6e3mNzLWEqipP7krfQTAODww
+tORbJakUcR5/XKOfKvcVhpFlAUBzVKKUnSqgf9kRehxiDcivw0M2YexpHkWcCJ5l
+4QJOr54FAA==
+-----END ENCRYPTED PRIVATE KEY-----)";
+    std::string raw_pem = R"(-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgHf0U1xFlPmPAh/XQ
+UvnPcQsTA1Wt++jIJZMaRyJxDeShRANCAARArDI53bXc9WpGYQuFAJndrjoKyWr+
+v1cI3SKQHAm1uJ+42+1M/MSd7Qr1g8e2O8BWXWnhF61ZdkhfM+OyolTd
+-----END PRIVATE KEY-----)";
+
+    BOOST_TEST(GemCrypto::isValidPass(enc_pem,"12345678"));
+    BOOST_TEST(!GemCrypto::isValidPass(enc_pem,""));
+    BOOST_TEST(GemCrypto::isValidPass(raw_pem,""));
+    BOOST_TEST(GemCrypto::isValidPass(raw_pem,"12345678"));
   }
 
 BOOST_AUTO_TEST_SUITE_END()
