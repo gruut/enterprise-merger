@@ -25,11 +25,13 @@ void MergerClient::accessToTracker() {
   request_msg["ip"] = setting->getMyAddress();
   request_msg["port"] = setting->getMyPort();
   request_msg["mCert"] = setting->getMyCert();
+  request_msg["time"]  = Time::now();
+  request_msg["hgt"] = to_string(0);
 
   // ToDO: 현재 local주소, setting에 tracker 정보 세팅 필요.
   CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";
   json response_msg;
-  HttpClient http_client("127.0.0.1:80/src/JoinMerger.php");
+  HttpClient http_client("ec2-13-125-221-27.ap-northeast-2.compute.amazonaws.com/src/JoinMerger.php");
   CURLcode status =
       http_client.postAndGetReply(request_msg.dump(), response_msg);
 

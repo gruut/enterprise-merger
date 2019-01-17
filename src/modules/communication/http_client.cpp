@@ -41,8 +41,8 @@ CURLcode HttpClient::postAndGetReply(const std::string &msg, json &json_data) {
 
     m_curl.setOpt(CURLOPT_WRITEFUNCTION, writeCallback);
     m_curl.setOpt(CURLOPT_WRITEDATA, &http_data);
-
     m_curl.perform();
+
     json_data = json::parse(http_data);
 
   } catch (curlpp::EasyException &err) {

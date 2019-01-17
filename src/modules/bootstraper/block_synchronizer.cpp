@@ -150,6 +150,8 @@ bool BlockSynchronizer::sendBlockRequest(size_t height) {
   // TODO : MAX BLOCK HEIGHT 를 가진 Merger들과 연결 될 수 있을때, loop를 빠져
   // 나간다. 사용자로 부터 입력을 받아 처리 할 수 도 있도록 수정 될 수 있음.
   bool conn_check = false;
+  if(max_hgt_merger_list.empty())
+    conn_check = true;
   while (!conn_check) {
     for (auto &merger_id : max_hgt_merger_list) {
       conn_check |= conn_manager->getMergerStatus(merger_id);
