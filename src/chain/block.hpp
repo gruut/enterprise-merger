@@ -162,7 +162,9 @@ public:
     return true;
   }
 
-  void linkPreviousBlock(const std::string & last_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64, const std::string & last_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64) {
+  void linkPreviousBlock(
+      const std::string &last_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64,
+      const std::string &last_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64) {
 
     m_version = config::DEFAULT_VERSION;
     m_prev_block_id_b64 = last_id_b64;
@@ -269,9 +271,7 @@ public:
     return TypeConverter::encodeBase64(m_block_id);
   }
 
-  timestamp_type getTime(){
-    return m_time;
-  }
+  timestamp_type getTime() { return m_time; }
 
   sha256 getHash() { return m_block_hash; }
 
@@ -281,13 +281,12 @@ public:
 
   std::string getPrevBlockIdB64() { return m_prev_block_id_b64; }
 
-  bool isValid(){
-    return (isValidEarly() && isValidLate());
-  }
+  bool isValid() { return (isValidEarly() && isValidLate()); }
 
-  // Support signature cannot be verified unless storage or block itself has suitable certificates
-  // Therefore, the verification of support signatures should be delayed until the previous block has been saved.
-  bool isValidLate(){
+  // Support signature cannot be verified unless storage or block itself has
+  // suitable certificates Therefore, the verification of support signatures
+  // should be delayed until the previous block has been saved.
+  bool isValidLate() {
     // step - check support signatures
     auto storage = Storage::getInstance();
 

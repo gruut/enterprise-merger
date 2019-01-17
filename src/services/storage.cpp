@@ -406,7 +406,8 @@ nth_block_link_type Storage::getNthBlockLinkInfo(size_t t_height) {
         getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevH");
     ret_link_info.height = Safe::getSize(
         getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_hgt"));
-    ret_link_info.time = Safe::getTime(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_time"));
+    ret_link_info.time = Safe::getTime(
+        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_time"));
   } else {
     ret_link_info.height = 0;
     ret_link_info.hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;

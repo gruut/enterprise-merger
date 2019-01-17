@@ -11,7 +11,9 @@ BlockProcessor::BlockProcessor() {
 
   auto last_block_info = m_storage->getNthBlockLinkInfo();
 
-  m_unresolved_block_pool.setPool(last_block_info.id_b64,last_block_info.hash_b64,last_block_info.height, last_block_info.time);
+  m_unresolved_block_pool.setPool(last_block_info.id_b64,
+                                  last_block_info.hash_b64,
+                                  last_block_info.height, last_block_info.time);
 
   auto &io_service = Application::app().getIoService();
   m_timer.reset(new boost::asio::deadline_timer(io_service));
@@ -20,19 +22,19 @@ BlockProcessor::BlockProcessor() {
   el::Loggers::getLogger("BPRO");
 }
 
-void BlockProcessor::start() {
-  periodicTask();
-}
+void BlockProcessor::start() { periodicTask(); }
 
-void BlockProcessor::periodicTask(){
+void BlockProcessor::periodicTask() {
   auto &io_service = Application::app().getIoService();
   io_service.post(m_task_strand->wrap([this]() {
-    std::vector<Block> blocks_to_save = m_unresolved_block_pool.getResolvedBlocks();
-    if(!blocks_to_save.empty()) {
-      for(auto &&each_block : blocks_to_save) {
+    std::vector<Block> blocks_to_save =
+        m_unresolved_block_pool.getResolvedBlocks();
+    if (!blocks_to_save.empty()) {
+      for (auto &&each_block : blocks_to_save) {
 
-        if(!each_block.isValidLate()) {
-          CLOG(ERROR, "BPRO") << "Block dropped (invalid - late stage validation)";
+        if (!each_block.isValidLate()) {
+          CLOG(ERROR, "BPRO")
+              << "Block dropped (invalid - late stage validation)";
           continue;
         }
 
@@ -47,8 +49,9 @@ void BlockProcessor::periodicTask(){
       }
     }
 
-    block_height_type unresolved_height = m_unresolved_block_pool.getUnresolvedLowestHeight();
-    if(unresolved_height > 0) {
+    block_height_type unresolved_height =
+        m_unresolved_block_pool.getUnresolvedLowestHeight();
+    if (unresolved_height > 0) {
       OutputMsgEntry msg_req_block;
 
       msg_req_block.type = MessageType::MSG_REQ_BLOCK;
@@ -65,7 +68,8 @@ void BlockProcessor::periodicTask(){
     }
   }));
 
-  m_timer->expires_from_now(boost::posix_time::milliseconds(config::BROC_PROCESSOR_TASK_PERIOD));
+  m_timer->expires_from_now(
+      boost::posix_time::milliseconds(config::BROC_PROCESSOR_TASK_PERIOD));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       CLOG(INFO, "BPRO") << "Timer ABORTED";
@@ -78,12 +82,12 @@ void BlockProcessor::periodicTask(){
   });
 }
 
-nth_block_link_type BlockProcessor::getMostPossibleLink(){
+nth_block_link_type BlockProcessor::getMostPossibleLink() {
 
   return m_unresolved_block_pool.getMostPossibleLink();
 }
 
-bool BlockProcessor::hasUnresolvedBlocks(){
+bool BlockProcessor::hasUnresolvedBlocks() {
   return m_unresolved_block_pool.hasUnresolvedBlocks();
 }
 
@@ -176,7 +180,7 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     return false;
   }
 
-  if(!m_unresolved_block_pool.push(recv_block)){
+  if (!m_unresolved_block_pool.push(recv_block)) {
     CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
   }
 

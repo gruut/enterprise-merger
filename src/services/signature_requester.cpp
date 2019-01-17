@@ -37,7 +37,7 @@ void SignatureRequester::requestSignatures() {
 
   // step 1 - check whether I can go
 
-  if(Application::app().getBlockProcessor().hasUnresolvedBlocks()){
+  if (Application::app().getBlockProcessor().hasUnresolvedBlocks()) {
     CLOG(ERROR, "SIGR") << "Has unresolved blocks";
     return;
   }
@@ -220,7 +220,8 @@ BasicBlockInfo SignatureRequester::generateBasicBlockInfo() {
 
   auto setting = Setting::getInstance();
 
-  auto latest_block_info = Application::app().getBlockProcessor().getMostPossibleLink();
+  auto latest_block_info =
+      Application::app().getBlockProcessor().getMostPossibleLink();
 
   BasicBlockInfo basic_info;
 
@@ -234,7 +235,6 @@ BasicBlockInfo SignatureRequester::generateBasicBlockInfo() {
     basic_info.height = 1; // this is genesis block
   else
     basic_info.height = latest_block_info.height + 1;
-
 
   return basic_info;
 }

@@ -22,14 +22,14 @@
 #include <botan-2/botan/buf_comp.h>
 
 #include <algorithm>
+#include <boost/asio/deadline_timer.hpp>
 #include <cstring>
 #include <iostream>
 #include <vector>
-#include <boost/asio/deadline_timer.hpp>
 
 namespace gruut {
 
-class BlockProcessor : public Module{
+class BlockProcessor : public Module {
 private:
   MessageProxy m_msg_proxy;
   Storage *m_storage;

@@ -33,6 +33,8 @@ constexpr size_t MAX_COLLECT_TRANSACTION_SIZE = 4096;
 constexpr size_t MIN_SIGNATURE_COLLECT_SIZE = 1;
 constexpr size_t MAX_SIGNATURE_COLLECT_SIZE = 20;
 
+constexpr size_t CONFIRM_LEVEL = 3;
+
 constexpr size_t JOIN_TIMEOUT_SEC = 10;
 
 constexpr size_t MAX_SIGNER_NUM = 200;

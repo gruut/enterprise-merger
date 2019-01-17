@@ -35,7 +35,8 @@ public:
     Block new_block;
     new_block.initialize(basic_info, merkle_tree.getMerkleTree());
     new_block.setSupportSignatures(support_sigs);
-    new_block.linkPreviousBlock(basic_info.prev_id_b64, basic_info.prev_hash_b64);
+    new_block.linkPreviousBlock(basic_info.prev_id_b64,
+                                basic_info.prev_hash_b64);
     new_block.finalize();
 
     json block_header = new_block.getBlockHeaderJson();
@@ -44,11 +45,11 @@ public:
 
     // step-2) save block
 
-//    auto storage = Storage::getInstance();
-//
-//
-//    storage->saveBlock(block_raw, block_header, block_body);
-//
+    //    auto storage = Storage::getInstance();
+    //
+    //
+    //    storage->saveBlock(block_raw, block_header, block_body);
+    //
     CLOG(INFO, "BGEN") << "BLOCK GENERATED (height=" << new_block.getHeight()
                        << ",#tx=" << new_block.getNumTransactions()
                        << ",#ssig=" << new_block.getNumSSigs() << ")";
