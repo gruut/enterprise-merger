@@ -44,16 +44,18 @@ public:
 
     // step-2) save block
 
-    auto storage = Storage::getInstance();
-    auto setting = Setting::getInstance();
-
-    storage->saveBlock(block_raw, block_header, block_body);
-
+//    auto storage = Storage::getInstance();
+//
+//
+//    storage->saveBlock(block_raw, block_header, block_body);
+//
     CLOG(INFO, "BGEN") << "BLOCK GENERATED (height=" << new_block.getHeight()
                        << ",#tx=" << new_block.getNumTransactions()
                        << ",#ssig=" << new_block.getNumSSigs() << ")";
 
     // setp-3) send blocks to others
+
+    auto setting = Setting::getInstance();
 
     OutputMsgEntry msg_header_msg;
     msg_header_msg.type = MessageType::MSG_HEADER;  // MSG_HEADER = 0xB5
@@ -67,9 +69,14 @@ public:
     msg_block_msg.body["tx"] = block_body["tx"];
     msg_block_msg.receivers = std::vector<id_type>{};
 
+    InputMsgEntry msg_block_msg_input;
+    msg_block_msg_input.type = msg_block_msg.type;
+    msg_block_msg_input.body = msg_block_msg.body;
+
     MessageProxy proxy;
     proxy.deliverOutputMessage(msg_header_msg);
     proxy.deliverOutputMessage(msg_block_msg);
+    proxy.deliverBlockProcessor(msg_block_msg_input);
   }
 };
 } // namespace gruut

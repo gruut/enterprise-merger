@@ -36,6 +36,7 @@ private:
   merger_id_type m_my_id;
   UnresolvedBlockPool m_unresolved_block_pool;
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
+  std::unique_ptr<boost::asio::io_service::strand> m_task_strand;
 
 public:
   BlockProcessor();
@@ -46,6 +47,7 @@ public:
   bool handleMessage(InputMsgEntry &entry);
 
   nth_block_link_type getMostPossibleLink();
+  bool hasUnresolvedBlocks();
 
 private:
   void periodicTask();

@@ -16,6 +16,7 @@ public:
   MessageProxy();
   void deliverInputMessage(InputMsgEntry &input_message);
   void deliverOutputMessage(OutputMsgEntry &ouput_message);
+  void deliverBlockProcessor(InputMsgEntry &input_message);
 
 private:
   OutputQueueAlt *m_output_queue;

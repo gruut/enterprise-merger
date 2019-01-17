@@ -13,7 +13,10 @@ BlockProcessor::BlockProcessor() {
 
   m_unresolved_block_pool.setPool(last_block_info.id_b64,last_block_info.hash_b64,last_block_info.height, last_block_info.time);
 
-  m_timer.reset(new boost::asio::deadline_timer(Application::app().getIoService()));
+  auto &io_service = Application::app().getIoService();
+  m_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_task_strand.reset(new boost::asio::io_service::strand(io_service));
+
   el::Loggers::getLogger("BPRO");
 }
 
@@ -23,10 +26,16 @@ void BlockProcessor::start() {
 
 void BlockProcessor::periodicTask(){
   auto &io_service = Application::app().getIoService();
-  io_service.post([this]() {
+  io_service.post(m_task_strand->wrap([this]() {
     std::vector<Block> blocks_to_save = m_unresolved_block_pool.getResolvedBlocks();
     if(!blocks_to_save.empty()) {
       for(auto &&each_block : blocks_to_save) {
+
+        if(!each_block.isValidLate()) {
+          CLOG(ERROR, "BPRO") << "Block dropped (invalid - late stage validation)";
+          continue;
+        }
+
         json block_header = each_block.getBlockHeaderJson();
         bytes block_raw = each_block.getBlockRaw();
         json block_body = each_block.getBlockBodyJson();
@@ -54,9 +63,9 @@ void BlockProcessor::periodicTask(){
 
       m_msg_proxy.deliverOutputMessage(msg_req_block);
     }
-  });
+  }));
 
-  m_timer->expires_from_now(boost::posix_time::seconds(config::BROC_PROCESSOR_TASK_PERIOD));
+  m_timer->expires_from_now(boost::posix_time::milliseconds(config::BROC_PROCESSOR_TASK_PERIOD));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       CLOG(INFO, "BPRO") << "Timer ABORTED";
@@ -70,7 +79,12 @@ void BlockProcessor::periodicTask(){
 }
 
 nth_block_link_type BlockProcessor::getMostPossibleLink(){
+
   return m_unresolved_block_pool.getMostPossibleLink();
+}
+
+bool BlockProcessor::hasUnresolvedBlocks(){
+  return m_unresolved_block_pool.hasUnresolvedBlocks();
 }
 
 bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
@@ -157,8 +171,8 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     return false;
   }
 
-  if (!recv_block.isValid()) {
-    CLOG(ERROR, "BPRO") << "Block dropped (invalid block)";
+  if (!recv_block.isValidEarly()) {
+    CLOG(ERROR, "BPRO") << "Block dropped (invalid - early stage validation)";
     return false;
   }
 

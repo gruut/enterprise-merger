@@ -35,7 +35,12 @@ void SignatureRequester::waitCollectDone() {
 }
 void SignatureRequester::requestSignatures() {
 
-  // step 1 - chooosing suitable signers
+  // step 1 - check whether I can go
+
+  if(Application::app().getBlockProcessor().hasUnresolvedBlocks()){
+    CLOG(ERROR, "SIGR") << "Has unresolved blocks";
+    return;
+  }
 
   auto target_signers = selectSigners();
 
@@ -112,6 +117,7 @@ void SignatureRequester::doCreateBlock() {
 
       BlockGenerator generator;
       generator.generateBlock(m_basic_block_info, signatures, m_merkle_tree);
+      CLOG(ERROR, "SIGR") << "END MAKING BLOCK";
     } else {
       CLOG(ERROR, "SIGR") << "CANCEL MAKING BLOCK";
       signature_pool.clear();
@@ -228,6 +234,7 @@ BasicBlockInfo SignatureRequester::generateBasicBlockInfo() {
     basic_info.height = 1; // this is genesis block
   else
     basic_info.height = latest_block_info.height + 1;
+
 
   return basic_info;
 }

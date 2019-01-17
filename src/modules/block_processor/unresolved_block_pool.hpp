@@ -19,7 +19,7 @@ class UnresolvedBlock {
 public:
   Block block;
   int prev_queue_idx {-1};
-  size_t confirm_level {0} ;
+  size_t confirm_level {0};
   UnresolvedBlock() = default;
   ~UnresolvedBlock() = default;
   UnresolvedBlock(Block &block_, int prev_queue_idx_, size_t confirm_level_)
@@ -35,8 +35,11 @@ private:
 
   std::string m_last_block_id_b64;
   std::string m_last_hash_b64;
-  block_height_type m_last_height;
+  std::atomic<block_height_type> m_last_height;
   timestamp_type m_last_time;
+
+  std::atomic<size_t> m_height_range_max {0};
+  std::atomic<bool> m_force_unresolved { false };
 
 public:
   UnresolvedBlockPool(){
@@ -55,9 +58,10 @@ public:
     m_last_hash_b64 = last_hash_b64;
     m_last_height = last_height;
     m_last_time = last_time;
+    m_height_range_max = last_height;
   }
 
-  bool push(Block &block) { // we assume this block has valid signatures at least
+  bool push(Block &block) { // we assume this block has valid structure at least
 
     block_height_type block_height = block.getHeight();
 
@@ -119,6 +123,10 @@ public:
           }
         }
       }
+
+      if(m_height_range_max < block_height){
+        m_height_range_max = block_height;
+      }
     }
 
     m_push_mutex.unlock();
@@ -126,10 +134,18 @@ public:
     return true;
   }
 
-  std::vector<Block> getResolvedBlocks(){
+  std::vector<Block> getResolvedBlocks(){ // flushing out resolved blocks
     std::vector<Block> blocks;
     std::lock_guard<std::mutex> guard(m_push_mutex);
-    resolveBlocksStepByStep(blocks);
+
+    size_t num_resolved_block = 0;
+
+    do {
+      num_resolved_block = blocks.size();
+      resolveBlocksStepByStep(blocks);
+    }
+    while(num_resolved_block < blocks.size());
+
     m_push_mutex.unlock();
     return blocks;
   }
@@ -165,17 +181,67 @@ public:
   }
 
   nth_block_link_type getMostPossibleLink(){
+
+    std::lock_guard<std::mutex> guard(m_push_mutex);
+
     nth_block_link_type ret_link;
+
+    // when resolved situation, the blow are the same with storage
+    // unless, they are faster than storage
     ret_link.height = m_last_height;
     ret_link.id_b64 = m_last_block_id_b64;
     ret_link.hash_b64 = m_last_hash_b64;
 
-    // TODO : find most possible link
+    if(m_block_pool.empty()){
+      return ret_link;
+    }
+
+    nth_block_link_type longest_link;
+    longest_link.height = 0;
+    for(size_t i = 0; i < m_block_pool[0].size(); ++i) {
+      if(m_block_pool[0][i].prev_queue_idx == 0) {
+
+        if(m_block_pool[0][i].block.getHeight() > longest_link.height) { // relaxation
+          longest_link.height = m_block_pool[0][i].block.getHeight();
+          longest_link.id_b64 = m_block_pool[0][i].block.getBlockIdB64();
+          longest_link.hash_b64 = m_block_pool[0][i].block.getHashB64();
+        }
+
+        recSearchLongestLink(0, i, longest_link);
+      }
+    }
+
+    if(ret_link.height < longest_link.height)
+      return longest_link;
 
     return ret_link;
   }
 
+  bool hasUnresolvedBlocks(){
+    CLOG(INFO, "URBK") << "Unresolved block pool status = (" <<  m_last_height << "," << m_height_range_max << ")";
+    return m_force_unresolved;
+  }
+
 private:
+
+  // search prev_level + 1
+  void recSearchLongestLink(size_t prev_level, size_t prev_node, nth_block_link_type &longest_link) {
+    if(m_block_pool.size() > prev_level + 1){
+
+      for(size_t i = 0; i < m_block_pool[prev_level + 1].size(); ++i) { // if this level is empty, it will automatically stop to search
+        auto& each_block = m_block_pool[prev_level + 1][i];
+        if(each_block.prev_queue_idx == prev_node){
+          if(each_block.block.getHeight() > longest_link.height) { // relaxation
+            longest_link.height = each_block.block.getHeight();
+            longest_link.id_b64 = each_block.block.getBlockIdB64();
+            longest_link.hash_b64 = each_block.block.getHashB64();
+          }
+
+          recSearchLongestLink(prev_level+1,i,longest_link);
+        }
+      }
+    }
+  }
 
   void resolveBlocksStepByStep(std::vector<Block> &resolved_blocks){
 
@@ -184,33 +250,31 @@ private:
     if(!m_block_pool.empty() && !m_block_pool[0].empty()) {
 
       size_t highest_confirm_level = 0;
-      auto highest_confirm_level_it = m_block_pool[0].begin();
+      int t_idx = -1;
 
-      bool is_some = false;
-      for(auto it_list = m_block_pool[0].begin(); it_list != m_block_pool[0].end(); ++it_list){
-        if(it_list->prev_queue_idx == 0 && it_list->confirm_level > highest_confirm_level) {
-          highest_confirm_level = it_list->confirm_level;
-          highest_confirm_level_it = it_list;
-          is_some = true;
+      for(int i = 0; i < (int) m_block_pool[0].size(); ++i){
+        if(m_block_pool[0][i].prev_queue_idx == 0 && m_block_pool[0][i].confirm_level > highest_confirm_level) {
+          highest_confirm_level = m_block_pool[0][i].confirm_level;
+          t_idx = i;
         }
       }
 
-      if(!is_some) { // nothing to do
+      if(t_idx < 0) { // nothing to do
         return;
       }
 
-      if(highest_confirm_level > config::MAX_SIGNATURE_COLLECT_SIZE) { // at lease 1 confirmation is needed
+      if(highest_confirm_level > 2) { // at lease 1 confirmation is needed
 
-        m_last_block_id_b64 = highest_confirm_level_it->block.getBlockIdB64();
-        m_last_hash_b64 = highest_confirm_level_it->block.getHashB64();
-        m_last_height = highest_confirm_level_it->block.getHeight();
+        m_last_block_id_b64 = m_block_pool[0][t_idx].block.getBlockIdB64();
+        m_last_hash_b64 = m_block_pool[0][t_idx].block.getHashB64();
+        m_last_height = m_block_pool[0][t_idx].block.getHeight();
 
-        resolved_blocks.emplace_back(highest_confirm_level_it->block);
+        resolved_blocks.emplace_back(m_block_pool[0][t_idx].block);
 
         // clear this height list
 
         if(m_block_pool[0].size() > 1)
-          CLOG(INFO, "BPRO") << "Dropped out " << m_block_pool[0].size() - 1 << " unresolved block(s)";
+          CLOG(INFO, "URBK") << "Dropped out " << m_block_pool[0].size() - 1 << " unresolved block(s)";
 
         m_block_pool.pop_front();
 
@@ -223,9 +287,6 @@ private:
               each_block.prev_queue_idx = -1; // this block is unlinkable => to be deleted
             }
           }
-
-          // call recursively
-          resolveBlocksStepByStep(resolved_blocks);
         }
       }
     }
@@ -235,26 +296,20 @@ private:
     if(m_block_pool.empty())
       return;
 
-    for(auto &each_height : m_block_pool){
-      for(auto &each_block : each_height){
+    for(auto&& each_level : m_block_pool){
+      for(auto&& each_block : each_level){
         each_block.confirm_level = each_block.block.getNumSSigs();
       }
     }
 
-    for(size_t i = m_block_pool.size() - 1; i >= 0; --i){
-      for(auto&& each_block : m_block_pool[i]){ // for list
-        if(i > 0 && each_block.prev_queue_idx >= 0 && m_block_pool[i-1].size() > each_block.prev_queue_idx) {
-          size_t idx = 0;
-          for(auto&& prev_each_block :  m_block_pool[i-1]) { // for list
-            if(idx == each_block.prev_queue_idx) {
-              prev_each_block.confirm_level += each_block.block.getNumSSigs();
-              break;
-            }
-            ++idx;
-          }
+    for(int i = (int) m_block_pool.size() - 1; i > 0; --i){
+      for(auto&& each_block : m_block_pool[i]){ // for vector
+        if(each_block.prev_queue_idx >= 0 && m_block_pool[i-1].size() > each_block.prev_queue_idx) {
+          m_block_pool[i-1][each_block.prev_queue_idx].confirm_level += each_block.confirm_level;
         }
       }
     }
+
   }
 
 

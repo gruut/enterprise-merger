@@ -281,19 +281,13 @@ public:
 
   std::string getPrevBlockIdB64() { return m_prev_block_id_b64; }
 
-  bool isValid() {
+  bool isValid(){
+    return (isValidEarly() && isValidLate());
+  }
 
-    if (m_block_raw.empty() || m_signature.empty()) {
-      CLOG(ERROR, "BLOC") << "Empty blockraw or signature";
-      return false;
-    }
-
-    // step - check merkle tree
-    if (m_tx_root != m_merkle_tree_node.back()) {
-      CLOG(ERROR, "BLOC") << "Invalid Merkle-tree root";
-      return false;
-    }
-
+  // Support signature cannot be verified unless storage or block itself has suitable certificates
+  // Therefore, the verification of support signatures should be delayed until the previous block has been saved.
+  bool isValidLate(){
     // step - check support signatures
     auto storage = Storage::getInstance();
 
@@ -325,6 +319,22 @@ public:
         CLOG(ERROR, "BLOC") << "Invalid support signature";
         return false;
       }
+    }
+
+    return true;
+  }
+
+  bool isValidEarly() {
+
+    if (m_block_raw.empty() || m_signature.empty()) {
+      CLOG(ERROR, "BLOC") << "Empty blockraw or signature";
+      return false;
+    }
+
+    // step - check merkle tree
+    if (m_tx_root != m_merkle_tree_node.back()) {
+      CLOG(ERROR, "BLOC") << "Invalid Merkle-tree root";
+      return false;
     }
 
     // step - transactions
