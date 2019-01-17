@@ -47,6 +47,8 @@ private:
 
   Signers selectSigners();
 
+  bool isNew(Signer &signer);
+
   Transaction generateCertificateTransaction(vector<Signer> &signers);
   BasicBlockInfo generateBasicBlockInfo();
 

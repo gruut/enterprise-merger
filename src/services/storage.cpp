@@ -29,10 +29,10 @@ Storage::Storage() {
       m_options, m_db_path + "/" + config::DB_SUB_DIR_TRANSACTION,
       &m_db_transaction));
   errorOnCritical(leveldb::DB::Open(
-      m_options, m_db_path + "/" + config::DB_SUB_DIR_CERT, &m_db_certificate));
-  errorOnCritical(leveldb::DB::Open(
       m_options, m_db_path + "/" + config::DB_SUB_DIR_IDHEIGHT,
       &m_db_blockid_height));
+  errorOnCritical(leveldb::DB::Open(
+      m_options, m_db_path + "/" + config::DB_SUB_DIR_LEDGER, &m_db_ledger));
 }
 
 Storage::~Storage() {
@@ -40,15 +40,15 @@ Storage::~Storage() {
   delete m_db_block_raw;
   delete m_db_latest_block_header;
   delete m_db_transaction;
-  delete m_db_certificate;
   delete m_db_blockid_height;
+  delete m_db_ledger;
 
   m_db_block_header = nullptr;
   m_db_block_raw = nullptr;
   m_db_latest_block_header = nullptr;
   m_db_transaction = nullptr;
-  m_db_certificate = nullptr;
   m_db_blockid_height = nullptr;
+  m_db_ledger = nullptr;
 }
 
 bool Storage::saveBlock(bytes &block_raw, json &block_header,
@@ -108,8 +108,8 @@ bool Storage::addBatch(DBType what, const string &base_suffix_key,
   case DBType::TRANSACTION:
     m_batch_transaction.Put(key, value);
     break;
-  case DBType::CERTIFICATE:
-    m_batch_certificate.Put(key, value);
+  case DBType::LEDGER:
+    m_batch_ledger.Put(key, value);
     break;
   default:
     break;
@@ -124,7 +124,6 @@ void Storage::commitBatchAll() {
   m_db_latest_block_header->Write(m_write_options,
                                   &m_batch_latest_block_header);
   m_db_transaction->Write(m_write_options, &m_batch_transaction);
-  m_db_certificate->Write(m_write_options, &m_batch_certificate);
 
   clearBatchAll();
 }
@@ -136,7 +135,6 @@ void Storage::clearBatchAll() {
   m_batch_block_raw.Clear();
   m_batch_latest_block_header.Clear();
   m_batch_transaction.Clear();
-  m_batch_certificate.Clear();
   m_batch_blockid_height.Clear();
 }
 
@@ -249,34 +247,6 @@ bool Storage::putTransaction(json &block_body_json,
     if (!addBatch(DBType::TRANSACTION, key, value))
       return false;
 
-    // TODO : remove blow after certificate ledger build
-
-    if (!tx_json["content"].is_array())
-      return false;
-
-    json content = tx_json["content"];
-
-    if (Safe::getString(tx_json, "type") == TXTYPE_CERTIFICATES) {
-      for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
-        string user_id_b64 = Safe::getString(content[c_idx]);
-        string cert_idx = getValueByKey(DBType::CERTIFICATE, user_id_b64);
-
-        // User ID에 해당하는 Certification Size 저장
-        key = user_id_b64;
-        value = (cert_idx.empty()) ? "1" : to_string(stoi(cert_idx) + 1);
-        if (!addBatch(DBType::CERTIFICATE, key, value))
-          return false;
-
-        key += (cert_idx.empty()) ? "_0" : "_" + cert_idx;
-        std::string pem = Safe::getString(content[c_idx + 1]);
-        value = parseCert(pem);
-        if (value.empty())
-          return false;
-
-        if (!addBatch(DBType::CERTIFICATE, key, value))
-          return false;
-      }
-    }
     ++i;
   }
 
@@ -291,31 +261,6 @@ bool Storage::putTransaction(json &block_body_json,
     return false;
 
   return true; // everthing is ok!
-}
-
-std::string Storage::parseCert(std::string &pem) {
-
-  // User ID에 해당하는 n번째 Certification 저장 (발급일, 만료일, 인증서)
-
-  std::string json_str;
-
-  try {
-    Botan::DataSource_Memory cert_datasource(pem);
-    Botan::X509_Certificate cert(cert_datasource);
-
-    json tmp_cert = json::array();
-    tmp_cert.push_back(
-        to_string(Botan::X509_Time(cert.not_before()).time_since_epoch()));
-    tmp_cert.push_back(
-        to_string(Botan::X509_Time(cert.not_after()).time_since_epoch()));
-    tmp_cert.push_back(pem);
-
-    json_str = tmp_cert.dump();
-  } catch (...) {
-    // do nothing
-  }
-
-  return json_str;
 }
 
 std::string Storage::getValueByKey(DBType what,
@@ -341,8 +286,8 @@ std::string Storage::getValueByKey(DBType what,
   case DBType::TRANSACTION:
     status = m_db_transaction->Get(m_read_options, key, &value);
     break;
-  case DBType::CERTIFICATE:
-    status = m_db_certificate->Get(m_read_options, key, &value);
+  case DBType::LEDGER:
+    status = m_db_ledger->Get(m_read_options, key, &value);
     break;
   default:
     break;
@@ -442,55 +387,14 @@ std::vector<std::string> Storage::getNthTxIdList(size_t t_height) {
   return tx_ids_list;
 }
 
-std::string Storage::getCertificate(const std::string &user_id_b64,
-                                    const timestamp_type &at_this_time) {
-  std::string cert;
-  std::string cert_size = getValueByKey(DBType::CERTIFICATE, user_id_b64);
-  if (!cert_size.empty()) {
-    int num_certs = stoi(cert_size);
-    if (at_this_time == 0) {
-      std::string latest_cert = getValueByKey(
-          DBType::CERTIFICATE, user_id_b64 + "_" + to_string(num_certs - 1));
-
-      json latest_cert_json = Safe::parseJsonAsArray(latest_cert);
-      if (!latest_cert_json.empty())
-        cert = Safe::getString(latest_cert_json[2]);
-
-    } else {
-      timestamp_type max_start_date = 0;
-      for (int i = 0; i < num_certs; ++i) {
-        std::string nth_cert = getValueByKey(DBType::CERTIFICATE,
-                                             user_id_b64 + "_" + to_string(i));
-
-        json cert_json = Safe::parseJson(nth_cert);
-        if (cert_json.empty())
-          break;
-
-        auto start_date =
-            static_cast<timestamp_type>(stoi(Safe::getString(cert_json[0])));
-        auto end_date =
-            static_cast<timestamp_type>(stoi(Safe::getString(cert_json[1])));
-        if (start_date <= at_this_time && at_this_time <= end_date) {
-          if (max_start_date < start_date) {
-            max_start_date = start_date;
-            cert = Safe::getString(cert_json[2]);
-          }
-        }
-      }
-    }
-  }
-
-  return cert;
-}
-
 void Storage::destroyDB() {
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_HEADER);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_RAW);
-  boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_CERT);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_LATEST);
   boost::filesystem::remove_all(m_db_path + "/" +
                                 config::DB_SUB_DIR_TRANSACTION);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_IDHEIGHT);
+  boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_LEDGER);
 }
 
 read_block_type Storage::readBlock(size_t height) {
@@ -601,15 +505,26 @@ proof_type Storage::getProof(const std::string &txid_b64) {
   return proof;
 }
 
-std::string Storage::getCertificate(const signer_id_type &user_id,
-                                    const timestamp_type &at_this_time) {
-  std::string user_id_b64 = TypeConverter::encodeBase64(user_id);
-  return getCertificate(user_id_b64);
-}
-
 bool Storage::isDuplicatedTx(const std::string &txid_b64) {
   std::string block_id_b64 =
       getValueByKey(DBType::TRANSACTION, txid_b64 + "_bID");
   return !block_id_b64.empty();
 }
+
+bool Storage::saveLedger(std::string &key, std::string &ledger) {
+  addBatch(DBType::LEDGER, key, ledger);
+  return true;
+}
+
+std::string Storage::readLedger(std::string &key) {
+  return getValueByKey(DBType::LEDGER, key);
+}
+
+void Storage::clearLedger() { m_batch_ledger.Clear(); }
+
+void Storage::flushLedger() {
+  m_db_ledger->Write(m_write_options, &m_batch_ledger);
+  clearLedger();
+}
+
 } // namespace gruut

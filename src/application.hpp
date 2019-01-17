@@ -16,6 +16,13 @@
 #include "chain/transaction.hpp"
 
 #include "modules/block_processor/block_processor.hpp"
+
+#include "ledger/certificate_ledger.hpp"
+#include "ledger/digest_ledger.hpp"
+#include "ledger/ledger.hpp"
+#include "ledger/sms_ledger.hpp"
+
+#include "services/custom_ledger_manager.hpp"
 #include "services/setting.hpp"
 #include "services/signature_pool.hpp"
 #include "services/signer_pool_manager.hpp"
@@ -58,6 +65,10 @@ public:
 
   BpScheduler &getBpScheduler();
 
+  CustomLedgerManager &getCustomLedgerManager();
+
+  CertificateLedger &getCertificateLedger();
+
   void setup();
   void start();
   void exec();
@@ -85,6 +96,11 @@ private:
   shared_ptr<Bootstrapper> m_bootstraper;
   shared_ptr<BlockHealthChecker> m_block_health_checker;
   shared_ptr<MessageFetcher> m_message_fetcher;
+
+  shared_ptr<CustomLedgerManager> m_custom_ledger_manager;
+  shared_ptr<CertificateLedger> m_certificate_ledger;
+  shared_ptr<DigestLedger> m_digest_ledger;
+  shared_ptr<SmsLedger> m_sms_ledger;
 
   int m_running_stage{0};
 

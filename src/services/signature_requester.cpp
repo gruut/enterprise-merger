@@ -33,6 +33,13 @@ void SignatureRequester::waitCollectDone() {
     }
   });
 }
+
+bool SignatureRequester::isNew(Signer &signer) {
+  auto &certificate_ledger = Application::app().getCertificateLedger();
+  auto cert = certificate_ledger.getCertificate(signer.user_id);
+  return (cert.empty() || cert != signer.pk_cert);
+}
+
 void SignatureRequester::requestSignatures() {
 
   // step 1 - check whether I can go
@@ -51,7 +58,7 @@ void SignatureRequester::requestSignatures() {
 
   std::vector<Signer> new_signers;
   for (auto &signer : target_signers) {
-    if (signer.isNew()) {
+    if (isNew(signer)) {
       new_signers.emplace_back(signer);
     }
   }
@@ -199,7 +206,7 @@ SignatureRequester::generateCertificateTransaction(vector<Signer> &signers) {
 
     std::vector<content_type> content_list;
     for (auto &signer : signers) {
-      if (signer.isNew()) {
+      if (isNew(signer)) {
         auto user_id_str = TypeConverter::encodeBase64(signer.user_id);
         content_list.emplace_back(user_id_str);
         content_list.emplace_back(signer.pk_cert);

@@ -182,6 +182,7 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   if (!m_unresolved_block_pool.push(recv_block)) {
     CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
+
   }
 
   return true;

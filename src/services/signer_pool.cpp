@@ -1,4 +1,5 @@
 #include "signer_pool.hpp"
+#include "../config/config.hpp"
 
 using namespace gruut::config;
 
@@ -129,7 +130,7 @@ std::vector<Signer> SignerPool::getRandomSigners(size_t number) {
   std::shuffle(signers.begin(), signers.end(),
                std::mt19937(std::random_device()()));
 
-  return vector<Signer>(signers.begin(), signers.begin() + number);
+  return std::vector<Signer>(signers.begin(), signers.begin() + number);
 }
 
 std::list<Signer>::iterator SignerPool::find(signer_id_type &user_id) {
