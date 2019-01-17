@@ -9,6 +9,8 @@
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
 
+#include "../ledger/certificate_ledger.hpp"
+
 #include "block_generator.hpp"
 #include "message_proxy.hpp"
 #include "signature_requester.hpp"
@@ -61,6 +63,8 @@ private:
 
   std::atomic<bool> m_is_collect_timer_running{false};
   size_t m_max_signers;
+
+  CertificateLedger m_cert_ledger;
 };
 } // namespace gruut
 #endif

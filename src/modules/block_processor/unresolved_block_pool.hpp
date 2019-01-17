@@ -93,7 +93,7 @@ public:
       if (bin_pos > 0) {       // if there is previous bin
 
         size_t idx = 0;
-        for (auto &&each_block : m_block_pool[bin_pos - 1]) {
+        for (auto &each_block : m_block_pool[bin_pos - 1]) {
           if (each_block.block.getBlockIdB64() == block.getPrevBlockIdB64() &&
               each_block.block.getHashB64() == block.getPrevHashB64()) {
             prev_queue_idx = static_cast<int>(idx);
@@ -115,7 +115,7 @@ public:
       int queue_idx = m_block_pool[bin_pos].size() - 1; // last
 
       if (bin_pos + 1 < m_block_pool.size()) { // if there is next bin
-        for (auto &&each_block : m_block_pool[bin_pos + 1]) {
+        for (auto &each_block : m_block_pool[bin_pos + 1]) {
           if (each_block.block.getPrevBlockIdB64() == block.getBlockIdB64() &&
               each_block.block.getPrevHashB64() == block.getHashB64()) {
             each_block.prev_queue_idx = queue_idx;
@@ -159,7 +159,7 @@ public:
         break;
       } else {
         bool is_some = false;
-        for (auto &&each_block : m_block_pool[i]) {
+        for (auto &each_block : m_block_pool[i]) {
           if (each_block.prev_queue_idx != -1) {
             is_some = true;
             break;
@@ -300,7 +300,7 @@ private:
 
         if (!m_block_pool.empty()) {
 
-          for (auto &&each_block : m_block_pool[0]) {
+          for (auto &each_block : m_block_pool[0]) {
             if (each_block.block.getPrevBlockIdB64() == m_last_block_id_b64 &&
                 each_block.block.getPrevHashB64() == m_last_hash_b64) {
               each_block.prev_queue_idx = 0;
@@ -318,14 +318,14 @@ private:
     if (m_block_pool.empty())
       return;
 
-    for (auto &&each_level : m_block_pool) {
-      for (auto &&each_block : each_level) {
+    for (auto &each_level : m_block_pool) {
+      for (auto &each_block : each_level) {
         each_block.confirm_level = each_block.block.getNumSSigs();
       }
     }
 
     for (int i = (int)m_block_pool.size() - 1; i > 0; --i) {
-      for (auto &&each_block : m_block_pool[i]) { // for vector
+      for (auto &each_block : m_block_pool[i]) { // for vector
         if (each_block.prev_queue_idx >= 0 &&
             m_block_pool[i - 1].size() > each_block.prev_queue_idx) {
           m_block_pool[i - 1][each_block.prev_queue_idx].confirm_level +=

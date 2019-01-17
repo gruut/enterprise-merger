@@ -42,6 +42,8 @@ void BlockProcessor::periodicTask() {
         bytes block_raw = each_block.getBlockRaw();
         json block_body = each_block.getBlockBodyJson();
 
+        Application::app().getCustomLedgerManager().procLedgerBlock(block_body);
+
         m_storage->saveBlock(block_raw, block_header, block_body);
         CLOG(INFO, "BPRO") << "BLOCK SAVED (height=" << each_block.getHeight()
                            << ",#tx=" << each_block.getNumTransactions()
@@ -182,7 +184,6 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   if (!m_unresolved_block_pool.push(recv_block)) {
     CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
-
   }
 
   return true;

@@ -290,6 +290,7 @@ public:
   bool isValidLate() {
     // step - check support signatures
     bytes ssig_msg_after_sid = getSupportSigMessageCommon();
+    CertificateLedger cert_ledger;
 
     for (auto &each_ssig : m_ssigs) {
       BytesBuilder ssig_msg_builder;
@@ -304,7 +305,6 @@ public:
       if (it_map != m_user_certs.end()) {
         user_pk_pem = it_map->second;
       } else {
-        CertificateLedger cert_ledger;
         user_pk_pem = cert_ledger.getCertificate(user_id_b64, m_time);
       }
 

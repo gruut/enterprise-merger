@@ -26,10 +26,6 @@ CustomLedgerManager &Application::getCustomLedgerManager() {
   return *m_custom_ledger_manager;
 }
 
-CertificateLedger &Application::getCertificateLedger() {
-  return *m_certificate_ledger;
-}
-
 void Application::registerModule(shared_ptr<Module> module, int stage,
                                  bool runover_flag) {
   if (runover_flag)
@@ -109,9 +105,6 @@ void Application::setup() {
   m_message_fetcher = make_shared<MessageFetcher>();
 
   m_custom_ledger_manager = make_shared<CustomLedgerManager>();
-  m_certificate_ledger = make_shared<CertificateLedger>();
-  m_digest_ledger = make_shared<DigestLedger>();
-  m_sms_ledger = make_shared<SmsLedger>();
 
   // step 2 - running scenario
   registerModule(m_block_health_checker, 0, true);
@@ -125,10 +118,6 @@ void Application::setup() {
   // setp 3 - link services
 
   m_bootstraper->setCommunication(m_communication);
-
-  m_custom_ledger_manager->registerLedger(m_certificate_ledger);
-  m_custom_ledger_manager->registerLedger(m_digest_ledger);
-  m_custom_ledger_manager->registerLedger(m_sms_ledger);
 }
 
 Application::Application() {

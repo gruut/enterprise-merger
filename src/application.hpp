@@ -18,9 +18,6 @@
 #include "modules/block_processor/block_processor.hpp"
 
 #include "ledger/certificate_ledger.hpp"
-#include "ledger/digest_ledger.hpp"
-#include "ledger/ledger.hpp"
-#include "ledger/sms_ledger.hpp"
 
 #include "services/custom_ledger_manager.hpp"
 #include "services/setting.hpp"
@@ -67,8 +64,6 @@ public:
 
   CustomLedgerManager &getCustomLedgerManager();
 
-  CertificateLedger &getCertificateLedger();
-
   void setup();
   void start();
   void exec();
@@ -98,9 +93,6 @@ private:
   shared_ptr<MessageFetcher> m_message_fetcher;
 
   shared_ptr<CustomLedgerManager> m_custom_ledger_manager;
-  shared_ptr<CertificateLedger> m_certificate_ledger;
-  shared_ptr<DigestLedger> m_digest_ledger;
-  shared_ptr<SmsLedger> m_sms_ledger;
 
   int m_running_stage{0};
 

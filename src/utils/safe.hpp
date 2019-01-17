@@ -67,12 +67,17 @@ public:
     return static_cast<uint64_t>(stoll(dec_str));
   }
 
+  static gruut::timestamp_type getTime(const std::string &dec_str) {
+    if (dec_str.empty())
+      return 0;
+    return static_cast<gruut::timestamp_type>(stoll(dec_str));
+  }
+
   template <typename S = nlohmann::json, typename K = std::string>
   static gruut::timestamp_type getTime(S &&json_obj, K &&key) {
     std::string dec_str = getString(json_obj, key);
     if (dec_str.empty())
       return 0;
-    }
     return static_cast<gruut::timestamp_type>(stoll(dec_str));
   }
 
