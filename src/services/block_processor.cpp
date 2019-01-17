@@ -132,6 +132,16 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     auto &custom_ledger_manager = Application::app().getCustomLedgerManager();
     custom_ledger_manager.procLedgerBlock(block_body);
 
+    auto setting = Setting::getInstance();
+
+    OutputMsgEntry output_msg;
+    output_msg.type = MessageType::MSG_BLOCK_HGT;
+    output_msg.body["mID"] = TypeConverter::encodeBase64(setting->getMyId());
+    output_msg.body["time"] = Time::now();
+    output_msg.body["hgt"] = to_string(recv_block.getHeight());
+
+    MessageProxy proxy;
+    proxy.deliverOutputMessage(output_msg);
   } else {
     // TODO : push this block to unresolved block pool
     CLOG(ERROR, "BPRO")
