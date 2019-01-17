@@ -36,6 +36,7 @@ file(GLOB HEADER_FILES
         "src/chain/*.hpp"
         "src/config/config.hpp"
         "src/modules/communication/protos/*.h"
+        "src/ledger/*.hpp"
         "include/*.hpp"
         "include/*/*.hpp"
         )

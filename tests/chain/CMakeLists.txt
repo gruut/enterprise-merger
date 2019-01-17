@@ -24,6 +24,8 @@ target_sources(chain_test
         ${HEADER_FILES}
         )
 
+add_subdirectory(lib/leveldb)
+
 target_include_directories(chain_test PRIVATE ${Boost_INCLUDE_DIR} ../../include /usr/local/include)
 target_link_libraries(chain_test
         PRIVATE

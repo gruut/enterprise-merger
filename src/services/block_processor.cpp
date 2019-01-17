@@ -128,6 +128,10 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
     auto &tx_pool = Application::app().getTransactionPool();
     tx_pool.removeDuplicatedTransactions(recv_block.getTxIds());
+
+    auto &custom_ledger_manager = Application::app().getCustomLedgerManager();
+    custom_ledger_manager.procLedgerBlock(block_body);
+
   } else {
     // TODO : push this block to unresolved block pool
     CLOG(ERROR, "BPRO")
