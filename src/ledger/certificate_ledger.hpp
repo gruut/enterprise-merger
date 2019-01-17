@@ -28,12 +28,8 @@
 namespace gruut {
 
 class CertificateLedger : public Ledger {
-private:
-  Storage *m_storage;
-  std::string m_prefix{"C"};
-
 public:
-  CertificateLedger() { m_storage = Storage::getInstance(); }
+  CertificateLedger() { setPrefix("C"); }
 
   bool isValidTx(Transaction &tx) override { return true; }
 
@@ -47,137 +43,12 @@ public:
       }
     }
 
-    return true;
-  }
-
-  static bool caCertValid(std::string &ca_cert_pem) {
-    try {
-      Botan::X509_Certificate ca_cert = strToCert(ca_cert_pem);
-
-      if (!ca_cert.is_CA_cert()) {
-        std::cout << "X509_CA: This certificate is not for a CA" << std::endl;
-        return false;
-      }
-
-      Botan::RSA_PublicKey ca_pub_key(
-          ca_cert.subject_public_key()->algorithm_identifier(),
-          ca_cert.subject_public_key()->public_key_bits());
-
-      if (!ca_cert.check_signature(ca_pub_key)) {
-        return false;
-      }
-      return caCertValid(ca_cert);
-
-    } catch (Botan::Exception &exception) {
-      std::cout << "error on PEM to RSA PK: " << exception.what() << std::endl;
-    }
-    return true;
-  }
-
-  static bool caCertValid(Botan::X509_Certificate &ca_cert) {
-
-    // TODO : cert 정보는 하드코딩 한 상태 -> 나중에 수정
-    if (validTime(ca_cert) != true)
-      return false;
-    if (ca_cert.subject_info("Name")[0] != "//////////8=")
-      return false;
-    if (ca_cert.subject_info("RFC822")[0] != "contact@gruut.net")
-      return false;
-    if (ca_cert.subject_info("Organization")[0] != "Gruut Networks")
-      return false;
-    if (ca_cert.subject_info("Country")[0] != "KR")
-      return false;
-    if (ca_cert.issuer_info("Name")[0] != "//////////8=")
-      return false;
-    if (ca_cert.issuer_info("Organization")[0] != "Gruut Networks")
-      return false;
-    if (Botan::hex_encode(ca_cert.serial_number()) !=
-        "BD9171B2F8905C20AB9CA974143C031C")
-      return false;
+    m_storage->flushLedger();
 
     return true;
   }
 
-  static bool certValid(std::string &ca_cert_pem, std::string &cert_pem_str) {
-    try {
-      Botan::X509_Certificate ca_cert = strToCert(ca_cert_pem);
-      Botan::X509_Certificate cert = strToCert(cert_pem_str);
-
-      Botan::RSA_PublicKey ca_pub_key(
-          ca_cert.subject_public_key()->algorithm_identifier(),
-          ca_cert.subject_public_key()->public_key_bits());
-
-      if (!cert.check_signature(ca_pub_key)) {
-        return false;
-      }
-
-      return certValid(cert);
-
-    } catch (Botan::Exception &exception) {
-      std::cout << "error on PEM to ECDSA PK: " << exception.what()
-                << std::endl;
-    }
-    return true;
-  }
-
-  static bool certValid(Botan::X509_Certificate &cert) {
-
-    // TODO : cert 정보는 하드코딩 한 상태 -> 나중에 수정
-    if (validTime(cert) != true)
-      return false;
-    if (cert.subject_info("Name")[0] != "TUVSR0VSLTE=")
-      return false;
-    if (cert.subject_info("RFC822")[0] != "contact@gruut.net")
-      return false;
-    if (cert.subject_info("Organization")[0] != "Gruut Networks")
-      return false;
-    if (cert.subject_info("Country")[0] != "KR")
-      return false;
-    if (cert.issuer_info("Name")[0] != "//////////8=")
-      return false;
-    if (cert.issuer_info("Organization")[0] != "Gruut Networks")
-      return false;
-    if (Botan::hex_encode(cert.serial_number()) !=
-        "EEE11C41D93BB0CAC68FA720914014C3")
-      return false;
-
-    return true;
-  }
-
-  bool isValidTxInBlock(json &tx_json) {
-
-    if (Safe::getString(tx_json["type"]) == TXTYPE_CERTIFICATES) {
-
-      if (!tx_json["content"].is_array())
-        return false;
-
-      nlohmann::json content = tx_json["content"];
-      if (!content.is_array())
-        return false;
-
-      for (size_t i = 0; i < content.size(); i += 2) {
-        std::string user_id = Safe::getString(content[i]);
-        std::string cert_pem = Safe::getString(content[i + 1]);
-
-        // TODO : 나중에 변경
-        std::string ca_cert;
-
-        if (!certValid(ca_cert, cert_pem))
-          return false;
-
-        timestamp_type received_time =
-            static_cast<timestamp_type>(stoi(Safe::getString(tx_json, "time")));
-        std::string cert_from_db = getCertificate(user_id, received_time);
-
-        if (!checkDuplicatedCert(cert_pem, cert_from_db))
-          return false;
-      }
-    }
-
-    return true;
-  }
-
-  std::string getCertificate(std::string &user_id_b64,
+  std::string getCertificate(const std::string &user_id_b64,
                              const timestamp_type &at_this_time = 0) {
     std::string cert;
     std::string cert_size = searchLedger(user_id_b64);
@@ -219,13 +90,142 @@ public:
     return cert;
   }
 
-  std::string getCertificate(signer_id_type &user_id,
+  std::string getCertificate(const signer_id_type &user_id,
                              const timestamp_type &at_this_time = 0) {
     std::string user_id_b64 = TypeConverter::encodeBase64(user_id);
     return getCertificate(user_id_b64);
   }
 
 private:
+  bool isValidCaCert(std::string &ca_cert_pem) {
+    try {
+      Botan::X509_Certificate ca_cert = strToCert(ca_cert_pem);
+
+      if (!ca_cert.is_CA_cert()) {
+        std::cout << "X509_CA: This certificate is not for a CA" << std::endl;
+        return false;
+      }
+
+      Botan::RSA_PublicKey ca_pub_key(
+          ca_cert.subject_public_key()->algorithm_identifier(),
+          ca_cert.subject_public_key()->public_key_bits());
+
+      if (!ca_cert.check_signature(ca_pub_key)) {
+        return false;
+      }
+      return isValidCaCert(ca_cert);
+
+    } catch (Botan::Exception &exception) {
+      std::cout << "error on PEM to RSA PK: " << exception.what() << std::endl;
+    }
+    return true;
+  }
+
+  bool isValidCaCert(Botan::X509_Certificate &ca_cert) {
+
+    // TODO : cert 정보는 하드코딩 한 상태 -> 나중에 수정
+    /*
+    if (validTime(ca_cert) != true)
+      return false;
+    if (ca_cert.subject_info("Name")[0] != "//////////8=")
+      return false;
+    if (ca_cert.subject_info("RFC822")[0] != "contact@gruut.net")
+      return false;
+    if (ca_cert.subject_info("Organization")[0] != "Gruut Networks")
+      return false;
+    if (ca_cert.subject_info("Country")[0] != "KR")
+      return false;
+    if (ca_cert.issuer_info("Name")[0] != "//////////8=")
+      return false;
+    if (ca_cert.issuer_info("Organization")[0] != "Gruut Networks")
+      return false;
+    if (Botan::hex_encode(ca_cert.serial_number()) !=
+        "BD9171B2F8905C20AB9CA974143C031C")
+      return false;
+    */
+    return true;
+  }
+
+  bool isValidCert(std::string &ca_cert_pem, std::string &cert_pem_str) {
+    try {
+      Botan::X509_Certificate ca_cert = strToCert(ca_cert_pem);
+      Botan::X509_Certificate cert = strToCert(cert_pem_str);
+
+      Botan::RSA_PublicKey ca_pub_key(
+          ca_cert.subject_public_key()->algorithm_identifier(),
+          ca_cert.subject_public_key()->public_key_bits());
+
+      if (!cert.check_signature(ca_pub_key)) {
+        return false;
+      }
+
+      return isValidCert(cert);
+
+    } catch (Botan::Exception &exception) {
+      std::cout << "error on PEM to ECDSA PK: " << exception.what()
+                << std::endl;
+    }
+    return true;
+  }
+
+  bool isValidCert(Botan::X509_Certificate &cert) {
+
+    // TODO : cert 정보는 하드코딩 한 상태 -> 나중에 수정
+    /*
+    if (validTime(cert) != true)
+      return false;
+    if (cert.subject_info("Name")[0] != "TUVSR0VSLTE=")
+      return false;
+    if (cert.subject_info("RFC822")[0] != "contact@gruut.net")
+      return false;
+    if (cert.subject_info("Organization")[0] != "Gruut Networks")
+      return false;
+    if (cert.subject_info("Country")[0] != "KR")
+      return false;
+    if (cert.issuer_info("Name")[0] != "//////////8=")
+      return false;
+    if (cert.issuer_info("Organization")[0] != "Gruut Networks")
+      return false;
+    if (Botan::hex_encode(cert.serial_number()) !=
+        "EEE11C41D93BB0CAC68FA720914014C3")
+      return false;
+    */
+    return true;
+  }
+
+  bool isValidTxInBlock(json &tx_json) {
+
+    if (Safe::getString(tx_json["type"]) == TXTYPE_CERTIFICATES) {
+
+      if (!tx_json["content"].is_array())
+        return false;
+
+      nlohmann::json content = tx_json["content"];
+      if (!content.is_array())
+        return false;
+
+      for (size_t i = 0; i < content.size(); i += 2) {
+        std::string user_id = Safe::getString(content[i]);
+        std::string cert_pem = Safe::getString(content[i + 1]);
+
+        // TODO : 나중에 변경
+        std::string ca_cert;
+
+        if (!isValidCert(ca_cert, cert_pem))
+          return false;
+
+        timestamp_type received_time =
+            static_cast<timestamp_type>(stoi(Safe::getString(tx_json, "time")));
+        std::string cert_from_db = getCertificate(user_id, received_time);
+
+        if (!checkDuplicatedCert(cert_pem, cert_from_db))
+          return false;
+      }
+    }
+
+    return true;
+  }
+
   bool checkDuplicatedCert(std::string &cert_pem, std::string &cert_from_db) {
     try {
       Botan::X509_Certificate cert = strToCert(cert_pem);
@@ -238,12 +238,6 @@ private:
       throw;
     }
 
-    return true;
-  }
-
-  bool saveLedger(std::string &key, std::string &value) {
-    std::string wrap_key = m_prefix + key;
-    m_storage->saveLedger(wrap_key, value);
     return true;
   }
 
@@ -301,12 +295,7 @@ private:
     return json_str;
   }
 
-  std::string searchLedger(std::string &key) {
-    std::string wrap_key = m_prefix + key;
-    return m_storage->readLedger(wrap_key);
-  }
-
-  static Botan::X509_Certificate strToCert(std::string &cert_pem_str) {
+  Botan::X509_Certificate strToCert(std::string &cert_pem_str) {
 
     try {
       Botan::DataSource_Memory cert_datasource(cert_pem_str);
@@ -319,7 +308,7 @@ private:
     }
   }
 
-  static bool validTime(Botan::X509_Certificate &cert) {
+  bool validTime(Botan::X509_Certificate &cert) {
     Botan::X509_Time t1 = cert.not_before();
     Botan::X509_Time now = Botan::X509_Time(std::chrono::system_clock::now());
     Botan::X509_Time t2 = cert.not_after();

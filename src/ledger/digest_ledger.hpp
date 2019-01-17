@@ -6,13 +6,8 @@
 
 namespace gruut {
 class DigestLedger : public Ledger {
-
-private:
-  Storage *m_storage;
-  std::string m_prefix{"D"};
-
 public:
-  DigestLedger() { m_storage = Storage::getInstance(); }
+  DigestLedger() { setPrefix("D"); }
 
   bool isValidTx(Transaction &tx) override { return true; }
 

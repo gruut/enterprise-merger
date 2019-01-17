@@ -64,6 +64,8 @@ public:
   bool isDuplicatedTx(const std::string &txid_b64);
   bool saveLedger(std::string &key, std::string &ledger);
   std::string readLedger(std::string &key);
+  void clearLedger();
+  void flushLedger();
 
 private:
   bool errorOnCritical(const leveldb::Status &status);

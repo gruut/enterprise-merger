@@ -510,13 +510,18 @@ bool Storage::isDuplicatedTx(const std::string &txid_b64) {
 
 bool Storage::saveLedger(std::string &key, std::string &ledger) {
   addBatch(DBType::LEDGER, key, ledger);
-  m_db_ledger->Write(m_write_options, &m_batch_ledger);
-  m_batch_ledger.Clear();
   return true;
 }
 
 std::string Storage::readLedger(std::string &key) {
   return getValueByKey(DBType::LEDGER, key);
+}
+
+void Storage::clearLedger() { m_batch_ledger.Clear(); }
+
+void Storage::flushLedger() {
+  m_db_ledger->Write(m_write_options, &m_batch_ledger);
+  clearLedger();
 }
 
 } // namespace gruut
