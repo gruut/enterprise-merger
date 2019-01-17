@@ -77,6 +77,8 @@ public:
 
   void setTime(timestamp_type sent_time) { m_sent_time = sent_time; }
 
+  timestamp_type getTime() { return m_sent_time; }
+
   template <typename T = requestor_id_type>
   void setRequestorId(T &&requestor_id) {
     m_requestor_id = requestor_id;
@@ -85,6 +87,8 @@ public:
   void setTransactionType(TransactionType transaction_type) {
     m_transaction_type = transaction_type;
   }
+
+  TransactionType getTransactionType() { return m_transaction_type; }
 
   template <typename T = signature_type> void setSignature(T &&signature) {
     m_signature = signature;

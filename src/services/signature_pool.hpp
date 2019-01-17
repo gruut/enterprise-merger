@@ -3,7 +3,6 @@
 
 #include "nlohmann/json.hpp"
 
-#include "../application.hpp"
 #include "../chain/block.hpp"
 #include "../chain/signature.hpp"
 #include "../utils/bytes_builder.hpp"

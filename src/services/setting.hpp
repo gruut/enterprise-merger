@@ -174,7 +174,7 @@ public:
     if (m_port.empty()) {
       m_port = config::DEFAULT_PORT_NUM;
     }
-
+    //
     auto cert_pool =
         CertificatePool::getInstance(); // to push certificates to cert_pool
 
@@ -188,6 +188,7 @@ public:
     m_gruut_authority.address = Safe::getString(setting_json["GA"], "address");
     m_gruut_authority.cert = joinMultiLine(setting_json["cert"]);
 
+    //
     cert_pool->pushCert(m_gruut_authority.id, m_gruut_authority.cert);
 
     m_service_endpoints.clear();
@@ -198,6 +199,7 @@ public:
       tmp_info.port = Safe::getString(setting_json["SE"][i], "port");
       tmp_info.cert = joinMultiLine(setting_json["SE"][i]["cert"]);
       m_service_endpoints.emplace_back(tmp_info);
+      //
       cert_pool->pushCert(tmp_info.id, tmp_info.cert);
     }
 
@@ -214,6 +216,7 @@ public:
       }
 
       m_mergers.emplace_back(tmp_info);
+      //
       cert_pool->pushCert(tmp_info.id, tmp_info.cert);
     }
 

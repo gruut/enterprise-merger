@@ -39,7 +39,7 @@ using namespace std;
 const std::map<DBType, std::string> DB_PREFIX = {
     {DBType::BLOCK_HEADER, "B"}, {DBType::BLOCK_HEIGHT, "H"},
     {DBType::BLOCK_RAW, "R"},    {DBType::BLOCK_LATEST, "L"},
-    {DBType::TRANSACTION, "T"},  {DBType::CERTIFICATE, "C"}};
+    {DBType::TRANSACTION, "T"},  {DBType::LEDGER, "G"}};
 
 const std::vector<std::pair<std::string, std::string>> DB_BLOCK_HEADER_SUFFIX =
     {{"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
@@ -58,14 +58,14 @@ public:
   std::pair<std::string, size_t> getLatestHashAndHeight();
   nth_block_link_type getNthBlockLinkInfo(size_t t_height = 0);
   std::vector<std::string> getNthTxIdList(size_t t_height = 0);
-  std::string getCertificate(const std::string &user_id_b64,
-                             const timestamp_type &at_this_time = 0);
-  std::string getCertificate(const signer_id_type &user_id,
-                             const timestamp_type &at_this_time = 0);
   void destroyDB();
   read_block_type readBlock(size_t height);
   proof_type getProof(const std::string &txid_b64);
   bool isDuplicatedTx(const std::string &txid_b64);
+  bool saveLedger(std::string &key, std::string &ledger);
+  std::string readLedger(std::string &key);
+  void clearLedger();
+  void flushLedger();
 
 private:
   bool errorOnCritical(const leveldb::Status &status);
@@ -79,7 +79,6 @@ private:
   std::string getValueByKey(DBType what,
                             const std::string &base_suffix_keys = "");
   std::string getPrefix(DBType what);
-  std::string parseCert(std::string &pem);
   void rollbackBatchAll();
   void commitBatchAll();
   void clearBatchAll();
@@ -95,15 +94,15 @@ private:
   leveldb::DB *m_db_block_raw;
   leveldb::DB *m_db_latest_block_header;
   leveldb::DB *m_db_transaction;
-  leveldb::DB *m_db_certificate;
   leveldb::DB *m_db_blockid_height;
+  leveldb::DB *m_db_ledger;
 
   leveldb::WriteBatch m_batch_block_header;
   leveldb::WriteBatch m_batch_block_raw;
   leveldb::WriteBatch m_batch_latest_block_header;
   leveldb::WriteBatch m_batch_transaction;
-  leveldb::WriteBatch m_batch_certificate;
   leveldb::WriteBatch m_batch_blockid_height;
+  leveldb::WriteBatch m_batch_ledger;
 };
 } // namespace gruut
 #endif

@@ -11,6 +11,7 @@
 #include "../utils/compressor.hpp"
 #include "../utils/ecdsa.hpp"
 
+#include "../ledger/certificate_ledger.hpp"
 #include "easy_logging.hpp"
 #include "nlohmann/json.hpp"
 
@@ -297,8 +298,6 @@ public:
     }
 
     // step - check support signatures
-    auto storage = Storage::getInstance();
-
     bytes ssig_msg_after_sid = getSupportSigMessageCommon();
 
     for (auto &each_ssig : m_ssigs) {
@@ -314,7 +313,8 @@ public:
       if (it_map != m_user_certs.end()) {
         user_pk_pem = it_map->second;
       } else {
-        user_pk_pem = storage->getCertificate(user_id_b64, m_time);
+        CertificateLedger cert_ledger;
+        user_pk_pem = cert_ledger.getCertificate(user_id_b64, m_time);
       }
 
       if (user_pk_pem.empty()) {

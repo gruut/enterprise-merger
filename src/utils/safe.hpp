@@ -7,10 +7,6 @@
 
 class Safe {
 public:
-  static nlohmann::json parseJson(std::string &&json_str) {
-    return parseJson(json_str);
-  }
-
   static nlohmann::json parseJson(const std::string &json_str) {
     nlohmann::json ret_json;
 
@@ -26,10 +22,6 @@ public:
     return ret_json;
   }
 
-  static nlohmann::json parseJsonAsArray(const std::string &&json_str) {
-    return parseJsonAsArray(json_str);
-  }
-
   static nlohmann::json parseJsonAsArray(const std::string &json_str) {
     nlohmann::json ret_json = parseJson(json_str);
 
@@ -39,12 +31,7 @@ public:
     return ret_json;
   }
 
-  static std::string getString(nlohmann::json &&json_obj,
-                               const std::string &key) {
-    return getString(json_obj, key);
-  }
-
-  static std::string getString(nlohmann::json &json_obj,
+  static std::string getString(const nlohmann::json &json_obj,
                                const std::string &key) {
     if (json_obj.find(key) != json_obj.end()) {
       return getString(json_obj[key]);
@@ -52,11 +39,7 @@ public:
     return std::string();
   }
 
-  static std::string getString(nlohmann::json &&json_obj) {
-    return getString(json_obj);
-  }
-
-  static std::string getString(nlohmann::json &json_obj) {
+  static std::string getString(const nlohmann::json &json_obj) {
     std::string ret_str;
     if (!json_obj.empty()) {
       try {
@@ -69,42 +52,31 @@ public:
     return ret_str;
   }
 
-  static size_t getSize(const std::string &size_str) {
+  template <typename K = std::string> static size_t getSize(K &&size_str) {
     if (size_str.empty())
       return 0;
 
     return static_cast<uint64_t>(stoll(size_str));
   }
 
-  static uint64_t getInt(nlohmann::json &&json_obj, const std::string &key) {
-    return getInt(json_obj, key);
-  }
-
-  static uint64_t getInt(nlohmann::json &json_obj, const std::string &key) {
+  template <typename S = nlohmann::json, typename K = std::string>
+  static uint64_t getInt(S &&json_obj, K &&key) {
     std::string dec_str = getString(json_obj, key);
     if (dec_str.empty())
       return 0;
     return static_cast<uint64_t>(stoll(dec_str));
   }
 
-  static gruut::timestamp_type getTime(nlohmann::json &&json_obj,
-                                       const std::string &key) {
-    return getTime(json_obj, key);
-  }
-
-  static gruut::timestamp_type getTime(nlohmann::json &json_obj,
-                                       const std::string &key) {
+  template <typename S = nlohmann::json, typename K = std::string>
+  static gruut::timestamp_type getTime(S &&json_obj, K &&key) {
     std::string dec_str = getString(json_obj, key);
     if (dec_str.empty())
       return 0;
     return static_cast<gruut::timestamp_type>(stoll(dec_str));
   }
 
-  static bool getBoolean(nlohmann::json &&json_obj, const std::string &key) {
-    return getBoolean(json_obj, key);
-  }
-
-  static bool getBoolean(nlohmann::json &json_obj, const std::string &key) {
+  static bool getBoolean(const nlohmann::json &json_obj,
+                         const std::string &key) {
     if (json_obj.find(key) != json_obj.end()) {
       if (!json_obj[key].is_boolean()) {
         return false;
@@ -116,13 +88,9 @@ public:
     return false;
   }
 
-  template <typename T = gruut::bytes>
-  static T getBytesFromB64(nlohmann::json &&json_obj, const std::string &key) {
-    return getBytesFromB64<T>(json_obj, key);
-  }
-
-  template <typename T = gruut::bytes>
-  static T getBytesFromB64(nlohmann::json &json_obj, const std::string &key) {
+  template <typename T = gruut::bytes, typename S = nlohmann::json,
+            typename K = std::string>
+  static T getBytesFromB64(S &&json_obj, K &&key) {
     std::string parse_str = getString(json_obj, key);
     if (parse_str.empty())
       return T();
