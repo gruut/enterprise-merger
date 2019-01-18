@@ -47,7 +47,7 @@ void BlockHealthChecker::startHealthCheck() {
     read_block_type nth_block = storage->readBlock(i);
     test_block.reset(new Block);
     test_block->initialize(nth_block);
-    if (test_block->isValid() &&
+    if (test_block->isValidEarly() &&
         test_block->getPrevHashB64() == prev_hash_b64 &&
         test_block->getPrevBlockIdB64() == prev_block_id_b64) {
 

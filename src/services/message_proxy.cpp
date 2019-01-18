@@ -60,4 +60,10 @@ void MessageProxy::deliverOutputMessage(OutputMsgEntry &output_message) {
 
   m_output_queue->push(output_message);
 }
+
+void MessageProxy::deliverBlockProcessor(InputMsgEntry &input_message) {
+  CLOG(INFO, "MPRX") << "MSG TO BPRO: 0x" << std::hex
+                     << (int)input_message.type;
+  Application::app().getBlockProcessor().handleMessage(input_message);
+}
 } // namespace gruut

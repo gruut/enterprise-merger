@@ -56,7 +56,7 @@ public:
       if (setting_json_str.empty()) {
         CLOG(ERROR, "ARGV")
             << "Failed to open setting files " << result["in"].as<string>();
-        return setting_json;
+        return false;
       }
 
       setting_json = json::parse(setting_json_str); // try-catch below

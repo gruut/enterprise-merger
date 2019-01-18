@@ -35,14 +35,18 @@ void SignatureRequester::waitCollectDone() {
 }
 
 bool SignatureRequester::isNew(Signer &signer) {
-  auto &certificate_ledger = Application::app().getCertificateLedger();
-  auto cert = certificate_ledger.getCertificate(signer.user_id);
+  auto cert = m_cert_ledger.getCertificate(signer.user_id);
   return (cert.empty() || cert != signer.pk_cert);
 }
 
 void SignatureRequester::requestSignatures() {
 
-  // step 1 - chooosing suitable signers
+  // step 1 - check whether I can go
+
+  if (Application::app().getBlockProcessor().hasUnresolvedBlocks()) {
+    CLOG(ERROR, "SIGR") << "Has unresolved blocks";
+    return;
+  }
 
   auto target_signers = selectSigners();
 
@@ -119,6 +123,7 @@ void SignatureRequester::doCreateBlock() {
 
       BlockGenerator generator;
       generator.generateBlock(m_basic_block_info, signatures, m_merkle_tree);
+      CLOG(ERROR, "SIGR") << "END MAKING BLOCK";
     } else {
       CLOG(ERROR, "SIGR") << "CANCEL MAKING BLOCK";
       signature_pool.clear();
@@ -221,20 +226,22 @@ BasicBlockInfo SignatureRequester::generateBasicBlockInfo() {
 
   auto setting = Setting::getInstance();
 
-  auto storage = Storage::getInstance();
-  auto latest_block_info = storage->getNthBlockLinkInfo();
+  auto latest_block_info =
+      Application::app().getBlockProcessor().getMostPossibleLink();
 
-  BasicBlockInfo partial_block;
+  BasicBlockInfo basic_info;
 
-  partial_block.time = Time::now_int();
-  partial_block.merger_id = setting->getMyId();
-  partial_block.chain_id = setting->getLocalChainId();
+  basic_info.time = Time::now_int();
+  basic_info.merger_id = setting->getMyId();
+  basic_info.chain_id = setting->getLocalChainId();
+  basic_info.prev_id_b64 = latest_block_info.id_b64;
+  basic_info.prev_hash_b64 = latest_block_info.hash_b64;
 
   if (latest_block_info.height == 0)
-    partial_block.height = 1; // this is genesis block
+    basic_info.height = 1; // this is genesis block
   else
-    partial_block.height = latest_block_info.height + 1;
+    basic_info.height = latest_block_info.height + 1;
 
-  return partial_block;
+  return basic_info;
 }
 } // namespace gruut

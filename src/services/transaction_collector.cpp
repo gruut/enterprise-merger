@@ -50,9 +50,7 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
     return;
   }
 
-  auto &custom_ledger_manager = Application::app().getCustomLedgerManager();
-
-  if (custom_ledger_manager.isValidTransaction(new_tx)) {
+  if (Application::app().getCustomLedgerManager().isValidTransaction(new_tx)) {
     transaction_pool.push(new_tx);
   } else {
     CLOG(ERROR, "TXCO") << "TX dropped (invalid)";

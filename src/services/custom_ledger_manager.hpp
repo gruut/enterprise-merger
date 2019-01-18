@@ -15,9 +15,22 @@ namespace gruut {
 class CustomLedgerManager {
 private:
   std::vector<std::shared_ptr<Ledger>> m_ledgers;
+  std::shared_ptr<CertificateLedger> m_certificate_ledger;
+  std::shared_ptr<DigestLedger> m_digest_ledger;
+  std::shared_ptr<SmsLedger> m_sms_ledger;
 
 public:
-  CustomLedgerManager() { el::Loggers::getLogger("CLMA"); }
+  CustomLedgerManager() {
+    el::Loggers::getLogger("CLMA");
+
+    m_certificate_ledger = std::make_shared<CertificateLedger>();
+    m_digest_ledger = std::make_shared<DigestLedger>();
+    m_sms_ledger = std::make_shared<SmsLedger>();
+
+    registerLedger(m_certificate_ledger);
+    registerLedger(m_digest_ledger);
+    registerLedger(m_sms_ledger);
+  }
 
   bool isValidTransaction(Transaction &tx) {
     if (m_ledgers.empty())
@@ -37,6 +50,7 @@ public:
     }
   }
 
+private:
   void registerLedger(std::shared_ptr<Ledger> ledger) {
     m_ledgers.emplace_back(ledger);
   }

@@ -1,5 +1,5 @@
 #include "block_processor.hpp"
-#include "../application.hpp"
+#include "../../application.hpp"
 #include "easy_logging.hpp"
 
 namespace gruut {
@@ -8,7 +8,89 @@ BlockProcessor::BlockProcessor() {
   m_storage = Storage::getInstance();
   auto setting = Setting::getInstance();
   m_my_id = setting->getMyId();
+
+  auto last_block_info = m_storage->getNthBlockLinkInfo();
+
+  m_unresolved_block_pool.setPool(last_block_info.id_b64,
+                                  last_block_info.hash_b64,
+                                  last_block_info.height, last_block_info.time);
+
+  auto &io_service = Application::app().getIoService();
+  m_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_task_strand.reset(new boost::asio::io_service::strand(io_service));
+
   el::Loggers::getLogger("BPRO");
+}
+
+void BlockProcessor::start() { periodicTask(); }
+
+void BlockProcessor::periodicTask() {
+  auto &io_service = Application::app().getIoService();
+  io_service.post(m_task_strand->wrap([this]() {
+    std::vector<Block> blocks_to_save =
+        m_unresolved_block_pool.getResolvedBlocks();
+    if (!blocks_to_save.empty()) {
+      for (auto &&each_block : blocks_to_save) {
+
+        if (!each_block.isValidLate()) {
+          CLOG(ERROR, "BPRO")
+              << "Block dropped (invalid - late stage validation)";
+          continue;
+        }
+
+        json block_header = each_block.getBlockHeaderJson();
+        bytes block_raw = each_block.getBlockRaw();
+        json block_body = each_block.getBlockBodyJson();
+
+        Application::app().getCustomLedgerManager().procLedgerBlock(block_body);
+
+        m_storage->saveBlock(block_raw, block_header, block_body);
+        CLOG(INFO, "BPRO") << "BLOCK SAVED (height=" << each_block.getHeight()
+                           << ",#tx=" << each_block.getNumTransactions()
+                           << ",#ssig=" << each_block.getNumSSigs() << ")";
+      }
+    }
+
+    block_height_type unresolved_height =
+        m_unresolved_block_pool.getUnresolvedLowestHeight();
+    if (unresolved_height > 0) {
+      OutputMsgEntry msg_req_block;
+
+      msg_req_block.type = MessageType::MSG_REQ_BLOCK;
+      msg_req_block.body["mID"] = TypeConverter::encodeBase64(m_my_id); // my_id
+      msg_req_block.body["time"] = Time::now();
+      msg_req_block.body["mCert"] = "";
+      msg_req_block.body["hgt"] = std::to_string(unresolved_height);
+      msg_req_block.body["mSig"] = "";
+      msg_req_block.receivers = {};
+
+      CLOG(INFO, "BSYN") << "send MSG_REQ_BLOCK (" << unresolved_height << ")";
+
+      m_msg_proxy.deliverOutputMessage(msg_req_block);
+    }
+  }));
+
+  m_timer->expires_from_now(
+      boost::posix_time::milliseconds(config::BROC_PROCESSOR_TASK_PERIOD));
+  m_timer->async_wait([this](const boost::system::error_code &ec) {
+    if (ec == boost::asio::error::operation_aborted) {
+      CLOG(INFO, "BPRO") << "Timer ABORTED";
+    } else if (ec.value() == 0) {
+      periodicTask();
+    } else {
+      CLOG(ERROR, "BPRO") << ec.message();
+      // throw;
+    }
+  });
+}
+
+nth_block_link_type BlockProcessor::getMostPossibleLink() {
+
+  return m_unresolved_block_pool.getMostPossibleLink();
+}
+
+bool BlockProcessor::hasUnresolvedBlocks() {
+  return m_unresolved_block_pool.hasUnresolvedBlocks();
 }
 
 bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
@@ -25,8 +107,6 @@ bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
 }
 
 bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
-
-  CLOG(INFO, "BPRO") << "called handleMsgReqBlock()";
 
   block_height_type req_block_height = Safe::getInt(entry.body, "hgt");
 
@@ -82,9 +162,17 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   msg_block.receivers = {recv_id};
 
   CLOG(INFO, "BPRO") << "Send MSG_BLOCK (height=" << saved_block.height
-                     << ", #TX=" << saved_block.txs.size() << ")";
+                     << ", #tx=" << saved_block.txs.size() << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_block);
+
+  OutputMsgEntry msg_block_hgt;
+  output_msg.type = MessageType::MSG_BLOCK_HGT;
+  output_msg.body["mID"] = msg_block.body["mID"];
+  output_msg.body["time"] = Time::now();
+  output_msg.body["hgt"] = to_string(saved_block.height);
+
+  proxy.deliverOutputMessage(msg_block_hgt);
 
   return true;
 }
@@ -97,56 +185,13 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     return false;
   }
 
-  if (!recv_block.isValid()) {
-    CLOG(ERROR, "BPRO") << "Block dropped (invalid block)";
+  if (!recv_block.isValidEarly()) {
+    CLOG(ERROR, "BPRO") << "Block dropped (invalid - early stage validation)";
     return false;
   }
 
-  auto latest_block_link = m_storage->getNthBlockLinkInfo();
-
-  if (recv_block.getHeight() <= latest_block_link.height) {
-    CLOG(ERROR, "BPRO") << "Block dropped (duplicated block)";
-    return false;
-  }
-
-  if (recv_block.getHeight() == latest_block_link.height + 1) {
-
-    if (recv_block.getPrevBlockIdB64() != latest_block_link.id_b64 &&
-        recv_block.getPrevHashB64() != latest_block_link.hash_b64) {
-      CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
-      return false;
-    }
-
-    json block_header = recv_block.getBlockHeaderJson();
-    bytes block_raw = recv_block.getBlockRaw();
-    json block_body = recv_block.getBlockBodyJson();
-
-    m_storage->saveBlock(block_raw, block_header, block_body);
-
-    CLOG(INFO, "BPRO") << "Block saved (height=" << recv_block.getHeight()
-                       << ")";
-
-    auto &tx_pool = Application::app().getTransactionPool();
-    tx_pool.removeDuplicatedTransactions(recv_block.getTxIds());
-
-    auto &custom_ledger_manager = Application::app().getCustomLedgerManager();
-    custom_ledger_manager.procLedgerBlock(block_body);
-
-    auto setting = Setting::getInstance();
-
-    OutputMsgEntry output_msg;
-    output_msg.type = MessageType::MSG_BLOCK_HGT;
-    output_msg.body["mID"] = TypeConverter::encodeBase64(setting->getMyId());
-    output_msg.body["time"] = Time::now();
-    output_msg.body["hgt"] = to_string(recv_block.getHeight());
-
-    MessageProxy proxy;
-    proxy.deliverOutputMessage(output_msg);
-  } else {
-    // TODO : push this block to unresolved block pool
-    CLOG(ERROR, "BPRO")
-        << "Unable to handle this block due to implementation issue";
-    return false;
+  if (!m_unresolved_block_pool.push(recv_block)) {
+    CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
   }
 
   return true;

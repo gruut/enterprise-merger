@@ -121,7 +121,7 @@ using string = std::string;
 using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
 using timestamp_type = uint64_t;
-using block_height_type = uint64_t;
+using block_height_type = size_t;
 
 constexpr auto TRANSACTION_ID_TYPE_SIZE = 32;
 using transaction_id_type = std::array<uint8_t, TRANSACTION_ID_TYPE_SIZE>;
@@ -157,6 +157,7 @@ using nth_block_link_type = struct nth_block_link_t {
   std::string prev_id_b64;
   std::string prev_hash_b64;
   size_t height;
+  timestamp_type time;
 };
 
 // 아래는 모두 동일한 타입, 문맥에 맞춰서 쓸 것
