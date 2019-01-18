@@ -70,8 +70,7 @@ bool SignaturePool::verifySignature(signer_id_type &recv_id,
                                     json &msg_body_json) {
   auto pk_cert = SignerPool::getInstance()->getPkCert(recv_id);
   if (pk_cert.empty()) {
-    auto &certificate_ledger = Application::app().getCertificateLedger();
-    pk_cert = certificate_ledger.getCertificate(recv_id);
+    pk_cert = m_cert_ledger.getCertificate(recv_id);
   }
 
   if (pk_cert.empty()) {

@@ -27,6 +27,8 @@ public:
   local_chain_id_type chain_id;
   block_height_type height;
   transaction_root_type transaction_root;
+  std::string prev_id_b64;
+  std::string prev_hash_b64;
 
   vector<Transaction> transactions;
 };
@@ -161,19 +163,13 @@ public:
     return true;
   }
 
-  void linkPreviousBlock() {
-    auto storage = Storage::getInstance();
+  void linkPreviousBlock(
+      const std::string &last_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64,
+      const std::string &last_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64) {
 
     m_version = config::DEFAULT_VERSION;
-    auto latest_block_info = storage->getNthBlockLinkInfo();
-
-    if (latest_block_info.height == 0) { // this is genesis block
-      m_prev_block_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
-      m_prev_block_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
-    } else {
-      m_prev_block_id_b64 = latest_block_info.id_b64;
-      m_prev_block_hash_b64 = latest_block_info.hash_b64;
-    }
+    m_prev_block_id_b64 = last_id_b64;
+    m_prev_block_hash_b64 = last_hash_b64;
 
     BytesBuilder block_id_builder;
     block_id_builder.append(m_chain_id);
@@ -264,7 +260,7 @@ public:
                  {"tx", txs}});
   }
 
-  size_t getHeight() { return m_height; }
+  block_height_type getHeight() { return m_height; }
 
   size_t getNumTransactions() { return m_transactions.size(); }
 
@@ -276,6 +272,8 @@ public:
     return TypeConverter::encodeBase64(m_block_id);
   }
 
+  timestamp_type getTime() { return m_time; }
+
   sha256 getHash() { return m_block_hash; }
 
   std::string getHashB64() { return TypeConverter::encodeBase64(m_block_hash); }
@@ -284,21 +282,15 @@ public:
 
   std::string getPrevBlockIdB64() { return m_prev_block_id_b64; }
 
-  bool isValid() {
+  bool isValid() { return (isValidEarly() && isValidLate()); }
 
-    if (m_block_raw.empty() || m_signature.empty()) {
-      CLOG(ERROR, "BLOC") << "Empty blockraw or signature";
-      return false;
-    }
-
-    // step - check merkle tree
-    if (m_tx_root != m_merkle_tree_node.back()) {
-      CLOG(ERROR, "BLOC") << "Invalid Merkle-tree root";
-      return false;
-    }
-
+  // Support signature cannot be verified unless storage or block itself has
+  // suitable certificates Therefore, the verification of support signatures
+  // should be delayed until the previous block has been saved.
+  bool isValidLate() {
     // step - check support signatures
     bytes ssig_msg_after_sid = getSupportSigMessageCommon();
+    CertificateLedger cert_ledger;
 
     for (auto &each_ssig : m_ssigs) {
       BytesBuilder ssig_msg_builder;
@@ -313,7 +305,6 @@ public:
       if (it_map != m_user_certs.end()) {
         user_pk_pem = it_map->second;
       } else {
-        CertificateLedger cert_ledger;
         user_pk_pem = cert_ledger.getCertificate(user_id_b64, m_time);
       }
 
@@ -327,6 +318,22 @@ public:
         CLOG(ERROR, "BLOC") << "Invalid support signature";
         return false;
       }
+    }
+
+    return true;
+  }
+
+  bool isValidEarly() {
+
+    if (m_block_raw.empty() || m_signature.empty()) {
+      CLOG(ERROR, "BLOC") << "Empty blockraw or signature";
+      return false;
+    }
+
+    // step - check merkle tree
+    if (m_tx_root != m_merkle_tree_node.back()) {
+      CLOG(ERROR, "BLOC") << "Invalid Merkle-tree root";
+      return false;
     }
 
     // step - transactions

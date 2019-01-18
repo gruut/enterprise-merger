@@ -24,12 +24,16 @@ constexpr CompressionAlgorithmType DEFAULT_BLOCKRAW_COMP_ALGO =
 constexpr size_t BP_INTERVAL = 10;
 constexpr size_t BP_PING_PERIOD = 4;
 
+constexpr size_t BROC_PROCESSOR_TASK_PERIOD = 1500;
+
 constexpr size_t MAX_MERKLE_LEAVES = 4096;
 
 constexpr size_t MAX_COLLECT_TRANSACTION_SIZE = 4096;
 
 constexpr size_t MIN_SIGNATURE_COLLECT_SIZE = 1;
 constexpr size_t MAX_SIGNATURE_COLLECT_SIZE = 20;
+
+constexpr size_t CONFIRM_LEVEL = 3;
 
 constexpr size_t JOIN_TIMEOUT_SEC = 10;
 

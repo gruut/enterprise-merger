@@ -43,7 +43,7 @@ bool TransactionPool::pop(Transaction &transaction) {
     return false;
 
   bool success = false;
-  for (int i = m_transaction_pool.size() - 1; i >= 0; --i) {
+  for (int i = (int)m_transaction_pool.size() - 1; i >= 0; --i) {
     std::string tx_id_str =
         TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
             m_transaction_pool[i].getId());
@@ -61,7 +61,7 @@ bool TransactionPool::pop(Transaction &transaction) {
 std::vector<Transaction> TransactionPool::fetchLastN(size_t n) {
   std::vector<Transaction> transactions;
 
-  for (int i = m_transaction_pool.size() - 1; i >= 0; --i) {
+  for (int i = (int)m_transaction_pool.size() - 1; i >= 0; --i) {
     std::string tx_id_str =
         TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
             m_transaction_pool[i].getId());

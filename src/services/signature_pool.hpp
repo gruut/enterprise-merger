@@ -10,6 +10,8 @@
 #include "../utils/safe.hpp"
 #include "../utils/type_converter.hpp"
 
+#include "../ledger/certificate_ledger.hpp"
+
 #include <list>
 #include <mutex>
 #include <string>
@@ -53,6 +55,7 @@ private:
   block_height_type m_height;
   sha256 m_tx_root;
   timestamp_type m_block_time;
+  CertificateLedger m_cert_ledger;
 
   std::mutex m_mutex;
 
