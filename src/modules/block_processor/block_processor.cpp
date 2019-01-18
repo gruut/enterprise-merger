@@ -167,12 +167,12 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   m_msg_proxy.deliverOutputMessage(msg_block);
 
   OutputMsgEntry msg_block_hgt;
-  output_msg.type = MessageType::MSG_BLOCK_HGT;
-  output_msg.body["mID"] = msg_block.body["mID"];
-  output_msg.body["time"] = Time::now();
-  output_msg.body["hgt"] = to_string(saved_block.height);
+  msg_block_hgt.type = MessageType::MSG_BLOCK_HGT;
+  msg_block_hgt.body["mID"] = msg_block.body["mID"];
+  msg_block_hgt.body["time"] = Time::now();
+  msg_block_hgt.body["hgt"] = to_string(saved_block.height);
 
-  proxy.deliverOutputMessage(msg_block_hgt);
+  m_msg_proxy.deliverOutputMessage(msg_block_hgt);
 
   return true;
 }

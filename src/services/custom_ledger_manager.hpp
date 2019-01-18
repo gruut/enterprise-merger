@@ -3,6 +3,8 @@
 
 #include "../chain/types.hpp"
 #include "../ledger/ledger.hpp"
+#include "../ledger/digest_ledger.hpp"
+#include "../ledger/sms_ledger.hpp"
 #include "../utils/safe.hpp"
 #include "easy_logging.hpp"
 #include "nlohmann/json.hpp"

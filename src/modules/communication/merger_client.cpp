@@ -26,7 +26,11 @@ void MergerClient::accessToTracker() {
   request_msg["port"] = setting->getMyPort();
   request_msg["mCert"] = setting->getMyCert();
   request_msg["time"]  = Time::now();
+  //TODO: 아래는 현재 테스트를 위한 값으로 수정 될 것.
   request_msg["hgt"] = to_string(0);
+  request_msg["bID"] = to_string(0);
+  request_msg["prevHash"] =to_string(0);
+  request_msg["prevbID"] = to_string(0);
 
   // ToDO: 현재 local주소, setting에 tracker 정보 세팅 필요.
   CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";
