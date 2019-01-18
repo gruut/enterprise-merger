@@ -51,7 +51,7 @@ private:
 
   merger_id_type m_my_mid;
   std::string m_my_mid_b64;
-  local_chain_id_type m_my_cid;
+  localchain_id_type m_my_cid;
   std::string m_my_cid_b64;
 
   size_t m_up_slot{0};

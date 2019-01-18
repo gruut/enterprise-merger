@@ -29,12 +29,12 @@ public:
 class UnresolvedBlockPool {
 private:
   std::deque<std::vector<UnresolvedBlock>> m_block_pool; // bin structure
-  std::mutex m_push_mutex;
+  std::recursive_mutex m_push_mutex;
 
   std::string m_last_block_id_b64;
   std::string m_last_hash_b64;
   std::atomic<block_height_type> m_last_height;
-  timestamp_type m_last_time;
+  timestamp_t m_last_time;
 
   std::atomic<size_t> m_height_range_max{0};
   std::atomic<bool> m_force_unresolved{false};
@@ -44,13 +44,21 @@ public:
 
   UnresolvedBlockPool(std::string &last_block_id_b64,
                       std::string &last_hash_b64, block_height_type last_height,
-                      timestamp_type last_time) {
+                      timestamp_t last_time) {
     setPool(last_block_id_b64, last_hash_b64, last_height, last_time);
     el::Loggers::getLogger("URBK");
   }
 
+  size_t size() {
+    return m_block_pool.size();
+  }
+
+  bool empty(){
+    return m_block_pool.empty();
+  }
+
   void setPool(std::string &last_block_id_b64, std::string &last_hash_b64,
-               block_height_type last_height, timestamp_type last_time) {
+               block_height_type last_height, timestamp_t last_time) {
     m_last_block_id_b64 = last_block_id_b64;
     m_last_hash_b64 = last_hash_b64;
     m_last_height = last_height;
@@ -62,7 +70,7 @@ public:
 
     block_height_type block_height = block.getHeight();
 
-    std::lock_guard<std::mutex> guard(m_push_mutex);
+    std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
 
     if ((Time::now_int() - m_last_time) <
         (block.getHeight() - m_last_height - 1) * config::BP_INTERVAL) {
@@ -133,9 +141,39 @@ public:
     return true;
   }
 
+  bool getBlock(block_height_type t_height, const std::string &t_prev_hash_b64, Block &ret_block) {
+    std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
+    if(m_block_pool.empty()){
+      return false;
+    }
+
+    if(t_height <= m_last_height || m_last_height + m_block_pool.size() < t_height) {
+      return false;
+    }
+
+    size_t bin_pos = t_height - m_last_height;
+    std::string prev_hash_b64 = t_prev_hash_b64;
+    if(t_height == 0) {
+      nth_link_type most_possible_link = getMostPossibleLink();
+      bin_pos = most_possible_link.height - m_last_height;
+      prev_hash_b64 = most_possible_link.prev_hash_b64;
+    }
+
+    bool is_some = false;
+    for(auto &each_block : m_block_pool[bin_pos]) {
+      if(each_block.block.getPrevHashB64() == prev_hash_b64) {
+        ret_block = each_block.block;
+        is_some = true;
+        break;
+      }
+    }
+
+    return is_some;
+  }
+
   std::vector<Block> getResolvedBlocks() { // flushing out resolved blocks
     std::vector<Block> blocks;
-    std::lock_guard<std::mutex> guard(m_push_mutex);
+    std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
 
     size_t num_resolved_block = 0;
 
@@ -150,7 +188,7 @@ public:
 
   block_height_type
   getUnresolvedLowestHeight() { // must be called after getResolvedBlocks()
-    std::lock_guard<std::mutex> guard(m_push_mutex);
+    std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
 
     int unresolved_lowest_height = -1;
     for (size_t i = 0; i < m_block_pool.size(); ++i) {
@@ -180,11 +218,11 @@ public:
                                           m_last_height);
   }
 
-  nth_block_link_type getMostPossibleLink() {
+  nth_link_type getMostPossibleLink() {
 
-    std::lock_guard<std::mutex> guard(m_push_mutex);
+    std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
 
-    nth_block_link_type ret_link;
+    nth_link_type ret_link;
 
     // when resolved situation, the blow are the same with storage
     // unless, they are faster than storage
@@ -196,7 +234,7 @@ public:
       return ret_link;
     }
 
-    nth_block_link_type longest_link;
+    nth_link_type longest_link;
     longest_link.height = 0;
     for (size_t i = 0; i < m_block_pool[0].size(); ++i) {
       if (m_block_pool[0][i].prev_queue_idx == 0) {
@@ -227,7 +265,7 @@ public:
 private:
   // search prev_level + 1
   void recSearchLongestLink(size_t prev_level, size_t prev_node,
-                            nth_block_link_type &longest_link) {
+                            nth_link_type &longest_link) {
     if (m_block_pool.size() > prev_level + 1) {
 
       for (size_t i = 0; i < m_block_pool[prev_level + 1].size();

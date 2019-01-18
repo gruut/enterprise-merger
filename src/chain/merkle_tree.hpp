@@ -57,12 +57,12 @@ class MerkleTree {
 public:
   MerkleTree() { prepareLookUpTable(); }
 
-  MerkleTree(vector<sha256> &tx_digests) {
+  MerkleTree(vector<hash_t> &tx_digests) {
     prepareLookUpTable();
     generate(tx_digests);
   }
 
-  void generate(vector<sha256> &tx_digests) {
+  void generate(vector<hash_t> &tx_digests) {
     const bytes dummy_leaf(32, 0); // for SHA-256
 
     auto min_addable_size = min(MAX_MERKLE_LEAVES, tx_digests.size());
@@ -82,12 +82,12 @@ public:
   }
 
   void generate(vector<Transaction> &transactions) {
-    vector<sha256> tx_digests;
+    vector<hash_t> tx_digests;
     generateTxDigests(tx_digests, transactions);
     generate(tx_digests);
   }
 
-  vector<sha256> getMerkleTree() { return m_merkle_tree; }
+  vector<hash_t> getMerkleTree() { return m_merkle_tree; }
 
   static bool isValidSiblings(proof_type &proof,
                               const std::string &root_val_b64) {
@@ -127,10 +127,10 @@ public:
     if (siblings[0].second != my_val)
       return false;
 
-    sha256 mtree_root;
+    hash_t mtree_root;
     for (size_t i = 0; i < siblings.size(); ++i) {
       if (i == 0) {
-        mtree_root = static_cast<sha256>(siblings[i].second);
+        mtree_root = static_cast<hash_t>(siblings[i].second);
         continue;
       }
 
@@ -152,13 +152,13 @@ private:
   void prepareLookUpTable() {
     m_merkle_tree.resize(MAX_MERKLE_LEAVES * 2 - 1);
     for (auto &hash_entry : HASH_LOOKUP) {
-      sha256 hash_val =
-          static_cast<sha256>(TypeConverter::decodeBase64(hash_entry.second));
+      hash_t hash_val =
+          static_cast<hash_t>(TypeConverter::decodeBase64(hash_entry.second));
       m_hash_lookup.emplace(hash_entry.first, hash_val);
     }
   }
 
-  sha256 makeParent(sha256 left, sha256 &right) {
+  hash_t makeParent(hash_t left, hash_t &right) {
     left.insert(left.cend(), right.cbegin(), right.cend());
     std::string lookup_key = TypeConverter::encodeBase64(left);
 
@@ -170,15 +170,15 @@ private:
     }
   }
 
-  void generateTxDigests(vector<sha256> &tx_digests,
+  void generateTxDigests(vector<hash_t> &tx_digests,
                          vector<Transaction> &transactions) {
     transform(transactions.begin(), transactions.end(),
               back_inserter(tx_digests),
               [](Transaction &t) { return t.getDigest(); });
   }
 
-  vector<sha256> m_merkle_tree;
-  std::map<std::string, sha256> m_hash_lookup;
+  vector<hash_t> m_merkle_tree;
+  std::map<std::string, hash_t> m_hash_lookup;
 };
 } // namespace gruut
 

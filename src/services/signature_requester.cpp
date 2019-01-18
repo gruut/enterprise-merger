@@ -199,7 +199,7 @@ SignatureRequester::generateCertificateTransaction(vector<Signer> &signers) {
     auto setting = Setting::getInstance();
 
     //    new_transaction.setId(generateTxId());
-    new_transaction.setTime(static_cast<timestamp_type>(Time::now_int()));
+    new_transaction.setTime(static_cast<timestamp_t>(Time::now_int()));
     new_transaction.setRequestorId(setting->getMyId());
     new_transaction.setTransactionType(TransactionType::CERTIFICATES);
 

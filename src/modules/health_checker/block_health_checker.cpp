@@ -44,7 +44,7 @@ void BlockHealthChecker::startHealthCheck() {
       CLOG(INFO, "BHCH") << "Checking ... " << i << "/"
                          << latest_block_info.height;
 
-    read_block_type nth_block = storage->readBlock(i);
+    storage_block_type nth_block = storage->readBlock(i);
     test_block.reset(new Block);
     test_block->initialize(nth_block);
     if (test_block->isValidEarly() &&

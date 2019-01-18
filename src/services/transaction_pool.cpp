@@ -30,10 +30,10 @@ void TransactionPool::clear() {
   m_push_mutex.unlock();
 }
 
-bool TransactionPool::isDuplicated(transaction_id_type &&tx_id) {
+bool TransactionPool::isDuplicated(tx_id_type &&tx_id) {
   return isDuplicated(tx_id);
 }
-bool TransactionPool::isDuplicated(transaction_id_type &tx_id) {
+bool TransactionPool::isDuplicated(tx_id_type &tx_id) {
   return m_txid_pool.has(
       TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(tx_id));
 }
@@ -77,12 +77,12 @@ std::vector<Transaction> TransactionPool::fetchLastN(size_t n) {
 }
 
 void TransactionPool::removeDuplicatedTransactions(
-    std::vector<transaction_id_type> &&tx_ids) {
+    std::vector<tx_id_type> &&tx_ids) {
   removeDuplicatedTransactions(tx_ids);
 }
 
 void TransactionPool::removeDuplicatedTransactions(
-    std::vector<transaction_id_type> &tx_ids) {
+    std::vector<tx_id_type> &tx_ids) {
   if (tx_ids.empty())
     return;
 

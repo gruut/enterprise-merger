@@ -22,9 +22,9 @@ using namespace std;
 namespace gruut {
 class BasicBlockInfo {
 public:
-  timestamp_type time;
+  timestamp_t time;
   merger_id_type merger_id;
-  local_chain_id_type chain_id;
+  localchain_id_type chain_id;
   block_height_type height;
   transaction_root_type transaction_root;
   std::string prev_id_b64;
@@ -36,27 +36,27 @@ public:
 class Block {
 private:
   block_version_type m_version;
-  timestamp_type m_time;
+  timestamp_t m_time;
   block_id_type m_block_id;
   merger_id_type m_merger_id;
-  local_chain_id_type m_chain_id;
+  localchain_id_type m_chain_id;
   block_height_type m_height;
   transaction_root_type m_tx_root;
   std::vector<Transaction> m_transactions;
-  std::vector<sha256> m_merkle_tree_node;
+  std::vector<hash_t> m_merkle_tree_node;
   std::string m_prev_block_hash_b64;
   std::string m_prev_block_id_b64;
   bytes m_signature;
   std::vector<Signature> m_ssigs;
   std::map<std::string, std::string> m_user_certs;
   bytes m_block_raw;
-  sha256 m_block_hash;
+  hash_t m_block_hash;
 
 public:
   Block() { el::Loggers::getLogger("BLOC"); };
 
   bool initialize(BasicBlockInfo &basic_info,
-                  std::vector<sha256> &&merkle_Tree_node = {}) {
+                  std::vector<hash_t> &&merkle_Tree_node = {}) {
     m_time = basic_info.time;
     m_merger_id = basic_info.merger_id;
     m_chain_id = basic_info.chain_id;
@@ -74,7 +74,7 @@ public:
     return true;
   }
 
-  bool initialize(read_block_type &read_block) {
+  bool initialize(storage_block_type &read_block) {
     return initialize(read_block.block_raw, read_block.txs);
   }
 
@@ -205,8 +205,8 @@ public:
     return m_block_raw;
   }
 
-  std::vector<transaction_id_type> getTxIds() {
-    std::vector<transaction_id_type> ret_txids;
+  std::vector<tx_id_type> getTxIds() {
+    std::vector<tx_id_type> ret_txids;
     for (auto &each_tx : m_transactions) {
       ret_txids.emplace_back(each_tx.getId());
     }
@@ -272,9 +272,9 @@ public:
     return TypeConverter::encodeBase64(m_block_id);
   }
 
-  timestamp_type getTime() { return m_time; }
+  timestamp_t getTime() { return m_time; }
 
-  sha256 getHash() { return m_block_hash; }
+  hash_t getHash() { return m_block_hash; }
 
   std::string getHashB64() { return TypeConverter::encodeBase64(m_block_hash); }
 
@@ -416,9 +416,9 @@ private:
     return ssig_msg_common_builder.getBytes();
   }
 
-  std::vector<sha256> calcMerkleTreeNode() {
-    std::vector<sha256> merkle_tree_node;
-    std::vector<sha256> tx_digests;
+  std::vector<hash_t> calcMerkleTreeNode() {
+    std::vector<hash_t> merkle_tree_node;
+    std::vector<hash_t> tx_digests;
 
     for (auto &each_tx : m_transactions) {
       tx_digests.emplace_back(each_tx.getDigest());

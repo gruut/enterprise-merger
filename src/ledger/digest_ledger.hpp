@@ -9,9 +9,9 @@ class DigestLedger : public Ledger {
 public:
   DigestLedger() { setPrefix("D"); }
 
-  bool isValidTx(Transaction &tx) override { return true; }
+  bool isValidTx(const Transaction &tx) override { return true; }
 
-  bool procBlock(json &block_json) override { return true; }
+  bool procBlock(const json &block_json) override { return true; }
 };
 } // namespace gruut
 

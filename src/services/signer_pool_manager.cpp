@@ -31,7 +31,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     m_join_temp_table[recv_id_b64].reset(new JoinTemporaryData());
     m_join_temp_table[recv_id_b64]->join_lock = true;
     m_join_temp_table[recv_id_b64]->start_time =
-        static_cast<timestamp_type>(current_time);
+        static_cast<timestamp_t>(current_time);
     m_join_temp_table[recv_id_b64]->merger_nonce =
         PRNG::toString(PRNG::randomize(32));
 
@@ -92,7 +92,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     m_join_temp_table[recv_id_b64]->shared_secret_key =
         vector<uint8_t>(shared_sk_bytes.begin(), shared_sk_bytes.end());
 
-    timestamp_type current_time = static_cast<timestamp_type>(Time::now_int());
+    timestamp_t current_time = static_cast<timestamp_t>(Time::now_int());
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_RESPONSE_2;
@@ -177,7 +177,7 @@ bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
 
 string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
                                       string dhx, string dhy,
-                                      timestamp_type timestamp) {
+                                      timestamp_t timestamp) {
 
   auto setting = Setting::getInstance();
   string ecdsa_sk_pem = setting->getMySK();
@@ -200,7 +200,7 @@ bool SignerPoolManager::isJoinable() {
 
 bool SignerPoolManager::isTimeout(std::string &signer_id_b64) {
   // Dont't call this function unless checking m_join_temp_table
-  return (static_cast<timestamp_type>(Time::now_int()) -
+  return (static_cast<timestamp_t>(Time::now_int()) -
               m_join_temp_table[signer_id_b64]->start_time >
           config::JOIN_TIMEOUT_SEC);
 }

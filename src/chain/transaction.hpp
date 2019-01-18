@@ -19,8 +19,8 @@
 namespace gruut {
 class Transaction {
 private:
-  transaction_id_type m_transaction_id;
-  timestamp_type m_sent_time;
+  tx_id_type m_transaction_id;
+  timestamp_t m_sent_time;
   requestor_id_type m_requestor_id;
   TransactionType m_transaction_type;
   signature_type m_signature;
@@ -31,7 +31,7 @@ public:
       : m_sent_time(0), m_transaction_id({0x00}),
         m_transaction_type(TransactionType::UNKNOWN) {}
 
-  Transaction(transaction_id_type transaction_id, timestamp_type sent_time,
+  Transaction(tx_id_type transaction_id, timestamp_t sent_time,
               requestor_id_type &requestor_id, TransactionType transaction_type,
               signature_type &signature,
               std::vector<content_type> &content_list)
@@ -69,15 +69,15 @@ public:
                  {"content", m_content_list}});
   }
 
-  template <typename T = transaction_id_type> void setId(T &&transaction_id) {
+  template <typename T = tx_id_type> void setId(T &&transaction_id) {
     m_transaction_id = transaction_id;
   }
 
-  transaction_id_type getId() { return m_transaction_id; }
+  tx_id_type getId() { return m_transaction_id; }
 
-  void setTime(timestamp_type sent_time) { m_sent_time = sent_time; }
+  void setTime(timestamp_t sent_time) { m_sent_time = sent_time; }
 
-  timestamp_type getTime() { return m_sent_time; }
+  timestamp_t getTime() { return m_sent_time; }
 
   template <typename T = requestor_id_type>
   void setRequestorId(T &&requestor_id) {
@@ -141,7 +141,7 @@ public:
     m_signature = ECDSA::doSign(pem_sk, getBeforeDigestByte(), pem_pass);
   }
 
-  sha256 getDigest() {
+  hash_t getDigest() {
     bytes msg = getBeforeDigestByte();
     msg.insert(msg.end(), m_signature.begin(), m_signature.end());
     return Sha256::hash(msg);
@@ -189,7 +189,7 @@ private:
     return msg_builder.getBytes();
   }
 
-  transaction_id_type buildTxId() {
+  tx_id_type buildTxId() {
 
     BytesBuilder txid_builder;
     txid_builder.append(m_sent_time);
@@ -200,7 +200,7 @@ private:
       txid_builder.append(content);
     }
 
-    return static_cast<transaction_id_type>(
+    return static_cast<tx_id_type>(
         TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(
             Sha256::hash(txid_builder.getBytes())));
   }

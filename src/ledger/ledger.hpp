@@ -15,8 +15,8 @@ protected:
 public:
   Ledger() { m_storage = Storage::getInstance(); };
 
-  virtual bool isValidTx(Transaction &tx) = 0;
-  virtual bool procBlock(json &block_json) = 0;
+  virtual bool isValidTx(const Transaction &tx) = 0;
+  virtual bool procBlock(const json &block_json) = 0;
 
 protected:
   template <typename T = std::string> void setPrefix(T &&prefix) {

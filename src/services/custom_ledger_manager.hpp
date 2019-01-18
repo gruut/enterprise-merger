@@ -1,11 +1,16 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_LEDGER_VALIDATOR_HPP
 #define GRUUT_ENTERPRISE_MERGER_LEDGER_VALIDATOR_HPP
 
-#include "../chain/types.hpp"
-#include "../ledger/ledger.hpp"
-#include "../utils/safe.hpp"
 #include "easy_logging.hpp"
 #include "nlohmann/json.hpp"
+
+#include "../ledger/digest_ledger.hpp"
+#include "../ledger/sms_ledger.hpp"
+#include "../ledger/digest_ledger.hpp"
+
+#include "../chain/types.hpp"
+#include "../utils/safe.hpp"
+
 #include <iostream>
 #include <memory>
 #include <vector>

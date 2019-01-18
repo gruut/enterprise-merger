@@ -108,12 +108,15 @@ void Application::setup() {
 
   // step 2 - running scenario
   registerModule(m_block_health_checker, 0, true);
+
+  registerModule(m_block_processor, 1);
   registerModule(m_communication, 1);
   registerModule(m_out_message_fetcher, 1);
   registerModule(m_bootstraper, 1, true);
+
   registerModule(m_message_fetcher, 2);
   registerModule(m_bp_scheduler, 2);
-  registerModule(m_block_processor, 2);
+
 
   // setp 3 - link services
 

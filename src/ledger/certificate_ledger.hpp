@@ -31,9 +31,9 @@ class CertificateLedger : public Ledger {
 public:
   CertificateLedger() { setPrefix("C"); }
 
-  bool isValidTx(Transaction &tx) override { return true; }
+  bool isValidTx(const Transaction &tx) override { return true; }
 
-  bool procBlock(json &block_json) override {
+  bool procBlock(const json &block_json) override {
     if (!block_json["tx"].is_array())
       return false;
 
@@ -49,7 +49,7 @@ public:
   }
 
   std::string getCertificate(const std::string &user_id_b64,
-                             const timestamp_type &at_this_time = 0) {
+                             const timestamp_t &at_this_time = 0) {
     std::string cert;
     std::string cert_size = searchLedger(user_id_b64);
 
@@ -64,7 +64,7 @@ public:
           cert = Safe::getString(latest_cert_json[2]);
       } else {
 
-        timestamp_type max_start_date = 0;
+        timestamp_t max_start_date = 0;
         for (int i = 0; i < num_certs; ++i) {
           std::string temp = user_id_b64 + "_" + to_string(i);
           std::string nth_cert = searchLedger(temp);
@@ -74,9 +74,9 @@ public:
             break;
 
           auto start_date =
-              static_cast<timestamp_type>(stoi(Safe::getString(cert_json[0])));
+              static_cast<timestamp_t>(stoi(Safe::getString(cert_json[0])));
           auto end_date =
-              static_cast<timestamp_type>(stoi(Safe::getString(cert_json[1])));
+              static_cast<timestamp_t>(stoi(Safe::getString(cert_json[1])));
           if (start_date <= at_this_time && at_this_time <= end_date) {
             if (max_start_date < start_date) {
               max_start_date = start_date;
@@ -91,13 +91,13 @@ public:
   }
 
   std::string getCertificate(const signer_id_type &user_id,
-                             const timestamp_type &at_this_time = 0) {
+                             const timestamp_t &at_this_time = 0) {
     std::string user_id_b64 = TypeConverter::encodeBase64(user_id);
     return getCertificate(user_id_b64);
   }
 
 private:
-  bool isValidCaCert(std::string &ca_cert_pem) {
+  bool isValidCaCert(const std::string &ca_cert_pem) {
     try {
       Botan::X509_Certificate ca_cert = strToCert(ca_cert_pem);
 
@@ -121,7 +121,7 @@ private:
     return true;
   }
 
-  bool isValidCaCert(Botan::X509_Certificate &ca_cert) {
+  bool isValidCaCert(const Botan::X509_Certificate &ca_cert) {
 
     // TODO : cert 정보는 하드코딩 한 상태 -> 나중에 수정
     /*
@@ -146,7 +146,7 @@ private:
     return true;
   }
 
-  bool isValidCert(std::string &ca_cert_pem, std::string &cert_pem_str) {
+  bool isValidCert(const std::string &ca_cert_pem, const std::string &cert_pem_str) {
     try {
       Botan::X509_Certificate ca_cert = strToCert(ca_cert_pem);
       Botan::X509_Certificate cert = strToCert(cert_pem_str);
@@ -168,7 +168,7 @@ private:
     return true;
   }
 
-  bool isValidCert(Botan::X509_Certificate &cert) {
+  bool isValidCert(const Botan::X509_Certificate &cert) {
 
     // TODO : cert 정보는 하드코딩 한 상태 -> 나중에 수정
     /*
@@ -193,40 +193,37 @@ private:
     return true;
   }
 
-  bool isValidTxInBlock(json &tx_json) {
+  bool isValidTxInBlock(const json &tx_json) {
 
-    if (Safe::getString(tx_json["type"]) == TXTYPE_CERTIFICATES) {
+    if (Safe::getString(tx_json["type"]) != TXTYPE_CERTIFICATES)
+      return false;
 
-      if (!tx_json["content"].is_array())
+    if (!tx_json["content"].is_array())
+      return false;
+
+    json content = tx_json["content"];
+
+    for (size_t i = 0; i < content.size(); i += 2) {
+      std::string user_id = Safe::getString(content[i]);
+      std::string cert_pem = Safe::getString(content[i + 1]);
+
+      // TODO : 나중에 변경
+      std::string ca_cert;
+
+      if (!isValidCert(ca_cert, cert_pem))
         return false;
 
-      nlohmann::json content = tx_json["content"];
-      if (!content.is_array())
+      timestamp_t received_time = static_cast<timestamp_t>(Safe::getTime(tx_json, "time"));
+      std::string cert_from_db = getCertificate(user_id, received_time);
+
+      if (!checkDuplicatedCert(cert_pem, cert_from_db))
         return false;
-
-      for (size_t i = 0; i < content.size(); i += 2) {
-        std::string user_id = Safe::getString(content[i]);
-        std::string cert_pem = Safe::getString(content[i + 1]);
-
-        // TODO : 나중에 변경
-        std::string ca_cert;
-
-        if (!isValidCert(ca_cert, cert_pem))
-          return false;
-
-        timestamp_type received_time =
-            static_cast<timestamp_type>(stoi(Safe::getString(tx_json, "time")));
-        std::string cert_from_db = getCertificate(user_id, received_time);
-
-        if (!checkDuplicatedCert(cert_pem, cert_from_db))
-          return false;
-      }
     }
 
     return true;
   }
 
-  bool checkDuplicatedCert(std::string &cert_pem, std::string &cert_from_db) {
+  bool checkDuplicatedCert(const std::string &cert_pem, const std::string &cert_from_db) {
     try {
       Botan::X509_Certificate cert = strToCert(cert_pem);
       Botan::X509_Certificate db_cert = strToCert(cert_from_db);
@@ -241,7 +238,7 @@ private:
     return true;
   }
 
-  bool saveCert(nlohmann::json &tx_json) {
+  bool saveCert(const json &tx_json) {
     std::string key, value;
 
     json content = tx_json["content"];
@@ -271,7 +268,7 @@ private:
     return true;
   }
 
-  std::string parseCert(std::string &pem) {
+  std::string parseCert(const std::string &pem) {
 
     // User ID에 해당하는 n번째 Certification 저장 (발급일, 만료일, 인증서)
     std::string json_str;
@@ -295,7 +292,7 @@ private:
     return json_str;
   }
 
-  Botan::X509_Certificate strToCert(std::string &cert_pem_str) {
+  Botan::X509_Certificate strToCert(const std::string &cert_pem_str) {
 
     try {
       Botan::DataSource_Memory cert_datasource(cert_pem_str);
@@ -308,15 +305,13 @@ private:
     }
   }
 
-  bool validTime(Botan::X509_Certificate &cert) {
+  bool validTime(const Botan::X509_Certificate &cert) {
     Botan::X509_Time t1 = cert.not_before();
-    Botan::X509_Time now = Botan::X509_Time(std::chrono::system_clock::now());
     Botan::X509_Time t2 = cert.not_after();
 
-    if (t1.cmp(now) != -1 || t2.cmp(now) != 1)
-      return false;
+    Botan::X509_Time now = Botan::X509_Time(std::chrono::system_clock::now());
 
-    return true;
+    return (t1.cmp(now) == -1 && t2.cmp(now) == 1);
   }
 };
 } // namespace gruut

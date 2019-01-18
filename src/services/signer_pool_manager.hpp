@@ -3,7 +3,6 @@
 
 #include "nlohmann/json.hpp"
 
-#include "../chain/join_temporary_data.hpp"
 #include "../chain/signer.hpp"
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
@@ -33,6 +32,14 @@
 using namespace std;
 
 namespace gruut {
+struct JoinTemporaryData {
+  string merger_nonce;
+  string signer_cert;
+  vector<uint8_t> shared_secret_key;
+  timestamp_t start_time;
+  atomic<bool> join_lock;
+};
+
 class SignerPoolManager {
 public:
   SignerPoolManager();

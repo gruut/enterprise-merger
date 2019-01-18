@@ -46,7 +46,7 @@ public:
 
   bool handleMessage(InputMsgEntry &entry);
 
-  nth_block_link_type getMostPossibleLink();
+  nth_link_type getMostPossibleLink();
   bool hasUnresolvedBlocks();
 
 private:
@@ -54,6 +54,7 @@ private:
   bool handleMsgReqBlock(InputMsgEntry &entry);
   bool handleMsgBlock(InputMsgEntry &entry);
   bool handleMsgReqCheck(InputMsgEntry &entry);
+  void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
 };
 } // namespace gruut
 
