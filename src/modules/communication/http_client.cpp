@@ -30,12 +30,18 @@ CURLcode HttpClient::post(const string &packed_msg) {
   return CURLE_OK;
 }
 
-CURLcode HttpClient::postAndGetReply(const std::string &msg, json &json_data) {
+CURLcode HttpClient::postAndGetReply(const string &msg, json &response_json) {
   try {
     m_curl.setOpt(CURLOPT_URL, m_address.data());
     m_curl.setOpt(CURLOPT_POST, 1L);
-    m_curl.setOpt(CURLOPT_POSTFIELDS, msg.data());
-    m_curl.setOpt(CURLOPT_POSTFIELDSIZE, msg.size());
+
+    const auto escaped_filed_data = m_curl.escape(msg);
+    const string post_field = getPostField("message", escaped_filed_data);
+    CLOG(INFO, "HTTP") << "POST (" << m_address << ", " << post_field.size()
+                       << "bytes )";
+
+    m_curl.setOpt(CURLOPT_POSTFIELDS, post_field.data());
+    m_curl.setOpt(CURLOPT_POSTFIELDSIZE, post_field.size());
 
     string http_data;
 
@@ -43,7 +49,7 @@ CURLcode HttpClient::postAndGetReply(const std::string &msg, json &json_data) {
     m_curl.setOpt(CURLOPT_WRITEDATA, &http_data);
     m_curl.perform();
 
-    json_data = json::parse(http_data);
+    response_json = json::parse(http_data);
 
   } catch (curlpp::EasyException &err) {
     CLOG(ERROR, "HTTP") << err.what();
