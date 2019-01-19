@@ -8,6 +8,7 @@
 #include "../ledger/sms_ledger.hpp"
 #include "../ledger/digest_ledger.hpp"
 
+#include "../chain/mem_ledger.hpp"
 #include "../chain/types.hpp"
 #include "../utils/safe.hpp"
 
@@ -37,7 +38,7 @@ public:
     registerLedger(m_sms_ledger);
   }
 
-  bool isValidTransaction(Transaction &tx) {
+  bool isValidTransaction(const Transaction &tx) {
     if (m_ledgers.empty())
       return false;
 
@@ -49,10 +50,10 @@ public:
     return is_valid;
   }
 
-  void procLedgerBlock(json &block_json) {
+  void procLedgerBlock(const json &txs_json) {
     CLOG(INFO, "CLMA") << "called procLedgerBlock()";
     for (auto &ledger : m_ledgers) {
-      ledger->procBlock(block_json);
+      ledger->procBlock(txs_json);
     }
   }
 

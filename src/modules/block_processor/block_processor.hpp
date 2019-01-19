@@ -48,6 +48,7 @@ public:
   block_height_type handleMsgBlock(InputMsgEntry &entry);
 
   nth_link_type getMostPossibleLink();
+  std::deque<Block> getMostPossibleBlocks();
   bool hasUnresolvedBlocks();
 
 private:

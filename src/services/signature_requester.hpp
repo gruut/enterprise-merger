@@ -49,7 +49,7 @@ private:
 
   Signers selectSigners();
 
-  bool isNew(Signer &signer);
+  bool isNewSigner(Signer &signer);
 
   Transaction generateCertificateTransaction(vector<Signer> &signers);
   BasicBlockInfo generateBasicBlockInfo();

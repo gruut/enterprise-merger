@@ -15,6 +15,8 @@ BlockProcessor::BlockProcessor() {
                                   last_block_info.hash_b64,
                                   last_block_info.height, last_block_info.time);
 
+  // TODO : resotre m_unresolved_block_pool from backup
+
   auto &io_service = Application::app().getIoService();
   m_timer.reset(new boost::asio::deadline_timer(io_service));
   m_task_strand.reset(new boost::asio::io_service::strand(io_service));
@@ -44,7 +46,7 @@ void BlockProcessor::periodicTask() {
         bytes block_raw = each_block.getBlockRaw();
         json block_body = each_block.getBlockBodyJson();
 
-        Application::app().getCustomLedgerManager().procLedgerBlock(block_body);
+        Application::app().getCustomLedgerManager().procLedgerBlock(block_body["tx"]);
 
         m_storage->saveBlock(block_raw, block_header, block_body);
 
@@ -85,8 +87,11 @@ void BlockProcessor::periodicTask() {
 }
 
 nth_link_type BlockProcessor::getMostPossibleLink() {
-
   return m_unresolved_block_pool.getMostPossibleLink();
+}
+
+std::deque<Block> BlockProcessor::getMostPossibleBlocks(){
+  return m_unresolved_block_pool.getMostPossibleBlocks();
 }
 
 bool BlockProcessor::hasUnresolvedBlocks() {

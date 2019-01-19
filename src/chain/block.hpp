@@ -5,6 +5,7 @@
 #include "signature.hpp"
 #include "transaction.hpp"
 #include "types.hpp"
+#include "mem_ledger.hpp"
 
 #include "../services/certificate_pool.hpp"
 #include "../services/storage.hpp"
@@ -51,6 +52,7 @@ private:
   std::map<std::string, std::string> m_user_certs;
   bytes m_block_raw;
   hash_t m_block_hash;
+  mem_ledger_t m_mem_ledger;
 
 public:
   Block() { el::Loggers::getLogger("BLOC"); };

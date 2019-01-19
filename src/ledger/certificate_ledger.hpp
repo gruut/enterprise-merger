@@ -42,16 +42,12 @@ public:
 
   bool isValidTx(const Transaction &tx) override { return true; }
 
-  bool procBlock(const json &block_json) override {
-    if (!block_json["tx"].is_array())
+  bool procBlock(const json &txs_json) override {
+    if (!txs_json.is_array())
       return false;
 
-    for (auto &tx_json : block_json["tx"]) {
-      if (isValidTxInBlock(tx_json)) {
-        saveCert(tx_json);
-      }
-    }
-
+    mem_ledger_t && mem_ledger = blockToLedger(txs_json);
+    saveLedger(mem_ledger);
     m_storage->flushLedger();
 
     return true;
@@ -59,35 +55,33 @@ public:
 
   std::string getCertificate(const std::string &user_id_b64,
                              const timestamp_t &at_this_time = 0) {
-    std::string cert;
-    std::string cert_size = searchLedger(user_id_b64);
+    std::string ret_cert;
+    std::string cert_size = readLedgerByKey(user_id_b64);
 
     if (!cert_size.empty()) {
       int num_certs = stoi(cert_size);
       if (at_this_time == 0) {
-        std::string latest_cert = searchLedger(user_id_b64 + "_" + to_string(num_certs - 1));
+        std::string latest_cert = readLedgerByKey(user_id_b64 + "_" + to_string(num_certs - 1));
 
         json latest_cert_json = Safe::parseJsonAsArray(latest_cert);
         if (!latest_cert_json.empty())
-          cert = Safe::getString(latest_cert_json[2]);
+          ret_cert = Safe::getString(latest_cert_json[2]);
       } else {
 
-        timestamp_t max_start_date = 0;
+        timestamp_t lastest_valid_begin = 0;
         for (int i = 0; i < num_certs; ++i) {
-          std::string nth_cert = searchLedger(user_id_b64 + "_" + to_string(i));
+          std::string nth_cert = readLedgerByKey(user_id_b64 + "_" + to_string(i));
 
           json cert_json = Safe::parseJson(nth_cert);
           if (cert_json.empty())
             break;
 
-          auto start_date =
-              static_cast<timestamp_t>(stoi(Safe::getString(cert_json[0])));
-          auto end_date =
-              static_cast<timestamp_t>(stoi(Safe::getString(cert_json[1])));
-          if (start_date <= at_this_time && at_this_time <= end_date) {
-            if (max_start_date < start_date) {
-              max_start_date = start_date;
-              cert = Safe::getString(cert_json[2]);
+          auto valid_begin = Safe::getTime(Safe::getString(cert_json[0]));
+          auto valid_end = Safe::getTime(Safe::getString(cert_json[1]));
+          if (valid_begin < at_this_time && at_this_time < valid_end) {
+            if (lastest_valid_begin < valid_begin) {
+              lastest_valid_begin = valid_begin;
+              ret_cert = Safe::getString(cert_json[2]);
             }
           }
         }
@@ -96,7 +90,7 @@ public:
       CLOG(INFO, "CERT") << "No certificate for [" << user_id_b64 << "]";
     }
 
-    return cert;
+    return ret_cert;
   }
 
   std::string getCertificate(const signer_id_type &user_id,
@@ -106,6 +100,42 @@ public:
   }
 
 private:
+
+  LedgerMemory blockToLedger(const json &txs_json){
+
+    LedgerMemory ret_ledger;
+
+    if(txs_json["tx"].is_array()) {
+
+      std::string key, value;
+
+      for (auto &tx_json : txs_json["tx"]) {
+
+        auto &content = tx_json["content"];
+        if (!content.is_array())
+          continue;
+
+        for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
+          string user_id_b64 = Safe::getString(content[c_idx]);
+          string cert_idx = readLedgerByKey(user_id_b64);
+
+          key = user_id_b64;
+          value = (cert_idx.empty()) ? "1" : to_string(stoi(cert_idx) + 1);
+          ret_ledger.emplace_back(key, value);
+
+          key += (cert_idx.empty()) ? "_0" : "_" + cert_idx;
+          value = parseCert(Safe::getString(content[c_idx + 1]));
+
+          if (value.empty())
+            continue;
+
+          ret_ledger.emplace_back(key, value);
+        }
+      }
+    }
+
+    return ret_ledger;
+  }
 
   void loadCACert(){
     try {
@@ -215,11 +245,11 @@ private:
 
     for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
       string user_id_b64 = Safe::getString(content[c_idx]);
-      string cert_idx = searchLedger(user_id_b64);
+      string cert_idx = readLedgerByKey(user_id_b64);
 
       key = user_id_b64;
       value = (cert_idx.empty()) ? "1" : to_string(stoi(cert_idx) + 1);
-      if (!saveLedger(key, value))
+      if (!saveLedger(key, value)) // number of certificate
         return false;
 
       key += (cert_idx.empty()) ? "_0" : "_" + cert_idx;
@@ -242,14 +272,11 @@ private:
     std::string json_str;
 
     try {
-      Botan::DataSource_Memory cert_datasource(pem);
-      Botan::X509_Certificate cert(cert_datasource);
+      auto&& cert = pemToX509(pem);
 
       json tmp_cert = json::array();
-      tmp_cert.push_back(
-          to_string(Botan::X509_Time(cert.not_before()).time_since_epoch()));
-      tmp_cert.push_back(
-          to_string(Botan::X509_Time(cert.not_after()).time_since_epoch()));
+      tmp_cert.push_back(to_string(cert.not_before().time_since_epoch()));
+      tmp_cert.push_back(to_string(cert.not_after().time_since_epoch()));
       tmp_cert.push_back(pem);
 
       json_str = tmp_cert.dump();
@@ -273,12 +300,11 @@ private:
   }
 
   bool validTime(const Botan::X509_Certificate &cert) {
-    Botan::X509_Time t1 = cert.not_before();
-    Botan::X509_Time t2 = cert.not_after();
+    timestamp_t t1 = cert.not_before().time_since_epoch();
+    timestamp_t t2 = cert.not_after().time_since_epoch();
+    timestamp_t current_time = Time::now_int();
 
-    Botan::X509_Time now = Botan::X509_Time(std::chrono::system_clock::now());
-
-    return (t1.cmp(now) == -1 && t2.cmp(now) == 1);
+    return (t1 < current_time && current_time < t2);
   }
 };
 } // namespace gruut

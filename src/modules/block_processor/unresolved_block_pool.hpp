@@ -3,9 +3,11 @@
 
 #include "easy_logging.hpp"
 
+#include "../../config/config.hpp"
+
 #include "../../chain/block.hpp"
 #include "../../chain/types.hpp"
-#include "../../config/config.hpp"
+
 #include "../../services/storage.hpp"
 
 #include <deque>
@@ -252,6 +254,19 @@ public:
     }
 
     return ret_link;
+  }
+
+  std::deque<Block> getMostPossibleBlocks(){
+    auto t_block_pos = getLongestBlockPos();
+    std::deque<Block> ret_blocks;
+
+    int queue_idx = t_block_pos.vector_idx;
+    for(int i = t_block_pos.height - m_last_height; i >= 0; --i) {
+      ret_blocks.emplace_front(m_block_pool[i][queue_idx].block);
+      queue_idx = m_block_pool[i][queue_idx].prev_queue_idx;
+    }
+
+    return ret_blocks;
   }
 
   bool hasUnresolvedBlocks() {

@@ -528,7 +528,7 @@ bool Storage::saveLedger(std::string &key, std::string &ledger) {
   return true;
 }
 
-std::string Storage::readLedger(std::string &key) {
+std::string Storage::readLedgerByKey(std::string &key) {
   return getValueByKey(DBType::LEDGER, key);
 }
 

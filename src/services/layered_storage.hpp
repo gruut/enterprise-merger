@@ -1,0 +1,15 @@
+#ifndef GRUUT_ENTERPRISE_MERGER_LAYERED_STORAGE_HPP
+#define GRUUT_ENTERPRISE_MERGER_LAYERED_STORAGE_HPP
+
+namespace gruut {
+
+class LayeredStorage {
+private:
+  
+public:
+
+};
+
+}
+
+#endif //GRUUT_ENTERPRISE_MERGER_LAYERED_STORAGE_HPP

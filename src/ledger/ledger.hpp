@@ -2,6 +2,7 @@
 #define GRUUT_ENTERPRISE_MERGER_LEDGER_HPP
 
 #include "easy_logging.hpp"
+#include "../chain/mem_ledger.hpp"
 #include "../chain/types.hpp"
 #include "nlohmann/json.hpp"
 #include <iostream>
@@ -20,7 +21,7 @@ public:
   };
 
   virtual bool isValidTx(const Transaction &tx) = 0;
-  virtual bool procBlock(const json &block_json) = 0;
+  virtual bool procBlock(const json &txs_json) = 0;
 
 protected:
   template <typename T = std::string> void setPrefix(T &&prefix) {
@@ -34,11 +35,20 @@ protected:
     return true;
   }
 
-  template <typename T = std::string> std::string searchLedger(T &&key) {
+  bool saveLedger(mem_ledger_t &ledger) {
+    bool ret_val = true;
+    for(auto &ledger_record : ledger) {
+      ret_val &= saveLedger(ledger_record.key, ledger_record.value);
+    }
+    return ret_val;
+  }
+
+  template <typename T = std::string> std::string readLedgerByKey(T &&key) {
     std::string wrap_key = m_prefix + key;
     CLOG(INFO, "LEDG") << "Search ledger (key=" << wrap_key << ")";
-    return m_storage->readLedger(wrap_key);
+    return m_storage->readLedgerByKey(wrap_key);
   }
+
 };
 } // namespace gruut
 

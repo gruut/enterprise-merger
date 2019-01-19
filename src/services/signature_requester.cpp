@@ -31,7 +31,7 @@ void SignatureRequester::waitCollectDone() {
   });
 }
 
-bool SignatureRequester::isNew(Signer &signer) {
+bool SignatureRequester::isNewSigner(Signer &signer) {
   auto cert = m_cert_ledger.getCertificate(signer.user_id);
   return (cert.empty() || cert != signer.pk_cert);
 }
@@ -54,7 +54,7 @@ void SignatureRequester::requestSignatures() {
 
   std::vector<Signer> new_signers;
   for (auto &signer : target_signers) {
-    if (isNew(signer)) {
+    if (isNewSigner(signer)) {
       new_signers.emplace_back(signer);
     }
   }

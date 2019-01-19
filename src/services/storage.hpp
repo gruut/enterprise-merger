@@ -63,7 +63,7 @@ public:
   proof_type getProof(const std::string &txid_b64);
   bool isDuplicatedTx(const std::string &txid_b64);
   bool saveLedger(std::string &key, std::string &ledger);
-  std::string readLedger(std::string &key);
+  std::string readLedgerByKey(std::string &key);
   void clearLedger();
   void flushLedger();
   bool empty();
