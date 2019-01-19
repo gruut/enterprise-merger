@@ -44,16 +44,16 @@ public:
 
   void start() override;
 
-  bool handleMessage(InputMsgEntry &entry);
+  void handleMessage(InputMsgEntry &entry);
+  block_height_type handleMsgBlock(InputMsgEntry &entry);
 
   nth_link_type getMostPossibleLink();
   bool hasUnresolvedBlocks();
 
 private:
   void periodicTask();
-  bool handleMsgReqBlock(InputMsgEntry &entry);
-  bool handleMsgBlock(InputMsgEntry &entry);
-  bool handleMsgReqCheck(InputMsgEntry &entry);
+  void handleMsgReqBlock(InputMsgEntry &entry);
+  void handleMsgReqCheck(InputMsgEntry &entry);
   void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
 };
 } // namespace gruut

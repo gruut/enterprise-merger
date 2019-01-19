@@ -186,7 +186,7 @@ public:
     m_gruut_authority.id =
         Safe::getBytesFromB64<id_type>(setting_json["GA"], "id");
     m_gruut_authority.address = Safe::getString(setting_json["GA"], "address");
-    m_gruut_authority.cert = joinMultiLine(setting_json["cert"]);
+    m_gruut_authority.cert = joinMultiLine(setting_json["GA"]["cert"]);
 
     //
     cert_pool->pushCert(m_gruut_authority.id, m_gruut_authority.cert);

@@ -48,8 +48,7 @@ public:
 private:
   bool verifySignature(signer_id_type &signer_id, json &message_body_json);
   string signMessage(string, string, string, string, uint64_t);
-  void sendErrorMessage(vector<signer_id_type> &receiver_list,
-                        ErrorMsgType error_type, const std::string &info = "");
+  void sendErrorMessage(signer_id_type &recv_id, ErrorMsgType error_type, const std::string &info = "");
   bool isJoinable();
 
   bool isTimeout(std::string &signer_id_b64);

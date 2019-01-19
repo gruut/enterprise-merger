@@ -71,6 +71,9 @@ const json SCHEMA_REQ_BLOCK = R"({
     "prevHash": {
       "type": "string"
     },
+    "hash": {
+      "type": "string"
+    },
     "mSig": {
       "type": "string"
     }
@@ -356,27 +359,11 @@ const json SCHEMA_REQ_STATUS = R"({
     },
     "time": {
       "type": "string"
-    },
-    "mCert": {
-      "type": "string"
-    },
-    "hgt": {
-      "type": "string"
-    },
-    "hash": {
-      "type": "string"
-    },
-    "mSig": {
-      "type": "string"
     }
   },
   "required": [
     "mID",
-    "time",
-    "mCert",
-    "hgt",
-    "hash",
-    "mSig"
+    "time"
   ]
 })"_json;
 

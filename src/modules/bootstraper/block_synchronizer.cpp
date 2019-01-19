@@ -10,9 +10,9 @@ BlockSynchronizer::BlockSynchronizer() {
 
   auto &io_service = Application::app().getIoService();
 
-  m_block_sync_strand.reset(new boost::asio::io_service::strand(io_service));
-  m_msg_fetching_timer.reset(new boost::asio::deadline_timer(io_service));
-  m_sync_ctrl_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_msg_fetching_loop_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_sync_ctrl_loop_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_sync_begin_timer.reset(new boost::asio::deadline_timer(io_service));
 
   m_inputQueue = InputQueueAlt::getInstance();
   auto setting = Setting::getInstance();
@@ -22,19 +22,16 @@ BlockSynchronizer::BlockSynchronizer() {
   el::Loggers::getLogger("BSYN");
 }
 
-void BlockSynchronizer::syncFinish() {
+void BlockSynchronizer::syncFinish(ExitCode exit_code) {
 
-  std::call_once(m_end_sync_call_flag, [this]() {
-    m_msg_fetching_timer->cancel();
-    m_sync_ctrl_timer->cancel();
+  m_is_sync_done = true;
 
-    if (m_sync_fail) {
-      if (m_sync_alone)
-        m_finish_callback(ExitCode::ERROR_SYNC_ALONE);
-      else
-        m_finish_callback(ExitCode::ERROR_SYNC_FAIL);
-    } else
-      m_finish_callback(ExitCode::NORMAL);
+  std::call_once(m_sync_finish_call_flag, [this,&exit_code]() {
+    m_msg_fetching_loop_timer->cancel();
+    m_sync_ctrl_loop_timer->cancel();
+
+    m_sync_finish_callback(exit_code);
+    m_is_sync_done = true;
 
     CLOG(INFO, "BSYN") << "BLOCK SYNCHRONIZATION ---- END";
   });
@@ -43,26 +40,38 @@ void BlockSynchronizer::syncFinish() {
 
 void BlockSynchronizer::blockSyncControl() {
 
-  if (m_sync_done) {
+  if (m_is_sync_done) {
     return;
   }
 
   auto &io_service = Application::app().getIoService();
-  io_service.post(m_block_sync_strand->wrap([this]() {
+  io_service.post([this]() {
+    if(!m_is_sync_begin) {
+      return;
+    }
 
+    bool is_done = true;
 
+    for(auto each_flag : m_sync_flags){
+      if(each_flag == false){
+        is_done = false;
+        break;
+      }
+    }
 
-  }));
+    if(is_done)
+      syncFinish(ExitCode::NORMAL);
 
-  m_sync_ctrl_timer->expires_from_now(
+  });
+
+  m_sync_ctrl_loop_timer->expires_from_now(
       boost::posix_time::milliseconds(config::SYNC_CONTROL_INTERVAL));
-  m_sync_ctrl_timer->async_wait([this](const boost::system::error_code &ec) {
-    if (ec == boost::asio::error::operation_aborted) {
-      CLOG(INFO, "BSYN") << "CtrlTimer ABORTED";
-    } else if (ec.value() == 0) {
+  m_sync_ctrl_loop_timer->async_wait([this](const boost::system::error_code &error) {
+    if (!error) {
       blockSyncControl();
-    } else {
-      CLOG(ERROR, "BSYN") << ec.message();
+    }
+    else {
+      CLOG(INFO, "BSYN") << error.message();
     }
   });
 }
@@ -89,15 +98,12 @@ void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry) {
 }
 
 void BlockSynchronizer::messageFetch() {
-  if (m_sync_done)
+  if (m_is_sync_done)
     return;
 
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() {
-    if (m_sync_done)
-      return;
-
-    if (m_inputQueue->empty())
+    if (m_is_sync_done || m_inputQueue->empty())
       return;
 
     InputMsgEntry input_msg_entry = m_inputQueue->fetch();
@@ -107,9 +113,7 @@ void BlockSynchronizer::messageFetch() {
 
     CLOG(INFO, "BSYN") << "MSG IN: 0x" << std::hex << (int) input_msg_entry.type;
 
-    if (checkMsgFromOtherMerger(input_msg_entry.type)) {
-      m_sync_alone = false; // Wow! I am not alone!
-    } else if (checkMsgFromSigner(input_msg_entry.type)) {
+    if (checkMsgFromSigner(input_msg_entry.type)) {
       sendErrorToSigner(input_msg_entry);
     }
 
@@ -117,32 +121,28 @@ void BlockSynchronizer::messageFetch() {
     case MessageType::MSG_ERROR : {
       if (Safe::getString(input_msg_entry.body, "type")
         == std::to_string(static_cast<int>(ErrorMsgType::BSYNC_NO_BLOCK))) { // Oh! No block!
-        m_sync_done = true;
-        m_sync_alone = false;
-        m_sync_fail = false;
-        syncFinish();
+        syncFinish(ExitCode::NORMAL);
       }
     }
       break;
 
     case MessageType::MSG_BLOCK : {
-      if (Application::app().getBlockProcessor().handleMessage(input_msg_entry)) {
+      auto pushed_block_height = Application::app().getBlockProcessor().handleMsgBlock(input_msg_entry);
+      if(pushed_block_height > 0) {
 
         if (pushed_block_height > m_link_from.height) {
           size_t req_map_size = pushed_block_height - m_link_from.height;
-          if (m_sync_map.size() < req_map_size)
-            m_sync_map.resize(req_map_size, false);
+          if (m_sync_flags.size() < req_map_size)
+            m_sync_flags.resize(req_map_size, false);
 
-          m_sync_map[req_map_size - 1] = true;
+          m_sync_flags[req_map_size - 1] = true; // last or this
         }
-
       }
-
     }
       break;
 
     case MessageType::MSG_RES_STATUS : {
-
+      collectingStatus(input_msg_entry);
     }
       break;
 
@@ -155,23 +155,36 @@ void BlockSynchronizer::messageFetch() {
     }
   });
 
-  m_msg_fetching_timer->expires_from_now(
+  m_msg_fetching_loop_timer->expires_from_now(
       boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTERVAL));
-  m_msg_fetching_timer->async_wait([this](const boost::system::error_code &ec) {
-    if (ec == boost::asio::error::operation_aborted) {
-      CLOG(INFO, "BSYN") << "FetchingTimer ABORTED";
-    } else if (ec.value() == 0) {
+  m_msg_fetching_loop_timer->async_wait([this](const boost::system::error_code &error) {
+    if (!error) {
       messageFetch();
-    } else {
-      CLOG(ERROR, "BSYN") << ec.message();
-      // throw;
+    }
+    else {
+      CLOG(INFO, "BSYN") << error.message();
     }
   });
 }
 
+void BlockSynchronizer::collectingStatus(InputMsgEntry &entry){
+  if(m_is_sync_begin)
+    return;
+
+  std::lock_guard<std::mutex> guard(m_chain_mutex);
+
+  m_chain_status.insert(std::make_pair(
+    Safe::getString(entry.body,"mID"),
+    OtherStatusData(Safe::getString(entry.body,"hash"),Safe::getSize(entry.body,"hgt"))
+  ));
+
+  m_chain_mutex.unlock();
+
+}
+
 void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 
-  m_finish_callback = std::move(callback);
+  m_sync_finish_callback = std::move(callback);
 
   CLOG(INFO, "BSYN") << "BLOCK SYNCHRONIZATION ---- START";
 
@@ -180,9 +193,55 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
   sendRequestStatus();
   messageFetch();
   blockSyncControl();
+
+  m_sync_begin_timer->expires_from_now(boost::posix_time::seconds(config::STATUS_COLLECTING_TIMEOUT_SEC));
+  m_sync_begin_timer->async_wait([this](const boost::system::error_code &error) {
+    if (!error) {
+      sendRequestLastBlock();
+    }
+    else {
+      CLOG(INFO, "BSYN") << error.message();
+    }
+  });
 }
 
-void BlockSynchronizer::sendRequestBlock(size_t height){
+void BlockSynchronizer::sendRequestLastBlock(){
+
+  block_height_type last_block_height = 0;
+  std::string last_block_hash_b64;
+  std::string t_merger_id_b64;
+
+  for(auto& status_dat : m_chain_status) {
+    if(status_dat.second.height > last_block_height) {
+      last_block_height = status_dat.second.height;
+      last_block_hash_b64 = status_dat.second.hash_b64;
+      t_merger_id_b64 = status_dat.first;
+    }
+
+    if(status_dat.second.height == last_block_height) {
+      if(last_block_hash_b64 != status_dat.second.hash_b64) {
+        CLOG(INFO, "ERROR") << "Chain fork was detected! [" << t_merger_id_b64 << "] and [" << status_dat.first << "] have different blocks.";
+      }
+    }
+  }
+
+  if(last_block_height == 0) { // no response at all
+    syncFinish(ExitCode::ERROR_SYNC_ALONE);
+    return;
+  }
+
+  sendRequestBlock(last_block_height, last_block_hash_b64, TypeConverter::decodeBase64(t_merger_id_b64));
+
+  if (last_block_height > m_link_from.height) {
+    size_t req_map_size = last_block_height - m_link_from.height;
+    if (m_sync_flags.size() < req_map_size)
+      m_sync_flags.resize(req_map_size, false);
+  }
+
+  m_is_sync_begin = true;
+}
+
+void BlockSynchronizer::sendRequestBlock(size_t height, const std::string &block_hash_b64, const merger_id_type &t_merger){
 
   OutputMsgEntry msg_req_block;
   msg_req_block.type = MessageType::MSG_REQ_BLOCK;
@@ -191,8 +250,9 @@ void BlockSynchronizer::sendRequestBlock(size_t height){
   msg_req_block.body["mCert"] = "";
   msg_req_block.body["hgt"] = std::to_string(height);
   msg_req_block.body["prevHash"] = "";
+  msg_req_block.body["hash"] = block_hash_b64;
   msg_req_block.body["mSig"] = "";
-  msg_req_block.receivers = {};
+  msg_req_block.receivers = {t_merger};
 
   CLOG(INFO, "BSYN") << "send MSG_REQ_BLOCK (" << height << ")";
 

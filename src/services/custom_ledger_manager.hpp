@@ -50,6 +50,7 @@ public:
   }
 
   void procLedgerBlock(json &block_json) {
+    CLOG(INFO, "CLMA") << "called procLedgerBlock()";
     for (auto &ledger : m_ledgers) {
       ledger->procBlock(block_json);
     }

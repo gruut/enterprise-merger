@@ -2,7 +2,6 @@
 #define GRUUT_ENTERPRISE_MERGER_UNRESOLVED_BLOCK_POOL_HPP
 
 #include "easy_logging.hpp"
-#include "omp_hash_map.h"
 
 #include "../../chain/block.hpp"
 #include "../../chain/types.hpp"
@@ -14,21 +13,27 @@
 #include <vector>
 
 namespace gruut {
-class UnresolvedBlock {
+struct UnresolvedBlock {
 public:
   Block block;
   int prev_queue_idx{-1};
   size_t confirm_level{0};
   UnresolvedBlock() = default;
-  ~UnresolvedBlock() = default;
   UnresolvedBlock(Block &block_, int prev_queue_idx_, size_t confirm_level_)
       : block(block_), prev_queue_idx(prev_queue_idx_),
         confirm_level(confirm_level_) {}
 };
 
+struct BlockPosOnMap {
+  size_t height;
+  size_t vector_idx;
+};
+
+
 class UnresolvedBlockPool {
 private:
   std::deque<std::vector<UnresolvedBlock>> m_block_pool; // bin structure
+
   std::recursive_mutex m_push_mutex;
 
   std::string m_last_block_id_b64;
@@ -38,6 +43,7 @@ private:
 
   std::atomic<size_t> m_height_range_max{0};
   std::atomic<bool> m_force_unresolved{false};
+
 
 public:
   UnresolvedBlockPool() { el::Loggers::getLogger("URBK"); };
@@ -57,6 +63,10 @@ public:
     return m_block_pool.empty();
   }
 
+  void clear(){
+    m_block_pool.clear();
+  }
+
   void setPool(std::string &last_block_id_b64, std::string &last_hash_b64,
                block_height_type last_height, timestamp_t last_time) {
     m_last_block_id_b64 = last_block_id_b64;
@@ -66,7 +76,7 @@ public:
     m_height_range_max = last_height;
   }
 
-  bool push(Block &block) { // we assume this block has valid structure at least
+  block_height_type push(Block &block) { // we assume this block has valid structure at least
 
     block_height_type block_height = block.getHeight();
 
@@ -74,14 +84,14 @@ public:
 
     if ((Time::now_int() - m_last_time) <
         (block.getHeight() - m_last_height - 1) * config::BP_INTERVAL) {
-      return false;
+      return 0;
     }
 
     if (m_last_height >= block_height) {
-      return false;
+      return 0;
     }
 
-    size_t bin_pos = block_height - m_last_height - 1; // e.g., 0 = 2 - 1 - 1
+    int bin_pos = block_height - m_last_height - 1; // e.g., 0 = 2 - 1 - 1
 
     if (m_block_pool.size() < bin_pos + 1) {
       m_block_pool.resize(bin_pos + 1);
@@ -114,7 +124,7 @@ public:
             block.getPrevHashB64() == m_last_hash_b64) {
           prev_queue_idx = 0;
         } else {
-          return false; // drop block -- this is not linkable block!
+          return 0; // drop block -- this is not linkable block!
         }
       }
 
@@ -138,10 +148,10 @@ public:
 
     m_push_mutex.unlock();
 
-    return true;
+    return block_height;
   }
 
-  bool getBlock(block_height_type t_height, const std::string &t_prev_hash_b64, Block &ret_block) {
+  bool getBlock(block_height_type t_height, const std::string &t_prev_hash_b64, const std::string &t_hash_b64, Block &ret_block) {
     std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
     if(m_block_pool.empty()){
       return false;
@@ -151,17 +161,24 @@ public:
       return false;
     }
 
-    size_t bin_pos = t_height - m_last_height;
+    int bin_pos = t_height - m_last_height;
     std::string prev_hash_b64 = t_prev_hash_b64;
+    std::string hash_b64 = t_hash_b64;
+
     if(t_height == 0) {
       nth_link_type most_possible_link = getMostPossibleLink();
       bin_pos = most_possible_link.height - m_last_height;
       prev_hash_b64 = most_possible_link.prev_hash_b64;
+      hash_b64 = most_possible_link.hash_b64;
     }
+
+    if(bin_pos < 0) // something wrong
+      return false;
 
     bool is_some = false;
     for(auto &each_block : m_block_pool[bin_pos]) {
-      if(each_block.block.getPrevHashB64() == prev_hash_b64) {
+      if((prev_hash_b64.empty() || each_block.block.getPrevHashB64() == prev_hash_b64) &&
+        (hash_b64.empty() || each_block.block.getHashB64() == hash_b64)) {
         ret_block = each_block.block;
         is_some = true;
         break;
@@ -186,72 +203,53 @@ public:
     return blocks;
   }
 
-  block_height_type
-  getUnresolvedLowestHeight() { // must be called after getResolvedBlocks()
-    std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
-
-    int unresolved_lowest_height = -1;
-    for (size_t i = 0; i < m_block_pool.size(); ++i) {
-      if (m_block_pool[i].empty()) { // empty, but reserved
-        unresolved_lowest_height = static_cast<int>(i);
-        break;
-      } else {
-        bool is_some = false;
-        for (auto &each_block : m_block_pool[i]) {
-          if (each_block.prev_queue_idx != -1) {
-            is_some = true;
-            break;
-          }
-        }
-
-        if (!is_some) {
-          unresolved_lowest_height = static_cast<int>(i);
-          break;
-        }
-      }
-    }
-
-    if (unresolved_lowest_height < 0)
-      return 0;
-
-    return static_cast<block_height_type>((size_t)unresolved_lowest_height +
-                                          m_last_height);
-  }
-
-  nth_link_type getMostPossibleLink() {
-
-    std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
+  nth_link_type getUnresolvedLowestLink() {
+    BlockPosOnMap longest_pos = getLongestBlockPos();
 
     nth_link_type ret_link;
 
+    if(longest_pos.height >= m_block_pool.size() + m_last_height || longest_pos.height < m_last_height){
+      ret_link.height = 0; // no unresolved block or invalid link info
+    } else {
+      int deque_idx = ret_link.height - m_last_height - 1;
+
+      if(deque_idx >= 0) {
+        ret_link.height = m_block_pool[deque_idx][longest_pos.vector_idx].block.getHeight() + 1;
+        ret_link.prev_hash_b64 = m_block_pool[deque_idx][longest_pos.vector_idx].block.getHashB64();
+      }
+    }
+
+    return ret_link;
+  }
+
+  nth_link_type getMostPossibleLink() {
+    nth_link_type ret_link;
+
+    std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
+
     // when resolved situation, the blow are the same with storage
     // unless, they are faster than storage
+
     ret_link.height = m_last_height;
     ret_link.id_b64 = m_last_block_id_b64;
     ret_link.hash_b64 = m_last_hash_b64;
 
-    if (m_block_pool.empty()) {
+    if (m_block_pool.empty())
       return ret_link;
-    }
 
-    nth_link_type longest_link;
-    longest_link.height = 0;
-    for (size_t i = 0; i < m_block_pool[0].size(); ++i) {
-      if (m_block_pool[0][i].prev_queue_idx == 0) {
+    BlockPosOnMap longest_pos = getLongestBlockPos();
 
-        if (m_block_pool[0][i].block.getHeight() >
-            longest_link.height) { // relaxation
-          longest_link.height = m_block_pool[0][i].block.getHeight();
-          longest_link.id_b64 = m_block_pool[0][i].block.getBlockIdB64();
-          longest_link.hash_b64 = m_block_pool[0][i].block.getHashB64();
-        }
+    if (ret_link.height < longest_pos.height) {
 
-        recSearchLongestLink(0, i, longest_link);
+      int deque_idx = longest_pos.height - m_last_height - 1; // must be larger or equal to 0
+
+      if(deque_idx >= 0) {
+        auto &t_block = m_block_pool[deque_idx][longest_pos.vector_idx];
+        ret_link.height = t_block.block.getHeight();
+        ret_link.id_b64 = t_block.block.getBlockIdB64();
+        ret_link.hash_b64 = t_block.block.getHashB64();
       }
     }
-
-    if (ret_link.height < longest_link.height)
-      return longest_link;
 
     return ret_link;
   }
@@ -263,25 +261,40 @@ public:
   }
 
 private:
-  // search prev_level + 1
-  void recSearchLongestLink(size_t prev_level, size_t prev_node,
-                            nth_link_type &longest_link) {
-    if (m_block_pool.size() > prev_level + 1) {
 
-      for (size_t i = 0; i < m_block_pool[prev_level + 1].size();
-           ++i) { // if this level is empty, it will automatically stop to
-                  // search
-        auto &each_block = m_block_pool[prev_level + 1][i];
-        if (each_block.prev_queue_idx == prev_node) {
-          if (each_block.block.getHeight() >
-              longest_link.height) { // relaxation
-            longest_link.height = each_block.block.getHeight();
-            longest_link.id_b64 = each_block.block.getBlockIdB64();
-            longest_link.hash_b64 = each_block.block.getHashB64();
-          }
+  BlockPosOnMap getLongestBlockPos(){
+    BlockPosOnMap longest_pos;
+    longest_pos.height = 0;
+    for (size_t i = 0; i < m_block_pool[0].size(); ++i) {
+      if (m_block_pool[0][i].prev_queue_idx == 0) {
 
-          recSearchLongestLink(prev_level + 1, i, longest_link);
+        if (m_block_pool[0][i].block.getHeight() > longest_pos.height) { // relaxation
+          longest_pos.height = m_block_pool[0][i].block.getHeight();
+          longest_pos.vector_idx = i;
         }
+
+        recSearchLongestLink(0, i, longest_pos); // recursive call
+      }
+    }
+
+    return longest_pos;
+  }
+
+  // search prev_level + 1
+  void recSearchLongestLink(size_t prev_level, size_t prev_node, BlockPosOnMap &longest_pos) {
+    if (m_block_pool.size() <= prev_level + 1)
+      return;
+
+    // if this level is empty, it will automatically stop to search
+    for (size_t i = 0; i < m_block_pool[prev_level + 1].size(); ++i) {
+      auto &each_block = m_block_pool[prev_level + 1][i];
+      if (each_block.prev_queue_idx == prev_node) {
+        if (each_block.block.getHeight() > longest_pos.height) { // relaxation
+          longest_pos.height = each_block.block.getHeight();
+          longest_pos.vector_idx = i;
+        }
+
+        recSearchLongestLink(prev_level + 1, i, longest_pos);
       }
     }
   }
@@ -290,64 +303,58 @@ private:
 
     updateConfirmLevel();
 
-    if (m_block_pool.size() > 2 && !m_block_pool[0].empty() &&
-        !m_block_pool[1].empty()) {
+    if(m_block_pool.size() < 2 || m_block_pool[0].empty() || m_block_pool[1].empty())
+      return;
 
-      size_t highest_confirm_level = 0;
-      int t_idx = -1;
+    size_t highest_confirm_level = 0;
+    int t_idx = -1;
 
-      for (size_t i = 0; i < m_block_pool[0].size(); ++i) {
-        if (m_block_pool[0][i].prev_queue_idx == 0 &&
-            m_block_pool[0][i].confirm_level > highest_confirm_level) {
-          highest_confirm_level = m_block_pool[0][i].confirm_level;
-          t_idx = static_cast<int>(i);
-        }
+    for (size_t i = 0; i < m_block_pool[0].size(); ++i) {
+      if (m_block_pool[0][i].prev_queue_idx == 0 &&
+          m_block_pool[0][i].confirm_level > highest_confirm_level) {
+        highest_confirm_level = m_block_pool[0][i].confirm_level;
+        t_idx = static_cast<int>(i);
       }
+    }
 
-      if (t_idx < 0) { // nothing to do
-        return;
+    if (t_idx < 0 || highest_confirm_level < config::BLOCK_CONFIRM_LEVEL)
+      return; // nothing to do
+
+    bool is_after = false;
+    for (size_t i = 0; i < m_block_pool[1].size(); ++i) {
+      if (m_block_pool[1][i].prev_queue_idx == t_idx) {
+        is_after = true;
+        break;
       }
+    }
 
-      if (highest_confirm_level > config::CONFIRM_LEVEL) {
+    if (!is_after)
+      return;
 
-        bool is_after = false;
-        for (size_t i = 0; i < m_block_pool[1].size(); ++i) {
-          if (m_block_pool[1][i].prev_queue_idx == t_idx) {
-            is_after = true;
-            break;
-          }
-        }
+    m_last_block_id_b64 = m_block_pool[0][t_idx].block.getBlockIdB64();
+    m_last_hash_b64 = m_block_pool[0][t_idx].block.getHashB64();
+    m_last_height = m_block_pool[0][t_idx].block.getHeight();
 
-        if (!is_after) {
-          return;
-        }
+    resolved_blocks.emplace_back(m_block_pool[0][t_idx].block);
 
-        m_last_block_id_b64 = m_block_pool[0][t_idx].block.getBlockIdB64();
-        m_last_hash_b64 = m_block_pool[0][t_idx].block.getHashB64();
-        m_last_height = m_block_pool[0][t_idx].block.getHeight();
+    // clear this height list
 
-        resolved_blocks.emplace_back(m_block_pool[0][t_idx].block);
+    if (m_block_pool[0].size() > 1)
+      CLOG(INFO, "URBK") << "Dropped out " << m_block_pool[0].size() - 1
+                         << " unresolved block(s)";
 
-        // clear this height list
+    m_block_pool.pop_front();
 
-        if (m_block_pool[0].size() > 1)
-          CLOG(INFO, "URBK") << "Dropped out " << m_block_pool[0].size() - 1
-                             << " unresolved block(s)";
+    if (m_block_pool.empty())
+      return;
 
-        m_block_pool.pop_front();
-
-        if (!m_block_pool.empty()) {
-
-          for (auto &each_block : m_block_pool[0]) {
-            if (each_block.block.getPrevBlockIdB64() == m_last_block_id_b64 &&
-                each_block.block.getPrevHashB64() == m_last_hash_b64) {
-              each_block.prev_queue_idx = 0;
-            } else {
-              each_block.prev_queue_idx =
-                  -1; // this block is unlinkable => to be deleted
-            }
-          }
-        }
+    for (auto &each_block : m_block_pool[0]) {
+      if (each_block.block.getPrevBlockIdB64() == m_last_block_id_b64 &&
+          each_block.block.getPrevHashB64() == m_last_hash_b64) {
+        each_block.prev_queue_idx = 0;
+      } else {
+        // this block is unlinkable => to be deleted
+        each_block.prev_queue_idx = -1;
       }
     }
   }

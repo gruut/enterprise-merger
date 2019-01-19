@@ -22,14 +22,11 @@ void SignatureRequester::waitCollectDone() {
 
   m_check_timer->expires_from_now(boost::posix_time::milliseconds(
       config::SIGNATURE_COLLECTION_CHECK_INTERVAL));
-  m_check_timer->async_wait([this](const boost::system::error_code &ec) {
-    if (ec == boost::asio::error::operation_aborted) {
-      CLOG(INFO, "SIGR") << "CheckTimer ABORTED";
-    } else if (ec.value() == 0) {
+  m_check_timer->async_wait([this](const boost::system::error_code &error) {
+    if (!error) {
       waitCollectDone();
     } else {
-      CLOG(ERROR, "SIGR") << ec.message();
-      // throw;
+      CLOG(INFO, "SIGR") << error.message();
     }
   });
 }
@@ -123,7 +120,7 @@ void SignatureRequester::doCreateBlock() {
 
       BlockGenerator generator;
       generator.generateBlock(m_basic_block_info, signatures, m_merkle_tree);
-      CLOG(ERROR, "SIGR") << "END MAKING BLOCK";
+      CLOG(INFO, "SIGR") << "END MAKING BLOCK";
     } else {
       CLOG(ERROR, "SIGR") << "CANCEL MAKING BLOCK";
       signature_pool.clear();
@@ -136,15 +133,12 @@ void SignatureRequester::startSignatureCollectTimer() {
 
   m_collect_timer->expires_from_now(
       boost::posix_time::milliseconds(config::SIGNATURE_COLLECTION_INTERVAL));
-  m_collect_timer->async_wait([this](const boost::system::error_code &ec) {
-    if (ec == boost::asio::error::operation_aborted) {
-      CLOG(INFO, "SIGR") << "SigCollectTimer ABORTED";
-    } else if (ec.value() == 0) {
+  m_collect_timer->async_wait([this](const boost::system::error_code &error) {
+    if (!error) {
       if (m_is_collect_timer_running)
         doCreateBlock();
     } else {
-      CLOG(ERROR, "SIGR") << ec.message();
-      // throw;
+      CLOG(INFO, "SIGR") << error.message();
     }
   });
 }
@@ -198,7 +192,7 @@ SignatureRequester::generateCertificateTransaction(vector<Signer> &signers) {
 
     auto setting = Setting::getInstance();
 
-    //    new_transaction.setId(generateTxId());
+    // new_transaction.setId(generateTxId());
     new_transaction.setTime(static_cast<timestamp_t>(Time::now_int()));
     new_transaction.setRequestorId(setting->getMyId());
     new_transaction.setTransactionType(TransactionType::CERTIFICATES);
@@ -213,9 +207,7 @@ SignatureRequester::generateCertificateTransaction(vector<Signer> &signers) {
     }
 
     new_transaction.setContents(content_list);
-
     new_transaction.genNewTxId();
-
     new_transaction.refreshSignature(setting->getMySK(), setting->getMyPass());
   }
 

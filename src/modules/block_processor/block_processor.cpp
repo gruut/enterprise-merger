@@ -30,7 +30,9 @@ void BlockProcessor::periodicTask() {
     std::vector<Block> resolved_blocks =
         m_unresolved_block_pool.getResolvedBlocks();
     if (!resolved_blocks.empty()) {
-      for (auto &&each_block : resolved_blocks) {
+      CLOG(INFO, "BPRO") << "Resolved block(s) received (" << resolved_blocks.size() << ")";
+
+      for (auto &each_block : resolved_blocks) {
 
         if (!each_block.isValidLate()) {
           CLOG(ERROR, "BPRO")
@@ -45,42 +47,39 @@ void BlockProcessor::periodicTask() {
         Application::app().getCustomLedgerManager().procLedgerBlock(block_body);
 
         m_storage->saveBlock(block_raw, block_header, block_body);
+
         CLOG(INFO, "BPRO") << "BLOCK SAVED (height=" << each_block.getHeight()
                            << ",#tx=" << each_block.getNumTransactions()
                            << ",#ssig=" << each_block.getNumSSigs() << ")";
       }
     }
 
-    block_height_type unresolved_height =
-        m_unresolved_block_pool.getUnresolvedLowestHeight();
-    if (unresolved_height > 0) {
+    nth_link_type unresolved_block = m_unresolved_block_pool.getUnresolvedLowestLink();
+    if (unresolved_block.height > 0) {
       OutputMsgEntry msg_req_block;
 
       msg_req_block.type = MessageType::MSG_REQ_BLOCK;
       msg_req_block.body["mID"] = TypeConverter::encodeBase64(m_my_id); // my_id
       msg_req_block.body["time"] = Time::now();
       msg_req_block.body["mCert"] = "";
-      msg_req_block.body["hgt"] = std::to_string(unresolved_height);
-      msg_req_block.body["prevHash"] = "";
+      msg_req_block.body["hgt"] = std::to_string(unresolved_block.height);
+      msg_req_block.body["prevHash"] = unresolved_block.prev_hash_b64;
       msg_req_block.body["mSig"] = "";
       msg_req_block.receivers = {};
 
-      CLOG(INFO, "BSYN") << "send MSG_REQ_BLOCK (" << unresolved_height << ")";
+      CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (" << unresolved_block.height << ")";
 
       m_msg_proxy.deliverOutputMessage(msg_req_block);
     }
   }));
 
   m_timer->expires_from_now(
-      boost::posix_time::milliseconds(config::BROC_PROCESSOR_TASK_PERIOD));
-  m_timer->async_wait([this](const boost::system::error_code &ec) {
-    if (ec == boost::asio::error::operation_aborted) {
-      CLOG(INFO, "BPRO") << "Timer ABORTED";
-    } else if (ec.value() == 0) {
+      boost::posix_time::milliseconds(config::BROC_PROCESSOR_TASK_INTERVAL));
+  m_timer->async_wait([this](const boost::system::error_code &error) {
+    if (!error) {
       periodicTask();
     } else {
-      CLOG(ERROR, "BPRO") << ec.message();
-      // throw;
+      CLOG(INFO, "BPRO") << error.message();
     }
   });
 }
@@ -94,23 +93,27 @@ bool BlockProcessor::hasUnresolvedBlocks() {
   return m_unresolved_block_pool.hasUnresolvedBlocks();
 }
 
-bool BlockProcessor::handleMessage(InputMsgEntry &entry) {
+void BlockProcessor::handleMessage(InputMsgEntry &entry) {
   switch (entry.type) {
   case MessageType::MSG_REQ_BLOCK:
-    return handleMsgReqBlock(entry);
+    handleMsgReqBlock(entry);
+    break;
   case MessageType::MSG_BLOCK:
-    return handleMsgBlock(entry);
+    handleMsgBlock(entry);
+    break;
   case MessageType::MSG_REQ_CHECK:
-    return handleMsgReqCheck(entry);
+    handleMsgReqCheck(entry);
+    break;
   default:
-    return false;
+    break;
   }
 }
 
-bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
+void BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   block_height_type req_block_height = Safe::getInt(entry.body, "hgt");
   std::string req_prev_hash = Safe::getString(entry.body, "prevHash");
+  std::string req_hash = Safe::getString(entry.body, "hash");
 
   if (Safe::getString(entry.body, "mCert").empty() ||
       Safe::getString(entry.body, "mSig").empty()) {
@@ -130,7 +133,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
                          Safe::getBytesFromB64(entry.body, "mSig"))) {
 
       CLOG(ERROR, "BPRO") << "Invalid mSig on MSG_REQ_BLOCK";
-      return false;
+      return;
     }
   }
 
@@ -138,18 +141,19 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   if(m_unresolved_block_pool.empty() && m_storage->empty()) {
     sendErrorMessage(ErrorMsgType::BSYNC_NO_BLOCK,recv_id);
-    return false;
+    return;
   }
 
   bool found_block = false;
   Block ret_block;
-  if(m_unresolved_block_pool.getBlock(req_block_height,req_prev_hash,ret_block)){
+  if(m_unresolved_block_pool.getBlock(req_block_height,req_prev_hash,req_hash,ret_block)){
     found_block = true;
   }
 
   if(!found_block) { // no block in unresolved block pool, then try storage
     storage_block_type saved_block = m_storage->readBlock(req_block_height);
-    if (req_prev_hash.empty() || saved_block.prev_hash_b64 == req_prev_hash) {
+    if ((req_prev_hash.empty() || saved_block.prev_hash_b64 == req_prev_hash) &&
+        (req_hash.empty() || saved_block.hash_b64 == req_hash)) {
       found_block = true;
       ret_block.initialize(saved_block);
     }
@@ -157,7 +161,7 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   if (!found_block) {
     sendErrorMessage(ErrorMsgType::NO_SUCH_BLOCK,recv_id);
-    return false;
+    return;
   }
 
   OutputMsgEntry msg_block;
@@ -170,34 +174,35 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   CLOG(INFO, "BPRO") << "Send MSG_BLOCK (height=" << ret_block.getHeight() << ",#tx=" << ret_block.getNumTransactions() << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_block);
-
-  return true;
 }
 
-bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
+block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   Block recv_block;
   if (!recv_block.initialize(entry.body)) {
     CLOG(ERROR, "BPRO") << "Block dropped (missing information)";
-    return false;
+    return 0;
   }
 
   if (!recv_block.isValidEarly()) {
     CLOG(ERROR, "BPRO") << "Block dropped (invalid - early stage validation)";
-    return false;
+    return 0;
   }
 
-  if (!m_unresolved_block_pool.push(recv_block)) {
+  auto pushed_block_height = m_unresolved_block_pool.push(recv_block);
+
+  if (pushed_block_height == 0) {
     CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
+    return 0;
   }
 
   Application::app().getTransactionPool().removeDuplicatedTransactions(
       recv_block.getTxIds());
 
-  return true;
+  return pushed_block_height;
 }
 
-bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
+void BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
 
   auto setting = Setting::getInstance();
 
@@ -219,8 +224,6 @@ bool BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   CLOG(INFO, "BPRO") << "Send MSG_RES_CHECK";
 
   m_msg_proxy.deliverOutputMessage(msg_res_check);
-
-  return true;
 }
 
 void BlockProcessor::sendErrorMessage(ErrorMsgType t_error_type, id_type &recv_id) {

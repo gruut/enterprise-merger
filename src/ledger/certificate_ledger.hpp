@@ -2,8 +2,11 @@
 #define GRUUT_ENTERPRISE_MERGER_CERTIFICATE_HPP
 
 #include "../services/storage.hpp"
+#include "../services/setting.hpp"
 #include "../utils/safe.hpp"
 #include "ledger.hpp"
+
+#include "easy_logging.hpp"
 
 #include <botan-2/botan/asn1_alt_name.h>
 #include <botan-2/botan/asn1_time.h>
@@ -28,8 +31,14 @@
 namespace gruut {
 
 class CertificateLedger : public Ledger {
+private:
+  std::unique_ptr<Botan::X509_Certificate> m_ca_cert;
 public:
-  CertificateLedger() { setPrefix("C"); }
+  CertificateLedger() {
+    setPrefix("C");
+    el::Loggers::getLogger("CERT");
+    loadCACert();
+  }
 
   bool isValidTx(const Transaction &tx) override { return true; }
 
@@ -56,8 +65,7 @@ public:
     if (!cert_size.empty()) {
       int num_certs = stoi(cert_size);
       if (at_this_time == 0) {
-        std::string temp = user_id_b64 + "_" + to_string(num_certs - 1);
-        std::string latest_cert = searchLedger(temp);
+        std::string latest_cert = searchLedger(user_id_b64 + "_" + to_string(num_certs - 1));
 
         json latest_cert_json = Safe::parseJsonAsArray(latest_cert);
         if (!latest_cert_json.empty())
@@ -66,8 +74,7 @@ public:
 
         timestamp_t max_start_date = 0;
         for (int i = 0; i < num_certs; ++i) {
-          std::string temp = user_id_b64 + "_" + to_string(i);
-          std::string nth_cert = searchLedger(temp);
+          std::string nth_cert = searchLedger(user_id_b64 + "_" + to_string(i));
 
           json cert_json = Safe::parseJson(nth_cert);
           if (cert_json.empty())
@@ -85,6 +92,8 @@ public:
           }
         }
       }
+    } else {
+      CLOG(INFO, "CERT") << "No certificate for [" << user_id_b64 << "]";
     }
 
     return cert;
@@ -97,151 +106,110 @@ public:
   }
 
 private:
-  bool isValidCaCert(const std::string &ca_cert_pem) {
+
+  void loadCACert(){
     try {
-      Botan::X509_Certificate ca_cert = strToCert(ca_cert_pem);
+      Botan::X509_Certificate ca_cert = pemToX509(Setting::getInstance()->getGruutAuthorityInfo().cert);
+      m_ca_cert.reset(new Botan::X509_Certificate(ca_cert));
 
-      if (!ca_cert.is_CA_cert()) {
-        std::cout << "X509_CA: This certificate is not for a CA" << std::endl;
+      if (!m_ca_cert->is_CA_cert()) {
+        CLOG(ERROR, "CERT") << "X509_CA: This certificate is not for CA";
+      }
+    }
+    catch (...){
+      m_ca_cert.reset(nullptr);
+      CLOG(ERROR, "CERT") << "Failed to load CA's certificate! (Exception)";
+    }
+  }
+
+  bool isValidCert(const std::string &cert_pem_str) {
+    if(m_ca_cert == nullptr)
+      return false;
+
+    try {
+      auto&& cert = pemToX509(cert_pem_str);
+
+      Botan::ECDSA_PublicKey pub_key(
+        cert.subject_public_key()->algorithm_identifier(),
+        cert.subject_public_key()->public_key_bits());
+
+      if (!m_ca_cert->check_signature(pub_key)) {
         return false;
       }
 
-      Botan::RSA_PublicKey ca_pub_key(
-          ca_cert.subject_public_key()->algorithm_identifier(),
-          ca_cert.subject_public_key()->public_key_bits());
-
-      if (!ca_cert.check_signature(ca_pub_key)) {
+      /*
+      if (validTime(cert) != true)
         return false;
-      }
-      return isValidCaCert(ca_cert);
+      if (cert.subject_info("Name")[0] != "TUVSR0VSLTE=")
+        return false;
+      if (cert.subject_info("RFC822")[0] != "contact@gruut.net")
+        return false;
+      if (cert.subject_info("Organization")[0] != "Gruut Networks")
+        return false;
+      if (cert.subject_info("Country")[0] != "KR")
+        return false;
+      if (cert.issuer_info("Name")[0] != "//////////8=")
+        return false;
+      if (cert.issuer_info("Organization")[0] != "Gruut Networks")
+        return false;
+      if (Botan::hex_encode(cert.serial_number()) !=
+          "EEE11C41D93BB0CAC68FA720914014C3")
+        return false;
+      */
+
+      return true;
 
     } catch (Botan::Exception &exception) {
-      std::cout << "error on PEM to RSA PK: " << exception.what() << std::endl;
+      CLOG(ERROR, "CERT") << "Error on PEM to ECDSA PK: " << exception.what();
+      return false;
     }
-    return true;
-  }
-
-  bool isValidCaCert(const Botan::X509_Certificate &ca_cert) {
-
-    // TODO : cert 정보는 하드코딩 한 상태 -> 나중에 수정
-    /*
-    if (validTime(ca_cert) != true)
-      return false;
-    if (ca_cert.subject_info("Name")[0] != "//////////8=")
-      return false;
-    if (ca_cert.subject_info("RFC822")[0] != "contact@gruut.net")
-      return false;
-    if (ca_cert.subject_info("Organization")[0] != "Gruut Networks")
-      return false;
-    if (ca_cert.subject_info("Country")[0] != "KR")
-      return false;
-    if (ca_cert.issuer_info("Name")[0] != "//////////8=")
-      return false;
-    if (ca_cert.issuer_info("Organization")[0] != "Gruut Networks")
-      return false;
-    if (Botan::hex_encode(ca_cert.serial_number()) !=
-        "BD9171B2F8905C20AB9CA974143C031C")
-      return false;
-    */
-    return true;
-  }
-
-  bool isValidCert(const std::string &ca_cert_pem, const std::string &cert_pem_str) {
-    try {
-      Botan::X509_Certificate ca_cert = strToCert(ca_cert_pem);
-      Botan::X509_Certificate cert = strToCert(cert_pem_str);
-
-      Botan::RSA_PublicKey ca_pub_key(
-          ca_cert.subject_public_key()->algorithm_identifier(),
-          ca_cert.subject_public_key()->public_key_bits());
-
-      if (!cert.check_signature(ca_pub_key)) {
-        return false;
-      }
-
-      return isValidCert(cert);
-
-    } catch (Botan::Exception &exception) {
-      std::cout << "error on PEM to ECDSA PK: " << exception.what()
-                << std::endl;
-    }
-    return true;
-  }
-
-  bool isValidCert(const Botan::X509_Certificate &cert) {
-
-    // TODO : cert 정보는 하드코딩 한 상태 -> 나중에 수정
-    /*
-    if (validTime(cert) != true)
-      return false;
-    if (cert.subject_info("Name")[0] != "TUVSR0VSLTE=")
-      return false;
-    if (cert.subject_info("RFC822")[0] != "contact@gruut.net")
-      return false;
-    if (cert.subject_info("Organization")[0] != "Gruut Networks")
-      return false;
-    if (cert.subject_info("Country")[0] != "KR")
-      return false;
-    if (cert.issuer_info("Name")[0] != "//////////8=")
-      return false;
-    if (cert.issuer_info("Organization")[0] != "Gruut Networks")
-      return false;
-    if (Botan::hex_encode(cert.serial_number()) !=
-        "EEE11C41D93BB0CAC68FA720914014C3")
-      return false;
-    */
-    return true;
   }
 
   bool isValidTxInBlock(const json &tx_json) {
 
-    if (Safe::getString(tx_json["type"]) != TXTYPE_CERTIFICATES)
+    if (Safe::getString(tx_json,"type") != TXTYPE_CERTIFICATES)
       return false;
 
     if (!tx_json["content"].is_array())
       return false;
 
-    json content = tx_json["content"];
+    auto& content = tx_json["content"];
 
     for (size_t i = 0; i < content.size(); i += 2) {
       std::string user_id = Safe::getString(content[i]);
-      std::string cert_pem = Safe::getString(content[i + 1]);
+      std::string user_pem = Safe::getString(content[i + 1]);
 
-      // TODO : 나중에 변경
-      std::string ca_cert;
-
-      if (!isValidCert(ca_cert, cert_pem))
+      if(user_pem.empty() || !isValidCert(user_pem))
         return false;
 
-      timestamp_t received_time = static_cast<timestamp_t>(Safe::getTime(tx_json, "time"));
-      std::string cert_from_db = getCertificate(user_id, received_time);
+      timestamp_t recv_time = Safe::getTime(tx_json, "time");
+      std::string pem_in_db = getCertificate(user_id, recv_time);
 
-      if (!checkDuplicatedCert(cert_pem, cert_from_db))
-        return false;
+      if (pem_in_db.empty() || !isDuplicatedCert(user_pem, pem_in_db))
+        return true;
     }
 
     return true;
   }
 
-  bool checkDuplicatedCert(const std::string &cert_pem, const std::string &cert_from_db) {
+  bool isDuplicatedCert(const std::string &user_pem, const std::string &pem_in_db) {
+
+    if(user_pem.empty() || pem_in_db.empty() || user_pem == pem_in_db)
+      return true;
+
     try {
-      Botan::X509_Certificate cert = strToCert(cert_pem);
-      Botan::X509_Certificate db_cert = strToCert(cert_from_db);
-
-      if (Botan::hex_encode(cert.serial_number()) ==
-          Botan::hex_encode(db_cert.serial_number()))
-        return false;
-    } catch (Botan::Exception &exception) {
-      throw;
+      auto&& cert = pemToX509(user_pem);
+      auto&& cert_in_db = pemToX509(pem_in_db);
+      return (cert.serial_number() == cert_in_db.serial_number());
+    } catch (...) {
+      return true;
     }
-
-    return true;
   }
 
   bool saveCert(const json &tx_json) {
     std::string key, value;
 
-    json content = tx_json["content"];
+    auto& content = tx_json["content"];
     if (!content.is_array())
       return false;
 
@@ -292,15 +260,14 @@ private:
     return json_str;
   }
 
-  Botan::X509_Certificate strToCert(const std::string &cert_pem_str) {
+  Botan::X509_Certificate pemToX509(const std::string &cert_pem_str) {
 
     try {
       Botan::DataSource_Memory cert_datasource(cert_pem_str);
-      Botan::X509_Certificate cert(cert_datasource);
-      return cert;
-
+      Botan::X509_Certificate x509_cert(cert_datasource);
+      return x509_cert;
     } catch (Botan::Exception &exception) {
-      std::cout << "error on str to cert : " << exception.what() << std::endl;
+      CLOG(ERROR, "CERT") << "Error on string to X509_Certificate - " << exception.what();
       throw;
     }
   }

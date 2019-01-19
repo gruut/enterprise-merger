@@ -52,11 +52,19 @@ public:
     return ret_str;
   }
 
+  template <typename S = nlohmann::json, typename K = std::string>
+  static size_t getSize(S &&json_obj, K &&key) {
+    return getSize(getString(json_obj,key));
+  }
+
   template <typename K = std::string> static size_t getSize(K &&size_str) {
     if (size_str.empty())
       return 0;
 
-    return static_cast<uint64_t>(stoll(size_str));
+    if (size_str.at(0) == '-')
+      return 0;
+
+    return static_cast<size_t>(stoll(size_str));
   }
 
   template <typename T = nlohmann::json, typename K = std::string>
