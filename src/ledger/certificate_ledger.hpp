@@ -99,10 +99,11 @@ public:
 private:
 
   template <typename S = json, typename T = std::string, typename V = std::vector<std::string>>
-  mem_ledger_t blockToLedger(S&& txs_json, T&& block_id_b64,  V&& block_layer = {}){
+  mem_ledger_t blockToLedger(S&& txs_json, T&& block_id_b64_,  V&& block_layer = {}){
 
-    mem_ledger_t ret_ledger;
-    LedgerRecord tmp_record;
+    mem_ledger_t ret_mem_ledger;
+
+    std::string block_id_b64 = block_id_b64_; // !!
 
     if(txs_json["tx"].is_array()) {
 
@@ -121,11 +122,7 @@ private:
           key = user_id_b64;
           value = (cert_idx.empty()) ? "1" : to_string(stoi(cert_idx) + 1);
 
-          tmp_record.key = key;
-          tmp_record.value = value;
-          tmp_record.block_id_b64 = block_id_b64;
-
-          ret_ledger.push_back(tmp_record);
+          ret_mem_ledger.emplace_back(key, value, block_id_b64);
 
           key += (cert_idx.empty()) ? "_0" : "_" + cert_idx;
           value = parseCert(Safe::getString(content[c_idx + 1]));
@@ -133,16 +130,12 @@ private:
           if (value.empty())
             continue;
 
-          tmp_record.key = key;
-          tmp_record.value = value;
-          tmp_record.block_id_b64 = block_id_b64;
-
-          ret_ledger.push_back(tmp_record);
+          ret_mem_ledger.emplace_back(key, value, block_id_b64);
         }
       }
     }
 
-    return ret_ledger;
+    return ret_mem_ledger;
   }
 
   void loadCACert(){

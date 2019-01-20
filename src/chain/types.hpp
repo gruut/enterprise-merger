@@ -153,10 +153,10 @@ using storage_block_type = struct _storage_block_type {
 };
 
 using nth_link_type = struct _nth_link_type {
-  std::string id_b64;
-  std::string hash_b64;
-  std::string prev_id_b64;
-  std::string prev_hash_b64;
+  block_id_type id;
+  block_id_type prev_id;
+  hash_t hash;
+  hash_t prev_hash;
   size_t height;
   timestamp_t time;
 };

@@ -13,8 +13,8 @@ BlockProcessor::BlockProcessor() {
 
   auto last_block_info = m_storage->getNthBlockLinkInfo();
 
-  m_unresolved_block_pool.setPool(last_block_info.id_b64,
-                                  last_block_info.hash_b64,
+  m_unresolved_block_pool.setPool(last_block_info.id,
+                                  last_block_info.hash,
                                   last_block_info.height, last_block_info.time);
 
   // TODO : resotre m_unresolved_block_pool from backup
@@ -73,7 +73,7 @@ void BlockProcessor::periodicTask() {
       msg_req_block.body["time"] = Time::now();
       msg_req_block.body["mCert"] = "";
       msg_req_block.body["hgt"] = std::to_string(unresolved_block.height);
-      msg_req_block.body["prevHash"] = unresolved_block.prev_hash_b64;
+      msg_req_block.body["prevHash"] = TypeConverter::encodeBase64(unresolved_block.prev_hash);
       msg_req_block.body["mSig"] = "";
       msg_req_block.receivers = {};
 

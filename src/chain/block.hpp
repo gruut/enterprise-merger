@@ -43,16 +43,16 @@ private:
   localchain_id_type m_chain_id;
   block_height_type m_height;
   transaction_root_type m_tx_root;
+  hash_t m_prev_block_hash;
+  hash_t m_block_hash;
+  block_id_type m_prev_block_id;
+  bytes m_signature;
   std::vector<Transaction> m_transactions;
   std::vector<hash_t> m_merkle_tree_node;
-  std::string m_prev_block_hash_b64;
-  std::string m_prev_block_id_b64;
-  bytes m_signature;
   std::vector<Signature> m_ssigs;
   std::map<std::string, std::string> m_user_certs;
   bytes m_block_raw;
-  hash_t m_block_hash;
-  mem_ledger_t m_mem_ledger;
+
 
 public:
   Block() { el::Loggers::getLogger("BLOC"); };
@@ -102,8 +102,8 @@ public:
     m_height = Safe::getInt(block_header_json, "hgt");
     m_tx_root =
         Safe::getBytesFromB64<transaction_root_type>(block_header_json, "txrt");
-    m_prev_block_hash_b64 = Safe::getString(block_header_json, "prevH");
-    m_prev_block_id_b64 = Safe::getString(block_header_json, "prevbID");
+    m_prev_block_hash = Safe::getBytesFromB64(block_header_json, "prevH");
+    m_prev_block_id = Safe::getBytesFromB64<block_id_type>(block_header_json, "prevbID");
     m_block_id = Safe::getBytesFromB64<block_id_type>(block_header_json, "bID");
 
     if (!setSupportSignaturesFromJson(block_header_json["SSig"]))
@@ -165,13 +165,12 @@ public:
     return true;
   }
 
-  void linkPreviousBlock(
-      const std::string &last_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64,
-      const std::string &last_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64) {
+  template <typename T = std::string>
+  void linkPreviousBlock(T&& last_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64, T&& last_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64) {
 
     m_version = config::DEFAULT_VERSION;
-    m_prev_block_id_b64 = last_id_b64;
-    m_prev_block_hash_b64 = last_hash_b64;
+    m_prev_block_id = TypeConverter::decodeBase64(last_id_b64);
+    m_prev_block_hash = TypeConverter::decodeBase64(last_hash_b64);
 
     BytesBuilder block_id_builder;
     block_id_builder.append(m_chain_id);
@@ -221,8 +220,8 @@ public:
 
     block_header["ver"] = to_string(m_version);
     block_header["cID"] = TypeConverter::encodeBase64(m_chain_id);
-    block_header["prevH"] = m_prev_block_hash_b64;
-    block_header["prevbID"] = m_prev_block_id_b64;
+    block_header["prevH"] = TypeConverter::encodeBase64(m_prev_block_hash);
+    block_header["prevbID"] = TypeConverter::encodeBase64(m_prev_block_id);
     block_header["bID"] = TypeConverter::encodeBase64(m_block_id);
     block_header["time"] = to_string(m_time); // important!!
     block_header["hgt"] = to_string(m_height);
@@ -268,21 +267,19 @@ public:
 
   size_t getNumSSigs() { return m_ssigs.size(); }
 
-  block_id_type getBlockId() { return m_block_id; }
 
-  std::string getBlockIdB64() {
-    return TypeConverter::encodeBase64(m_block_id);
-  }
 
   timestamp_t getTime() { return m_time; }
 
   hash_t getHash() { return m_block_hash; }
+  hash_t getPrevHash(){ return m_prev_block_hash; }
+  block_id_type getBlockId() { return m_block_id; }
+  block_id_type getPrevBlockId(){ return m_prev_block_id; }
 
   std::string getHashB64() { return TypeConverter::encodeBase64(m_block_hash); }
-
-  std::string getPrevHashB64() { return m_prev_block_hash_b64; }
-
-  std::string getPrevBlockIdB64() { return m_prev_block_id_b64; }
+  std::string getPrevHashB64() { return TypeConverter::encodeBase64(m_prev_block_hash); }
+  std::string getBlockIdB64() { return TypeConverter::encodeBase64(m_block_id); }
+  std::string getPrevBlockIdB64() { return TypeConverter::encodeBase64(m_prev_block_id); }
 
   bool isValid() { return (isValidEarly() && isValidLate()); }
 

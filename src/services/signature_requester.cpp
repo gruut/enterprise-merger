@@ -83,8 +83,8 @@ void SignatureRequester::requestSignatures() {
   m_basic_block_info.time = Time::now_int();
   m_basic_block_info.merger_id = setting->getMyId();
   m_basic_block_info.chain_id = setting->getLocalChainId();
-  m_basic_block_info.prev_id_b64 = most_possible_link.id_b64;
-  m_basic_block_info.prev_hash_b64 = most_possible_link.hash_b64;
+  m_basic_block_info.prev_id_b64 = TypeConverter::encodeBase64(most_possible_link.id);
+  m_basic_block_info.prev_hash_b64 = TypeConverter::encodeBase64(most_possible_link.hash);
   m_basic_block_info.height = (most_possible_link.height == 0) ? 1 : most_possible_link.height + 1;
   m_basic_block_info.transaction_root = m_merkle_tree.getMerkleTree().back();
   m_basic_block_info.transactions = std::move(transactions);

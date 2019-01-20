@@ -323,10 +323,10 @@ nth_link_type Storage::getLatestHashAndHeight() {
 
   auto block_id = getValueByKey(DBType::BLOCK_LATEST, "bID");
   if (block_id.empty()) {
-    ret_link_info.hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
+    ret_link_info.hash = TypeConverter::decodeBase64(config::GENESIS_BLOCK_PREV_HASH_B64);
     ret_link_info.height = 0;
   } else {
-    ret_link_info.hash_b64 = TypeConverter::encodeBase64(getValueByKey(DBType::BLOCK_RAW, block_id + "_hash"));
+    ret_link_info.hash = TypeConverter::stringToBytes(getValueByKey(DBType::BLOCK_RAW, block_id + "_hash"));
     ret_link_info.height = Safe::getSize(getValueByKey(DBType::BLOCK_LATEST, "hgt"));
   }
 
@@ -343,21 +343,16 @@ nth_link_type Storage::getNthBlockLinkInfo(size_t t_height) {
           : getValueByKey(DBType::BLOCK_HEIGHT, to_string(t_height));
 
   if (!t_block_id_b64.empty()) {
-    ret_link_info.id_b64 = t_block_id_b64;
-    ret_link_info.hash_b64 = TypeConverter::encodeBase64(
-        getValueByKey(DBType::BLOCK_RAW, t_block_id_b64 + "_hash"));
-    ret_link_info.prev_id_b64 =
-        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevbID");
-    ret_link_info.prev_hash_b64 =
-        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevH");
-    ret_link_info.height = Safe::getSize(
-        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_hgt"));
-    ret_link_info.time = Safe::getTime(
-        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_time"));
+    ret_link_info.id = TypeConverter::decodeBase64(t_block_id_b64);
+    ret_link_info.hash = TypeConverter::stringToBytes(getValueByKey(DBType::BLOCK_RAW, t_block_id_b64 + "_hash"));
+    ret_link_info.prev_id = TypeConverter::decodeBase64(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevbID"));
+    ret_link_info.prev_hash = TypeConverter::stringToBytes(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevH"));
+    ret_link_info.height = Safe::getSize(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_hgt"));
+    ret_link_info.time = Safe::getTime(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_time"));
   } else {
     ret_link_info.height = 0;
-    ret_link_info.hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
-    ret_link_info.id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
+    ret_link_info.hash = TypeConverter::decodeBase64(config::GENESIS_BLOCK_PREV_HASH_B64);
+    ret_link_info.id = TypeConverter::decodeBase64(config::GENESIS_BLOCK_PREV_ID_B64);
     ret_link_info.time = 0;
   }
 
@@ -431,10 +426,10 @@ storage_block_type Storage::readBlock(size_t height) {
     }
 
     nth_link_type link_info = getNthBlockLinkInfo(result.height);
-    result.prev_id_b64 = link_info.prev_id_b64;
-    result.prev_hash_b64 = link_info.prev_hash_b64;
-    result.hash_b64 = link_info.hash_b64;
-    result.id_b64 = link_info.id_b64;
+    result.prev_id_b64 = TypeConverter::encodeBase64(link_info.prev_id);
+    result.prev_hash_b64 = TypeConverter::encodeBase64(link_info.prev_hash);
+    result.hash_b64 = TypeConverter::encodeBase64(link_info.hash);
+    result.id_b64 = TypeConverter::encodeBase64(link_info.id);
     result.time = link_info.time;
     result.txs = txs_json;
   }

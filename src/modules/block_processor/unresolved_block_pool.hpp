@@ -7,6 +7,7 @@
 
 #include "../../chain/block.hpp"
 #include "../../chain/types.hpp"
+#include "../../utils/type_converter.hpp"
 
 #include <deque>
 #include <list>
@@ -36,8 +37,8 @@ private:
 
   std::recursive_mutex m_push_mutex;
 
-  std::string m_last_block_id_b64;
-  std::string m_last_hash_b64;
+  block_id_type m_last_block_id;
+  hash_t m_last_hash;
   std::atomic<block_height_type> m_last_height;
   timestamp_t m_last_time;
 
@@ -47,13 +48,6 @@ private:
 
 public:
   UnresolvedBlockPool() { el::Loggers::getLogger("URBK"); };
-
-  UnresolvedBlockPool(std::string &last_block_id_b64,
-                      std::string &last_hash_b64, block_height_type last_height,
-                      timestamp_t last_time) {
-    setPool(last_block_id_b64, last_hash_b64, last_height, last_time);
-    el::Loggers::getLogger("URBK");
-  }
 
   size_t size() {
     return m_block_pool.size();
@@ -67,10 +61,9 @@ public:
     m_block_pool.clear();
   }
 
-  void setPool(std::string &last_block_id_b64, std::string &last_hash_b64,
-               block_height_type last_height, timestamp_t last_time) {
-    m_last_block_id_b64 = last_block_id_b64;
-    m_last_hash_b64 = last_hash_b64;
+  void setPool(block_id_type& last_block_id, hash_t& last_hash, block_height_type last_height, timestamp_t last_time) {
+    m_last_block_id = last_block_id;
+    m_last_hash = last_hash;
     m_last_height = last_height;
     m_last_time = last_time;
     m_height_range_max = last_height;
@@ -82,14 +75,14 @@ public:
 
     std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
 
-    if ((Time::now_int() - m_last_time) <
-        (block.getHeight() - m_last_height - 1) * config::BP_INTERVAL) {
-      return 0;
-    }
-
     if (m_last_height >= block_height) {
       return 0;
     }
+
+    if ((Time::now_int() - m_last_time) < (block_height - m_last_height - 1) * config::BP_INTERVAL) {
+      return 0;
+    }
+
 
     int bin_pos = block_height - m_last_height - 1; // e.g., 0 = 2 - 1 - 1
 
@@ -112,16 +105,15 @@ public:
 
         size_t idx = 0;
         for (auto &each_block : m_block_pool[bin_pos - 1]) {
-          if (each_block.block.getBlockIdB64() == block.getPrevBlockIdB64() &&
-              each_block.block.getHashB64() == block.getPrevHashB64()) {
+          if (each_block.block.getBlockId() == block.getPrevBlockId() &&
+              each_block.block.getHash() == block.getPrevHash()) {
             prev_queue_idx = static_cast<int>(idx);
             break;
           }
           ++idx;
         }
       } else { // no previous
-        if (block.getPrevBlockIdB64() == m_last_block_id_b64 &&
-            block.getPrevHashB64() == m_last_hash_b64) {
+        if (block.getPrevBlockId() == m_last_block_id && block.getPrevHash() == m_last_hash) {
           prev_queue_idx = 0;
         } else {
           return 0; // drop block -- this is not linkable block!
@@ -134,8 +126,8 @@ public:
 
       if (bin_pos + 1 < m_block_pool.size()) { // if there is next bin
         for (auto &each_block : m_block_pool[bin_pos + 1]) {
-          if (each_block.block.getPrevBlockIdB64() == block.getBlockIdB64() &&
-              each_block.block.getPrevHashB64() == block.getHashB64()) {
+          if (each_block.block.getPrevBlockId() == block.getBlockId() &&
+              each_block.block.getPrevHash() == block.getHash()) {
             each_block.prev_queue_idx = queue_idx;
           }
         }
@@ -151,7 +143,8 @@ public:
     return block_height;
   }
 
-  bool getBlock(block_height_type t_height, const std::string &t_prev_hash_b64, const std::string &t_hash_b64, Block &ret_block) {
+  template <typename T = std::string>
+  bool getBlock(block_height_type t_height, T&& t_prev_hash_b64, T&& t_hash_b64, Block &ret_block) {
     std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
     if(m_block_pool.empty()){
       return false;
@@ -162,14 +155,15 @@ public:
     }
 
     int bin_pos = t_height - m_last_height;
-    std::string prev_hash_b64 = t_prev_hash_b64;
-    std::string hash_b64 = t_hash_b64;
+
+    hash_t block_hash = TypeConverter::decodeBase64(t_hash_b64);
+    hash_t prev_hash = TypeConverter::decodeBase64(t_prev_hash_b64);
 
     if(t_height == 0) {
       nth_link_type most_possible_link = getMostPossibleLink();
       bin_pos = most_possible_link.height - m_last_height;
-      prev_hash_b64 = most_possible_link.prev_hash_b64;
-      hash_b64 = most_possible_link.hash_b64;
+      prev_hash = most_possible_link.prev_hash;
+      block_hash = most_possible_link.hash;
     }
 
     if(bin_pos < 0) // something wrong
@@ -177,8 +171,8 @@ public:
 
     bool is_some = false;
     for(auto &each_block : m_block_pool[bin_pos]) {
-      if((prev_hash_b64.empty() || each_block.block.getPrevHashB64() == prev_hash_b64) &&
-        (hash_b64.empty() || each_block.block.getHashB64() == hash_b64)) {
+      if((prev_hash.empty() || each_block.block.getPrevHash() == prev_hash) &&
+        (block_hash.empty() || each_block.block.getHash() == block_hash)) {
         ret_block = each_block.block;
         is_some = true;
         break;
@@ -216,7 +210,7 @@ public:
 
       if(deque_idx >= 0) {
         ret_link.height = m_block_pool[deque_idx][longest_pos.vector_idx].block.getHeight() + 1;
-        ret_link.prev_hash_b64 = m_block_pool[deque_idx][longest_pos.vector_idx].block.getHashB64();
+        ret_link.prev_hash = m_block_pool[deque_idx][longest_pos.vector_idx].block.getHash();
       }
     }
 
@@ -232,8 +226,8 @@ public:
     // unless, they are faster than storage
 
     ret_link.height = m_last_height;
-    ret_link.id_b64 = m_last_block_id_b64;
-    ret_link.hash_b64 = m_last_hash_b64;
+    ret_link.id = m_last_block_id;
+    ret_link.hash = m_last_hash;
 
     if (m_block_pool.empty())
       return ret_link;
@@ -247,8 +241,8 @@ public:
       if(deque_idx >= 0) {
         auto &t_block = m_block_pool[deque_idx][longest_pos.vector_idx];
         ret_link.height = t_block.block.getHeight();
-        ret_link.id_b64 = t_block.block.getBlockIdB64();
-        ret_link.hash_b64 = t_block.block.getHashB64();
+        ret_link.id = t_block.block.getBlockId();
+        ret_link.hash = t_block.block.getHash();
       }
     }
 
@@ -261,7 +255,10 @@ public:
     std::vector<std::string> ret_block_layer;
 
     int queue_idx = t_block_pos.vector_idx;
-    for(int i = t_block_pos.height - m_last_height; i >= 0; --i) {
+
+    int bin_end = t_block_pos.height - m_last_height - 1;
+
+    for(int i = bin_end; i >= 0; --i) {
       ret_block_layer.emplace_back(m_block_pool[i][queue_idx].block.getBlockIdB64());
       queue_idx = m_block_pool[i][queue_idx].prev_queue_idx;
     }
@@ -346,8 +343,8 @@ private:
     if (!is_after)
       return;
 
-    m_last_block_id_b64 = m_block_pool[0][t_idx].block.getBlockIdB64();
-    m_last_hash_b64 = m_block_pool[0][t_idx].block.getHashB64();
+    m_last_block_id = m_block_pool[0][t_idx].block.getBlockId();
+    m_last_hash = m_block_pool[0][t_idx].block.getHash();
     m_last_height = m_block_pool[0][t_idx].block.getHeight();
 
     resolved_blocks.emplace_back(m_block_pool[0][t_idx].block);
@@ -358,7 +355,7 @@ private:
 
     if (m_block_pool[0].size() > 1) {
       for(auto &each_block : m_block_pool[0]) {
-        if(each_block.block.getBlockIdB64() != m_last_block_id_b64) {
+        if(each_block.block.getBlockId() != m_last_block_id) {
           drop_blocks.emplace_back(each_block.block.getBlockIdB64());
         }
       }
@@ -372,8 +369,8 @@ private:
       return;
 
     for (auto &each_block : m_block_pool[0]) {
-      if (each_block.block.getPrevBlockIdB64() == m_last_block_id_b64 &&
-          each_block.block.getPrevHashB64() == m_last_hash_b64) {
+      if (each_block.block.getPrevBlockId() == m_last_block_id &&
+          each_block.block.getPrevHash() == m_last_hash) {
         each_block.prev_queue_idx = 0;
       } else {
         // this block is unlinkable => to be deleted
