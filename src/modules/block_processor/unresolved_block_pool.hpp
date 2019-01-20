@@ -8,8 +8,6 @@
 #include "../../chain/block.hpp"
 #include "../../chain/types.hpp"
 
-#include "../../services/storage.hpp"
-
 #include <deque>
 #include <list>
 #include <vector>
@@ -190,19 +188,20 @@ public:
     return is_some;
   }
 
-  std::vector<Block> getResolvedBlocks() { // flushing out resolved blocks
-    std::vector<Block> blocks;
+  void getResolvedBlocks(std::vector<Block> &blocks, std::vector<std::string> &drop_blocks) { // flushing out resolved blocks
+    blocks.clear();
+    drop_blocks.clear();
+
     std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
 
     size_t num_resolved_block = 0;
 
     do {
       num_resolved_block = blocks.size();
-      resolveBlocksStepByStep(blocks);
+      resolveBlocksStepByStep(blocks, drop_blocks);
     } while (num_resolved_block < blocks.size());
 
     m_push_mutex.unlock();
-    return blocks;
   }
 
   nth_link_type getUnresolvedLowestLink() {
@@ -256,17 +255,18 @@ public:
     return ret_link;
   }
 
-  std::deque<Block> getMostPossibleBlocks(){
+  // reverse order
+  std::vector<std::string> getMostPossibleBlockLayer(){
     auto t_block_pos = getLongestBlockPos();
-    std::deque<Block> ret_blocks;
+    std::vector<std::string> ret_block_layer;
 
     int queue_idx = t_block_pos.vector_idx;
     for(int i = t_block_pos.height - m_last_height; i >= 0; --i) {
-      ret_blocks.emplace_front(m_block_pool[i][queue_idx].block);
+      ret_block_layer.emplace_back(m_block_pool[i][queue_idx].block.getBlockIdB64());
       queue_idx = m_block_pool[i][queue_idx].prev_queue_idx;
     }
 
-    return ret_blocks;
+    return ret_block_layer;
   }
 
   bool hasUnresolvedBlocks() {
@@ -314,7 +314,7 @@ private:
     }
   }
 
-  void resolveBlocksStepByStep(std::vector<Block> &resolved_blocks) {
+  void resolveBlocksStepByStep(std::vector<Block> &resolved_blocks, std::vector<std::string> &drop_blocks) {
 
     updateConfirmLevel();
 
@@ -354,9 +354,17 @@ private:
 
     // clear this height list
 
-    if (m_block_pool[0].size() > 1)
+    auto leyered_storage = LayeredStorage::getInstance();
+
+    if (m_block_pool[0].size() > 1) {
+      for(auto &each_block : m_block_pool[0]) {
+        if(each_block.block.getBlockIdB64() != m_last_block_id_b64) {
+          drop_blocks.emplace_back(each_block.block.getBlockIdB64());
+        }
+      }
       CLOG(INFO, "URBK") << "Dropped out " << m_block_pool[0].size() - 1
                          << " unresolved block(s)";
+    }
 
     m_block_pool.pop_front();
 

@@ -6,6 +6,8 @@ namespace gruut {
 
 BlockProcessor::BlockProcessor() {
   m_storage = Storage::getInstance();
+  m_layered_storage = LayeredStorage::getInstance();
+
   auto setting = Setting::getInstance();
   m_my_id = setting->getMyId();
 
@@ -29,8 +31,14 @@ void BlockProcessor::start() { periodicTask(); }
 void BlockProcessor::periodicTask() {
   auto &io_service = Application::app().getIoService();
   io_service.post(m_task_strand->wrap([this]() {
-    std::vector<Block> resolved_blocks =
-        m_unresolved_block_pool.getResolvedBlocks();
+    std::vector<Block> resolved_blocks;
+    std::vector<std::string> drop_blocks;
+
+    m_unresolved_block_pool.getResolvedBlocks(resolved_blocks,drop_blocks);
+
+    for(auto &block_id_b64 : drop_blocks)
+      m_layered_storage->dropLedger(block_id_b64);
+
     if (!resolved_blocks.empty()) {
       CLOG(INFO, "BPRO") << "Resolved block(s) received (" << resolved_blocks.size() << ")";
 
@@ -46,15 +54,15 @@ void BlockProcessor::periodicTask() {
         bytes block_raw = each_block.getBlockRaw();
         json block_body = each_block.getBlockBodyJson();
 
-        Application::app().getCustomLedgerManager().procLedgerBlock(block_body["tx"]);
-
         m_storage->saveBlock(block_raw, block_header, block_body);
+        m_layered_storage->moveToDiskLedger(each_block.getBlockIdB64());
 
         CLOG(INFO, "BPRO") << "BLOCK SAVED (height=" << each_block.getHeight()
                            << ",#tx=" << each_block.getNumTransactions()
                            << ",#ssig=" << each_block.getNumSSigs() << ")";
       }
     }
+
 
     nth_link_type unresolved_block = m_unresolved_block_pool.getUnresolvedLowestLink();
     if (unresolved_block.height > 0) {
@@ -90,8 +98,8 @@ nth_link_type BlockProcessor::getMostPossibleLink() {
   return m_unresolved_block_pool.getMostPossibleLink();
 }
 
-std::deque<Block> BlockProcessor::getMostPossibleBlocks(){
-  return m_unresolved_block_pool.getMostPossibleBlocks();
+std::vector<std::string> BlockProcessor::getMostPossibleBlockLayer(){
+  return m_unresolved_block_pool.getMostPossibleBlockLayer();
 }
 
 bool BlockProcessor::hasUnresolvedBlocks() {
@@ -200,6 +208,8 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
     return 0;
   }
+
+  Application::app().getCustomLedgerManager().procLedgerBlock(entry.body["tx"], recv_block.getBlockIdB64());
 
   Application::app().getTransactionPool().removeDuplicatedTransactions(
       recv_block.getTxIds());

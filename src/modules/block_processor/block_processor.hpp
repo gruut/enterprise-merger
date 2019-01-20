@@ -14,6 +14,7 @@
 #include "../../services/output_queue.hpp"
 #include "../../services/setting.hpp"
 #include "../../services/storage.hpp"
+#include "../../services/layered_storage.hpp"
 
 #include "../module.hpp"
 #include "unresolved_block_pool.hpp"
@@ -33,6 +34,7 @@ class BlockProcessor : public Module {
 private:
   MessageProxy m_msg_proxy;
   Storage *m_storage;
+  LayeredStorage *m_layered_storage;
   merger_id_type m_my_id;
   UnresolvedBlockPool m_unresolved_block_pool;
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
@@ -48,7 +50,7 @@ public:
   block_height_type handleMsgBlock(InputMsgEntry &entry);
 
   nth_link_type getMostPossibleLink();
-  std::deque<Block> getMostPossibleBlocks();
+  std::vector<std::string> getMostPossibleBlockLayer();
   bool hasUnresolvedBlocks();
 
 private:

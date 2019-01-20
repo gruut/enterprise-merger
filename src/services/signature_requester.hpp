@@ -51,8 +51,7 @@ private:
 
   bool isNewSigner(Signer &signer);
 
-  Transaction generateCertificateTransaction(vector<Signer> &signers);
-  BasicBlockInfo generateBasicBlockInfo();
+  Transaction genCertificateTransaction(vector<Signer> &signers);
 
   std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_check_timer;

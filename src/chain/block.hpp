@@ -307,7 +307,7 @@ public:
       if (it_map != m_user_certs.end()) {
         user_pk_pem = it_map->second;
       } else {
-        user_pk_pem = cert_ledger.getCertificate(user_id_b64, m_time);
+        user_pk_pem = cert_ledger.getCertificate(user_id_b64, m_time); // this is from storage
       }
 
       if (user_pk_pem.empty()) {

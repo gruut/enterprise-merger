@@ -42,26 +42,24 @@ public:
 
   bool isValidTx(const Transaction &tx) override { return true; }
 
-  bool procBlock(const json &txs_json) override {
+  bool procBlock(const json &txs_json, const std::string &block_id_b64) override {
     if (!txs_json.is_array())
       return false;
 
-    mem_ledger_t && mem_ledger = blockToLedger(txs_json);
+    mem_ledger_t && mem_ledger = blockToLedger(txs_json, block_id_b64);
     saveLedger(mem_ledger);
-    m_storage->flushLedger();
 
     return true;
   }
 
-  std::string getCertificate(const std::string &user_id_b64,
-                             const timestamp_t &at_this_time = 0) {
+  std::string getCertificate(const std::string &user_id_b64, const timestamp_t &at_this_time = 0, const std::vector<std::string> block_layer = {}) {
     std::string ret_cert;
-    std::string cert_size = readLedgerByKey(user_id_b64);
+    std::string cert_size = readLedgerByKey(user_id_b64,block_layer);
 
     if (!cert_size.empty()) {
       int num_certs = stoi(cert_size);
       if (at_this_time == 0) {
-        std::string latest_cert = readLedgerByKey(user_id_b64 + "_" + to_string(num_certs - 1));
+        std::string latest_cert = readLedgerByKey(user_id_b64 + "_" + to_string(num_certs - 1),block_layer);
 
         json latest_cert_json = Safe::parseJsonAsArray(latest_cert);
         if (!latest_cert_json.empty())
@@ -70,7 +68,7 @@ public:
 
         timestamp_t lastest_valid_begin = 0;
         for (int i = 0; i < num_certs; ++i) {
-          std::string nth_cert = readLedgerByKey(user_id_b64 + "_" + to_string(i));
+          std::string nth_cert = readLedgerByKey(user_id_b64 + "_" + to_string(i),block_layer);
 
           json cert_json = Safe::parseJson(nth_cert);
           if (cert_json.empty())
@@ -93,17 +91,18 @@ public:
     return ret_cert;
   }
 
-  std::string getCertificate(const signer_id_type &user_id,
-                             const timestamp_t &at_this_time = 0) {
+  std::string getCertificate(const signer_id_type &user_id, const timestamp_t &at_this_time = 0, const std::vector<std::string> block_layer = {}) {
     std::string user_id_b64 = TypeConverter::encodeBase64(user_id);
-    return getCertificate(user_id_b64);
+    return getCertificate(user_id_b64, at_this_time, block_layer);
   }
 
 private:
 
-  LedgerMemory blockToLedger(const json &txs_json){
+  template <typename S = json, typename T = std::string, typename V = std::vector<std::string>>
+  mem_ledger_t blockToLedger(S&& txs_json, T&& block_id_b64,  V&& block_layer = {}){
 
-    LedgerMemory ret_ledger;
+    mem_ledger_t ret_ledger;
+    LedgerRecord tmp_record;
 
     if(txs_json["tx"].is_array()) {
 
@@ -117,11 +116,16 @@ private:
 
         for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
           string user_id_b64 = Safe::getString(content[c_idx]);
-          string cert_idx = readLedgerByKey(user_id_b64);
+          string cert_idx = readLedgerByKey(user_id_b64, block_layer);
 
           key = user_id_b64;
           value = (cert_idx.empty()) ? "1" : to_string(stoi(cert_idx) + 1);
-          ret_ledger.emplace_back(key, value);
+
+          tmp_record.key = key;
+          tmp_record.value = value;
+          tmp_record.block_id_b64 = block_id_b64;
+
+          ret_ledger.push_back(tmp_record);
 
           key += (cert_idx.empty()) ? "_0" : "_" + cert_idx;
           value = parseCert(Safe::getString(content[c_idx + 1]));
@@ -129,7 +133,11 @@ private:
           if (value.empty())
             continue;
 
-          ret_ledger.emplace_back(key, value);
+          tmp_record.key = key;
+          tmp_record.value = value;
+          tmp_record.block_id_b64 = block_id_b64;
+
+          ret_ledger.push_back(tmp_record);
         }
       }
     }
@@ -152,7 +160,8 @@ private:
     }
   }
 
-  bool isValidCert(const std::string &cert_pem_str) {
+  template <typename T = std::string>
+  bool isValidCert(T&& cert_pem_str) {
     if(m_ca_cert == nullptr)
       return false;
 
@@ -195,7 +204,8 @@ private:
     }
   }
 
-  bool isValidTxInBlock(const json &tx_json) {
+  template <typename S = json>
+  bool isValidTxInBlock(S&& tx_json) {
 
     if (Safe::getString(tx_json,"type") != TXTYPE_CERTIFICATES)
       return false;
@@ -222,7 +232,8 @@ private:
     return true;
   }
 
-  bool isDuplicatedCert(const std::string &user_pem, const std::string &pem_in_db) {
+  template <typename T = std::string>
+  bool isDuplicatedCert(T&& user_pem, T&& pem_in_db) {
 
     if(user_pem.empty() || pem_in_db.empty() || user_pem == pem_in_db)
       return true;
@@ -236,37 +247,8 @@ private:
     }
   }
 
-  bool saveCert(const json &tx_json) {
-    std::string key, value;
-
-    auto& content = tx_json["content"];
-    if (!content.is_array())
-      return false;
-
-    for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
-      string user_id_b64 = Safe::getString(content[c_idx]);
-      string cert_idx = readLedgerByKey(user_id_b64);
-
-      key = user_id_b64;
-      value = (cert_idx.empty()) ? "1" : to_string(stoi(cert_idx) + 1);
-      if (!saveLedger(key, value)) // number of certificate
-        return false;
-
-      key += (cert_idx.empty()) ? "_0" : "_" + cert_idx;
-      std::string pem = Safe::getString(content[c_idx + 1]);
-      value = parseCert(pem);
-
-      if (value.empty())
-        return false;
-
-      if (!saveLedger(key, value))
-        return false;
-    }
-
-    return true;
-  }
-
-  std::string parseCert(const std::string &pem) {
+  template <typename T = std::string>
+  std::string parseCert(T&& pem) {
 
     // User ID에 해당하는 n번째 Certification 저장 (발급일, 만료일, 인증서)
     std::string json_str;
@@ -287,7 +269,8 @@ private:
     return json_str;
   }
 
-  Botan::X509_Certificate pemToX509(const std::string &cert_pem_str) {
+  template <typename T = std::string>
+  Botan::X509_Certificate pemToX509(T&& cert_pem_str) {
 
     try {
       Botan::DataSource_Memory cert_datasource(cert_pem_str);
@@ -299,7 +282,8 @@ private:
     }
   }
 
-  bool validTime(const Botan::X509_Certificate &cert) {
+  template <typename X = Botan::X509_Certificate>
+  bool validTime(X&& cert) {
     timestamp_t t1 = cert.not_before().time_since_epoch();
     timestamp_t t2 = cert.not_after().time_since_epoch();
     timestamp_t current_time = Time::now_int();

@@ -43,18 +43,11 @@ public:
     bytes block_raw = new_block.getBlockRaw();
     json block_body = new_block.getBlockBodyJson();
 
-    // step-2) save block
-
-    //    auto storage = Storage::getInstance();
-    //
-    //
-    //    storage->saveBlock(block_raw, block_header, block_body);
-    //
     CLOG(INFO, "BGEN") << "BLOCK GENERATED (height=" << new_block.getHeight()
                        << ",#tx=" << new_block.getNumTransactions()
                        << ",#ssig=" << new_block.getNumSSigs() << ")";
 
-    // setp-3) send blocks to others
+    // setp-2) send blocks to others
 
     auto setting = Setting::getInstance();
 
