@@ -346,7 +346,7 @@ nth_link_type Storage::getNthBlockLinkInfo(block_height_type t_height) {
     ret_link_info.id = TypeConverter::decodeBase64(t_block_id_b64);
     ret_link_info.hash = TypeConverter::stringToBytes(getValueByKey(DBType::BLOCK_RAW, t_block_id_b64 + "_hash"));
     ret_link_info.prev_id = TypeConverter::decodeBase64(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevbID"));
-    ret_link_info.prev_hash = TypeConverter::stringToBytes(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevH"));
+    ret_link_info.prev_hash = TypeConverter::decodeBase64(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevH"));
     ret_link_info.height = Safe::getSize(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_hgt"));
     ret_link_info.time = Safe::getTime(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_time"));
   } else {

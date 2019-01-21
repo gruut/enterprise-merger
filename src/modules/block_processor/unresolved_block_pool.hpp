@@ -62,7 +62,7 @@ public:
     m_block_pool.clear();
   }
 
-  void setPool(block_id_type& last_block_id, hash_t& last_hash, block_height_type last_height, timestamp_t last_time) {
+  void setPool(const block_id_type& last_block_id, const hash_t& last_hash, block_height_type last_height, timestamp_t last_time) {
     m_last_block_id = last_block_id;
     m_last_hash = last_hash;
     m_last_height = last_height;
@@ -85,6 +85,8 @@ public:
     if (m_block_pool.size() < bin_pos + 1) {
       m_block_pool.resize(bin_pos + 1);
     }
+
+    return true;
   }
 
   unblk_push_result_type push(Block &block) { // we assume this block has valid structure at least
@@ -213,15 +215,19 @@ public:
     BlockPosOnMap longest_pos = getLongestBlockPos();
 
     nth_link_type ret_link;
+    ret_link.height = 0; // no unresolved block or invalid link info
 
-    if(longest_pos.height >= m_block_pool.size() + m_last_height || longest_pos.height < m_last_height){
-      ret_link.height = 0; // no unresolved block or invalid link info
-    } else {
-      int deque_idx = ret_link.height - m_last_height - 1;
+    if( m_last_height <= longest_pos.height && longest_pos.height < m_block_pool.size() + m_last_height){
 
-      if(deque_idx >= 0) {
-        ret_link.height = m_block_pool[deque_idx][longest_pos.vector_idx].block.getHeight() + 1;
-        ret_link.prev_hash = m_block_pool[deque_idx][longest_pos.vector_idx].block.getHash();
+      int bin_idx = longest_pos.height - m_last_height - 1;
+
+      if(longest_pos.height == m_last_height) {
+        ret_link.height = m_last_height + 1;
+        ret_link.prev_hash = m_last_hash;
+      }
+      else if(bin_idx >= 0) {
+        ret_link.height = m_block_pool[bin_idx][longest_pos.vector_idx].block.getHeight() + 1;
+        ret_link.prev_hash = m_block_pool[bin_idx][longest_pos.vector_idx].block.getHash();
       }
     }
 
@@ -288,6 +294,7 @@ private:
   BlockPosOnMap getLongestBlockPos(){
     BlockPosOnMap longest_pos;
     longest_pos.height = 0;
+    longest_pos.vector_idx = 0;
     if(!m_block_pool.empty()) {
       for (size_t i = 0; i < m_block_pool[0].size(); ++i) {
         if (m_block_pool[0][i].prev_queue_idx == 0) {

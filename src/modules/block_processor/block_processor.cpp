@@ -66,7 +66,6 @@ void BlockProcessor::periodicTask() {
       }
     }
 
-
     nth_link_type unresolved_block = m_unresolved_block_pool.getUnresolvedLowestLink();
     if (unresolved_block.height > 0) {
       OutputMsgEntry msg_req_block;
@@ -80,7 +79,7 @@ void BlockProcessor::periodicTask() {
       msg_req_block.body["mSig"] = "";
       msg_req_block.receivers = {};
 
-      CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (" << unresolved_block.height << ")";
+      CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (height=" << unresolved_block.height << ",prevHash=" << msg_req_block.body["prevHash"] << ")";
 
       m_msg_proxy.deliverOutputMessage(msg_req_block);
     }
@@ -243,14 +242,13 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   auto block_push_result = m_unresolved_block_pool.push(recv_block);
 
   if (block_push_result.height == 0) {
-    CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
+    CLOG(ERROR, "BPRO") << "Block dropped (unlinkable or duplicated)";
     return 0;
   }
 
   // if not linked initially, we cannot interpret this block because of previous missing blocks!
   if(block_push_result.linked)
     Application::app().getCustomLedgerManager().procLedgerBlock(entry.body["tx"], recv_block.getBlockIdB64());
-
 
   Application::app().getTransactionPool().removeDuplicatedTransactions(recv_block.getTxIds());
 
