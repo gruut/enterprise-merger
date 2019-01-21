@@ -56,10 +56,10 @@ public:
   bool saveBlock(const std::string &block_raw_b64, json &block_header,
                  json &block_transaction);
   nth_link_type getLatestHashAndHeight();
-  nth_link_type getNthBlockLinkInfo(size_t t_height = 0);
-  std::vector<std::string> getNthTxIdList(size_t t_height = 0);
+  nth_link_type getNthBlockLinkInfo(block_height_type t_height = 0);
+  std::vector<std::string> getNthTxIdList(block_height_type t_height = 0);
   void destroyDB();
-  storage_block_type readBlock(size_t height);
+  storage_block_type readBlock(block_height_type height);
   proof_type getProof(const std::string &txid_b64);
   bool isDuplicatedTx(const std::string &txid_b64);
   bool saveLedger(std::string &key, std::string &ledger);
@@ -69,6 +69,7 @@ public:
   bool empty();
 
 private:
+  std::string getNthBlockIdB64(block_height_type height = 0);
   bool errorOnCritical(const leveldb::Status &status);
   bool errorOn(const leveldb::Status &status);
   bool addBatch(DBType what, const std::string &key, const std::string &value);

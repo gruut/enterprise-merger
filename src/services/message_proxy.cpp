@@ -41,7 +41,8 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
     } break;
     case MessageType::MSG_REQ_CHECK:
     case MessageType::MSG_BLOCK:
-    case MessageType::MSG_REQ_BLOCK: {
+    case MessageType::MSG_REQ_BLOCK:
+    case MessageType::MSG_REQ_STATUS:{
       Application::app().getBlockProcessor().handleMessage(input_message);
     } break;
     default:

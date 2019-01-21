@@ -18,11 +18,12 @@ struct UnresolvedBlock {
 public:
   Block block;
   int prev_queue_idx{-1};
+  bool init_linked{false}; // This is for unresolved block because of previous missing blocks!
   size_t confirm_level{0};
   UnresolvedBlock() = default;
-  UnresolvedBlock(Block &block_, int prev_queue_idx_, size_t confirm_level_)
-      : block(block_), prev_queue_idx(prev_queue_idx_),
-        confirm_level(confirm_level_) {}
+  UnresolvedBlock(Block &block_, int prev_queue_idx_, size_t confirm_level_, bool init_linked_)
+      : block(block_), prev_queue_idx(prev_queue_idx_), confirm_level(confirm_level_), init_linked(init_linked_)
+      {}
 };
 
 struct BlockPosOnMap {
@@ -69,26 +70,34 @@ public:
     m_height_range_max = last_height;
   }
 
-  block_height_type push(Block &block) { // we assume this block has valid structure at least
-
-    block_height_type block_height = block.getHeight();
-
+  bool prepareBins(block_height_type t_height){
     std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
-
-    if (m_last_height >= block_height) {
-      return 0;
+    if (m_last_height >= t_height) {
+      return false;
     }
 
-    if ((Time::now_int() - m_last_time) < (block_height - m_last_height - 1) * config::BP_INTERVAL) {
-      return 0;
+    if ((Time::now_int() - m_last_time) < (t_height - m_last_height - 1) * config::BP_INTERVAL) {
+      return false;
     }
 
-
-    int bin_pos = block_height - m_last_height - 1; // e.g., 0 = 2 - 1 - 1
+    int bin_pos = t_height - m_last_height - 1; // e.g., 0 = 2 - 1 - 1
 
     if (m_block_pool.size() < bin_pos + 1) {
       m_block_pool.resize(bin_pos + 1);
     }
+  }
+
+  unblk_push_result_type push(Block &block) { // we assume this block has valid structure at least
+    unblk_push_result_type ret_val;
+    ret_val.height = 0;
+    ret_val.linked = false;
+
+    std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
+
+    block_height_type block_height = block.getHeight();
+    int bin_pos = block_height - m_last_height - 1; // e.g., 0 = 2 - 1 - 1
+    if(!prepareBins(block_height))
+      return ret_val;
 
     bool is_new = true;
     for (auto &each_block : m_block_pool[bin_pos]) {
@@ -98,53 +107,55 @@ public:
       }
     }
 
-    if (is_new) {
+    if(!is_new)
+      return ret_val;
 
-      int prev_queue_idx = -1; // no previous
-      if (bin_pos > 0) {       // if there is previous bin
-
-        size_t idx = 0;
-        for (auto &each_block : m_block_pool[bin_pos - 1]) {
-          if (each_block.block.getBlockId() == block.getPrevBlockId() &&
-              each_block.block.getHash() == block.getPrevHash()) {
-            prev_queue_idx = static_cast<int>(idx);
-            break;
-          }
-          ++idx;
+    int prev_queue_idx = -1; // no previous
+    if (bin_pos > 0) {       // if there is previous bin
+      size_t idx = 0;
+      for (auto &each_block : m_block_pool[bin_pos - 1]) {
+        if (each_block.block.getBlockId() == block.getPrevBlockId() &&
+            each_block.block.getHash() == block.getPrevHash()) {
+          prev_queue_idx = static_cast<int>(idx);
+          break;
         }
-      } else { // no previous
-        if (block.getPrevBlockId() == m_last_block_id && block.getPrevHash() == m_last_hash) {
-          prev_queue_idx = 0;
-        } else {
-          return 0; // drop block -- this is not linkable block!
+        ++idx;
+      }
+    } else { // no previous
+      if (block.getPrevBlockId() == m_last_block_id && block.getPrevHash() == m_last_hash) {
+        prev_queue_idx = 0;
+      } else {
+        return ret_val; // drop block -- this is not linkable block!
+      }
+    }
+
+    m_block_pool[bin_pos].emplace_back(block, prev_queue_idx, 0, (prev_queue_idx >= 0));
+
+    int queue_idx = m_block_pool[bin_pos].size() - 1; // last
+
+    if (bin_pos + 1 < m_block_pool.size()) { // if there is next bin
+      for (auto &each_block : m_block_pool[bin_pos + 1]) {
+        if (each_block.block.getPrevBlockId() == block.getBlockId() &&
+            each_block.block.getPrevHash() == block.getHash()) {
+          each_block.prev_queue_idx = queue_idx;
         }
       }
+    }
 
-      m_block_pool[bin_pos].emplace_back(block, prev_queue_idx, 0);
+    ret_val.height = block_height;
+    ret_val.linked = (prev_queue_idx >= 0);
 
-      int queue_idx = m_block_pool[bin_pos].size() - 1; // last
-
-      if (bin_pos + 1 < m_block_pool.size()) { // if there is next bin
-        for (auto &each_block : m_block_pool[bin_pos + 1]) {
-          if (each_block.block.getPrevBlockId() == block.getBlockId() &&
-              each_block.block.getPrevHash() == block.getHash()) {
-            each_block.prev_queue_idx = queue_idx;
-          }
-        }
-      }
-
-      if (m_height_range_max < block_height) {
-        m_height_range_max = block_height;
-      }
+    if (m_height_range_max < block_height) {
+      m_height_range_max = block_height;
     }
 
     m_push_mutex.unlock();
 
-    return block_height;
+    return ret_val;
   }
 
-  template <typename T = std::string>
-  bool getBlock(block_height_type t_height, T&& t_prev_hash_b64, T&& t_hash_b64, Block &ret_block) {
+  template <typename T = std::string, typename H = hash_t>
+  bool getBlock(block_height_type t_height, H&& t_prev_hash, H&& t_hash, Block &ret_block) {
     std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
     if(m_block_pool.empty()){
       return false;
@@ -156,8 +167,8 @@ public:
 
     int bin_pos = t_height - m_last_height;
 
-    hash_t block_hash = TypeConverter::decodeBase64(t_hash_b64);
-    hash_t prev_hash = TypeConverter::decodeBase64(t_prev_hash_b64);
+    hash_t block_hash = t_hash;
+    hash_t prev_hash = t_prev_hash;
 
     if(t_height == 0) {
       nth_link_type most_possible_link = getMostPossibleLink();
@@ -182,7 +193,7 @@ public:
     return is_some;
   }
 
-  void getResolvedBlocks(std::vector<Block> &blocks, std::vector<std::string> &drop_blocks) { // flushing out resolved blocks
+  void getResolvedBlocks(std::vector<std::pair<Block,bool>> &blocks, std::vector<std::string> &drop_blocks) { // flushing out resolved blocks
     blocks.clear();
     drop_blocks.clear();
 
@@ -277,15 +288,17 @@ private:
   BlockPosOnMap getLongestBlockPos(){
     BlockPosOnMap longest_pos;
     longest_pos.height = 0;
-    for (size_t i = 0; i < m_block_pool[0].size(); ++i) {
-      if (m_block_pool[0][i].prev_queue_idx == 0) {
+    if(!m_block_pool.empty()) {
+      for (size_t i = 0; i < m_block_pool[0].size(); ++i) {
+        if (m_block_pool[0][i].prev_queue_idx == 0) {
 
-        if (m_block_pool[0][i].block.getHeight() > longest_pos.height) { // relaxation
-          longest_pos.height = m_block_pool[0][i].block.getHeight();
-          longest_pos.vector_idx = i;
+          if (m_block_pool[0][i].block.getHeight() > longest_pos.height) { // relaxation
+            longest_pos.height = m_block_pool[0][i].block.getHeight();
+            longest_pos.vector_idx = i;
+          }
+
+          recSearchLongestLink(0, i, longest_pos); // recursive call
         }
-
-        recSearchLongestLink(0, i, longest_pos); // recursive call
       }
     }
 
@@ -311,7 +324,7 @@ private:
     }
   }
 
-  void resolveBlocksStepByStep(std::vector<Block> &resolved_blocks, std::vector<std::string> &drop_blocks) {
+  void resolveBlocksStepByStep(std::vector<std::pair<Block,bool>> &resolved_blocks, std::vector<std::string> &drop_blocks) {
 
     updateConfirmLevel();
 
@@ -319,22 +332,22 @@ private:
       return;
 
     size_t highest_confirm_level = 0;
-    int t_idx = -1;
+    int resolved_block_idx = -1;
 
     for (size_t i = 0; i < m_block_pool[0].size(); ++i) {
       if (m_block_pool[0][i].prev_queue_idx == 0 &&
           m_block_pool[0][i].confirm_level > highest_confirm_level) {
         highest_confirm_level = m_block_pool[0][i].confirm_level;
-        t_idx = static_cast<int>(i);
+        resolved_block_idx = static_cast<int>(i);
       }
     }
 
-    if (t_idx < 0 || highest_confirm_level < config::BLOCK_CONFIRM_LEVEL)
+    if (resolved_block_idx < 0 || highest_confirm_level < config::BLOCK_CONFIRM_LEVEL)
       return; // nothing to do
 
     bool is_after = false;
-    for (size_t i = 0; i < m_block_pool[1].size(); ++i) {
-      if (m_block_pool[1][i].prev_queue_idx == t_idx) {
+    for(auto &each_block : m_block_pool[1]) {
+      if (each_block.prev_queue_idx == resolved_block_idx) { // some block links this block
         is_after = true;
         break;
       }
@@ -343,11 +356,11 @@ private:
     if (!is_after)
       return;
 
-    m_last_block_id = m_block_pool[0][t_idx].block.getBlockId();
-    m_last_hash = m_block_pool[0][t_idx].block.getHash();
-    m_last_height = m_block_pool[0][t_idx].block.getHeight();
+    m_last_block_id = m_block_pool[0][resolved_block_idx].block.getBlockId();
+    m_last_hash = m_block_pool[0][resolved_block_idx].block.getHash();
+    m_last_height = m_block_pool[0][resolved_block_idx].block.getHeight();
 
-    resolved_blocks.emplace_back(m_block_pool[0][t_idx].block);
+    resolved_blocks.emplace_back(std::make_pair(m_block_pool[0][resolved_block_idx].block,m_block_pool[0][resolved_block_idx].init_linked));
 
     // clear this height list
 
