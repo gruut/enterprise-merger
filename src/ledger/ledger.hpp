@@ -33,12 +33,16 @@ protected:
 
   template <typename T = std::string> bool saveLedger(T &&key, T &&value) {
     std::string wrap_key = m_prefix + key;
-    CLOG(INFO, "LEDG") << "Save ledger (key=" << wrap_key << ")";
+    //CLOG(INFO, "LEDG") << "Save ledger (key=" << wrap_key << ")";
     m_layered_storage->saveLedger(wrap_key, value);
     return true;
   }
 
   bool saveLedger(mem_ledger_t &ledger) {
+    for(auto &record : ledger) {
+      record.key = m_prefix + record.key; // key to wrap key
+    }
+
     bool ret_val = m_layered_storage->saveLedger(ledger);
     if(ret_val)
       m_layered_storage->flushLedger();
@@ -48,7 +52,7 @@ protected:
   template <typename T = std::string, typename V = std::vector<std::string>>
   std::string readLedgerByKey(T &&key, V&& block_layer = {}) {
     std::string wrap_key = m_prefix + key;
-    CLOG(INFO, "LEDG") << "Search ledger (key=" << wrap_key << ")";
+    //CLOG(INFO, "LEDG") << "Search ledger (key=" << wrap_key << ")";
     return m_layered_storage->readLedgerByKey(wrap_key, block_layer);
   }
 

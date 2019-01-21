@@ -105,11 +105,13 @@ private:
 
     std::string block_id_b64 = block_id_b64_; // !!
 
-    if(txs_json["tx"].is_array()) {
+    if(txs_json.is_array()) {
 
       std::string key, value;
 
-      for (auto &tx_json : txs_json["tx"]) {
+      for (auto &tx_json : txs_json) {
+        if(Safe::getString(tx_json,"type") != TXTYPE_CERTIFICATES) // important !!
+          continue;
 
         auto &content = tx_json["content"];
         if (!content.is_array())

@@ -44,9 +44,9 @@ public:
 
     for(auto &each_block_id_b64 : block_layer) { // reverse_order
       bool is_found = false;
-      for (auto it_list = m_mem_ledger.begin(); it_list != m_mem_ledger.end(); ++it_list) {
-        if (it_list->key == key && each_block_id_b64 == it_list->block_id_b64) {
-          ret_val = it_list->value;
+      for(auto &record : m_mem_ledger){
+        if (record.key == key && record.block_id_b64 == each_block_id_b64) {
+          ret_val = record.value;
           is_found = true;
           break;
         }
