@@ -16,13 +16,11 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   string recv_id_b64 = Safe::getString(message_body_json, "sID");
   signer_id_type recv_id = Safe::getBytesFromB64(message_body_json, "sID");
 
-  vector<signer_id_type> receiver_list{recv_id};
-
   switch (message_type) {
   case MessageType::MSG_JOIN: {
     if (!isJoinable()) {
       CLOG(ERROR, "SMGR") << "Merger is full";
-      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_MAX_SIGNER_POOL);
+      sendErrorMessage(recv_id, ErrorMsgType::ECDH_MAX_SIGNER_POOL);
       return;
     }
 
@@ -31,7 +29,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     m_join_temp_table[recv_id_b64].reset(new JoinTemporaryData());
     m_join_temp_table[recv_id_b64]->join_lock = true;
     m_join_temp_table[recv_id_b64]->start_time =
-        static_cast<timestamp_type>(current_time);
+        static_cast<timestamp_t>(current_time);
     m_join_temp_table[recv_id_b64]->merger_nonce =
         PRNG::toString(PRNG::randomize(32));
 
@@ -40,7 +38,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     output_message.body["mID"] = TypeConverter::encodeBase64(m_my_id);
     output_message.body["time"] = to_string(current_time);
     output_message.body["mN"] = m_join_temp_table[recv_id_b64]->merger_nonce;
-    output_message.receivers = receiver_list;
+    output_message.receivers = {recv_id};
 
     m_proxy.deliverOutputMessage(output_message);
 
@@ -48,20 +46,20 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
   case MessageType::MSG_RESPONSE_1: {
     if (m_join_temp_table.find(recv_id_b64) == m_join_temp_table.end()) {
       CLOG(ERROR, "SMGR") << "Illegal Trial";
-      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_ILLEGAL_ACCESS);
+      sendErrorMessage(recv_id, ErrorMsgType::ECDH_ILLEGAL_ACCESS);
       return;
     }
 
     if (isTimeout(recv_id_b64)) {
       CLOG(ERROR, "SMGR") << "Join timeout (" << recv_id_b64 << ")";
-      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_TIMEOUT,
+      sendErrorMessage(recv_id, ErrorMsgType::ECDH_TIMEOUT,
                        "too late MSG_RESPONSE_1");
       return;
     }
 
     if (!verifySignature(recv_id, message_body_json)) {
       CLOG(ERROR, "SMGR") << "Invalid Signature";
-      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_INVALID_SIG);
+      sendErrorMessage(recv_id, ErrorMsgType::ECDH_INVALID_SIG);
       return;
     }
 
@@ -85,14 +83,14 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     if (shared_sk_bytes.empty()) {
       CLOG(ERROR, "SMGR") << "Failed to generate SSK (invalid PK)";
-      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_INVALID_PK, "");
+      sendErrorMessage(recv_id, ErrorMsgType::ECDH_INVALID_PK, "");
       return;
     }
 
     m_join_temp_table[recv_id_b64]->shared_secret_key =
         vector<uint8_t>(shared_sk_bytes.begin(), shared_sk_bytes.end());
 
-    timestamp_type current_time = static_cast<timestamp_type>(Time::now_int());
+    timestamp_t current_time = static_cast<timestamp_t>(Time::now_int());
 
     OutputMsgEntry output_message;
     output_message.type = MessageType::MSG_RESPONSE_2;
@@ -104,7 +102,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     output_message.body["sig"] = signMessage(
         m_join_temp_table[recv_id_b64]->merger_nonce,
         Safe::getString(message_body_json, "sN"), dhx, dhy, current_time);
-    output_message.receivers = receiver_list;
+    output_message.receivers = {recv_id};
 
     m_proxy.deliverOutputMessage(output_message);
 
@@ -121,7 +119,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
 
     if (isTimeout(recv_id_b64)) {
       CLOG(ERROR, "SMGR") << "Join timeout (" << recv_id_b64 << ")";
-      sendErrorMessage(receiver_list, ErrorMsgType::ECDH_TIMEOUT,
+      sendErrorMessage(recv_id, ErrorMsgType::ECDH_TIMEOUT,
                        "too late MSG_SUCCESS");
       return;
     }
@@ -134,9 +132,11 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     output_message.body["mID"] = TypeConverter::encodeBase64(m_my_id);
     output_message.body["time"] = Time::now();
     output_message.body["val"] = true;
-    output_message.receivers = receiver_list;
+    output_message.receivers = {recv_id};
 
     m_proxy.deliverOutputMessage(output_message);
+
+    CLOG(INFO, "SMGR") << "Signer joined (" << recv_id_b64 << ")";
 
   } break;
   case MessageType::MSG_LEAVE: {
@@ -177,7 +177,7 @@ bool SignerPoolManager::verifySignature(signer_id_type &signer_id,
 
 string SignerPoolManager::signMessage(string merger_nonce, string signer_nonce,
                                       string dhx, string dhy,
-                                      timestamp_type timestamp) {
+                                      timestamp_t timestamp) {
 
   auto setting = Setting::getInstance();
   string ecdsa_sk_pem = setting->getMySK();
@@ -200,12 +200,12 @@ bool SignerPoolManager::isJoinable() {
 
 bool SignerPoolManager::isTimeout(std::string &signer_id_b64) {
   // Dont't call this function unless checking m_join_temp_table
-  return (static_cast<timestamp_type>(Time::now_int()) -
+  return (static_cast<timestamp_t>(Time::now_int()) -
               m_join_temp_table[signer_id_b64]->start_time >
           config::JOIN_TIMEOUT_SEC);
 }
 
-void SignerPoolManager::sendErrorMessage(vector<signer_id_type> &receiver_list,
+void SignerPoolManager::sendErrorMessage(signer_id_type &recv_id,
                                          ErrorMsgType error_type,
                                          const std::string &info) {
 
@@ -215,7 +215,7 @@ void SignerPoolManager::sendErrorMessage(vector<signer_id_type> &receiver_list,
   output_message.body["time"] = Time::now();
   output_message.body["type"] = std::to_string(static_cast<int>(error_type));
   output_message.body["info"] = info;
-  output_message.receivers = receiver_list;
+  output_message.receivers = {recv_id};
 
   m_proxy.deliverOutputMessage(output_message);
 }

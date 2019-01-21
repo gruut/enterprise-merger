@@ -16,53 +16,32 @@ using namespace gruut::config;
 
 namespace gruut {
 
+// clang-format off
 const std::map<std::string, std::string> HASH_LOOKUP = {
-    {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-     "AAAAAAAAAAAAA==",
-     "9aX9QtFqIDAnmO9u0wmXm0MAPSMg2fDo6pgxqSdZ+0s="}, // 1
-    {"9aX9QtFqIDAnmO9u0wmXm0MAPSMg2fDo6pgxqSdZ+"
-     "0v1pf1C0WogMCeY727TCZebQwA9IyDZ8OjqmDGpJ1n7Sw==",
-     "21YRTgD91MH4XIkr81rJqJKJquyx69CpbN5ganSLXXE="}, // 2
-    {"21YRTgD91MH4XIkr81rJqJKJquyx69CpbN5ganSLXXHbVhFOAP3UwfhciSvzWsmokomq7LHr0"
-     "Kls3mBqdItdcQ==",
-     "x4AJ/fB/xWoR8SI3BlijU6qlQu1j5ExLwV/0zRBaszw="}, // 3
-    {"x4AJ/fB/xWoR8SI3BlijU6qlQu1j5ExLwV/0zRBaszzHgAn98H/"
-     "FahHxIjcGWKNTqqVC7WPkTEvBX/TNEFqzPA==",
-     "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw="}, // 4
-    {"U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjxTbZiDfy3RZaVdXurpFIWVRHLVbyRt8"
-     "la/PK4ZNSoSPA==",
-     "nv3gUqoVQp+uBbrU0LHXxk2mTQPXoYVKWIwsuEMMDTA="}, // 5
-    {"nv3gUqoVQp+uBbrU0LHXxk2mTQPXoYVKWIwsuEMMDTCe/"
-     "eBSqhVCn64FutTQsdfGTaZNA9ehhUpYjCy4QwwNMA==",
-     "2I3f7tQAqHVVlrIZQsFJfhFMMC5hGCkPkeZ3KXYEH6E="}, // 6
-    {"2I3f7tQAqHVVlrIZQsFJfhFMMC5hGCkPkeZ3KXYEH6HYjd/"
-     "u1ACodVWWshlCwUl+EUwwLmEYKQ+R5ncpdgQfoQ==",
-     "h+sN26V+NfbShmc4AqSvWXXiJQbHz0xku2vl7hFSfyw="}, // 7
-    {"h+sN26V+"
-     "NfbShmc4AqSvWXXiJQbHz0xku2vl7hFSfyyH6w3bpX419tKGZzgCpK9ZdeIlBsfPTGS7a+"
-     "XuEVJ/LA==",
-     "JoRkdv1fxUpdQzhRZ8lRRPJkP1M8yFu50Wt4L419sZM="}, // 8
-    {"JoRkdv1fxUpdQzhRZ8lRRPJkP1M8yFu50Wt4L419sZMmhGR2/V/FSl1DOFFnyVFE8mQ/"
-     "UzzIW7nRa3gvjX2xkw==",
-     "UG2GWC0lJAW4QAGHksrSvxJZ8e9apfiH4Tyy8AlPUeE="}, // 9
-    {"UG2GWC0lJAW4QAGHksrSvxJZ8e9apfiH4Tyy8AlPUeFQbYZYLSUkBbhAAYeSytK/"
-     "Elnx71ql+IfhPLLwCU9R4Q==",
-     "//8K1+ZZdy+VNMGVyBXvxAFO8eHa7UQEwGOF0RGS6Ss="}, // 10
-    {"//8K1+ZZdy+VNMGVyBXvxAFO8eHa7UQEwGOF0RGS6Sv//wrX5ll3L5U0wZXIFe/"
-     "EAU7x4drtRATAY4XREZLpKw==",
-     "bPBBJ9sFRBzYMxB6Ur6FKGiJDkMX5qAqtHaDqnWWQiA="} // 11
+    {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==", "9aX9QtFqIDAnmO9u0wmXm0MAPSMg2fDo6pgxqSdZ+0s="}, // 1
+    {"9aX9QtFqIDAnmO9u0wmXm0MAPSMg2fDo6pgxqSdZ+0v1pf1C0WogMCeY727TCZebQwA9IyDZ8OjqmDGpJ1n7Sw==", "21YRTgD91MH4XIkr81rJqJKJquyx69CpbN5ganSLXXE="}, // 2
+    {"21YRTgD91MH4XIkr81rJqJKJquyx69CpbN5ganSLXXHbVhFOAP3UwfhciSvzWsmokomq7LHr0Kls3mBqdItdcQ==", "x4AJ/fB/xWoR8SI3BlijU6qlQu1j5ExLwV/0zRBaszw="}, // 3
+    {"x4AJ/fB/xWoR8SI3BlijU6qlQu1j5ExLwV/0zRBaszzHgAn98H/FahHxIjcGWKNTqqVC7WPkTEvBX/TNEFqzPA==", "U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjw="}, // 4
+    {"U22Yg38t0WWlXV7q6RSFlURy1W8kbfJWvzyuGTUqEjxTbZiDfy3RZaVdXurpFIWVRHLVbyRt8la/PK4ZNSoSPA==", "nv3gUqoVQp+uBbrU0LHXxk2mTQPXoYVKWIwsuEMMDTA="}, // 5
+    {"nv3gUqoVQp+uBbrU0LHXxk2mTQPXoYVKWIwsuEMMDTCe/eBSqhVCn64FutTQsdfGTaZNA9ehhUpYjCy4QwwNMA==", "2I3f7tQAqHVVlrIZQsFJfhFMMC5hGCkPkeZ3KXYEH6E="}, // 6
+    {"2I3f7tQAqHVVlrIZQsFJfhFMMC5hGCkPkeZ3KXYEH6HYjd/u1ACodVWWshlCwUl+EUwwLmEYKQ+R5ncpdgQfoQ==", "h+sN26V+NfbShmc4AqSvWXXiJQbHz0xku2vl7hFSfyw="}, // 7
+    {"h+sN26V+NfbShmc4AqSvWXXiJQbHz0xku2vl7hFSfyyH6w3bpX419tKGZzgCpK9ZdeIlBsfPTGS7a+XuEVJ/LA==", "JoRkdv1fxUpdQzhRZ8lRRPJkP1M8yFu50Wt4L419sZM="}, // 8
+    {"JoRkdv1fxUpdQzhRZ8lRRPJkP1M8yFu50Wt4L419sZMmhGR2/V/FSl1DOFFnyVFE8mQ/UzzIW7nRa3gvjX2xkw==", "UG2GWC0lJAW4QAGHksrSvxJZ8e9apfiH4Tyy8AlPUeE="}, // 9
+    {"UG2GWC0lJAW4QAGHksrSvxJZ8e9apfiH4Tyy8AlPUeFQbYZYLSUkBbhAAYeSytK/Elnx71ql+IfhPLLwCU9R4Q==", "//8K1+ZZdy+VNMGVyBXvxAFO8eHa7UQEwGOF0RGS6Ss="}, // 10
+    {"//8K1+ZZdy+VNMGVyBXvxAFO8eHa7UQEwGOF0RGS6Sv//wrX5ll3L5U0wZXIFe/EAU7x4drtRATAY4XREZLpKw==", "bPBBJ9sFRBzYMxB6Ur6FKGiJDkMX5qAqtHaDqnWWQiA="} // 11
 };
+// clang-format on
 
 class MerkleTree {
 public:
   MerkleTree() { prepareLookUpTable(); }
 
-  MerkleTree(vector<sha256> &tx_digests) {
+  MerkleTree(vector<hash_t> &tx_digests) {
     prepareLookUpTable();
     generate(tx_digests);
   }
 
-  void generate(vector<sha256> &tx_digests) {
+  void generate(vector<hash_t> &tx_digests) {
     const bytes dummy_leaf(32, 0); // for SHA-256
 
     auto min_addable_size = min(MAX_MERKLE_LEAVES, tx_digests.size());
@@ -82,12 +61,12 @@ public:
   }
 
   void generate(vector<Transaction> &transactions) {
-    vector<sha256> tx_digests;
+    vector<hash_t> tx_digests;
     generateTxDigests(tx_digests, transactions);
     generate(tx_digests);
   }
 
-  vector<sha256> getMerkleTree() { return m_merkle_tree; }
+  vector<hash_t> getMerkleTree() { return m_merkle_tree; }
 
   static bool isValidSiblings(proof_type &proof,
                               const std::string &root_val_b64) {
@@ -127,10 +106,10 @@ public:
     if (siblings[0].second != my_val)
       return false;
 
-    sha256 mtree_root;
+    hash_t mtree_root;
     for (size_t i = 0; i < siblings.size(); ++i) {
       if (i == 0) {
-        mtree_root = static_cast<sha256>(siblings[i].second);
+        mtree_root = static_cast<hash_t>(siblings[i].second);
         continue;
       }
 
@@ -152,13 +131,13 @@ private:
   void prepareLookUpTable() {
     m_merkle_tree.resize(MAX_MERKLE_LEAVES * 2 - 1);
     for (auto &hash_entry : HASH_LOOKUP) {
-      sha256 hash_val =
-          static_cast<sha256>(TypeConverter::decodeBase64(hash_entry.second));
+      hash_t hash_val =
+          static_cast<hash_t>(TypeConverter::decodeBase64(hash_entry.second));
       m_hash_lookup.emplace(hash_entry.first, hash_val);
     }
   }
 
-  sha256 makeParent(sha256 left, sha256 &right) {
+  hash_t makeParent(hash_t left, hash_t &right) {
     left.insert(left.cend(), right.cbegin(), right.cend());
     std::string lookup_key = TypeConverter::encodeBase64(left);
 
@@ -170,15 +149,15 @@ private:
     }
   }
 
-  void generateTxDigests(vector<sha256> &tx_digests,
+  void generateTxDigests(vector<hash_t> &tx_digests,
                          vector<Transaction> &transactions) {
     transform(transactions.begin(), transactions.end(),
               back_inserter(tx_digests),
               [](Transaction &t) { return t.getDigest(); });
   }
 
-  vector<sha256> m_merkle_tree;
-  std::map<std::string, sha256> m_hash_lookup;
+  vector<hash_t> m_merkle_tree;
+  std::map<std::string, hash_t> m_hash_lookup;
 };
 } // namespace gruut
 

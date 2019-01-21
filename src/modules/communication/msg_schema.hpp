@@ -80,6 +80,12 @@ const json SCHEMA_REQ_BLOCK = R"({
     "hgt": {
       "type": "string"
     },
+    "prevHash": {
+      "type": "string"
+    },
+    "hash": {
+      "type": "string"
+    },
     "mSig": {
       "type": "string"
     }
@@ -369,10 +375,60 @@ const json SCHEMA_REQ_CHECK = R"({
     }
   },
   "required": [
-  "sender",
-  "time",
-  "dID",
-  "txid"
+    "sender",
+    "time",
+    "dID",
+    "txid"
+  ]
+})"_json;
+
+const json SCHEMA_REQ_STATUS = R"({
+  "title": "Request Status",
+  "type": "object",
+  "properties": {
+    "mID": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "mID",
+    "time"
+  ]
+})"_json;
+
+const json SCHEMA_RES_STATUS = R"({
+  "title": "Response Status",
+  "type": "object",
+  "properties": {
+    "mID": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    },
+    "mCert": {
+      "type": "string"
+    },
+    "hgt": {
+      "type": "string"
+    },
+    "hash": {
+      "type": "string"
+    },
+    "mSig": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "mID",
+    "time",
+    "mCert",
+    "hgt",
+    "hash",
+    "mSig"
   ]
 })"_json;
 
@@ -389,7 +445,10 @@ const std::map<MessageType, json> MSG_SCHEMA_MAP = {
     {MessageType::MSG_SSIG, SCHEMA_SSIG},
     {MessageType::MSG_ERROR, SCHEMA_ERROR},
     {MessageType::MSG_TX, SCHEMA_TX},
-    {MessageType::MSG_REQ_CHECK, SCHEMA_REQ_CHECK}};
+    {MessageType::MSG_REQ_CHECK, SCHEMA_REQ_CHECK},
+    {MessageType::MSG_REQ_STATUS, SCHEMA_REQ_STATUS},
+    {MessageType::MSG_RES_STATUS, SCHEMA_RES_STATUS}
+};
 
 class MessageSchema {
 public:

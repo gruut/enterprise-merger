@@ -170,7 +170,7 @@ void BpScheduler::reschedule() {
 
 void BpScheduler::lockStatusloop() {
 
-  timestamp_type current_time = Time::now_int();
+  timestamp_t current_time = Time::now_int();
 
   size_t current_slot = current_time / config::BP_INTERVAL;
   time_t next_slot_begin = (current_slot + 1) * config::BP_INTERVAL;
@@ -232,7 +232,7 @@ void BpScheduler::postSendPingJob() {
   auto &io_service = Application::app().getIoService();
 
   io_service.post([this]() {
-    timestamp_type current_time = Time::now_int();
+    timestamp_t current_time = Time::now_int();
     size_t current_slot = current_time / config::BP_INTERVAL;
 
     auto signer_pool = SignerPool::getInstance();
@@ -299,7 +299,7 @@ void BpScheduler::updateRecvStatus(const std::string &id_b64, size_t timeslot,
 void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
   std::string merger_id_b64 = Safe::getString(msg.body, "mID");
-  timestamp_type merger_time = Safe::getTime(msg.body, "time");
+  timestamp_t merger_time = Safe::getTime(msg.body, "time");
   size_t timeslot = merger_time / config::BP_INTERVAL;
 
   if (abs((int64_t)merger_time - (int64_t)Time::now_int()) >

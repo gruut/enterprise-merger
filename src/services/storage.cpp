@@ -318,22 +318,23 @@ bool Storage::errorOn(const leveldb::Status &status) {
   return false;
 }
 
-std::pair<std::string, size_t> Storage::getLatestHashAndHeight() {
-  auto block_id = getValueByKey(DBType::BLOCK_LATEST, "bID");
-  if (block_id.empty())
-    return make_pair("", 0);
+nth_link_type Storage::getLatestHashAndHeight() {
+  nth_link_type ret_link_info;
 
-  auto hash_b64 = TypeConverter::encodeBase64(
-      getValueByKey(DBType::BLOCK_RAW, block_id + "_hash"));
-  auto height = getValueByKey(DBType::BLOCK_LATEST, "hgt");
-  if (height.empty())
-    return std::make_pair(hash_b64, 0);
-  else
-    return std::make_pair(hash_b64, static_cast<size_t>(stoll(height)));
+  auto block_id = getValueByKey(DBType::BLOCK_LATEST, "bID");
+  if (block_id.empty()) {
+    ret_link_info.hash = TypeConverter::decodeBase64(config::GENESIS_BLOCK_PREV_HASH_B64);
+    ret_link_info.height = 0;
+  } else {
+    ret_link_info.hash = TypeConverter::stringToBytes(getValueByKey(DBType::BLOCK_RAW, block_id + "_hash"));
+    ret_link_info.height = Safe::getSize(getValueByKey(DBType::BLOCK_LATEST, "hgt"));
+  }
+
+  return ret_link_info;
 }
 
-nth_block_link_type Storage::getNthBlockLinkInfo(size_t t_height) {
-  nth_block_link_type ret_link_info;
+nth_link_type Storage::getNthBlockLinkInfo(size_t t_height) {
+  nth_link_type ret_link_info;
   ret_link_info.height = t_height;
 
   std::string t_block_id_b64 =
@@ -342,21 +343,16 @@ nth_block_link_type Storage::getNthBlockLinkInfo(size_t t_height) {
           : getValueByKey(DBType::BLOCK_HEIGHT, to_string(t_height));
 
   if (!t_block_id_b64.empty()) {
-    ret_link_info.id_b64 = t_block_id_b64;
-    ret_link_info.hash_b64 = TypeConverter::encodeBase64(
-        getValueByKey(DBType::BLOCK_RAW, t_block_id_b64 + "_hash"));
-    ret_link_info.prev_id_b64 =
-        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevbID");
-    ret_link_info.prev_hash_b64 =
-        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevH");
-    ret_link_info.height = Safe::getSize(
-        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_hgt"));
-    ret_link_info.time = Safe::getTime(
-        getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_time"));
+    ret_link_info.id = TypeConverter::decodeBase64(t_block_id_b64);
+    ret_link_info.hash = TypeConverter::stringToBytes(getValueByKey(DBType::BLOCK_RAW, t_block_id_b64 + "_hash"));
+    ret_link_info.prev_id = TypeConverter::decodeBase64(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevbID"));
+    ret_link_info.prev_hash = TypeConverter::stringToBytes(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_prevH"));
+    ret_link_info.height = Safe::getSize(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_hgt"));
+    ret_link_info.time = Safe::getTime(getValueByKey(DBType::BLOCK_HEADER, t_block_id_b64 + "_time"));
   } else {
     ret_link_info.height = 0;
-    ret_link_info.hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
-    ret_link_info.id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
+    ret_link_info.hash = TypeConverter::decodeBase64(config::GENESIS_BLOCK_PREV_HASH_B64);
+    ret_link_info.id = TypeConverter::decodeBase64(config::GENESIS_BLOCK_PREV_ID_B64);
     ret_link_info.time = 0;
   }
 
@@ -397,17 +393,18 @@ void Storage::destroyDB() {
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_LEDGER);
 }
 
-read_block_type Storage::readBlock(size_t height) {
-  read_block_type result;
+storage_block_type Storage::readBlock(size_t height) {
+  storage_block_type result;
   std::string block_id_b64 =
       (height == 0) ? getValueByKey(DBType::BLOCK_LATEST, "bID")
                     : getValueByKey(DBType::BLOCK_HEIGHT, to_string(height));
   if (block_id_b64.empty())
     result.height = 0;
   else {
-    if (height == 0)
+    if (height == 0) {
       result.height = static_cast<size_t>(
           stoll(getValueByKey(DBType::BLOCK_LATEST, "hgt")));
+    }
 
     result.block_raw = TypeConverter::stringToBytes(
         getValueByKey(DBType::BLOCK_RAW, block_id_b64));
@@ -428,10 +425,20 @@ read_block_type Storage::readBlock(size_t height) {
       }
     }
 
+    nth_link_type link_info = getNthBlockLinkInfo(result.height);
+    result.prev_id_b64 = TypeConverter::encodeBase64(link_info.prev_id);
+    result.prev_hash_b64 = TypeConverter::encodeBase64(link_info.prev_hash);
+    result.hash_b64 = TypeConverter::encodeBase64(link_info.hash);
+    result.id_b64 = TypeConverter::encodeBase64(link_info.id);
+    result.time = link_info.time;
     result.txs = txs_json;
   }
 
   return result;
+}
+
+bool Storage::empty(){
+  return getValueByKey(DBType::BLOCK_LATEST, "bID").empty();
 }
 
 proof_type Storage::getProof(const std::string &txid_b64) {
@@ -450,7 +457,7 @@ proof_type Storage::getProof(const std::string &txid_b64) {
 
     if (!mtree_json_str.empty()) {
       json mtree_json = Safe::parseJson(mtree_json_str);
-      std::vector<sha256> mtree_digests(mtree_json.size());
+      std::vector<hash_t> mtree_digests(mtree_json.size());
 
       for (size_t i = 0; i < mtree_json.size(); ++i) {
         mtree_digests[i] =
@@ -459,7 +466,7 @@ proof_type Storage::getProof(const std::string &txid_b64) {
 
       MerkleTree mtree_generator(mtree_digests);
 
-      std::vector<sha256> mtree = mtree_generator.getMerkleTree();
+      std::vector<hash_t> mtree = mtree_generator.getMerkleTree();
 
       int merkle_tree_height =
           (int)log2(config::MAX_MERKLE_LEAVES); // log2(4096)=12
@@ -516,7 +523,7 @@ bool Storage::saveLedger(std::string &key, std::string &ledger) {
   return true;
 }
 
-std::string Storage::readLedger(std::string &key) {
+std::string Storage::readLedgerByKey(std::string &key) {
   return getValueByKey(DBType::LEDGER, key);
 }
 

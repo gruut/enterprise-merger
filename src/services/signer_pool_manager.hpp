@@ -3,7 +3,6 @@
 
 #include "nlohmann/json.hpp"
 
-#include "../chain/join_temporary_data.hpp"
 #include "../chain/signer.hpp"
 #include "../chain/types.hpp"
 #include "../config/config.hpp"
@@ -33,6 +32,14 @@
 using namespace std;
 
 namespace gruut {
+struct JoinTemporaryData {
+  string merger_nonce;
+  string signer_cert;
+  vector<uint8_t> shared_secret_key;
+  timestamp_t start_time;
+  atomic<bool> join_lock;
+};
+
 class SignerPoolManager {
 public:
   SignerPoolManager();
@@ -41,8 +48,7 @@ public:
 private:
   bool verifySignature(signer_id_type &signer_id, json &message_body_json);
   string signMessage(string, string, string, string, uint64_t);
-  void sendErrorMessage(vector<signer_id_type> &receiver_list,
-                        ErrorMsgType error_type, const std::string &info = "");
+  void sendErrorMessage(signer_id_type &recv_id, ErrorMsgType error_type, const std::string &info = "");
   bool isJoinable();
 
   bool isTimeout(std::string &signer_id_b64);

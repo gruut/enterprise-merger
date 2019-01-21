@@ -14,6 +14,7 @@
 #include "../../services/output_queue.hpp"
 #include "../../services/setting.hpp"
 #include "../../services/storage.hpp"
+#include "../../services/layered_storage.hpp"
 
 #include "../module.hpp"
 #include "unresolved_block_pool.hpp"
@@ -33,6 +34,7 @@ class BlockProcessor : public Module {
 private:
   MessageProxy m_msg_proxy;
   Storage *m_storage;
+  LayeredStorage *m_layered_storage;
   merger_id_type m_my_id;
   UnresolvedBlockPool m_unresolved_block_pool;
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
@@ -44,16 +46,18 @@ public:
 
   void start() override;
 
-  bool handleMessage(InputMsgEntry &entry);
+  void handleMessage(InputMsgEntry &entry);
+  block_height_type handleMsgBlock(InputMsgEntry &entry);
 
-  nth_block_link_type getMostPossibleLink();
+  nth_link_type getMostPossibleLink();
+  std::vector<std::string> getMostPossibleBlockLayer();
   bool hasUnresolvedBlocks();
 
 private:
   void periodicTask();
-  bool handleMsgReqBlock(InputMsgEntry &entry);
-  bool handleMsgBlock(InputMsgEntry &entry);
-  bool handleMsgReqCheck(InputMsgEntry &entry);
+  void handleMsgReqBlock(InputMsgEntry &entry);
+  void handleMsgReqCheck(InputMsgEntry &entry);
+  void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
 };
 } // namespace gruut
 

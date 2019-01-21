@@ -112,7 +112,7 @@ void MergerClient::checkHttpConnection() {
   }));
 
   m_http_check_timer->expires_from_now(
-      boost::posix_time::seconds(config::HTTP_CHECK_PERIOD));
+      boost::posix_time::seconds(config::HTTP_CHECK_INTERVAL));
   m_http_check_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       CLOG(INFO, "MCLN") << "HttpConnCheckTimer ABORTED";
@@ -138,7 +138,7 @@ void MergerClient::checkRpcConnection() {
   }));
 
   m_rpc_check_timer->expires_from_now(
-      boost::posix_time::seconds(config::RPC_CHECK_PERIOD));
+      boost::posix_time::seconds(config::RPC_CHECK_INTERVAL));
   m_rpc_check_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
       CLOG(INFO, "MCLN") << "RpcConnCheckTimer ABORTED";

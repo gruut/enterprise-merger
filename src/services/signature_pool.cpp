@@ -35,7 +35,7 @@ void SignaturePool::handleMessage(json &msg_body_json) {
 }
 
 void SignaturePool::setupSigPool(block_height_type chain_height,
-                                 timestamp_type block_time, sha256 &tx_root) {
+                                 timestamp_t block_time, hash_t &tx_root) {
   m_height = chain_height;
   m_block_time = block_time;
   m_tx_root = tx_root;

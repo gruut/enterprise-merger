@@ -29,41 +29,35 @@
 
 namespace gruut {
 
-struct RcvBlockMapItem {
-  std::string merger_id_b64;
-  Block block;
-  int num_retry{0};
-  timestamp_type req_time;
-  BlockState state{BlockState::RECEIVED};
+struct OtherStatusData {
+  std::string hash_b64;
+  block_height_type height;
+  OtherStatusData(std::string hash_b64_, block_height_type height_) : hash_b64(hash_b64_), height(height_) {}
 };
 
 class BlockSynchronizer {
 private:
   InputQueueAlt *m_inputQueue;
-  Storage *m_storage;
   MessageProxy m_msg_proxy;
-
-  std::unique_ptr<boost::asio::deadline_timer> m_msg_fetching_timer;
-  std::unique_ptr<boost::asio::deadline_timer> m_sync_ctrl_timer;
-  std::unique_ptr<boost::asio::io_service::strand> m_block_sync_strand;
-
-  size_t m_my_last_height;
-  std::string m_my_last_blk_hash_b64;
-  std::string m_my_last_blk_id_b64;
   merger_id_type m_my_id;
-  size_t m_first_recv_block_height{0};
 
-  std::function<void(ExitCode)> m_finish_callback;
-  std::map<size_t, RcvBlockMapItem> m_recv_block_list;
-  std::mutex m_block_list_mutex;
+  std::unique_ptr<boost::asio::deadline_timer> m_msg_fetching_loop_timer;
+  std::unique_ptr<boost::asio::deadline_timer> m_sync_ctrl_loop_timer;
+  std::unique_ptr<boost::asio::deadline_timer> m_sync_begin_timer;
 
-  timestamp_type m_last_task_time{0};
+  std::function<void(ExitCode)> m_sync_finish_callback;
+  std::once_flag m_sync_finish_call_flag;
+  ExitCode m_sync_finish_code;
 
-  std::once_flag m_end_sync_call_flag;
+  std::atomic<bool> m_is_sync_begin {false};
+  std::atomic<bool> m_is_sync_done {false};
 
-  std::atomic<bool> m_sync_alone{true};
-  std::atomic<bool> m_sync_done{false};
-  std::atomic<bool> m_sync_fail{false};
+  nth_link_type m_link_from;
+  std::vector<bool> m_sync_flags;
+
+  std::map<std::string, OtherStatusData> m_chain_status;
+
+  std::mutex m_chain_mutex;
 
 public:
   BlockSynchronizer();
@@ -71,18 +65,16 @@ public:
   void startBlockSync(std::function<void(ExitCode)> callback);
 
 private:
-  void reserveBlockList(size_t begin, size_t end);
-  bool pushMsgToBlockList(InputMsgEntry &msg_block);
-  bool sendBlockRequest(size_t height);
+  void collectingStatus(InputMsgEntry &entry);
+  void sendRequestLastBlock();
+  void sendRequestBlock(size_t height, const std::string &block_hash_b64, const merger_id_type &t_merger);
+  void sendRequestStatus();
   void sendErrorToSigner(InputMsgEntry &input_msg_entry);
-  bool validateBlock(size_t height);
-  void saveBlock(size_t height);
-  void syncFinish();
+  void syncFinish(ExitCode exit_code);
   void blockSyncControl();
   void messageFetch();
   bool checkMsgFromOtherMerger(MessageType msg_type);
   bool checkMsgFromSigner(MessageType msg_type);
-  void updateTaskTime();
 };
 } // namespace gruut
 

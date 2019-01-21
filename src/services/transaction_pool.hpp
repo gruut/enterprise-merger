@@ -15,12 +15,12 @@ class TransactionPool {
 public:
   TransactionPool();
   bool push(Transaction &transaction);
-  bool isDuplicated(transaction_id_type &&tx_id);
-  bool isDuplicated(transaction_id_type &tx_id);
+  bool isDuplicated(tx_id_type &&tx_id);
+  bool isDuplicated(tx_id_type &tx_id);
   bool pop(Transaction &transaction);
   size_t size();
-  void removeDuplicatedTransactions(std::vector<transaction_id_type> &tx_ids);
-  void removeDuplicatedTransactions(std::vector<transaction_id_type> &&tx_ids);
+  void removeDuplicatedTransactions(std::vector<tx_id_type> &tx_ids);
+  void removeDuplicatedTransactions(std::vector<tx_id_type> &&tx_ids);
   std::vector<Transaction> fetchLastN(size_t n);
   void clear();
 
