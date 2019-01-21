@@ -12,6 +12,7 @@
 
 #include "boost/date_time/local_time/local_time.hpp"
 #include <algorithm>
+#include <atomic>
 #include <boost/asio.hpp>
 #include <chrono>
 #include <memory>
@@ -36,6 +37,7 @@ public:
   BpScheduler();
   void handleMessage(InputMsgEntry &msg);
   void start() override;
+  void setWelcome(bool st);
 
 private:
   void sendPingloop();
@@ -58,6 +60,7 @@ private:
   size_t m_up_slot{0};
   BpStatus m_current_status{BpStatus::IN_BOOT_WAIT};
   bool m_is_lock{true};
+  std::atomic<bool> m_welcome{true};
   std::vector<BpRecvStatusInfo> m_recv_status;
 
   std::mutex m_recv_status_mutex;

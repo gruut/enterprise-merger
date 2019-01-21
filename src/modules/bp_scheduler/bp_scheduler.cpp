@@ -31,6 +31,10 @@ void BpScheduler::start() {
   sendPingloop();
 }
 
+void BpScheduler::setWelcome(bool st) {
+  m_welcome = st;
+}
+
 BpStatus BpScheduler::stringToStatus(const std::string &str) {
   BpStatus ret_status = BpStatus::UNKNOWN;
   for (auto &item : STATUS_STRING) {
@@ -214,7 +218,8 @@ void BpScheduler::sendPingloop() {
     if (ec == boost::asio::error::operation_aborted) {
       CLOG(INFO, "BPSC") << "PingTimer ABORTED";
     } else if (ec.value() == 0) {
-      postSendPingJob();
+      if(m_welcome)
+        postSendPingJob();
       sendPingloop();
     } else {
       CLOG(ERROR, "BPSC") << ec.message();
@@ -316,6 +321,8 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
   case MessageType::MSG_UP: {
     MessageProxy msg_proxy;
     OutputMsgEntry output_message;
+    std::vector<merger_id_type> receivers{TypeConverter::decodeBase64(merger_id_b64)};
+    output_message.receivers = receivers;
     output_message.type = MessageType::MSG_WELCOME;
     output_message.body["mID"] = m_my_mid_b64;
     output_message.body["time"] = Time::now();
@@ -343,8 +350,10 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
   case MessageType::MSG_WELCOME: {
     bool val = Safe::getBoolean(msg.body, "val");
-    if (val)
-      break;
+    if (val){
+      CLOG(INFO, "BPSC") << "WELCOME! From(" << merger_id_b64 << ")";
+      m_welcome = true;
+    }
 
     // TODO: Merger network에 등록되지 못 할시 처리 필요.
   } break;

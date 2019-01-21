@@ -166,14 +166,6 @@ bool BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   m_msg_proxy.deliverOutputMessage(msg_block);
 
-  OutputMsgEntry msg_block_hgt;
-  msg_block_hgt.type = MessageType::MSG_BLOCK_HGT;
-  msg_block_hgt.body["mID"] = msg_block.body["mID"];
-  msg_block_hgt.body["time"] = Time::now();
-  msg_block_hgt.body["hgt"] = to_string(saved_block.height);
-
-  m_msg_proxy.deliverOutputMessage(msg_block_hgt);
-
   return true;
 }
 
@@ -196,6 +188,17 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   Application::app().getTransactionPool().removeDuplicatedTransactions(
       recv_block.getTxIds());
+
+  OutputMsgEntry msg_block_hgt;
+  msg_block_hgt.type = MessageType::MSG_BLOCK_HGT; // MSG_BLOCK_HGT = 0xB6
+  msg_block_hgt.body["mID"] = Safe::getString(entry.body, "mID");
+  msg_block_hgt.body["time"] = Time::now();
+  msg_block_hgt.body["hgt"] = to_string(recv_block.getHeight());
+  msg_block_hgt.body["bID"] = TypeConverter::encodeBase64(recv_block.getBlockId());
+  msg_block_hgt.body["prevbID"] = recv_block.getPrevBlockIdB64();
+  msg_block_hgt.body["prevHash"] = recv_block.getPrevHashB64();
+
+  m_msg_proxy.deliverOutputMessage(msg_block_hgt);
 
   return true;
 }

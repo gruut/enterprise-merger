@@ -75,6 +75,9 @@ public:
     msg_block_hgt.body["mID"] = msg_block_msg.body["mID"];
     msg_block_hgt.body["time"] = Time::now();
     msg_block_hgt.body["hgt"] = to_string(new_block.getHeight());
+    msg_block_hgt.body["bID"] = TypeConverter::encodeBase64(new_block.getBlockId());
+    msg_block_hgt.body["prevbID"] = basic_info.prev_id_b64;
+    msg_block_hgt.body["prevHash"] = basic_info.prev_hash_b64;
 
     InputMsgEntry msg_block_msg_input;
     msg_block_msg_input.type = msg_block_msg.type;

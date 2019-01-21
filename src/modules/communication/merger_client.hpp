@@ -60,6 +60,8 @@ private:
   bool checkSignerMsgType(MessageType msg_tpye);
   bool checkSEMsgType(MessageType msg_type);
   bool checkTrackerMsgType(MessageType msg_type);
+
+  Status sendHealthCheck(MergerInfo &merger_info);
 };
 } // namespace gruut
 

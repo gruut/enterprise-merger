@@ -46,9 +46,14 @@ void MergerClient::accessToTracker() {
 
   if (response_msg.find("merger") != response_msg.end() &&
       response_msg.find("se") != response_msg.end()) {
+
     for (auto &merger : response_msg["merger"]) {
       MergerInfo merger_info;
       string m_id_b64 = Safe::getString(merger, "mID");
+
+      if(m_id_b64 == request_msg["mID"])
+        continue;
+
       merger_info.id = TypeConverter::decodeBase64(m_id_b64);
       merger_info.address = Safe::getString(merger, "ip");
       merger_info.port = Safe::getString(merger, "port");
@@ -59,6 +64,7 @@ void MergerClient::accessToTracker() {
       m_conn_manager->setMergerBlockHgt(merger_info.id, block_height);
       m_conn_manager->setMergerInfo(merger_info);
     }
+
     for (auto &se : response_msg["se"]) {
       ServiceEndpointInfo se_info;
       string se_id_b64 = Safe::getString(se, "seID");
@@ -68,6 +74,16 @@ void MergerClient::accessToTracker() {
       se_info.cert = Safe::getString(se, "seCert");
 
       m_conn_manager->setSeInfo(se_info);
+    }
+  }
+
+  auto merger_list = m_conn_manager->getAllMergerInfo();
+  for(auto &merger_info : merger_list){
+    Status st = sendHealthCheck(merger_info);
+    if(st.ok()){
+      auto &bp_scheduler = Application::app().getBpScheduler();
+      bp_scheduler.setWelcome(false);
+      return;
     }
   }
 }
@@ -116,19 +132,7 @@ void MergerClient::checkRpcConnection() {
     auto merger_list = m_conn_manager->getAllMergerInfo();
     for (auto &merger_info : merger_list) {
 
-      HealthCheckRequest request;
-      request.set_service("healthy_service");
-      HealthCheckResponse response;
-      ClientContext context;
-
-      std::shared_ptr<ChannelCredentials> credential =
-          InsecureChannelCredentials();
-      std::shared_ptr<Channel> channel = CreateChannel(
-          merger_info.address + ":" + merger_info.port, credential);
-      std::unique_ptr<Health::Stub> hc_stub =
-          health::v1::Health::NewStub(channel);
-
-      Status st = hc_stub->Check(&context, request, &response);
+      Status st = sendHealthCheck(merger_info);
       m_conn_manager->setMergerStatus(merger_info.id, st.ok());
     }
   }));
@@ -174,7 +178,7 @@ void MergerClient::sendMessage(MessageType msg_type,
 void MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
   std::string send_msg = output_msg.body.dump();
   // TODO : setting에서 tracker 정보 받아 올 수 있도록 수정 필요.
-  std::string address = "127.0.0.1:80/block_height";
+  std::string address = "ec2-13-125-221-27.ap-northeast-2.compute.amazonaws.com/src/ChainInfo.php";
   HttpClient http_client(address);
   http_client.post(send_msg);
 }
@@ -280,10 +284,27 @@ void MergerClient::sendToSigner(MessageType msg_type,
   }
 }
 
+Status MergerClient::sendHealthCheck(MergerInfo &merger_info){
+  HealthCheckRequest request;
+  request.set_service("healthy_service");
+  HealthCheckResponse response;
+  ClientContext context;
+
+  std::shared_ptr<ChannelCredentials> credential =
+	  InsecureChannelCredentials();
+  std::shared_ptr<Channel> channel = CreateChannel(
+	  merger_info.address + ":" + merger_info.port, credential);
+  std::unique_ptr<Health::Stub> hc_stub =
+	  health::v1::Health::NewStub(channel);
+
+  Status st = hc_stub->Check(&context, request, &response);
+  return st;
+}
+
 bool MergerClient::checkMergerMsgType(MessageType msg_type) {
   return (
       msg_type == MessageType::MSG_UP || msg_type == MessageType::MSG_PING ||
-      msg_type == MessageType::MSG_REQ_BLOCK ||
+      msg_type == MessageType::MSG_REQ_BLOCK || msg_type == MessageType::MSG_WELCOME ||
       msg_type == MessageType::MSG_BLOCK || msg_type == MessageType::MSG_ERROR);
 }
 
