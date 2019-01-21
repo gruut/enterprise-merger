@@ -27,8 +27,8 @@ public:
 
   void push(Signature &signature);
 
-  void setupSigPool(block_height_type chain_height, timestamp_type block_time,
-                    sha256 &tx_root);
+  void setupSigPool(block_height_type chain_height, timestamp_t block_time,
+                    hash_t &tx_root);
 
   bool empty();
 
@@ -51,10 +51,10 @@ private:
   std::list<Signature> m_signature_pool;
 
   merger_id_type m_my_id;
-  local_chain_id_type m_my_chain_id;
+  localchain_id_type m_my_chain_id;
   block_height_type m_height;
-  sha256 m_tx_root;
-  timestamp_type m_block_time;
+  hash_t m_tx_root;
+  timestamp_t m_block_time;
   CertificateLedger m_cert_ledger;
 
   std::mutex m_mutex;

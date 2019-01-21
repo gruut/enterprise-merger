@@ -39,6 +39,8 @@ enum class MessageType : uint8_t {
   MSG_UP = 0x30,
   MSG_PING = 0x31,
   MSG_REQ_BLOCK = 0x32,
+  MSG_REQ_STATUS = 0x33,
+  MSG_RES_STATUS = 0x34,
   MSG_JOIN = 0x54,
   MSG_CHALLENGE = 0x55,
   MSG_RESPONSE_1 = 0x56,
@@ -76,7 +78,8 @@ enum class ErrorMsgType : int {
   ECDH_INVALID_SIG = 24,
   ECDH_INVALID_PK = 25,
   TIME_SYNC = 61,
-  BSYNC_NO_BLOCK = 88
+  BSYNC_NO_BLOCK = 88,
+  NO_SUCH_BLOCK = 89
 };
 
 enum class CompressionAlgorithmType : uint8_t {
@@ -113,51 +116,53 @@ enum class ExitCode {
 
 using json = nlohmann::json;
 using string = std::string;
-
-using sha256 = std::vector<uint8_t>;
 using bytes = std::vector<uint8_t>;
-using timestamp_type = uint64_t;
-using block_height_type = size_t;
+
+using hash_t = std::vector<uint8_t>;
+using timestamp_t = uint64_t;
 
 constexpr auto TRANSACTION_ID_TYPE_SIZE = 32;
-using transaction_id_type = std::array<uint8_t, TRANSACTION_ID_TYPE_SIZE>;
-
 constexpr auto CHAIN_ID_TYPE_SIZE = 8;
-using local_chain_id_type = std::array<uint8_t, CHAIN_ID_TYPE_SIZE>;
+using tx_id_type = std::array<uint8_t, TRANSACTION_ID_TYPE_SIZE>;
+using localchain_id_type = std::array<uint8_t, CHAIN_ID_TYPE_SIZE>;
 
-using transaction_root_type = sha256;
-using block_header_hash_type = sha256;
-using block_id_type = sha256;
-using signature_type = bytes;
+using block_height_type = size_t;
+using block_header_hash_type = hash_t;
+using block_id_type = hash_t;
 using block_version_type = uint32_t;
+using transaction_root_type = hash_t;
+using signature_type = bytes;
 using header_length_type = uint32_t;
-
 using content_type = std::string;
-
 using hmac_key_type = Botan::secure_vector<uint8_t>;
 
-using proof_type = struct proof_t {
+using proof_type = struct _proof_type {
   std::string block_id_b64;
   std::vector<std::pair<bool, std::string>> siblings;
 };
 
-using read_block_type = struct read_block_t {
+using storage_block_type = struct _storage_block_type {
+  std::string id_b64;
+  std::string hash_b64;
+  std::string prev_id_b64;
+  std::string prev_hash_b64;
+  timestamp_t time;
   size_t height;
   bytes block_raw;
   json txs;
 };
 
-using nth_block_link_type = struct nth_block_link_t {
-  std::string id_b64;
-  std::string hash_b64;
-  std::string prev_id_b64;
-  std::string prev_hash_b64;
+using nth_link_type = struct _nth_link_type {
+  block_id_type id;
+  block_id_type prev_id;
+  hash_t hash;
+  hash_t prev_hash;
   size_t height;
-  timestamp_type time;
+  timestamp_t time;
 };
 
-// 아래는 모두 동일한 타입, 문맥에 맞춰서 쓸 것
-// 구별이 안되거나 혼용되어 있으면, id_type을 쓸 것
+// All of the blows are the same type. Use them according to the context.
+// If you cannot distinguish it, just use id_type
 using requestor_id_type = bytes;
 using merger_id_type = bytes;
 using signer_id_type = bytes;

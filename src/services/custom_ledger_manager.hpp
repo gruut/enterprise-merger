@@ -1,11 +1,17 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_LEDGER_VALIDATOR_HPP
 #define GRUUT_ENTERPRISE_MERGER_LEDGER_VALIDATOR_HPP
 
-#include "../chain/types.hpp"
-#include "../ledger/ledger.hpp"
-#include "../utils/safe.hpp"
 #include "easy_logging.hpp"
 #include "nlohmann/json.hpp"
+
+#include "../ledger/digest_ledger.hpp"
+#include "../ledger/sms_ledger.hpp"
+#include "../ledger/digest_ledger.hpp"
+
+#include "../chain/mem_ledger.hpp"
+#include "../chain/types.hpp"
+#include "../utils/safe.hpp"
+
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -32,7 +38,7 @@ public:
     registerLedger(m_sms_ledger);
   }
 
-  bool isValidTransaction(Transaction &tx) {
+  bool isValidTransaction(const Transaction &tx) {
     if (m_ledgers.empty())
       return false;
 
@@ -44,9 +50,10 @@ public:
     return is_valid;
   }
 
-  void procLedgerBlock(json &block_json) {
+  void procLedgerBlock(const json &txs_json, const std::string &block_id_b64) {
+    CLOG(INFO, "CLMA") << "called procLedgerBlock()";
     for (auto &ledger : m_ledgers) {
-      ledger->procBlock(block_json);
+      ledger->procBlock(txs_json, block_id_b64);
     }
   }
 

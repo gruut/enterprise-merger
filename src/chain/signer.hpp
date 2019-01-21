@@ -11,7 +11,7 @@ struct Signer {
   signer_id_type user_id;
   std::string pk_cert;
   hmac_key_type hmac_key;
-  timestamp_type last_update{0};
+  timestamp_t last_update{0};
   SignerStatus status{SignerStatus::UNKNOWN};
 };
 

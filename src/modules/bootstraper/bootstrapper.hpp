@@ -28,7 +28,7 @@ class Bootstrapper : public Module {
 private:
   BlockSynchronizer m_block_synchronizer;
   merger_id_type m_my_id;
-  local_chain_id_type m_my_localchain_id;
+  localchain_id_type m_my_localchain_id;
   MessageProxy m_msg_proxy;
   std::shared_ptr<Communication> m_communication;
 

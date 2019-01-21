@@ -55,17 +55,18 @@ public:
   bool saveBlock(bytes &block_raw, json &block_header, json &block_transaction);
   bool saveBlock(const std::string &block_raw_b64, json &block_header,
                  json &block_transaction);
-  std::pair<std::string, size_t> getLatestHashAndHeight();
-  nth_block_link_type getNthBlockLinkInfo(size_t t_height = 0);
+  nth_link_type getLatestHashAndHeight();
+  nth_link_type getNthBlockLinkInfo(size_t t_height = 0);
   std::vector<std::string> getNthTxIdList(size_t t_height = 0);
   void destroyDB();
-  read_block_type readBlock(size_t height);
+  storage_block_type readBlock(size_t height);
   proof_type getProof(const std::string &txid_b64);
   bool isDuplicatedTx(const std::string &txid_b64);
   bool saveLedger(std::string &key, std::string &ledger);
-  std::string readLedger(std::string &key);
+  std::string readLedgerByKey(std::string &key);
   void clearLedger();
   void flushLedger();
+  bool empty();
 
 private:
   bool errorOnCritical(const leveldb::Status &status);

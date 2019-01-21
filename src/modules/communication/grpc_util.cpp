@@ -39,7 +39,7 @@ HeaderController::attachHeader(std::string &compressed_json,
 
   auto setting = Setting::getInstance();
   id_type sender_id = setting->getMyId();
-  local_chain_id_type chain_id = setting->getLocalChainId();
+  localchain_id_type chain_id = setting->getLocalChainId();
 
   memcpy(&header[10], &chain_id[0], CHAIN_ID_TYPE_SIZE);
 

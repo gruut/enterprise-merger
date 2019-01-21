@@ -5,6 +5,7 @@
 #include "signature.hpp"
 #include "transaction.hpp"
 #include "types.hpp"
+#include "mem_ledger.hpp"
 
 #include "../services/certificate_pool.hpp"
 #include "../services/storage.hpp"
@@ -22,9 +23,9 @@ using namespace std;
 namespace gruut {
 class BasicBlockInfo {
 public:
-  timestamp_type time;
+  timestamp_t time;
   merger_id_type merger_id;
-  local_chain_id_type chain_id;
+  localchain_id_type chain_id;
   block_height_type height;
   transaction_root_type transaction_root;
   std::string prev_id_b64;
@@ -36,27 +37,28 @@ public:
 class Block {
 private:
   block_version_type m_version;
-  timestamp_type m_time;
+  timestamp_t m_time;
   block_id_type m_block_id;
   merger_id_type m_merger_id;
-  local_chain_id_type m_chain_id;
+  localchain_id_type m_chain_id;
   block_height_type m_height;
   transaction_root_type m_tx_root;
-  std::vector<Transaction> m_transactions;
-  std::vector<sha256> m_merkle_tree_node;
-  std::string m_prev_block_hash_b64;
-  std::string m_prev_block_id_b64;
+  hash_t m_prev_block_hash;
+  hash_t m_block_hash;
+  block_id_type m_prev_block_id;
   bytes m_signature;
+  std::vector<Transaction> m_transactions;
+  std::vector<hash_t> m_merkle_tree_node;
   std::vector<Signature> m_ssigs;
   std::map<std::string, std::string> m_user_certs;
   bytes m_block_raw;
-  sha256 m_block_hash;
+
 
 public:
   Block() { el::Loggers::getLogger("BLOC"); };
 
   bool initialize(BasicBlockInfo &basic_info,
-                  std::vector<sha256> &&merkle_Tree_node = {}) {
+                  std::vector<hash_t> &&merkle_Tree_node = {}) {
     m_time = basic_info.time;
     m_merger_id = basic_info.merger_id;
     m_chain_id = basic_info.chain_id;
@@ -74,7 +76,7 @@ public:
     return true;
   }
 
-  bool initialize(read_block_type &read_block) {
+  bool initialize(storage_block_type &read_block) {
     return initialize(read_block.block_raw, read_block.txs);
   }
 
@@ -100,8 +102,8 @@ public:
     m_height = Safe::getInt(block_header_json, "hgt");
     m_tx_root =
         Safe::getBytesFromB64<transaction_root_type>(block_header_json, "txrt");
-    m_prev_block_hash_b64 = Safe::getString(block_header_json, "prevH");
-    m_prev_block_id_b64 = Safe::getString(block_header_json, "prevbID");
+    m_prev_block_hash = Safe::getBytesFromB64(block_header_json, "prevH");
+    m_prev_block_id = Safe::getBytesFromB64<block_id_type>(block_header_json, "prevbID");
     m_block_id = Safe::getBytesFromB64<block_id_type>(block_header_json, "bID");
 
     if (!setSupportSignaturesFromJson(block_header_json["SSig"]))
@@ -163,13 +165,12 @@ public:
     return true;
   }
 
-  void linkPreviousBlock(
-      const std::string &last_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64,
-      const std::string &last_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64) {
+  template <typename T = std::string>
+  void linkPreviousBlock(T&& last_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64, T&& last_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64) {
 
     m_version = config::DEFAULT_VERSION;
-    m_prev_block_id_b64 = last_id_b64;
-    m_prev_block_hash_b64 = last_hash_b64;
+    m_prev_block_id = TypeConverter::decodeBase64(last_id_b64);
+    m_prev_block_hash = TypeConverter::decodeBase64(last_hash_b64);
 
     BytesBuilder block_id_builder;
     block_id_builder.append(m_chain_id);
@@ -205,8 +206,8 @@ public:
     return m_block_raw;
   }
 
-  std::vector<transaction_id_type> getTxIds() {
-    std::vector<transaction_id_type> ret_txids;
+  std::vector<tx_id_type> getTxIds() {
+    std::vector<tx_id_type> ret_txids;
     for (auto &each_tx : m_transactions) {
       ret_txids.emplace_back(each_tx.getId());
     }
@@ -219,8 +220,8 @@ public:
 
     block_header["ver"] = to_string(m_version);
     block_header["cID"] = TypeConverter::encodeBase64(m_chain_id);
-    block_header["prevH"] = m_prev_block_hash_b64;
-    block_header["prevbID"] = m_prev_block_id_b64;
+    block_header["prevH"] = TypeConverter::encodeBase64(m_prev_block_hash);
+    block_header["prevbID"] = TypeConverter::encodeBase64(m_prev_block_id);
     block_header["bID"] = TypeConverter::encodeBase64(m_block_id);
     block_header["time"] = to_string(m_time); // important!!
     block_header["hgt"] = to_string(m_height);
@@ -266,21 +267,19 @@ public:
 
   size_t getNumSSigs() { return m_ssigs.size(); }
 
+
+
+  timestamp_t getTime() { return m_time; }
+
+  hash_t getHash() { return m_block_hash; }
+  hash_t getPrevHash(){ return m_prev_block_hash; }
   block_id_type getBlockId() { return m_block_id; }
-
-  std::string getBlockIdB64() {
-    return TypeConverter::encodeBase64(m_block_id);
-  }
-
-  timestamp_type getTime() { return m_time; }
-
-  sha256 getHash() { return m_block_hash; }
+  block_id_type getPrevBlockId(){ return m_prev_block_id; }
 
   std::string getHashB64() { return TypeConverter::encodeBase64(m_block_hash); }
-
-  std::string getPrevHashB64() { return m_prev_block_hash_b64; }
-
-  std::string getPrevBlockIdB64() { return m_prev_block_id_b64; }
+  std::string getPrevHashB64() { return TypeConverter::encodeBase64(m_prev_block_hash); }
+  std::string getBlockIdB64() { return TypeConverter::encodeBase64(m_block_id); }
+  std::string getPrevBlockIdB64() { return TypeConverter::encodeBase64(m_prev_block_id); }
 
   bool isValid() { return (isValidEarly() && isValidLate()); }
 
@@ -305,7 +304,7 @@ public:
       if (it_map != m_user_certs.end()) {
         user_pk_pem = it_map->second;
       } else {
-        user_pk_pem = cert_ledger.getCertificate(user_id_b64, m_time);
+        user_pk_pem = cert_ledger.getCertificate(user_id_b64, m_time); // this is from storage
       }
 
       if (user_pk_pem.empty()) {
@@ -416,9 +415,9 @@ private:
     return ssig_msg_common_builder.getBytes();
   }
 
-  std::vector<sha256> calcMerkleTreeNode() {
-    std::vector<sha256> merkle_tree_node;
-    std::vector<sha256> tx_digests;
+  std::vector<hash_t> calcMerkleTreeNode() {
+    std::vector<hash_t> merkle_tree_node;
+    std::vector<hash_t> tx_digests;
 
     for (auto &each_tx : m_transactions) {
       tx_digests.emplace_back(each_tx.getDigest());

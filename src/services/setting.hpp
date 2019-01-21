@@ -138,7 +138,7 @@ private:
   std::string m_cert;
   std::string m_address;
   std::string m_port;
-  local_chain_id_type m_localchain_id;
+  localchain_id_type m_localchain_id;
   std::string m_localchain_name;
   std::string m_db_path;
 
@@ -186,7 +186,7 @@ public:
     m_gruut_authority.id =
         Safe::getBytesFromB64<id_type>(setting_json["GA"], "id");
     m_gruut_authority.address = Safe::getString(setting_json["GA"], "address");
-    m_gruut_authority.cert = joinMultiLine(setting_json["cert"]);
+    m_gruut_authority.cert = joinMultiLine(setting_json["GA"]["cert"]);
 
     //
     cert_pool->pushCert(m_gruut_authority.id, m_gruut_authority.cert);
@@ -241,7 +241,7 @@ public:
 
   inline std::string getMyPass() { return m_sk_pass; }
 
-  inline local_chain_id_type getLocalChainId() { return m_localchain_id; }
+  inline localchain_id_type getLocalChainId() { return m_localchain_id; }
 
   inline std::string getMyDbPath() { return m_db_path; }
 
@@ -256,10 +256,10 @@ public:
   }
 
 private:
-  local_chain_id_type getChainIdFromJson(json &t_json) {
+  localchain_id_type getChainIdFromJson(json &t_json) {
     std::string id_b64 = Safe::getString(t_json);
     bytes id_bytes = TypeConverter::decodeBase64(id_b64);
-    return static_cast<local_chain_id_type>(
+    return static_cast<localchain_id_type>(
         TypeConverter::bytesToArray<CHAIN_ID_TYPE_SIZE>(id_bytes));
   }
 
