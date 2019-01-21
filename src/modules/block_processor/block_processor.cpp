@@ -194,6 +194,9 @@ bool BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
   }
 
+  Application::app().getTransactionPool().removeDuplicatedTransactions(
+      recv_block.getTxIds());
+
   return true;
 }
 
