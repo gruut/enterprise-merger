@@ -42,7 +42,7 @@ void MergerClient::accessToTracker() {
       http_client.postAndGetReply(request_msg.dump(), response_msg);
 
   if (status != CURLE_OK) {
-    CLOG(ERROR, "MCLN") << "Could not get Merger infomations from Tracker";
+    CLOG(ERROR, "MCLN") << "Could not get Merger informations from Tracker";
     return;
   }
 
@@ -53,9 +53,6 @@ void MergerClient::accessToTracker() {
       MergerInfo merger_info;
       string m_id_b64 = Safe::getString(merger, "mID");
 
-      if (m_id_b64 == request_msg["mID"])
-        continue;
-
       merger_info.id = TypeConverter::decodeBase64(m_id_b64);
       merger_info.address = Safe::getString(merger, "ip");
       merger_info.port = Safe::getString(merger, "port");
@@ -64,7 +61,9 @@ void MergerClient::accessToTracker() {
       auto block_height = Safe::getInt(merger, "hgt");
 
       m_conn_manager->setMergerBlockHgt(merger_info.id, block_height);
-      m_conn_manager->setMergerInfo(merger_info);
+
+      if (m_id_b64 != request_msg["mID"])
+        m_conn_manager->setMergerInfo(merger_info);
     }
 
     for (auto &se : response_msg["se"]) {
