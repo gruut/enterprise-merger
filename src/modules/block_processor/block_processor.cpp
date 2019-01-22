@@ -27,71 +27,50 @@ BlockProcessor::BlockProcessor() {
 
 void BlockProcessor::start() { periodicTask(); }
 
+
 void BlockProcessor::periodicTask() {
   auto &io_service = Application::app().getIoService();
   io_service.post(m_task_strand->wrap([this]() {
-    std::vector<std::pair<Block, bool>> resolved_blocks;
-    std::vector<std::string> drop_blocks;
 
-    m_unresolved_block_pool.getResolvedBlocks(resolved_blocks, drop_blocks);
+    timestamp_t current_time = Time::now_int();
 
-    for (auto &block_id_b64 : drop_blocks)
-      m_layered_storage->dropLedger(block_id_b64);
+    std::vector<BlockRequestRecord> request_this_time;
 
-    if (!resolved_blocks.empty()) {
-      CLOG(INFO, "BPRO") << "Resolved block(s) received ("
-                         << resolved_blocks.size() << ")";
+    std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
 
-      for (auto &each_block : resolved_blocks) {
-
-        if (!each_block.first.isValidLate()) {
-          CLOG(ERROR, "BPRO")
-              << "Block dropped (invalid - late stage validation)";
-          continue;
-        }
-
-        json block_header = each_block.first.getBlockHeaderJson();
-        bytes block_raw = each_block.first.getBlockRaw();
-        json block_body = each_block.first.getBlockBodyJson();
-
-        if (!each_block.second) // this block was not interpreted into the
-                                // ledger because of link failure
-          Application::app().getCustomLedgerManager().procLedgerBlock(
-              block_body["tx"], each_block.first.getBlockIdB64());
-
-        m_storage->saveBlock(block_raw, block_header, block_body);
-        m_layered_storage->moveToDiskLedger(each_block.first.getBlockIdB64());
-
-        CLOG(INFO, "BPRO") << "BLOCK SAVED (height="
-                           << each_block.first.getHeight()
-                           << ",#tx=" << each_block.first.getNumTransactions()
-                           << ",#ssig=" << each_block.first.getNumSSigs()
-                           << ")";
+    for (auto &each_request : m_request_list) {
+      if (current_time > each_request.request_time && current_time > config::BROC_PROCESSOR_REQ_WAIT + each_request.request_time) {
+        request_this_time.emplace_back(each_request);
       }
     }
 
-    nth_link_type unresolved_block =
-        m_unresolved_block_pool.getUnresolvedLowestLink();
-    if (unresolved_block.height > 0) {
+    m_request_mutex.unlock();
+
+    for(auto &each_request : request_this_time) {
+
       OutputMsgEntry msg_req_block;
 
       msg_req_block.type = MessageType::MSG_REQ_BLOCK;
       msg_req_block.body["mID"] = m_my_id_b64; // my_id
-      msg_req_block.body["time"] = Time::now();
+      msg_req_block.body["time"] = to_string(current_time);
       msg_req_block.body["mCert"] = "";
-      msg_req_block.body["hgt"] = std::to_string(unresolved_block.height);
-      msg_req_block.body["prevHash"] =
-          TypeConverter::encodeBase64(unresolved_block.prev_hash);
+      msg_req_block.body["hgt"] = to_string(each_request.height);
+      msg_req_block.body["prevHash"] = each_request.prev_hash_b64;
+      msg_req_block.body["hash"] = each_request.hash_b64;
       msg_req_block.body["mSig"] = "";
-      msg_req_block.receivers = {};
 
-      CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (height="
-                         << unresolved_block.height
-                         << ",prevHash=" << msg_req_block.body["prevHash"]
+      if(each_request.recv_id.empty())
+        msg_req_block.receivers = {};
+      else
+        msg_req_block.receivers = {each_request.recv_id};
+
+      CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (height=" << each_request.height
+                         << ",prevHash=" << each_request.prev_hash_b64
                          << ")";
 
       m_msg_proxy.deliverOutputMessage(msg_req_block);
     }
+
   }));
 
   m_timer->expires_from_now(
@@ -169,30 +148,8 @@ void BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   hash_t req_prev_hash = Safe::getBytesFromB64<hash_t>(entry.body, "prevHash");
   hash_t req_hash = Safe::getBytesFromB64<hash_t>(entry.body, "hash");
 
-  /*
-    if (Safe::getString(entry.body, "mCert").empty() ||
-        Safe::getString(entry.body, "mSig").empty()) {
+  // TODO : check whether the requester is trustworthy or not
 
-      // TODO : check whether the requester is trustworthy or not
-
-    } else {
-      BytesBuilder msg_builder;
-      msg_builder.appendB64(Safe::getString(entry.body, "mID"));
-      msg_builder.appendDec(Safe::getString(entry.body, "time"));
-      msg_builder.append(Safe::getString(entry.body, "mCert"));
-      msg_builder.append(req_block_height);
-      msg_builder.appendB64(req_prev_hash);
-
-      if (!ECDSA::doVerify(Safe::getString(entry.body, "mCert"),
-                           msg_builder.getBytes(),
-                           Safe::getBytesFromB64(entry.body, "mSig"))) {
-
-        CLOG(ERROR, "BPRO") << "Invalid mSig on MSG_REQ_BLOCK";
-        return;
-      }
-    }
-
-  */
 
   id_type sender_id = Safe::getBytesFromB64<id_type>(entry.body, "mID");
 
@@ -263,6 +220,23 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     return 0;
   }
 
+  std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
+
+  auto it = m_request_list.begin();
+  while(it != m_request_list.end())
+  {
+    if(it->height == recv_block.getHeight() &&
+    (it->hash_b64.empty() || it->hash_b64 == recv_block.getHashB64()) &&
+    (it->prev_hash_b64.empty() || it->prev_hash_b64 == recv_block.getPrevHashB64())) {
+      m_request_list.erase(it++);
+    }
+    else {
+      it++;
+    }
+  }
+
+  m_request_mutex.unlock();
+
   // if not linked initially, we cannot interpret this block because of previous
   // missing blocks!
   if (block_push_result.linked)
@@ -272,7 +246,70 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   Application::app().getTransactionPool().removeDuplicatedTransactions(
       recv_block.getTxIds());
 
+  resolveBlocks();
+
   return block_push_result.height;
+}
+
+
+void BlockProcessor::resolveBlocks() {
+  std::vector<std::pair<Block, bool>> resolved_blocks;
+  std::vector<std::string> drop_blocks;
+
+  m_unresolved_block_pool.getResolvedBlocks(resolved_blocks, drop_blocks);
+
+  for (auto &block_id_b64 : drop_blocks)
+    m_layered_storage->dropLedger(block_id_b64);
+
+  if (!resolved_blocks.empty()) {
+    CLOG(INFO, "BPRO") << "Resolved block(s) received ("
+                       << resolved_blocks.size() << ")";
+
+    for (auto &each_block : resolved_blocks) {
+
+      if (!each_block.first.isValidLate()) {
+        CLOG(ERROR, "BPRO")
+            << "Block dropped (invalid - late stage validation)";
+        continue;
+      }
+
+      json block_header = each_block.first.getBlockHeaderJson();
+      bytes block_raw = each_block.first.getBlockRaw();
+      json block_body = each_block.first.getBlockBodyJson();
+
+      if (!each_block.second) // this block was not interpreted into the
+        // ledger because of link failure
+        Application::app().getCustomLedgerManager().procLedgerBlock(
+            block_body["tx"], each_block.first.getBlockIdB64());
+
+      m_storage->saveBlock(block_raw, block_header, block_body);
+      m_layered_storage->moveToDiskLedger(each_block.first.getBlockIdB64());
+
+      CLOG(INFO, "BPRO") << "BLOCK SAVED (height="
+                         << each_block.first.getHeight()
+                         << ",#tx=" << each_block.first.getNumTransactions()
+                         << ",#ssig=" << each_block.first.getNumSSigs()
+                         << ")";
+    }
+  }
+
+  nth_link_type unresolved_block =
+      m_unresolved_block_pool.getUnresolvedLowestLink();
+  if (unresolved_block.height > 0) {
+
+    // TODO : use tracker's information, broadcast can cause a lot of block droppings
+
+    BlockRequestRecord new_request;
+    new_request.height = unresolved_block.height;
+    new_request.recv_id = id_type();
+    new_request.hash_b64 = "";
+    new_request.prev_hash_b64 = TypeConverter::encodeBase64(unresolved_block.prev_hash);
+    new_request.request_time = Time::now_int();
+
+    std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
+    m_request_list.emplace_back(new_request);
+    m_request_mutex.unlock();
+  }
 }
 
 void BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {

@@ -37,6 +37,7 @@ constexpr size_t SYNC_CONTROL_INTERVAL = 1000;
 constexpr size_t BP_INTERVAL = 10;
 constexpr size_t BP_PING_PERIOD = 4;
 constexpr size_t BROC_PROCESSOR_TASK_INTERVAL = 1000;
+constexpr size_t BROC_PROCESSOR_REQ_WAIT = 3;
 constexpr size_t STATUS_COLLECTING_TIMEOUT_SEC = 4;
 constexpr size_t JOIN_TIMEOUT_SEC = 10;
 constexpr size_t INQUEUE_MSG_FETCHER_INTERVAL = 5;

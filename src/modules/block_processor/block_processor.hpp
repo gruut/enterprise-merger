@@ -30,6 +30,14 @@
 
 namespace gruut {
 
+struct BlockRequestRecord {
+  std::string hash_b64;
+  std::string prev_hash_b64;
+  block_height_type height;
+  id_type recv_id;
+  timestamp_t request_time;
+};
+
 class BlockProcessor : public Module {
 private:
   MessageProxy m_msg_proxy;
@@ -39,6 +47,8 @@ private:
   UnresolvedBlockPool m_unresolved_block_pool;
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_task_strand;
+  std::list<BlockRequestRecord> m_request_list;
+  std::recursive_mutex m_request_mutex;
 
 public:
   BlockProcessor();
@@ -59,6 +69,7 @@ private:
   void handleMsgReqCheck(InputMsgEntry &entry);
   void handleMsgReqStatus(InputMsgEntry &entry);
   void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
+  void resolveBlocks();
 };
 } // namespace gruut
 
