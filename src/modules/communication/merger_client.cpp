@@ -274,6 +274,8 @@ std::string MergerClient::getApiPath(MessageType msg_type) {
     case MessageType::MSG_HEADER:
       path = "/api/blocks";
       break;
+    default:
+      break;
   }
 
   return path;
