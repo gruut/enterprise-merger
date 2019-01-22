@@ -27,11 +27,9 @@ BlockProcessor::BlockProcessor() {
 
 void BlockProcessor::start() { periodicTask(); }
 
-
 void BlockProcessor::periodicTask() {
   auto &io_service = Application::app().getIoService();
   io_service.post(m_task_strand->wrap([this]() {
-
     timestamp_t current_time = Time::now_int();
 
     std::vector<BlockRequestRecord> request_this_time;
@@ -39,14 +37,17 @@ void BlockProcessor::periodicTask() {
     std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
 
     for (auto &each_request : m_request_list) {
-      if (current_time > each_request.request_time && current_time > config::BROC_PROCESSOR_REQ_WAIT + each_request.request_time) {
+      if (current_time > each_request.request_time &&
+          current_time >
+              config::BROC_PROCESSOR_REQ_WAIT + each_request.request_time) {
         request_this_time.emplace_back(each_request);
+        each_request.request_time = current_time;
       }
     }
 
     m_request_mutex.unlock();
 
-    for(auto &each_request : request_this_time) {
+    for (auto &each_request : request_this_time) {
 
       OutputMsgEntry msg_req_block;
 
@@ -59,18 +60,16 @@ void BlockProcessor::periodicTask() {
       msg_req_block.body["hash"] = each_request.hash_b64;
       msg_req_block.body["mSig"] = "";
 
-      if(each_request.recv_id.empty())
+      if (each_request.recv_id.empty())
         msg_req_block.receivers = {};
       else
         msg_req_block.receivers = {each_request.recv_id};
 
       CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (height=" << each_request.height
-                         << ",prevHash=" << each_request.prev_hash_b64
-                         << ")";
+                         << ",prevHash=" << each_request.prev_hash_b64 << ")";
 
       m_msg_proxy.deliverOutputMessage(msg_req_block);
     }
-
   }));
 
   m_timer->expires_from_now(
@@ -150,7 +149,6 @@ void BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   // TODO : check whether the requester is trustworthy or not
 
-
   id_type sender_id = Safe::getBytesFromB64<id_type>(entry.body, "mID");
 
   if (m_unresolved_block_pool.empty() && m_storage->empty()) {
@@ -223,14 +221,13 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
 
   auto it = m_request_list.begin();
-  while(it != m_request_list.end())
-  {
-    if(it->height == recv_block.getHeight() &&
-    (it->hash_b64.empty() || it->hash_b64 == recv_block.getHashB64()) &&
-    (it->prev_hash_b64.empty() || it->prev_hash_b64 == recv_block.getPrevHashB64())) {
+  while (it != m_request_list.end()) {
+    if (it->height == recv_block.getHeight() &&
+        (it->hash_b64.empty() || it->hash_b64 == recv_block.getHashB64()) &&
+        (it->prev_hash_b64.empty() ||
+         it->prev_hash_b64 == recv_block.getPrevHashB64())) {
       m_request_list.erase(it++);
-    }
-    else {
+    } else {
       it++;
     }
   }
@@ -250,7 +247,6 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   return block_push_result.height;
 }
-
 
 void BlockProcessor::resolveBlocks() {
   std::vector<std::pair<Block, bool>> resolved_blocks;
@@ -288,8 +284,7 @@ void BlockProcessor::resolveBlocks() {
       CLOG(INFO, "BPRO") << "BLOCK SAVED (height="
                          << each_block.first.getHeight()
                          << ",#tx=" << each_block.first.getNumTransactions()
-                         << ",#ssig=" << each_block.first.getNumSSigs()
-                         << ")";
+                         << ",#ssig=" << each_block.first.getNumSSigs() << ")";
     }
   }
 
@@ -297,14 +292,16 @@ void BlockProcessor::resolveBlocks() {
       m_unresolved_block_pool.getUnresolvedLowestLink();
   if (unresolved_block.height > 0) {
 
-    // TODO : use tracker's information, broadcast can cause a lot of block droppings
+    // TODO : use tracker's information, broadcast can cause a lot of block
+    // droppings
 
     BlockRequestRecord new_request;
     new_request.height = unresolved_block.height;
     new_request.recv_id = id_type();
     new_request.hash_b64 = "";
-    new_request.prev_hash_b64 = TypeConverter::encodeBase64(unresolved_block.prev_hash);
-    new_request.request_time = Time::now_int();
+    new_request.prev_hash_b64 =
+        TypeConverter::encodeBase64(unresolved_block.prev_hash);
+    new_request.request_time = 0;
 
     std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
     m_request_list.emplace_back(new_request);

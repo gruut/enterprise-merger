@@ -47,13 +47,13 @@ private:
   std::atomic<size_t> m_height_range_max{0};
   std::atomic<bool> m_force_unresolved{false};
 
-  std::atomic<bool> m_cache_link_valid {false};
+  std::atomic<bool> m_cache_link_valid{false};
   nth_link_type m_cache_possible_link;
 
-  std::atomic<bool> m_cache_layer_valid {false};
+  std::atomic<bool> m_cache_layer_valid{false};
   std::vector<std::string> m_cache_possible_block_layer;
 
-  std::atomic<bool> m_cache_pos_valid {false};
+  std::atomic<bool> m_cache_pos_valid{false};
   BlockPosOnMap m_cache_possible_pos;
 
 public:
@@ -94,7 +94,7 @@ public:
     return true;
   }
 
-  void invalidateCaches(){
+  void invalidateCaches() {
     m_cache_link_valid = false;
     m_cache_layer_valid = false;
     m_cache_pos_valid = false;
@@ -258,7 +258,7 @@ public:
 
   nth_link_type getMostPossibleLink() {
 
-    if(m_cache_link_valid)
+    if (m_cache_link_valid)
       return m_cache_possible_link;
 
     nth_link_type ret_link;
@@ -302,7 +302,7 @@ public:
   // reverse order
   std::vector<std::string> getMostPossibleBlockLayer() {
 
-    if(m_cache_layer_valid){
+    if (m_cache_layer_valid) {
       return m_cache_possible_block_layer;
     }
 
@@ -332,7 +332,7 @@ public:
 
 private:
   BlockPosOnMap getLongestBlockPos() {
-    if(m_cache_pos_valid)
+    if (m_cache_pos_valid)
       return m_cache_possible_pos;
 
     BlockPosOnMap longest_pos;
