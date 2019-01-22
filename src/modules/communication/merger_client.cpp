@@ -182,15 +182,17 @@ json MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
   // TODO : setting에서 tracker 정보 받아 올 수 있도록 수정 필요.
   std::string address = "ec2-13-125-221-27.ap-northeast-2.compute.amazonaws.com/src/";
 
-  if(output_msg.type == MessageType::MSG_CHAIN_INFO)
-    address += "ChainInfo.php";
-  else
-    address += "CheckExist.php";
-
-  HttpClient http_client(address);
   json reply_json;
-  http_client.postAndGetReply(send_msg, reply_json);
-
+  if(output_msg.type == MessageType::MSG_CHAIN_INFO) {
+    address += "ChainInfo.php";
+    HttpClient http_client(address);
+    http_client.post(send_msg);
+  }
+  else {
+    address += "CheckExist.php";
+    HttpClient http_client(address);
+    http_client.postAndGetReply(send_msg, reply_json);
+  }
   return reply_json;
 }
 void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
@@ -387,6 +389,8 @@ std::string MergerClient::getApiPath(MessageType msg_type) {
       break;
     case MessageType::MSG_HEADER:
       path = "/api/blocks";
+      break;
+    default:
       break;
   }
 
