@@ -14,6 +14,7 @@
 #include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
+#include <string>
 
 using namespace grpc;
 using namespace grpc_merger;
@@ -44,8 +45,8 @@ private:
   std::unique_ptr<boost::asio::deadline_timer> m_http_check_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_http_check_strand;
 
-  void sendToSE(std::vector<id_type> &receiver_list,
-                OutputMsgEntry &output_msg);
+  void sendToSE(std::vector<id_type> &receiver_list, OutputMsgEntry &output_msg,
+                std::string api_path);
 
   void sendToMerger(std::vector<id_type> &receiver_list,
                     std::string &packed_msg);
@@ -57,6 +58,7 @@ private:
   bool checkMergerMsgType(MessageType msg_tpye);
   bool checkSignerMsgType(MessageType msg_tpye);
   bool checkSEMsgType(MessageType msg_type);
+  std::string getApiPath(MessageType msg_type);
 };
 } // namespace gruut
 
