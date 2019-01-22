@@ -11,8 +11,9 @@ TransactionCollector::TransactionCollector() {
 
   m_storage = Storage::getInstance();
 
-  m_timer.reset(
-      new boost::asio::deadline_timer(Application::app().getIoService()));
+  auto& io_service = Application::app().getIoService();
+  m_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_postjob_strand.reset(new boost::asio::strand(io_service));
 }
 
 void TransactionCollector::handleMessage(json &msg_body_json) {
@@ -55,9 +56,7 @@ bool TransactionCollector::isRunnable() {
 
 void TransactionCollector::setTxCollectStatus(BpStatus stat) {
   m_next_tx_status = stat;
-  if (!m_timer_running) {
-    turnOnTimer();
-  }
+  turnOnTimer();
 
   if (m_current_tx_status == BpStatus::PRIMARY) {
     if (m_next_tx_status == BpStatus::PRIMARY) {
@@ -84,27 +83,27 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
 }
 
 void TransactionCollector::turnOnTimer() {
+  std::call_once(m_timer_once_flag, [this](){
 
-  m_timer_running = true;
+    m_bpjob_sequence.push_back(BpJobStatus::DONT);
+    m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
+    m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
 
-  m_bpjob_sequence.push_back(BpJobStatus::DONT);
-  m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
-  m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
-
-  updateStatus();
+    updateStatus();
+  });
 }
 
 void TransactionCollector::updateStatus() {
 
-  // CLOG(INFO, "TXCO") << "called updateStatus()";
+  size_t current_time = Time::now_ms();
+  size_t current_slot = current_time / (BP_INTERVAL * 1000);
+  timestamp_type next_slot_begin = (current_slot + 1) * (BP_INTERVAL * 1000);
+  timestamp_type time_to_next = next_slot_begin - current_time;
 
-  size_t current_slot = Time::now_int() / BP_INTERVAL;
-  time_t next_slot_begin = (current_slot + 1) * BP_INTERVAL;
+  if(time_to_next < 1000) // may be system time rewind
+    time_to_next = BP_INTERVAL * 1000 - time_to_next;
 
-  boost::posix_time::ptime task_time =
-      boost::posix_time::from_time_t(next_slot_begin);
-
-  m_timer->expires_at(task_time);
+  m_timer->expires_from_now(boost::posix_time::milliseconds(time_to_next));
   m_timer->async_wait([this](const boost::system::error_code &ec) {
     if (ec == boost::asio::error::operation_aborted) {
     } else if (ec.value() == 0) {
@@ -121,7 +120,7 @@ void TransactionCollector::updateStatus() {
 void TransactionCollector::postJob() {
   auto &io_service = Application::app().getIoService();
 
-  io_service.post([this]() {
+  io_service.post(m_postjob_strand->wrap([this]() {
     m_current_tx_status = m_next_tx_status;
 
     BpJobStatus this_job = m_bpjob_sequence.front();
@@ -131,7 +130,7 @@ void TransactionCollector::postJob() {
         Application::app().getTransactionPool().size() > 0) {
       m_signature_requester.requestSignatures();
     }
-  });
+  }));
 }
 
 } // namespace gruut

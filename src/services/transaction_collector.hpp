@@ -21,6 +21,7 @@
 #include <iostream>
 #include <memory>
 #include <queue>
+#include <mutex>
 
 namespace gruut {
 
@@ -44,12 +45,13 @@ private:
   BpStatus m_current_tx_status{BpStatus::IN_BOOT_WAIT};
   BpStatus m_next_tx_status{BpStatus::UNKNOWN};
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
+  std::unique_ptr<boost::asio::strand> m_postjob_strand;
   SignatureRequester m_signature_requester;
   std::deque<BpJobStatus> m_bpjob_sequence;
 
   Storage *m_storage;
 
-  bool m_timer_running{false};
+  std::once_flag m_timer_once_flag;
 };
 } // namespace gruut
 #endif

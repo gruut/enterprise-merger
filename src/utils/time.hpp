@@ -25,6 +25,13 @@ public:
     auto now = now_int();
     return now + seconds;
   }
+
+  static uint64_t now_ms(){
+    auto milliseconds_since_epoch =
+        static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+            (std::chrono::system_clock::now().time_since_epoch()).count());
+    return milliseconds_since_epoch;
+  }
 };
 
 #endif

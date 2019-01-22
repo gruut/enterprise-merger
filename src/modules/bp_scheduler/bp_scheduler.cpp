@@ -17,6 +17,7 @@ BpScheduler::BpScheduler() {
   auto &io_service = Application::app().getIoService();
   m_timer.reset(new boost::asio::deadline_timer(io_service));
   m_lock_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_set_strand.reset(new boost::asio::strand(io_service));
 
   el::Loggers::getLogger("BPSC");
 }
@@ -193,11 +194,11 @@ void BpScheduler::lockStatusloop() {
 
 void BpScheduler::postLockJob() {
   auto &io_service = Application::app().getIoService();
-  io_service.post([this]() {
+  io_service.post(m_set_strand->wrap([this]() {
+    m_is_lock = true; // lock to update status
     Application::app().getTransactionCollector().setTxCollectStatus(
         m_current_status);
-    m_is_lock = true; // lock to update status
-  });
+  }));
 }
 
 void BpScheduler::sendPingloop() {
@@ -205,7 +206,7 @@ void BpScheduler::sendPingloop() {
   time_t next_slot_begin = (current_slot + 1) * config::BP_INTERVAL;
 
   boost::posix_time::ptime ping_time = boost::posix_time::from_time_t(
-      PRNG::getRange(0, config::BP_PING_PERIOD) + next_slot_begin);
+      PRNG::getRange(1, config::BP_PING_PERIOD+1) + next_slot_begin);
   ping_time += boost::posix_time::milliseconds(PRNG::getRange(0, 999));
 
   m_timer->expires_at(ping_time);
