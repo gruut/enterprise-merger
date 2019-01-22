@@ -266,13 +266,16 @@ bool MergerClient::checkSEMsgType(MessageType msg_type) {
 std::string MergerClient::getApiPath(MessageType msg_type) {
   std::string path;
 
-  switch (msg_type) {
-  case MessageType::MSG_PING:
-    path = "/api/ping";
-    break;
-  case MessageType::MSG_HEADER:
-    path = "/api/blocks";
-    break;
+  switch (msg_type)
+  {
+    case MessageType::MSG_PING:
+      path = "/api/ping";
+      break;
+    case MessageType::MSG_HEADER:
+      path = "/api/blocks";
+      break;
+    default:
+      break;
   }
 
   return path;
