@@ -414,8 +414,7 @@ const std::map<MessageType, json> MSG_SCHEMA_MAP = {
     {MessageType::MSG_TX, SCHEMA_TX},
     {MessageType::MSG_REQ_CHECK, SCHEMA_REQ_CHECK},
     {MessageType::MSG_REQ_STATUS, SCHEMA_REQ_STATUS},
-    {MessageType::MSG_RES_STATUS, SCHEMA_RES_STATUS}
-};
+    {MessageType::MSG_RES_STATUS, SCHEMA_RES_STATUS}};
 
 class MessageSchema {
 public:

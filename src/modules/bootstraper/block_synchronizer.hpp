@@ -32,7 +32,8 @@ namespace gruut {
 struct OtherStatusData {
   std::string hash_b64;
   block_height_type height;
-  OtherStatusData(std::string hash_b64_, block_height_type height_) : hash_b64(hash_b64_), height(height_) {}
+  OtherStatusData(std::string hash_b64_, block_height_type height_)
+      : hash_b64(hash_b64_), height(height_) {}
 };
 
 class BlockSynchronizer {
@@ -49,8 +50,8 @@ private:
   std::once_flag m_sync_finish_call_flag;
   ExitCode m_sync_finish_code;
 
-  std::atomic<bool> m_is_sync_begin {false};
-  std::atomic<bool> m_is_sync_done {false};
+  std::atomic<bool> m_is_sync_begin{false};
+  std::atomic<bool> m_is_sync_done{false};
 
   nth_link_type m_link_from;
   std::vector<bool> m_sync_flags;
@@ -67,7 +68,8 @@ public:
 private:
   void collectingStatus(InputMsgEntry &entry);
   void sendRequestLastBlock();
-  void sendRequestBlock(size_t height, const std::string &block_hash_b64, const merger_id_type &t_merger);
+  void sendRequestBlock(size_t height, const std::string &block_hash_b64,
+                        const merger_id_type &t_merger);
   void sendRequestStatus();
   void sendErrorToSigner(InputMsgEntry &input_msg_entry);
   void syncFinish(ExitCode exit_code);

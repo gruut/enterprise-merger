@@ -54,7 +54,7 @@ public:
 
   template <typename S = nlohmann::json, typename K = std::string>
   static size_t getSize(S &&json_obj, K &&key) {
-    return getSize(getString(json_obj,key));
+    return getSize(getString(json_obj, key));
   }
 
   template <typename K = std::string> static size_t getSize(K &&size_str) {

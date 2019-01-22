@@ -117,7 +117,6 @@ void Application::setup() {
   registerModule(m_message_fetcher, 2);
   registerModule(m_bp_scheduler, 2);
 
-
   // setp 3 - link services
 
   m_bootstraper->setCommunication(m_communication);

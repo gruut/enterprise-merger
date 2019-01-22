@@ -33,7 +33,7 @@ public:
     if (len < 0 || len > bytes_val.size())
       len = (int)bytes_val.size();
 
-    if(len == 0)
+    if (len == 0)
       return;
 
     if (m_auto_append) {
@@ -63,7 +63,7 @@ public:
     if (len > 8)
       len = 8;
 
-    if(len == 0)
+    if (len == 0)
       return;
 
     auto int_val = (uint64_t)time_val;
@@ -94,7 +94,7 @@ public:
     if (len > sizeof(uint64_t))
       len = sizeof(uint64_t);
 
-    if(len == 0)
+    if (len == 0)
       return;
 
     std::vector<uint8_t> bytes(len, 0x00);
@@ -112,7 +112,7 @@ public:
     if (len < 0 || len > str_val.size())
       len = (int)str_val.size();
 
-    if(len == 0)
+    if (len == 0)
       return;
 
     std::vector<uint8_t> bytes(str_val.begin(), str_val.begin() + len);
@@ -125,7 +125,7 @@ public:
     if (len < 0)
       len = (int)hex_str_val.size() / 2;
 
-    if(len == 0)
+    if (len == 0)
       return;
 
     std::vector<uint8_t> bytes((size_t)len);

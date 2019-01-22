@@ -140,8 +140,8 @@ void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
       for (auto &service_endpoint : service_endpoints_list) {
         bool status = m_connection_list->getSeStatus(service_endpoint.id);
         if (status && service_endpoint.id == receiver_id) {
-          std::string address = service_endpoint.address + ":" +
-                                service_endpoint.port + api_path;
+          std::string address =
+              service_endpoint.address + ":" + service_endpoint.port + api_path;
           HttpClient http_client(address);
           http_client.post(send_msg);
           break;

@@ -11,7 +11,10 @@ public:
 
   bool isValidTx(const Transaction &tx) override { return true; }
 
-  bool procBlock(const json &txs_json, const std::string &block_id_b64) override { return true; }
+  bool procBlock(const json &txs_json,
+                 const std::string &block_id_b64) override {
+    return true;
+  }
 };
 } // namespace gruut
 
