@@ -15,6 +15,7 @@
 #include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
+#include <string>
 
 using namespace grpc;
 using namespace grpc_merger;
@@ -46,8 +47,8 @@ private:
 
   json sendToTracker(OutputMsgEntry &output_msg);
 
-  void sendToSE(std::vector<id_type> &receiver_list,
-                OutputMsgEntry &output_msg);
+  void sendToSE(std::vector<id_type> &receiver_list, OutputMsgEntry &output_msg,
+                std::string api_path);
 
   void sendToMerger(std::vector<id_type> &receiver_list,
                     std::string &packed_msg);
@@ -60,8 +61,8 @@ private:
   bool checkSignerMsgType(MessageType msg_tpye);
   bool checkSEMsgType(MessageType msg_type);
   bool checkTrackerMsgType(MessageType msg_type);
-
   Status sendHealthCheck(MergerInfo &merger_info);
+  std::string getApiPath(MessageType msg_type);
 };
 } // namespace gruut
 

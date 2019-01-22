@@ -168,7 +168,8 @@ void MergerClient::sendMessage(MessageType msg_type,
   }
 
   if (checkSEMsgType(msg_type)) {
-    sendToSE(receiver_list, output_msg);
+    auto api_path = getApiPath(msg_type);
+    sendToSE(receiver_list, output_msg, api_path);
   }
 
   if (checkTrackerMsgType(msg_type)) {
@@ -192,17 +193,19 @@ json MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
 
   return reply_json;
 }
-
 void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
-                            OutputMsgEntry &output_msg) {
+                            OutputMsgEntry &output_msg, std::string api_path) {
+
+
   std::string send_msg = output_msg.body.dump();
 
   if (receiver_list.empty()) {
     auto service_endpoints_list = m_conn_manager->getAllSeInfo();
+
     for (auto &service_endpoint : service_endpoints_list) {
       if (service_endpoint.conn_status) {
-        std::string address = service_endpoint.address + ":" +
-                              service_endpoint.port + "/api/blocks";
+        std::string address =
+            service_endpoint.address + ":" + service_endpoint.port + api_path;
         HttpClient http_client(address);
         http_client.post(send_msg);
       }
@@ -210,10 +213,9 @@ void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
   } else {
     for (auto &receiver_id : receiver_list) {
       auto service_endpoint = m_conn_manager->getSeInfo(receiver_id);
-
       if (service_endpoint.conn_status) {
         std::string address = service_endpoint.address + ":" +
-                              service_endpoint.port + "/api/blocks";
+            service_endpoint.port + api_path;
         HttpClient http_client(address);
         http_client.post(send_msg);
         break;
@@ -373,5 +375,21 @@ bool MergerClient::checkSEMsgType(MessageType msg_type) {
 
 bool MergerClient::checkTrackerMsgType(gruut::MessageType msg_type) {
   return (msg_type == MessageType::MSG_CHAIN_INFO);
+}
+
+std::string MergerClient::getApiPath(MessageType msg_type) {
+  std::string path;
+
+  switch (msg_type)
+  {
+    case MessageType::MSG_PING:
+      path = "/api/ping";
+      break;
+    case MessageType::MSG_HEADER:
+      path = "/api/blocks";
+      break;
+  }
+
+  return path;
 }
 }; // namespace gruut
