@@ -1,8 +1,8 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_CERTIFICATE_HPP
 #define GRUUT_ENTERPRISE_MERGER_CERTIFICATE_HPP
 
-#include "../services/storage.hpp"
 #include "../services/setting.hpp"
+#include "../services/storage.hpp"
 #include "../utils/safe.hpp"
 #include "ledger.hpp"
 
@@ -33,6 +33,7 @@ namespace gruut {
 class CertificateLedger : public Ledger {
 private:
   std::unique_ptr<Botan::X509_Certificate> m_ca_cert;
+
 public:
   CertificateLedger() {
     setPrefix("C");
@@ -42,24 +43,28 @@ public:
 
   bool isValidTx(const Transaction &tx) override { return true; }
 
-  bool procBlock(const json &txs_json, const std::string &block_id_b64) override {
+  bool procBlock(const json &txs_json,
+                 const std::string &block_id_b64) override {
     if (!txs_json.is_array())
       return false;
 
-    mem_ledger_t && mem_ledger = blockToLedger(txs_json, block_id_b64);
+    mem_ledger_t &&mem_ledger = blockToLedger(txs_json, block_id_b64);
     saveLedger(mem_ledger);
 
     return true;
   }
 
-  std::string getCertificate(const std::string &user_id_b64, const timestamp_t &at_this_time = 0, const std::vector<std::string> block_layer = {}) {
+  std::string getCertificate(const std::string &user_id_b64,
+                             const timestamp_t &at_this_time = 0,
+                             const std::vector<std::string> block_layer = {}) {
     std::string ret_cert;
-    std::string cert_size = readLedgerByKey(user_id_b64,block_layer);
+    std::string cert_size = readLedgerByKey(user_id_b64, block_layer);
 
     if (!cert_size.empty()) {
       int num_certs = stoi(cert_size);
       if (at_this_time == 0) {
-        std::string latest_cert = readLedgerByKey(user_id_b64 + "_" + to_string(num_certs - 1),block_layer);
+        std::string latest_cert = readLedgerByKey(
+            user_id_b64 + "_" + to_string(num_certs - 1), block_layer);
 
         json latest_cert_json = Safe::parseJsonAsArray(latest_cert);
         if (!latest_cert_json.empty())
@@ -68,7 +73,8 @@ public:
 
         timestamp_t lastest_valid_begin = 0;
         for (int i = 0; i < num_certs; ++i) {
-          std::string nth_cert = readLedgerByKey(user_id_b64 + "_" + to_string(i),block_layer);
+          std::string nth_cert =
+              readLedgerByKey(user_id_b64 + "_" + to_string(i), block_layer);
 
           json cert_json = Safe::parseJson(nth_cert);
           if (cert_json.empty())
@@ -91,23 +97,27 @@ public:
     return ret_cert;
   }
 
-  std::string getCertificate(const signer_id_type &user_id, const timestamp_t &at_this_time = 0, const std::vector<std::string> block_layer = {}) {
+  std::string getCertificate(const signer_id_type &user_id,
+                             const timestamp_t &at_this_time = 0,
+                             const std::vector<std::string> block_layer = {}) {
     std::string user_id_b64 = TypeConverter::encodeBase64(user_id);
     return getCertificate(user_id_b64, at_this_time, block_layer);
   }
 
 private:
-
-  mem_ledger_t blockToLedger(const json& txs_json, const std::string& block_id_b64, const std::vector<std::string>& block_layer = {}){
+  mem_ledger_t blockToLedger(const json &txs_json,
+                             const std::string &block_id_b64,
+                             const std::vector<std::string> &block_layer = {}) {
 
     mem_ledger_t ret_mem_ledger;
 
-    if(txs_json.is_array()) {
+    if (txs_json.is_array()) {
 
       std::string key, value;
 
       for (auto &tx_json : txs_json) {
-        if(Safe::getString(tx_json,"type") != TXTYPE_CERTIFICATES) // important !!
+        if (Safe::getString(tx_json, "type") !=
+            TXTYPE_CERTIFICATES) // important !!
           continue;
 
         auto &content = tx_json["content"];
@@ -137,32 +147,31 @@ private:
     return ret_mem_ledger;
   }
 
-  void loadCACert(){
+  void loadCACert() {
     try {
-      Botan::X509_Certificate ca_cert = pemToX509(Setting::getInstance()->getGruutAuthorityInfo().cert);
+      Botan::X509_Certificate ca_cert =
+          pemToX509(Setting::getInstance()->getGruutAuthorityInfo().cert);
       m_ca_cert.reset(new Botan::X509_Certificate(ca_cert));
 
       if (!m_ca_cert->is_CA_cert()) {
         CLOG(ERROR, "CERT") << "X509_CA: This certificate is not for CA";
       }
-    }
-    catch (...){
+    } catch (...) {
       m_ca_cert.reset(nullptr);
       CLOG(ERROR, "CERT") << "Failed to load CA's certificate! (Exception)";
     }
   }
 
-  template <typename T = std::string>
-  bool isValidCert(T&& cert_pem_str) {
-    if(m_ca_cert == nullptr)
+  template <typename T = std::string> bool isValidCert(T &&cert_pem_str) {
+    if (m_ca_cert == nullptr)
       return false;
 
     try {
-      auto&& cert = pemToX509(cert_pem_str);
+      auto &&cert = pemToX509(cert_pem_str);
 
       Botan::ECDSA_PublicKey pub_key(
-        cert.subject_public_key()->algorithm_identifier(),
-        cert.subject_public_key()->public_key_bits());
+          cert.subject_public_key()->algorithm_identifier(),
+          cert.subject_public_key()->public_key_bits());
 
       if (!m_ca_cert->check_signature(pub_key)) {
         return false;
@@ -196,22 +205,21 @@ private:
     }
   }
 
-  template <typename S = json>
-  bool isValidTxInBlock(S&& tx_json) {
+  template <typename S = json> bool isValidTxInBlock(S &&tx_json) {
 
-    if (Safe::getString(tx_json,"type") != TXTYPE_CERTIFICATES)
+    if (Safe::getString(tx_json, "type") != TXTYPE_CERTIFICATES)
       return false;
 
     if (!tx_json["content"].is_array())
       return false;
 
-    auto& content = tx_json["content"];
+    auto &content = tx_json["content"];
 
     for (size_t i = 0; i < content.size(); i += 2) {
       std::string user_id = Safe::getString(content[i]);
       std::string user_pem = Safe::getString(content[i + 1]);
 
-      if(user_pem.empty() || !isValidCert(user_pem))
+      if (user_pem.empty() || !isValidCert(user_pem))
         return false;
 
       timestamp_t recv_time = Safe::getTime(tx_json, "time");
@@ -225,28 +233,27 @@ private:
   }
 
   template <typename T = std::string>
-  bool isDuplicatedCert(T&& user_pem, T&& pem_in_db) {
+  bool isDuplicatedCert(T &&user_pem, T &&pem_in_db) {
 
-    if(user_pem.empty() || pem_in_db.empty() || user_pem == pem_in_db)
+    if (user_pem.empty() || pem_in_db.empty() || user_pem == pem_in_db)
       return true;
 
     try {
-      auto&& cert = pemToX509(user_pem);
-      auto&& cert_in_db = pemToX509(pem_in_db);
+      auto &&cert = pemToX509(user_pem);
+      auto &&cert_in_db = pemToX509(pem_in_db);
       return (cert.serial_number() == cert_in_db.serial_number());
     } catch (...) {
       return true;
     }
   }
 
-  template <typename T = std::string>
-  std::string parseCert(T&& pem) {
+  template <typename T = std::string> std::string parseCert(T &&pem) {
 
     // User ID에 해당하는 n번째 Certification 저장 (발급일, 만료일, 인증서)
     std::string json_str;
 
     try {
-      auto&& cert = pemToX509(pem);
+      auto &&cert = pemToX509(pem);
 
       json tmp_cert = json::array();
       tmp_cert.push_back(to_string(cert.not_before().time_since_epoch()));
@@ -262,20 +269,20 @@ private:
   }
 
   template <typename T = std::string>
-  Botan::X509_Certificate pemToX509(T&& cert_pem_str) {
+  Botan::X509_Certificate pemToX509(T &&cert_pem_str) {
 
     try {
       Botan::DataSource_Memory cert_datasource(cert_pem_str);
       Botan::X509_Certificate x509_cert(cert_datasource);
       return x509_cert;
     } catch (Botan::Exception &exception) {
-      CLOG(ERROR, "CERT") << "Error on string to X509_Certificate - " << exception.what();
+      CLOG(ERROR, "CERT") << "Error on string to X509_Certificate - "
+                          << exception.what();
       throw;
     }
   }
 
-  template <typename X = Botan::X509_Certificate>
-  bool validTime(X&& cert) {
+  template <typename X = Botan::X509_Certificate> bool validTime(X &&cert) {
     timestamp_t t1 = cert.not_before().time_since_epoch();
     timestamp_t t2 = cert.not_after().time_since_epoch();
     timestamp_t current_time = Time::now_int();

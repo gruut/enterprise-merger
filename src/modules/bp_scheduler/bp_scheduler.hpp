@@ -59,14 +59,17 @@ private:
 
   size_t m_up_slot{0};
   BpStatus m_current_status{BpStatus::IN_BOOT_WAIT};
+
   bool m_is_lock{true};
   std::atomic<bool> m_welcome{true};
+
   std::vector<BpRecvStatusInfo> m_recv_status;
 
   std::mutex m_recv_status_mutex;
 
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   std::unique_ptr<boost::asio::deadline_timer> m_lock_timer;
+  std::unique_ptr<boost::asio::strand> m_set_strand;
 
   MessageProxy m_msg_proxy;
   ConnManager *m_conn_manager;

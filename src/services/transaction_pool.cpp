@@ -10,22 +10,18 @@ bool TransactionPool::push(Transaction &transaction) {
   std::string tx_id_str =
       TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
           transaction.getId());
+  std::lock_guard<std::mutex> lock(m_push_mutex);
   if (!m_txid_pool.has(tx_id_str)) {
     m_txid_pool.set(tx_id_str, true);
-
-    std::lock_guard<std::mutex> lock(m_push_mutex);
     m_transaction_pool.emplace_back(transaction);
-    m_push_mutex.unlock();
-
     return true;
   }
   return false;
 }
 
 void TransactionPool::clear() {
-  m_txid_pool.clear();
-
   std::lock_guard<std::mutex> lock(m_push_mutex);
+  m_txid_pool.clear();
   m_transaction_pool.clear();
   m_push_mutex.unlock();
 }
@@ -59,6 +55,7 @@ bool TransactionPool::pop(Transaction &transaction) {
 }
 
 std::vector<Transaction> TransactionPool::fetchLastN(size_t n) {
+
   std::vector<Transaction> transactions;
 
   for (int i = (int)m_transaction_pool.size() - 1; i >= 0; --i) {

@@ -1,11 +1,11 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TEMPORARY_BLOCK_HPP
 #define GRUUT_ENTERPRISE_MERGER_TEMPORARY_BLOCK_HPP
 
+#include "mem_ledger.hpp"
 #include "merkle_tree.hpp"
 #include "signature.hpp"
 #include "transaction.hpp"
 #include "types.hpp"
-#include "mem_ledger.hpp"
 
 #include "../services/certificate_pool.hpp"
 #include "../services/storage.hpp"
@@ -52,7 +52,6 @@ private:
   std::vector<Signature> m_ssigs;
   std::map<std::string, std::string> m_user_certs;
   bytes m_block_raw;
-
 
 public:
   Block() { el::Loggers::getLogger("BLOC"); };
@@ -103,7 +102,8 @@ public:
     m_tx_root =
         Safe::getBytesFromB64<transaction_root_type>(block_header_json, "txrt");
     m_prev_block_hash = Safe::getBytesFromB64(block_header_json, "prevH");
-    m_prev_block_id = Safe::getBytesFromB64<block_id_type>(block_header_json, "prevbID");
+    m_prev_block_id =
+        Safe::getBytesFromB64<block_id_type>(block_header_json, "prevbID");
     m_block_id = Safe::getBytesFromB64<block_id_type>(block_header_json, "bID");
 
     if (!setSupportSignaturesFromJson(block_header_json["SSig"]))
@@ -166,7 +166,9 @@ public:
   }
 
   template <typename T = std::string>
-  void linkPreviousBlock(T&& last_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64, T&& last_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64) {
+  void
+  linkPreviousBlock(T &&last_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64,
+                    T &&last_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64) {
 
     m_version = config::DEFAULT_VERSION;
     m_prev_block_id = TypeConverter::decodeBase64(last_id_b64);
@@ -267,19 +269,23 @@ public:
 
   size_t getNumSSigs() { return m_ssigs.size(); }
 
-
-
   timestamp_t getTime() { return m_time; }
 
   hash_t getHash() { return m_block_hash; }
-  hash_t getPrevHash(){ return m_prev_block_hash; }
+  hash_t getPrevHash() { return m_prev_block_hash; }
   block_id_type getBlockId() { return m_block_id; }
-  block_id_type getPrevBlockId(){ return m_prev_block_id; }
+  block_id_type getPrevBlockId() { return m_prev_block_id; }
 
   std::string getHashB64() { return TypeConverter::encodeBase64(m_block_hash); }
-  std::string getPrevHashB64() { return TypeConverter::encodeBase64(m_prev_block_hash); }
-  std::string getBlockIdB64() { return TypeConverter::encodeBase64(m_block_id); }
-  std::string getPrevBlockIdB64() { return TypeConverter::encodeBase64(m_prev_block_id); }
+  std::string getPrevHashB64() {
+    return TypeConverter::encodeBase64(m_prev_block_hash);
+  }
+  std::string getBlockIdB64() {
+    return TypeConverter::encodeBase64(m_block_id);
+  }
+  std::string getPrevBlockIdB64() {
+    return TypeConverter::encodeBase64(m_prev_block_id);
+  }
 
   bool isValid() { return (isValidEarly() && isValidLate()); }
 
@@ -304,7 +310,8 @@ public:
       if (it_map != m_user_certs.end()) {
         user_pk_pem = it_map->second;
       } else {
-        user_pk_pem = cert_ledger.getCertificate(user_id_b64, m_time); // this is from storage
+        user_pk_pem = cert_ledger.getCertificate(
+            user_id_b64, m_time); // this is from storage
       }
 
       if (user_pk_pem.empty()) {

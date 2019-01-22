@@ -6,7 +6,6 @@
 
 #include "../ledger/digest_ledger.hpp"
 #include "../ledger/sms_ledger.hpp"
-#include "../ledger/digest_ledger.hpp"
 
 #include "../chain/mem_ledger.hpp"
 #include "../chain/types.hpp"

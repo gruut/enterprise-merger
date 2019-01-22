@@ -10,11 +10,11 @@
 #include "../../utils/sha256.hpp"
 
 #include "../../services/input_queue.hpp"
+#include "../../services/layered_storage.hpp"
 #include "../../services/message_proxy.hpp"
 #include "../../services/output_queue.hpp"
 #include "../../services/setting.hpp"
 #include "../../services/storage.hpp"
-#include "../../services/layered_storage.hpp"
 
 #include "../module.hpp"
 #include "unresolved_block_pool.hpp"
