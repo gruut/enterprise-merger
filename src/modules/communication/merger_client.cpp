@@ -302,27 +302,42 @@ Status MergerClient::sendHealthCheck(MergerInfo &merger_info) {
 }
 
 bool MergerClient::checkMergerMsgType(MessageType msg_type) {
+  // clang-format off
   return (
-      msg_type == MessageType::MSG_UP || msg_type == MessageType::MSG_PING ||
+      msg_type == MessageType::MSG_UP ||
+      msg_type == MessageType::MSG_PING ||
       msg_type == MessageType::MSG_REQ_BLOCK ||
       msg_type == MessageType::MSG_WELCOME ||
-      msg_type == MessageType::MSG_BLOCK || msg_type == MessageType::MSG_ERROR);
+      msg_type == MessageType::MSG_REQ_STATUS ||
+      msg_type == MessageType::MSG_RES_STATUS ||
+      msg_type == MessageType::MSG_BLOCK ||
+      msg_type == MessageType::MSG_ERROR
+      );
+  // clang-format on
 }
 
 bool MergerClient::checkSignerMsgType(MessageType msg_type) {
-  return (msg_type == MessageType::MSG_CHALLENGE ||
-          msg_type == MessageType::MSG_RESPONSE_2 ||
-          msg_type == MessageType::MSG_ACCEPT ||
-          msg_type == MessageType::MSG_REQ_SSIG ||
-          msg_type == MessageType::MSG_ERROR);
+  // clang-format off
+  return (
+      msg_type == MessageType::MSG_CHALLENGE ||
+      msg_type == MessageType::MSG_RESPONSE_2 ||
+      msg_type == MessageType::MSG_ACCEPT ||
+      msg_type == MessageType::MSG_REQ_SSIG ||
+      msg_type == MessageType::MSG_ERROR
+      );
+  // clang-format on
 }
 
 bool MergerClient::checkSEMsgType(MessageType msg_type) {
-  return (msg_type == MessageType::MSG_UP ||
-          msg_type == MessageType::MSG_PING ||
-          msg_type == MessageType::MSG_HEADER ||
-          msg_type == MessageType::MSG_RES_CHECK ||
-          msg_type == MessageType::MSG_ERROR);
+  // clang-format off
+  return (
+      msg_type == MessageType::MSG_UP ||
+      msg_type == MessageType::MSG_PING ||
+      msg_type == MessageType::MSG_HEADER ||
+      msg_type == MessageType::MSG_RES_CHECK ||
+      msg_type == MessageType::MSG_ERROR
+      );
+  // clang-format on
 }
 
 bool MergerClient::checkTrackerMsgType(gruut::MessageType msg_type) {

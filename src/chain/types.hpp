@@ -145,12 +145,12 @@ using proof_type = struct _proof_type {
 };
 
 using storage_block_type = struct _storage_block_type {
-  std::string id_b64;
-  std::string hash_b64;
-  std::string prev_id_b64;
-  std::string prev_hash_b64;
+  block_id_type id;
+  hash_t hash;
+  block_id_type prev_id;
+  hash_t prev_hash;
   timestamp_t time;
-  size_t height;
+  block_height_type height;
   bytes block_raw;
   json txs;
 };
@@ -160,8 +160,13 @@ using nth_link_type = struct _nth_link_type {
   block_id_type prev_id;
   hash_t hash;
   hash_t prev_hash;
-  size_t height;
+  block_height_type height;
   timestamp_t time;
+};
+
+using unblk_push_result_type = struct _unblk_push_result_type {
+  block_height_type height;
+  bool linked;
 };
 
 // All of the blows are the same type. Use them according to the context.

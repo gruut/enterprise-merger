@@ -35,7 +35,7 @@ private:
   MessageProxy m_msg_proxy;
   Storage *m_storage;
   LayeredStorage *m_layered_storage;
-  merger_id_type m_my_id;
+  std::string m_my_id_b64;
   UnresolvedBlockPool m_unresolved_block_pool;
   std::unique_ptr<boost::asio::deadline_timer> m_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_task_strand;
@@ -57,6 +57,7 @@ private:
   void periodicTask();
   void handleMsgReqBlock(InputMsgEntry &entry);
   void handleMsgReqCheck(InputMsgEntry &entry);
+  void handleMsgReqStatus(InputMsgEntry &entry);
   void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
 };
 } // namespace gruut

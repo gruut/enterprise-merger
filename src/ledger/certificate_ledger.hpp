@@ -98,12 +98,9 @@ public:
 
 private:
 
-  template <typename S = json, typename T = std::string, typename V = std::vector<std::string>>
-  mem_ledger_t blockToLedger(S&& txs_json, T&& block_id_b64_,  V&& block_layer = {}){
+  mem_ledger_t blockToLedger(const json& txs_json, const std::string& block_id_b64, const std::vector<std::string>& block_layer = {}){
 
     mem_ledger_t ret_mem_ledger;
-
-    std::string block_id_b64 = block_id_b64_; // !!
 
     if(txs_json.is_array()) {
 

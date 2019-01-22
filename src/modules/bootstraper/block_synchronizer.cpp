@@ -284,7 +284,7 @@ void BlockSynchronizer::sendRequestBlock(size_t height, const std::string &block
   msg_req_block.body["mSig"] = "";
   msg_req_block.receivers = {t_merger};
 
-  CLOG(INFO, "BSYN") << "send MSG_REQ_BLOCK (" << height << ")";
+  CLOG(INFO, "BSYN") << "send MSG_REQ_BLOCK (height=" << height << ",hash=" << block_hash_b64 << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_req_block);
 }
