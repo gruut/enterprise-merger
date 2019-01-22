@@ -54,8 +54,8 @@ enum class MessageType : uint8_t {
   MSG_SSIG = 0xB3,
   MSG_BLOCK = 0xB4,
   MSG_HEADER = 0xB5,
-  // TODO: MSG_BLOCK_HGT 번호는 변경 될 수 있습니다.
-  MSG_BLOCK_HGT = 0xB6,
+  // TODO: MSG_CHAIN_INFO 번호는 변경 될 수 있습니다.
+  MSG_CHAIN_INFO = 0xB7,
   MSG_ERROR = 0xFF,
   MSG_REQ_CHECK = 0xC0,
   MSG_RES_CHECK = 0xC1

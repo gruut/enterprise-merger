@@ -13,8 +13,7 @@ BlockProcessor::BlockProcessor() {
 
   auto last_block_info = m_storage->getNthBlockLinkInfo();
 
-  m_unresolved_block_pool.setPool(last_block_info.id,
-                                  last_block_info.hash,
+  m_unresolved_block_pool.setPool(last_block_info.id, last_block_info.hash,
                                   last_block_info.height, last_block_info.time);
 
   // TODO : resotre m_unresolved_block_pool from backup
@@ -34,13 +33,14 @@ void BlockProcessor::periodicTask() {
     std::vector<Block> resolved_blocks;
     std::vector<std::string> drop_blocks;
 
-    m_unresolved_block_pool.getResolvedBlocks(resolved_blocks,drop_blocks);
+    m_unresolved_block_pool.getResolvedBlocks(resolved_blocks, drop_blocks);
 
-    for(auto &block_id_b64 : drop_blocks)
+    for (auto &block_id_b64 : drop_blocks)
       m_layered_storage->dropLedger(block_id_b64);
 
     if (!resolved_blocks.empty()) {
-      CLOG(INFO, "BPRO") << "Resolved block(s) received (" << resolved_blocks.size() << ")";
+      CLOG(INFO, "BPRO") << "Resolved block(s) received ("
+                         << resolved_blocks.size() << ")";
 
       for (auto &each_block : resolved_blocks) {
 
@@ -63,8 +63,8 @@ void BlockProcessor::periodicTask() {
       }
     }
 
-
-    nth_link_type unresolved_block = m_unresolved_block_pool.getUnresolvedLowestLink();
+    nth_link_type unresolved_block =
+        m_unresolved_block_pool.getUnresolvedLowestLink();
     if (unresolved_block.height > 0) {
       OutputMsgEntry msg_req_block;
 
@@ -73,11 +73,13 @@ void BlockProcessor::periodicTask() {
       msg_req_block.body["time"] = Time::now();
       msg_req_block.body["mCert"] = "";
       msg_req_block.body["hgt"] = std::to_string(unresolved_block.height);
-      msg_req_block.body["prevHash"] = TypeConverter::encodeBase64(unresolved_block.prev_hash);
+      msg_req_block.body["prevHash"] =
+          TypeConverter::encodeBase64(unresolved_block.prev_hash);
       msg_req_block.body["mSig"] = "";
       msg_req_block.receivers = {};
 
-      CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (" << unresolved_block.height << ")";
+      CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (" << unresolved_block.height
+                         << ")";
 
       m_msg_proxy.deliverOutputMessage(msg_req_block);
     }
@@ -98,7 +100,7 @@ nth_link_type BlockProcessor::getMostPossibleLink() {
   return m_unresolved_block_pool.getMostPossibleLink();
 }
 
-std::vector<std::string> BlockProcessor::getMostPossibleBlockLayer(){
+std::vector<std::string> BlockProcessor::getMostPossibleBlockLayer() {
   return m_unresolved_block_pool.getMostPossibleBlockLayer();
 }
 
@@ -152,18 +154,19 @@ void BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
 
   id_type recv_id = Safe::getBytesFromB64<id_type>(entry.body, "mID");
 
-  if(m_unresolved_block_pool.empty() && m_storage->empty()) {
-    sendErrorMessage(ErrorMsgType::BSYNC_NO_BLOCK,recv_id);
+  if (m_unresolved_block_pool.empty() && m_storage->empty()) {
+    sendErrorMessage(ErrorMsgType::BSYNC_NO_BLOCK, recv_id);
     return;
   }
 
   bool found_block = false;
   Block ret_block;
-  if(m_unresolved_block_pool.getBlock(req_block_height,req_prev_hash,req_hash,ret_block)){
+  if (m_unresolved_block_pool.getBlock(req_block_height, req_prev_hash,
+                                       req_hash, ret_block)) {
     found_block = true;
   }
 
-  if(!found_block) { // no block in unresolved block pool, then try storage
+  if (!found_block) { // no block in unresolved block pool, then try storage
     storage_block_type saved_block = m_storage->readBlock(req_block_height);
     if ((req_prev_hash.empty() || saved_block.prev_hash_b64 == req_prev_hash) &&
         (req_hash.empty() || saved_block.hash_b64 == req_hash)) {
@@ -173,18 +176,20 @@ void BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
   }
 
   if (!found_block) {
-    sendErrorMessage(ErrorMsgType::NO_SUCH_BLOCK,recv_id);
+    sendErrorMessage(ErrorMsgType::NO_SUCH_BLOCK, recv_id);
     return;
   }
 
   OutputMsgEntry msg_block;
   msg_block.type = MessageType::MSG_BLOCK;
   msg_block.body["mID"] = TypeConverter::encodeBase64(m_my_id);
-  msg_block.body["blockraw"] = TypeConverter::encodeBase64(ret_block.getBlockRaw());
+  msg_block.body["blockraw"] =
+      TypeConverter::encodeBase64(ret_block.getBlockRaw());
   msg_block.body["tx"] = ret_block.getBlockBodyJson()["tx"];
   msg_block.receivers = {recv_id};
 
-  CLOG(INFO, "BPRO") << "Send MSG_BLOCK (height=" << ret_block.getHeight() << ",#tx=" << ret_block.getNumTransactions() << ")";
+  CLOG(INFO, "BPRO") << "Send MSG_BLOCK (height=" << ret_block.getHeight()
+                     << ",#tx=" << ret_block.getNumTransactions() << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_block);
 }
@@ -209,21 +214,25 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     return 0;
   }
 
-  Application::app().getCustomLedgerManager().procLedgerBlock(entry.body["tx"], recv_block.getBlockIdB64());
+  Application::app().getCustomLedgerManager().procLedgerBlock(
+      entry.body["tx"], recv_block.getBlockIdB64());
 
   Application::app().getTransactionPool().removeDuplicatedTransactions(
       recv_block.getTxIds());
 
-  OutputMsgEntry msg_block_hgt;
-  msg_block_hgt.type = MessageType::MSG_BLOCK_HGT; // MSG_BLOCK_HGT = 0xB6
-  msg_block_hgt.body["mID"] = Safe::getString(entry.body, "mID");
-  msg_block_hgt.body["time"] = Time::now();
-  msg_block_hgt.body["hgt"] = to_string(recv_block.getHeight());
-  msg_block_hgt.body["bID"] = TypeConverter::encodeBase64(recv_block.getBlockId());
-  msg_block_hgt.body["prevbID"] = recv_block.getPrevBlockIdB64();
-  msg_block_hgt.body["prevHash"] = recv_block.getPrevHashB64();
+  OutputMsgEntry msg_chain_info;
+  msg_chain_info.type = MessageType::MSG_CHAIN_INFO; // MSG_CHAIN_INFO = 0xB7
+  msg_chain_info.body["mID"] = Safe::getString(entry.body, "mID");
+  msg_chain_info.body["time"] = Time::now();
+  msg_chain_info.body["hgt"] = to_string(recv_block.getHeight());
+  msg_chain_info.body["bID"] = recv_block.getBlockIdB64();
+  msg_chain_info.body["prevbID"] = recv_block.getPrevBlockIdB64();
+  msg_chain_info.body["hash"] = recv_block.getHashB64();
+  msg_chain_info.body["prevHash"] = recv_block.getPrevHashB64();
+  // TODO : mSig 는 임시.
+  msg_chain_info.body["mSig"] = "";
 
-  m_msg_proxy.deliverOutputMessage(msg_block_hgt);
+  m_msg_proxy.deliverOutputMessage(msg_chain_info);
 
   return pushed_block_height;
 }
@@ -252,7 +261,8 @@ void BlockProcessor::handleMsgReqCheck(InputMsgEntry &entry) {
   m_msg_proxy.deliverOutputMessage(msg_res_check);
 }
 
-void BlockProcessor::sendErrorMessage(ErrorMsgType t_error_type, id_type &recv_id) {
+void BlockProcessor::sendErrorMessage(ErrorMsgType t_error_type,
+                                      id_type &recv_id) {
 
   OutputMsgEntry output_message;
   output_message.type = MessageType::MSG_ERROR;
@@ -262,7 +272,7 @@ void BlockProcessor::sendErrorMessage(ErrorMsgType t_error_type, id_type &recv_i
   output_message.body["info"] = "no block!";
   output_message.receivers = {recv_id};
 
-  CLOG(INFO, "BPRO") << "Send MSG_ERROR (" << (int) t_error_type << ")";
+  CLOG(INFO, "BPRO") << "Send MSG_ERROR (" << (int)t_error_type << ")";
 
   m_msg_proxy.deliverOutputMessage(output_message);
 }

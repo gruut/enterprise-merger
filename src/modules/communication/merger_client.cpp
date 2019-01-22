@@ -25,17 +25,19 @@ void MergerClient::accessToTracker() {
   request_msg["ip"] = setting->getMyAddress();
   request_msg["port"] = setting->getMyPort();
   request_msg["mCert"] = setting->getMyCert();
-  request_msg["time"]  = Time::now();
-  //TODO: 아래는 현재 테스트를 위한 값으로 수정 될 것.
+  request_msg["time"] = Time::now();
+  // TODO: 아래는 현재 테스트를 위한 값으로 수정 될 것.
   request_msg["hgt"] = to_string(0);
   request_msg["bID"] = to_string(0);
-  request_msg["prevHash"] =to_string(0);
+  request_msg["hash"] = to_string(0);
+  request_msg["prevHash"] = to_string(0);
   request_msg["prevbID"] = to_string(0);
 
   // ToDO: 현재 local주소, setting에 tracker 정보 세팅 필요.
   CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";
   json response_msg;
-  HttpClient http_client("ec2-13-125-221-27.ap-northeast-2.compute.amazonaws.com/src/JoinMerger.php");
+  HttpClient http_client("ec2-13-125-221-27.ap-northeast-2.compute.amazonaws."
+                         "com/src/JoinMerger.php");
   CURLcode status =
       http_client.postAndGetReply(request_msg.dump(), response_msg);
 
@@ -51,7 +53,7 @@ void MergerClient::accessToTracker() {
       MergerInfo merger_info;
       string m_id_b64 = Safe::getString(merger, "mID");
 
-      if(m_id_b64 == request_msg["mID"])
+      if (m_id_b64 == request_msg["mID"])
         continue;
 
       merger_info.id = TypeConverter::decodeBase64(m_id_b64);
@@ -78,9 +80,9 @@ void MergerClient::accessToTracker() {
   }
 
   auto merger_list = m_conn_manager->getAllMergerInfo();
-  for(auto &merger_info : merger_list){
+  for (auto &merger_info : merger_list) {
     Status st = sendHealthCheck(merger_info);
-    if(st.ok()){
+    if (st.ok()) {
       auto &bp_scheduler = Application::app().getBpScheduler();
       bp_scheduler.setWelcome(false);
       return;
@@ -178,7 +180,8 @@ void MergerClient::sendMessage(MessageType msg_type,
 void MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
   std::string send_msg = output_msg.body.dump();
   // TODO : setting에서 tracker 정보 받아 올 수 있도록 수정 필요.
-  std::string address = "ec2-13-125-221-27.ap-northeast-2.compute.amazonaws.com/src/ChainInfo.php";
+  std::string address = "ec2-13-125-221-27.ap-northeast-2.compute.amazonaws."
+                        "com/src/ChainInfo.php";
   HttpClient http_client(address);
   http_client.post(send_msg);
 }
@@ -284,18 +287,16 @@ void MergerClient::sendToSigner(MessageType msg_type,
   }
 }
 
-Status MergerClient::sendHealthCheck(MergerInfo &merger_info){
+Status MergerClient::sendHealthCheck(MergerInfo &merger_info) {
   HealthCheckRequest request;
   request.set_service("healthy_service");
   HealthCheckResponse response;
   ClientContext context;
 
-  std::shared_ptr<ChannelCredentials> credential =
-	  InsecureChannelCredentials();
-  std::shared_ptr<Channel> channel = CreateChannel(
-	  merger_info.address + ":" + merger_info.port, credential);
-  std::unique_ptr<Health::Stub> hc_stub =
-	  health::v1::Health::NewStub(channel);
+  std::shared_ptr<ChannelCredentials> credential = InsecureChannelCredentials();
+  std::shared_ptr<Channel> channel =
+      CreateChannel(merger_info.address + ":" + merger_info.port, credential);
+  std::unique_ptr<Health::Stub> hc_stub = health::v1::Health::NewStub(channel);
 
   Status st = hc_stub->Check(&context, request, &response);
   return st;
@@ -304,7 +305,8 @@ Status MergerClient::sendHealthCheck(MergerInfo &merger_info){
 bool MergerClient::checkMergerMsgType(MessageType msg_type) {
   return (
       msg_type == MessageType::MSG_UP || msg_type == MessageType::MSG_PING ||
-      msg_type == MessageType::MSG_REQ_BLOCK || msg_type == MessageType::MSG_WELCOME ||
+      msg_type == MessageType::MSG_REQ_BLOCK ||
+      msg_type == MessageType::MSG_WELCOME ||
       msg_type == MessageType::MSG_BLOCK || msg_type == MessageType::MSG_ERROR);
 }
 
@@ -325,6 +327,6 @@ bool MergerClient::checkSEMsgType(MessageType msg_type) {
 }
 
 bool MergerClient::checkTrackerMsgType(gruut::MessageType msg_type) {
-  return (msg_type == MessageType::MSG_BLOCK_HGT);
+  return (msg_type == MessageType::MSG_CHAIN_INFO);
 }
 }; // namespace gruut

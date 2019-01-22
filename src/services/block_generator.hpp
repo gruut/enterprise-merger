@@ -63,14 +63,15 @@ public:
     msg_block_msg.body["tx"] = block_body["tx"];
     msg_block_msg.receivers = std::vector<id_type>{};
 
-    OutputMsgEntry msg_block_hgt;
-    msg_block_hgt.type = MessageType::MSG_BLOCK_HGT; // MSG_BLOCK_HGT = 0xB6
-    msg_block_hgt.body["mID"] = msg_block_msg.body["mID"];
-    msg_block_hgt.body["time"] = Time::now();
-    msg_block_hgt.body["hgt"] = to_string(new_block.getHeight());
-    msg_block_hgt.body["bID"] = TypeConverter::encodeBase64(new_block.getBlockId());
-    msg_block_hgt.body["prevbID"] = basic_info.prev_id_b64;
-    msg_block_hgt.body["prevHash"] = basic_info.prev_hash_b64;
+    OutputMsgEntry msg_chain_info;
+    msg_chain_info.type = MessageType::MSG_CHAIN_INFO; // MSG_CHAIN_INFO = 0xB7
+    msg_chain_info.body["mID"] = msg_block_msg.body["mID"];
+    msg_chain_info.body["time"] = Time::now();
+    msg_chain_info.body["hgt"] = to_string(new_block.getHeight());
+    msg_chain_info.body["bID"] = new_block.getBlockIdB64();
+    msg_chain_info.body["prevbID"] = new_block.getPrevBlockIdB64();
+    msg_chain_info.body["hash"] = new_block.getHashB64();
+    msg_chain_info.body["prevHash"] = new_block.getPrevHashB64();
 
     InputMsgEntry msg_block_msg_input;
     msg_block_msg_input.type = msg_block_msg.type;
@@ -79,7 +80,7 @@ public:
     MessageProxy proxy;
     proxy.deliverOutputMessage(msg_header_msg);
     proxy.deliverOutputMessage(msg_block_msg);
-    proxy.deliverOutputMessage(msg_block_hgt);
+    proxy.deliverOutputMessage(msg_chain_info);
     proxy.deliverBlockProcessor(msg_block_msg_input);
   }
 };
