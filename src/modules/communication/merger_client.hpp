@@ -44,7 +44,7 @@ private:
   std::unique_ptr<boost::asio::deadline_timer> m_http_check_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_http_check_strand;
 
-  void sendToTracker(OutputMsgEntry &output_msg);
+  json sendToTracker(OutputMsgEntry &output_msg);
 
   void sendToSE(std::vector<id_type> &receiver_list,
                 OutputMsgEntry &output_msg);

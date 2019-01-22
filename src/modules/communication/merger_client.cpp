@@ -63,7 +63,7 @@ void MergerClient::accessToTracker() {
       m_conn_manager->setMergerBlockHgt(merger_info.id, block_height);
 
       if (m_id_b64 != request_msg["mID"])
-        m_conn_manager->setMergerInfo(merger_info);
+        m_conn_manager->setMergerInfo(merger_info ,true);
     }
 
     for (auto &se : response_msg["se"]) {
@@ -74,7 +74,7 @@ void MergerClient::accessToTracker() {
       se_info.port = Safe::getString(se, "port");
       se_info.cert = Safe::getString(se, "seCert");
 
-      m_conn_manager->setSeInfo(se_info);
+      m_conn_manager->setSeInfo(se_info, true);
     }
   }
 
@@ -176,13 +176,21 @@ void MergerClient::sendMessage(MessageType msg_type,
   }
 }
 
-void MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
+json MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
   std::string send_msg = output_msg.body.dump();
   // TODO : setting에서 tracker 정보 받아 올 수 있도록 수정 필요.
-  std::string address = "ec2-13-125-221-27.ap-northeast-2.compute.amazonaws."
-                        "com/src/ChainInfo.php";
+  std::string address = "ec2-13-125-221-27.ap-northeast-2.compute.amazonaws.com/src/";
+
+  if(output_msg.type == MessageType::MSG_CHAIN_INFO)
+    address += "ChainInfo.php";
+  else
+    address += "CheckExist.php";
+
   HttpClient http_client(address);
-  http_client.post(send_msg);
+  json reply_json;
+  http_client.postAndGetReply(send_msg, reply_json);
+
+  return reply_json;
 }
 
 void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
@@ -234,6 +242,29 @@ void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
     }
   } else {
     for (auto &receiver_id : receiver_list) {
+
+      if(!m_conn_manager->checkMergerInfo(receiver_id)) {
+        std::string receiver_id_b64 = TypeConverter::encodeBase64(receiver_id);
+        OutputMsgEntry output_msg;
+        json body;
+        body["mID"] = receiver_id_b64;
+        output_msg.body = body;
+
+        json reply_json = sendToTracker(output_msg);
+
+        if(reply_json.find("flag") != reply_json.end()){
+          CLOG(ERROR, "MCLN") << "Tracker has no information about (" <<receiver_id_b64<<")";
+          continue;
+        }
+        MergerInfo merger_info;
+        string m_id_b64 = Safe::getString(reply_json, "mID");
+
+        merger_info.id = receiver_id;
+        merger_info.address = Safe::getString(reply_json, "ip");
+        merger_info.port = Safe::getString(reply_json, "port");
+        merger_info.cert = Safe::getString(reply_json, "mCert");
+        m_conn_manager->setMergerInfo(merger_info, true);
+      }
       MergerInfo merger_info = m_conn_manager->getMergerInfo(receiver_id);
       if (merger_info.conn_status) {
         sendMsgToMerger(merger_info, request);

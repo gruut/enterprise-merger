@@ -98,7 +98,13 @@ public:
 
     return merger_list;
   }
+  bool checkMergerInfo(merger_id_type &merger_id) {
+    std::string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
+    if(m_merger_info.find(merger_id_b64) == m_merger_info.end())
+      return false;
 
+    return true;
+  }
   bool getMergerStatus(merger_id_type &merger_id) {
     if (!m_enabled_merger_check)
       return true;
