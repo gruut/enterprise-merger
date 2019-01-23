@@ -33,6 +33,8 @@ Storage::Storage() {
       &m_db_blockid_height));
   errorOnCritical(leveldb::DB::Open(
       m_options, m_db_path + "/" + config::DB_SUB_DIR_LEDGER, &m_db_ledger));
+  errorOnCritical(leveldb::DB::Open(
+      m_options, m_db_path + "/" + config::DB_SUB_DIR_SERIALIZED_UNRESOLVED_BLOCK, &m_db_serialized_unresolved_block));
 }
 
 Storage::~Storage() {
@@ -42,6 +44,7 @@ Storage::~Storage() {
   delete m_db_transaction;
   delete m_db_blockid_height;
   delete m_db_ledger;
+  delete m_db_serialized_unresolved_block;
 
   m_db_block_header = nullptr;
   m_db_block_raw = nullptr;
@@ -49,6 +52,7 @@ Storage::~Storage() {
   m_db_transaction = nullptr;
   m_db_blockid_height = nullptr;
   m_db_ledger = nullptr;
+  m_db_serialized_unresolved_block = nullptr;
 }
 
 bool Storage::saveBlock(bytes &block_raw, json &block_header,
@@ -110,6 +114,9 @@ bool Storage::addBatch(DBType what, const string &base_suffix_key,
     break;
   case DBType::LEDGER:
     m_batch_ledger.Put(key, value);
+    break;
+  case DBType::SERIALIZED_UNRESOLVED_BLOCK:
+    m_batch_serialized_unresolved_block.Put(key, value);
     break;
   default:
     break;
@@ -289,6 +296,9 @@ std::string Storage::getValueByKey(DBType what,
   case DBType::LEDGER:
     status = m_db_ledger->Get(m_read_options, key, &value);
     break;
+  case DBType::SERIALIZED_UNRESOLVED_BLOCK:
+    status = m_db_serialized_unresolved_block->Get(m_read_options, key, &value);
+    break;
   default:
     break;
   }
@@ -398,6 +408,7 @@ void Storage::destroyDB() {
                                 config::DB_SUB_DIR_TRANSACTION);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_IDHEIGHT);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_LEDGER);
+  boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_SERIALIZED_UNRESOLVED_BLOCK);
 }
 
 std::string Storage::getNthBlockIdB64(block_height_type height) {
@@ -547,6 +558,32 @@ void Storage::clearLedger() { m_batch_ledger.Clear(); }
 void Storage::flushLedger() {
   m_db_ledger->Write(m_write_options, &m_batch_ledger);
   clearLedger();
+}
+
+void Storage::saveSerializedUnreslovedBlock(std::string &key, std::string &value) {
+  addBatch(DBType::SERIALIZED_UNRESOLVED_BLOCK, key, value);
+}
+
+void Storage::flushSerializedUnresolvdBlock() {
+  m_db_serialized_unresolved_block->Write(m_write_options, &m_batch_serialized_unresolved_block);
+  clearSerializedUnresolvdBlock();
+}
+
+void Storage::clearSerializedUnresolvdBlock() {
+  m_batch_serialized_unresolved_block.Clear();
+}
+
+std::string Storage::readSerializedUnreslovedBlock(std::string &key) {
+  return getValueByKey(DBType::SERIALIZED_UNRESOLVED_BLOCK, key);
+}
+
+std::string Storage::getAllUnresolvedBlock() {
+  leveldb::Iterator* it = m_db_serialized_unresolved_block->NewIterator(leveldb::ReadOptions());
+  for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    it->value().ToString();
+  }
+  assert(it->status().ok());  // Check for any errors found during the scan
+  delete it;
 }
 
 } // namespace gruut

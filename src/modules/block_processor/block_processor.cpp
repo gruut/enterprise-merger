@@ -17,6 +17,7 @@ BlockProcessor::BlockProcessor() {
                                   last_block_info.height, last_block_info.time);
 
   // TODO : resotre m_unresolved_block_pool from backup
+  m_unresolved_block_pool.restoreUnresolvedBlockPool();
 
   auto &io_service = Application::app().getIoService();
   m_timer.reset(new boost::asio::deadline_timer(io_service));

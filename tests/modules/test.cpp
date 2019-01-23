@@ -11,6 +11,8 @@
 #include "../../src/modules/message_fetcher/message_fetcher.hpp"
 #include "../../src/config/config.hpp"
 
+#include "../../src/modules/block_processor/unresolved_block_pool.hpp"
+
 using namespace std;
 using namespace gruut;
 
@@ -97,4 +99,90 @@ BOOST_AUTO_TEST_SUITE(Test_HttpClient)
     CURLcode status = client.post("Hello world");
     BOOST_TEST(true);
   }
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Test_serialize)
+BOOST_AUTO_TEST_CASE(serialize) {
+
+  BasicBlockInfo p_block;
+  p_block.merger_id = TypeConverter::integerToBytes(1);
+  p_block.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(1);
+  p_block.height = 1;
+  p_block.transaction_root = vector<uint8_t>(4, 1);
+
+  Transaction test_tx;
+  string tx_id_str = "1";
+  test_tx.setId(TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(TypeConverter::stringToBytes(tx_id_str)));
+  test_tx.setTime(Time::now_int());
+  test_tx.setRequestorId(TypeConverter::integerToBytes(1));
+  test_tx.setTransactionType(TransactionType::DIGESTS);
+  test_tx.setSignature(TypeConverter::integerToBytes(1));
+  test_tx.setContents({"Hello world!","Hello world!"});
+
+  p_block.transactions.push_back(test_tx);
+
+  vector<Signature> signature;
+  Signature tmp_sig(static_cast<signer_id_type>(TypeConverter::integerToBytes(1)),static_cast<signature_type>(TypeConverter::integerToBytes(1)));
+  signature.emplace_back(tmp_sig);
+
+  MerkleTree tree;
+  vector<Transaction> transactions = {test_tx};
+  tree.generate(transactions);
+
+  Block new_block;
+  new_block.initialize(p_block, tree.getMerkleTree());
+  new_block.setSupportSignatures(signature);
+  new_block.linkPreviousBlock(p_block.prev_id_b64,
+                              p_block.prev_hash_b64);
+  new_block.finalize();
+
+  json block_header = new_block.getBlockHeaderJson();
+  bytes block_raw = new_block.getBlockRaw();
+  json block_body = new_block.getBlockBodyJson();
+
+  std::string block_id_b64 = Safe::getString(block_header, "bID");
+
+  // 두번째
+  BasicBlockInfo q_block;
+  q_block.merger_id = TypeConverter::integerToBytes(2);
+  q_block.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(2);
+  q_block.height = 2;
+  q_block.transaction_root = vector<uint8_t>(4, 1);
+
+  Transaction test_tx_2;
+  string tx_id_str_2 = "2";
+  test_tx_2.setId(TypeConverter::bytesToArray<TRANSACTION_ID_TYPE_SIZE>(TypeConverter::stringToBytes(tx_id_str_2)));
+  test_tx_2.setTime(Time::now_int());
+  test_tx_2.setRequestorId(TypeConverter::integerToBytes(2));
+  test_tx_2.setTransactionType(TransactionType::DIGESTS);
+  test_tx_2.setSignature(TypeConverter::integerToBytes(2));
+  test_tx_2.setContents({"Hello 2!","Hello 2!"});
+
+  q_block.transactions.push_back(test_tx_2);
+
+  vector<Signature> signature_2;
+  Signature tmp_sig_2(static_cast<signer_id_type>(TypeConverter::integerToBytes(2)),static_cast<signature_type>(TypeConverter::integerToBytes(2)));
+  signature.emplace_back(tmp_sig_2);
+
+  MerkleTree tree_2;
+  vector<Transaction> transactions_2 = {test_tx_2};
+  tree.generate(transactions_2);
+
+  Block new_block_2;
+  new_block_2.initialize(q_block, tree_2.getMerkleTree());
+  new_block_2.setSupportSignatures(signature_2);
+  new_block_2.linkPreviousBlock(q_block.prev_id_b64,
+                              q_block.prev_hash_b64);
+  new_block_2.finalize();
+
+  UnresolvedBlockPool test;
+
+  test.setUnresolvedBlockSize(2);
+  test.serializeUnresolvedBlock(new_block);
+  test.serializeUnresolvedBlock(new_block_2);
+
+  test.saveSerializedUnresolvedBlocks();
+  test.restoreUnresolvedBlockPool();
+
+}
 BOOST_AUTO_TEST_SUITE_END()
