@@ -39,6 +39,7 @@ enum class MessageType : uint8_t {
   MSG_UP = 0x30,
   MSG_PING = 0x31,
   MSG_REQ_BLOCK = 0x32,
+  MSG_WELCOME = 0x35,
   MSG_REQ_STATUS = 0x33,
   MSG_RES_STATUS = 0x34,
   MSG_JOIN = 0x54,
@@ -53,6 +54,8 @@ enum class MessageType : uint8_t {
   MSG_SSIG = 0xB3,
   MSG_BLOCK = 0xB4,
   MSG_HEADER = 0xB5,
+  // TODO: MSG_CHAIN_INFO 번호는 변경 될 수 있습니다.
+  MSG_CHAIN_INFO = 0xB7,
   MSG_ERROR = 0xFF,
   MSG_REQ_CHECK = 0xC0,
   MSG_RES_CHECK = 0xC1

@@ -7,6 +7,7 @@ namespace gruut {
 
 BpScheduler::BpScheduler() {
   m_setting = Setting::getInstance();
+  m_conn_manager = ConnManager::getInstance();
 
   m_my_mid = m_setting->getMyId();
   m_my_cid = m_setting->getLocalChainId();
@@ -30,6 +31,8 @@ void BpScheduler::start() {
   lockStatusloop();
   sendPingloop();
 }
+
+void BpScheduler::setWelcome(bool st) { m_welcome = st; }
 
 BpStatus BpScheduler::stringToStatus(const std::string &str) {
   BpStatus ret_status = BpStatus::UNKNOWN;
@@ -212,7 +215,8 @@ void BpScheduler::sendPingloop() {
   m_timer->expires_at(ping_time);
   m_timer->async_wait([this](const boost::system::error_code &error) {
     if (!error) {
-      postSendPingJob();
+      if (m_welcome)
+        postSendPingJob();
       sendPingloop();
     } else {
       CLOG(ERROR, "BPSC") << error.message();
@@ -311,11 +315,44 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
   } break;
   case MessageType::MSG_UP: {
-    // std::string ver = msg.body["ver"].get<std::string>();
+    MessageProxy msg_proxy;
+    OutputMsgEntry output_message;
+    std::vector<merger_id_type> receivers{
+        TypeConverter::decodeBase64(merger_id_b64)};
+    output_message.receivers = receivers;
+    output_message.type = MessageType::MSG_WELCOME;
+    output_message.body["mID"] = m_my_mid_b64;
+    output_message.body["time"] = Time::now();
+
+    // TODO : MSG_UP에 대해 검증 할 요소가 추가 될 수 있습니다.
     if (Safe::getString(msg.body, "cID") != m_my_cid_b64) {
-      break;
+      output_message.body["val"] = false;
+    } else {
+      std::string ip = Safe::getString(msg.body, "ip");
+      std::string port = Safe::getString(msg.body, "port");
+      std::string mCert = Safe::getString(msg.body, "mCert");
+
+      MergerInfo merger_info;
+      merger_info.id = TypeConverter::decodeBase64(merger_id_b64);
+      merger_info.address = ip;
+      merger_info.port = port;
+      merger_info.cert = mCert;
+      m_conn_manager->setMergerInfo(merger_info, true);
+
+      output_message.body["val"] = true;
+      updateRecvStatus(merger_id_b64, timeslot, BpStatus::IN_BOOT_WAIT);
     }
-    updateRecvStatus(merger_id_b64, timeslot, BpStatus::IN_BOOT_WAIT);
+    msg_proxy.deliverOutputMessage(output_message);
+  } break;
+
+  case MessageType::MSG_WELCOME: {
+    bool val = Safe::getBoolean(msg.body, "val");
+    if (val) {
+      CLOG(INFO, "BPSC") << "WELCOME! From(" << merger_id_b64 << ")";
+      m_welcome = true;
+    }
+
+    // TODO: Merger network에 등록되지 못 할시 처리 필요.
   } break;
 
   default:

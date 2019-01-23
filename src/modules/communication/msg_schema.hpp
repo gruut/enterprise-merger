@@ -19,13 +19,25 @@ const json SCHEMA_UP = R"({
     },
     "cID": {
        "type": "string"
+    },
+    "ip": {
+       "type": "string"
+    },
+    "port": {
+       "type": "string"
+    },
+    "mCert": {
+       "type": "string"
     }
   },
   "required": [
     "mID",
     "time",
     "ver",
-    "cID"
+    "cID",
+    "ip",
+    "port",
+    "mCert"
   ]
 })"_json;
 const json SCHEMA_PING = R"({
@@ -84,6 +96,26 @@ const json SCHEMA_REQ_BLOCK = R"({
     "mCert",
     "hgt",
     "mSig"
+  ]
+})"_json;
+const json SCHEMA_WELCOME = R"({
+  "title": "welcome",
+  "type": "object",
+  "properties": {
+    "mID": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    },
+    "val": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "mID",
+    "time",
+    "val"
   ]
 })"_json;
 const json SCHEMA_BLOCK = R"({
@@ -403,6 +435,7 @@ const json SCHEMA_RES_STATUS = R"({
 const std::map<MessageType, json> MSG_SCHEMA_MAP = {
     {MessageType::MSG_UP, SCHEMA_UP},
     {MessageType::MSG_PING, SCHEMA_PING},
+    {MessageType::MSG_WELCOME, SCHEMA_WELCOME},
     {MessageType::MSG_REQ_BLOCK, SCHEMA_REQ_BLOCK},
     {MessageType::MSG_BLOCK, SCHEMA_BLOCK},
     {MessageType::MSG_JOIN, SCHEMA_JOIN},

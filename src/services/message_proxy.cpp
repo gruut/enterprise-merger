@@ -36,7 +36,8 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
       Application::app().getSignaturePool().handleMessage(message_body_json);
     } break;
     case MessageType::MSG_PING:
-    case MessageType::MSG_UP: {
+    case MessageType::MSG_UP:
+    case MessageType::MSG_WELCOME: {
       Application::app().getBpScheduler().handleMessage(input_message);
     } break;
     case MessageType::MSG_REQ_CHECK:

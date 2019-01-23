@@ -15,6 +15,8 @@ public:
   inline bool isStarted() { return m_merger_server.isStarted(); }
 
 private:
+  void setUpConnList();
+
   MergerServer m_merger_server;
   MergerClient m_merger_client;
   std::string m_port_num;

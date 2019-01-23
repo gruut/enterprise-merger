@@ -1,5 +1,6 @@
 #include "bootstrapper.hpp"
 #include "../../application.hpp"
+#include "../../services/setting.hpp"
 #include "easy_logging.hpp"
 
 namespace gruut {
@@ -17,15 +18,18 @@ void Bootstrapper::start() {
 }
 
 void Bootstrapper::sendMsgUp() {
-
   CLOG(INFO, "BOOT") << "send MSG_UP";
-
+  auto setting = Setting::getInstance();
   OutputMsgEntry output_msg;
+  // TODO : Message에 항목은 변경 될 수 있습니다.
   output_msg.type = MessageType::MSG_UP;
   output_msg.body["mID"] = TypeConverter::encodeBase64(m_my_id);
   output_msg.body["time"] = Time::now();
   output_msg.body["ver"] = to_string(1);
   output_msg.body["cID"] = TypeConverter::encodeBase64(m_my_localchain_id);
+  output_msg.body["ip"] = setting->getMyAddress();
+  output_msg.body["port"] = setting->getMyPort();
+  output_msg.body["mCert"] = setting->getMyCert();
 
   m_msg_proxy.deliverOutputMessage(output_msg);
 }

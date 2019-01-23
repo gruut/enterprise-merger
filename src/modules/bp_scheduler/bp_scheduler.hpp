@@ -7,10 +7,12 @@
 #include "../../services/setting.hpp"
 #include "../../utils/time.hpp"
 #include "../../utils/type_converter.hpp"
+#include "../communication/manage_connection.hpp"
 #include "../module.hpp"
 
 #include "boost/date_time/local_time/local_time.hpp"
 #include <algorithm>
+#include <atomic>
 #include <boost/asio.hpp>
 #include <chrono>
 #include <memory>
@@ -35,6 +37,7 @@ public:
   BpScheduler();
   void handleMessage(InputMsgEntry &msg);
   void start() override;
+  void setWelcome(bool st);
 
 private:
   void sendPingloop();
@@ -56,7 +59,10 @@ private:
 
   size_t m_up_slot{0};
   BpStatus m_current_status{BpStatus::IN_BOOT_WAIT};
-  std::atomic<bool> m_is_lock{true};
+
+  bool m_is_lock{true};
+  std::atomic<bool> m_welcome{true};
+
   std::vector<BpRecvStatusInfo> m_recv_status;
 
   std::mutex m_recv_status_mutex;
@@ -66,6 +72,7 @@ private:
   std::unique_ptr<boost::asio::strand> m_set_strand;
 
   MessageProxy m_msg_proxy;
+  ConnManager *m_conn_manager;
   Setting *m_setting;
 };
 
