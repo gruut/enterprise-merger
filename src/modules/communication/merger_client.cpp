@@ -20,8 +20,9 @@ MergerClient::MergerClient() {
 
 void MergerClient::accessToTracker() {
   auto setting = Setting::getInstance();
+  std::string my_id_b64 = TypeConverter::encodeBase64(setting->getMyId());
   json request_msg;
-  request_msg["mID"] = TypeConverter::encodeBase64(setting->getMyId());
+  request_msg["mID"] = my_id_b64;
   request_msg["ip"] = setting->getMyAddress();
   request_msg["port"] = setting->getMyPort();
   request_msg["mCert"] = setting->getMyCert();
@@ -50,26 +51,33 @@ void MergerClient::accessToTracker() {
       response_msg.find("se") != response_msg.end()) {
 
     for (auto &merger : response_msg["merger"]) {
-      MergerInfo merger_info;
-      string m_id_b64 = Safe::getString(merger, "mID");
+      string merger_id_b64 = Safe::getString(merger, "mID");
+      merger_id_type merger_id = TypeConverter::decodeBase64(merger_id_b64);
+      auto block_height = Safe::getInt(merger, "hgt");
+      m_conn_manager->setMergerBlockHgt(merger_id, block_height);
 
-      merger_info.id = TypeConverter::decodeBase64(m_id_b64);
+      if( m_conn_manager->hasMergerInfo(merger_id) ||
+          merger_id_b64 == my_id_b64 )
+        continue;
+
+      MergerInfo merger_info;
+      merger_info.id = merger_id;
       merger_info.address = Safe::getString(merger, "ip");
       merger_info.port = Safe::getString(merger, "port");
       merger_info.cert = Safe::getString(merger, "mCert");
 
-      auto block_height = Safe::getInt(merger, "hgt");
-
-      m_conn_manager->setMergerBlockHgt(merger_info.id, block_height);
-
-      if (m_id_b64 != request_msg["mID"])
-        m_conn_manager->setMergerInfo(merger_info ,true);
+      m_conn_manager->setMergerInfo(merger_info ,true);
     }
 
     for (auto &se : response_msg["se"]) {
       ServiceEndpointInfo se_info;
       string se_id_b64 = Safe::getString(se, "seID");
-      se_info.id = TypeConverter::decodeBase64(se_id_b64);
+      servend_id_type se_id = TypeConverter::decodeBase64(se_id_b64);
+
+      if(m_conn_manager->hasSeInfo(se_id))
+        continue;
+
+      se_info.id = se_id;
       se_info.address = Safe::getString(se, "ip");
       se_info.port = Safe::getString(se, "port");
       se_info.cert = Safe::getString(se, "seCert");
@@ -247,7 +255,7 @@ void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
   } else {
     for (auto &receiver_id : receiver_list) {
 
-      if(!m_conn_manager->checkMergerInfo(receiver_id)) {
+      if(!m_conn_manager->hasMergerInfo(receiver_id)) {
         std::string receiver_id_b64 = TypeConverter::encodeBase64(receiver_id);
         OutputMsgEntry output_msg;
         json body;

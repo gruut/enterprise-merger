@@ -24,7 +24,7 @@ void MergerServer::runServer(const std::string &port_num) {
 
   HealthCheckServiceInterface *hc_service = m_server->GetHealthCheckService();
   if (hc_service == nullptr) {
-    ConnectionList::getInstance()->disableMergerCheck();
+    ConnManager::getInstance()->disableMergerCheck();
     CLOG(ERROR, "MSVR") << "gRPC heatlth check is disabled. Connection "
                            "managing between mergers will be disabled.";
   } else {

@@ -98,13 +98,17 @@ public:
 
     return merger_list;
   }
-  bool checkMergerInfo(merger_id_type &merger_id) {
+  bool hasMergerInfo(merger_id_type &merger_id) {
     std::string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
-    if(m_merger_info.find(merger_id_b64) == m_merger_info.end())
-      return false;
+    return m_merger_info.find(merger_id_b64) != m_merger_info.end();
 
-    return true;
   }
+
+  bool hasSeInfo(servend_id_type &se_id){
+    std::string se_id_b64 = TypeConverter::encodeBase64(se_id);
+    return m_se_info.find(se_id_b64) != m_se_info.end();
+  }
+
   bool getMergerStatus(merger_id_type &merger_id) {
     if (!m_enabled_merger_check)
       return true;
