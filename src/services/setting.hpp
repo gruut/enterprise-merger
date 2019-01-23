@@ -166,13 +166,9 @@ public:
     // TODO :: wipe-out m_sk securely
   }
 
-  void setDBCheck(){
-    m_db_check = true;
-  }
+  void setDBCheck() { m_db_check = true; }
 
-  bool getDBCheck(){
-    return m_db_check;
-  }
+  bool getDBCheck() { return m_db_check; }
 
   bool setJson(json &setting_json) {
     if (!validateSchema(setting_json))

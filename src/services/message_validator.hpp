@@ -39,71 +39,52 @@ enum class EntryLength : int {
   NOT_LIMITED = 0
 };
 
-const std::vector<std::tuple<MessageType, std::string, EntryType, EntryLength>>
-    VALID_FILTER = {
-        {MessageType::MSG_JOIN, "sID", EntryType::BASE64, EntryLength::ID},
-        {MessageType::MSG_JOIN, "time", EntryType::TIMESTAMP,
-         EntryLength::NOT_LIMITED},
-        {MessageType::MSG_JOIN, "cID", EntryType::BASE64, EntryLength::ID},
+// clang-format off
+const std::vector<std::tuple<MessageType, std::string, EntryType, EntryLength>> VALID_FILTER = {
+    {MessageType::MSG_JOIN, "sID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_JOIN, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_JOIN, "cID", EntryType::BASE64, EntryLength::ID},
 
-        {MessageType::MSG_RESPONSE_1, "sID", EntryType::BASE64,
-         EntryLength::ID},
-        {MessageType::MSG_RESPONSE_1, "time", EntryType::TIMESTAMP,
-         EntryLength::NOT_LIMITED},
-        {MessageType::MSG_RESPONSE_1, "sN", EntryType::BASE64,
-         EntryLength::SIG_NONCE},
-        {MessageType::MSG_RESPONSE_1, "dhx", EntryType::HEX,
-         EntryLength::ECDH_XY},
-        {MessageType::MSG_RESPONSE_1, "dhy", EntryType::HEX,
-         EntryLength::ECDH_XY},
+    {MessageType::MSG_RESPONSE_1, "sID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_RESPONSE_1, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_RESPONSE_1, "sN", EntryType::BASE64, EntryLength::SIG_NONCE},
+    {MessageType::MSG_RESPONSE_1, "dhx", EntryType::HEX, EntryLength::ECDH_XY},
+    {MessageType::MSG_RESPONSE_1, "dhy", EntryType::HEX, EntryLength::ECDH_XY},
 
-        {MessageType::MSG_SUCCESS, "sID", EntryType::BASE64, EntryLength::ID},
-        {MessageType::MSG_SUCCESS, "time", EntryType::TIMESTAMP,
-         EntryLength::NOT_LIMITED},
-        {MessageType::MSG_SUCCESS, "val", EntryType::BOOL,
-         EntryLength::NOT_LIMITED},
+    {MessageType::MSG_SUCCESS, "sID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_SUCCESS, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_SUCCESS, "val", EntryType::BOOL, EntryLength::NOT_LIMITED},
 
-        {MessageType::MSG_TX, "txid", EntryType::BASE64, EntryLength::TX_ID},
-        {MessageType::MSG_TX, "time", EntryType::TIMESTAMP,
-         EntryLength::NOT_LIMITED},
-        {MessageType::MSG_TX, "rID", EntryType::BASE64, EntryLength::ID},
-        {MessageType::MSG_TX, "type", EntryType::STRING,
-         EntryLength::NOT_LIMITED},
-        {MessageType::MSG_TX, "content", EntryType::ARRAYOFSTRING,
-         EntryLength::NOT_LIMITED},
+    {MessageType::MSG_TX, "txid", EntryType::BASE64, EntryLength::TX_ID},
+    {MessageType::MSG_TX, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_TX, "rID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_TX, "type", EntryType::STRING, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_TX, "content", EntryType::ARRAYOFSTRING, EntryLength::NOT_LIMITED},
 
-        {MessageType::MSG_SSIG, "sID", EntryType::BASE64, EntryLength::ID},
-        {MessageType::MSG_SSIG, "time", EntryType::TIMESTAMP,
-         EntryLength::NOT_LIMITED},
+    {MessageType::MSG_SSIG, "sID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_SSIG, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
 
-        {MessageType::MSG_PING, "mID", EntryType::BASE64, EntryLength::ID},
-        {MessageType::MSG_PING, "time", EntryType::TIMESTAMP,
-         EntryLength::NOT_LIMITED},
-        {MessageType::MSG_PING, "sCnt", EntryType::DECIMAL,
-         EntryLength::NOT_LIMITED},
+    {MessageType::MSG_PING, "mID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_PING, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_PING, "sCnt", EntryType::DECIMAL, EntryLength::NOT_LIMITED},
 
-        {MessageType::MSG_UP, "mID", EntryType::BASE64, EntryLength::ID},
-        {MessageType::MSG_UP, "time", EntryType::TIMESTAMP,
-         EntryLength::NOT_LIMITED},
-        {MessageType::MSG_UP, "cID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_UP, "mID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_UP, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_UP, "cID", EntryType::BASE64, EntryLength::ID},
 
-        {MessageType::MSG_REQ_CHECK, "sender", EntryType::BASE64,
-         EntryLength::ID},
-        {MessageType::MSG_REQ_CHECK, "time", EntryType::TIMESTAMP,
-         EntryLength::NOT_LIMITED},
-        {MessageType::MSG_REQ_CHECK, "dID", EntryType::BASE64, EntryLength::ID},
-        {MessageType::MSG_REQ_CHECK, "txid", EntryType::BASE64,
-         EntryLength::TX_ID},
+    {MessageType::MSG_REQ_CHECK, "sender", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_REQ_CHECK, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_REQ_CHECK, "dID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_REQ_CHECK, "txid", EntryType::BASE64, EntryLength::TX_ID},
 
-        {MessageType::MSG_BLOCK, "mID", EntryType::BASE64, EntryLength::ID},
-        {MessageType::MSG_BLOCK, "tx", EntryType::ARRAYOFOBJECT,
-         EntryLength::NOT_LIMITED},
+    {MessageType::MSG_BLOCK, "mID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_BLOCK, "tx", EntryType::ARRAYOFOBJECT, EntryLength::NOT_LIMITED},
 
-        {MessageType::MSG_REQ_BLOCK, "mID", EntryType::BASE64, EntryLength::ID},
-        {MessageType::MSG_REQ_BLOCK, "time", EntryType::TIMESTAMP,
-         EntryLength::NOT_LIMITED},
-        {MessageType::MSG_REQ_BLOCK, "hgt", EntryType::UINT,
-         EntryLength::NOT_LIMITED}};
+    {MessageType::MSG_REQ_BLOCK, "mID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_REQ_BLOCK, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_REQ_BLOCK, "hgt", EntryType::UINT, EntryLength::NOT_LIMITED}
+};
+// clang-format on
 
 class MessageValidator {
 

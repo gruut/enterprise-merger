@@ -1,8 +1,8 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_MESSAGE_FETCHER_HPP
 #define GRUUT_ENTERPRISE_MERGER_MESSAGE_FETCHER_HPP
 #include "../../services/input_queue.hpp"
-#include "../module.hpp"
 #include "../../utils/periodic_task.hpp"
+#include "../module.hpp"
 
 namespace gruut {
 class MessageFetcher : public Module {
