@@ -47,6 +47,15 @@ private:
   std::atomic<size_t> m_height_range_max{0};
   std::atomic<bool> m_force_unresolved{false};
 
+  std::atomic<bool> m_cache_link_valid{false};
+  nth_link_type m_cache_possible_link;
+
+  std::atomic<bool> m_cache_layer_valid{false};
+  std::vector<std::string> m_cache_possible_block_layer;
+
+  std::atomic<bool> m_cache_pos_valid{false};
+  BlockPosOnMap m_cache_possible_pos;
+
 public:
   UnresolvedBlockPool() { el::Loggers::getLogger("URBK"); };
 
@@ -83,6 +92,12 @@ public:
     }
 
     return true;
+  }
+
+  void invalidateCaches() {
+    m_cache_link_valid = false;
+    m_cache_layer_valid = false;
+    m_cache_pos_valid = false;
   }
 
   unblk_push_result_type
@@ -131,6 +146,8 @@ public:
 
     m_block_pool[bin_pos].emplace_back(block, prev_queue_idx, 0,
                                        (prev_queue_idx >= 0));
+
+    invalidateCaches();
 
     int queue_idx = m_block_pool[bin_pos].size() - 1; // last
 
@@ -240,6 +257,10 @@ public:
   }
 
   nth_link_type getMostPossibleLink() {
+
+    if (m_cache_link_valid)
+      return m_cache_possible_link;
+
     nth_link_type ret_link;
 
     std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
@@ -251,8 +272,11 @@ public:
     ret_link.id = m_last_block_id;
     ret_link.hash = m_last_hash;
 
-    if (m_block_pool.empty())
+    if (m_block_pool.empty()) {
+      m_cache_possible_link = ret_link;
+      m_cache_link_valid = true;
       return ret_link;
+    }
 
     BlockPosOnMap longest_pos = getLongestBlockPos();
 
@@ -269,11 +293,19 @@ public:
       }
     }
 
+    m_cache_possible_link = ret_link;
+    m_cache_link_valid = true;
+
     return ret_link;
   }
 
   // reverse order
   std::vector<std::string> getMostPossibleBlockLayer() {
+
+    if (m_cache_layer_valid) {
+      return m_cache_possible_block_layer;
+    }
+
     auto t_block_pos = getLongestBlockPos();
     std::vector<std::string> ret_block_layer;
 
@@ -287,6 +319,8 @@ public:
       queue_idx = m_block_pool[i][queue_idx].prev_queue_idx;
     }
 
+    m_cache_possible_block_layer = ret_block_layer;
+    m_cache_layer_valid = true;
     return ret_block_layer;
   }
 
@@ -298,6 +332,9 @@ public:
 
 private:
   BlockPosOnMap getLongestBlockPos() {
+    if (m_cache_pos_valid)
+      return m_cache_possible_pos;
+
     BlockPosOnMap longest_pos;
     longest_pos.height = 0;
     longest_pos.vector_idx = 0;
@@ -315,6 +352,9 @@ private:
         }
       }
     }
+
+    m_cache_possible_pos = longest_pos;
+    m_cache_pos_valid = true;
 
     return longest_pos;
   }

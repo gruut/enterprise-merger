@@ -25,17 +25,17 @@ public:
   bool parse(int argc, char *argv[]) {
 
     json setting_json;
-
+    // clang-format off
     cxxopts::Options options(argv[0], config::APP_NAME + "\n");
-    options.add_options("basic")("help", "Print help description")(
-        "in", "Location of setting file",
-        cxxopts::value<string>()->default_value("./setting.json"))(
-        "pass", "Password to decrypt secret key",
-        cxxopts::value<string>()->default_value(""))(
-        "port", "Port number", cxxopts::value<string>()->default_value(""))(
-        "dbpath", "Location where LevelDB stores data",
-        cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH))(
-        "dbclear", "To wipe out the existing LevelDB");
+    options.add_options("basic")
+    ("help", "Print help description")
+    ("in", "Location of setting file", cxxopts::value<string>()->default_value("./setting.json"))
+    ("pass", "Password to decrypt secret key", cxxopts::value<string>()->default_value(""))
+    ("port", "Port number", cxxopts::value<string>()->default_value(""))
+    ("dbpath", "Location where LevelDB stores data", cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH))
+    ("dbclear", "To wipe out the existing LevelDB")
+    ("dbcheck", "Perform DB health check before running");
+    // clang-format on
 
     if (argc == 1) {
       std::cout << options.help({"", "basic"}) << std::endl;
@@ -122,7 +122,12 @@ public:
 
       if (result.count("dbclear")) {
         Storage::getInstance()->destroyDB();
-        CLOG(INFO, "ARGV") << "THE EXISTING DB HAS BEEN CLEARED.";
+        CLOG(INFO, "ARGV") << "EXISTING DB HAS BEEN CLEARED.";
+      }
+
+      if(result.count("dbcheck")) {
+        setting->setDBCheck();
+        CLOG(INFO, "ARGV") << "DB HEALTH CHECKING IS ENABLED.";
       }
 
     } catch (json::parse_error &e) {

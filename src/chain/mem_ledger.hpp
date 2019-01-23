@@ -2,6 +2,7 @@
 #define GRUUT_ENTERPRISE_MERGER_MEM_LEDGER_HPP
 
 #include <list>
+#include <string>
 
 namespace gruut {
 

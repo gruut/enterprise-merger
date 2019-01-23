@@ -62,7 +62,7 @@ bool Storage::saveBlock(bytes &block_raw, json &block_header,
       putBlockRaw(block_raw, block_id_b64)) {
     commitBatchAll();
 
-    CLOG(INFO, "STRG") << "Success to save block";
+    // CLOG(INFO, "STRG") << "Success to save block";
 
     return true;
   }

@@ -33,12 +33,10 @@ void BlockHealthChecker::startHealthCheck() {
   std::string prev_block_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
   size_t last_healty_block = 0;
 
-  CLOG(INFO, "BHCH") << "Checking ... 0/" << latest_block_info.height;
-
   size_t unit_step =
       (latest_block_info.height < 10) ? 1 : latest_block_info.height / 10;
 
-  for (size_t i = 1; i < latest_block_info.height; ++i) {
+  for (size_t i = 1; i <= latest_block_info.height; ++i) {
 
     if (i % unit_step == 0)
       CLOG(INFO, "BHCH") << "Checking ... " << i << "/"

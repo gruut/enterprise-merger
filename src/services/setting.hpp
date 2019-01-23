@@ -147,6 +147,7 @@ private:
   GruutAuthorityInfo m_gruut_authority;
   std::vector<ServiceEndpointInfo> m_service_endpoints;
   std::vector<MergerInfo> m_mergers;
+  bool m_db_check{false};
 
 public:
   Setting()
@@ -163,6 +164,14 @@ public:
 
   ~Setting() {
     // TODO :: wipe-out m_sk securely
+  }
+
+  void setDBCheck(){
+    m_db_check = true;
+  }
+
+  bool getDBCheck(){
+    return m_db_check;
   }
 
   bool setJson(json &setting_json) {
