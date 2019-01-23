@@ -38,19 +38,15 @@ constexpr size_t BP_INTERVAL = 10;
 constexpr size_t BP_PING_PERIOD = 4;
 constexpr size_t BROC_PROCESSOR_TASK_INTERVAL = 500;
 constexpr size_t BROC_PROCESSOR_REQ_WAIT = 3;
-constexpr size_t STATUS_COLLECTING_TIMEOUT_SEC = 4;
+constexpr size_t STATUS_COLLECTING_TIMEOUT = 4000;
 constexpr size_t JOIN_TIMEOUT_SEC = 10;
 constexpr size_t INQUEUE_MSG_FETCHER_INTERVAL = 5;
 constexpr size_t OUTQUEUE_MSG_FETCHER_INTERVAL = 100;
-constexpr size_t SIGNATURE_COLLECTION_INTERVAL = 3000;
+constexpr size_t SIGNATURE_COLLECTION_TIMEOUT = 3000;
 constexpr size_t SIGNATURE_COLLECTION_CHECK_INTERVAL = 500;
-constexpr size_t BOOTSTRAP_RETRY_TIMEOUT = 10;
-constexpr size_t BOOTSTRAP_MAX_REQ_BLOCK_RETRY = 5;
-constexpr size_t BOOTSTRAP_MAX_TASK_WAIT_TIME = 10;
-constexpr size_t BSYNC_RETRY_TIME_INTERVAL = 2;
-constexpr size_t MAX_WAIT_TIME = 120;
-constexpr int RPC_CHECK_INTERVAL = 1;
-constexpr int HTTP_CHECK_INTERVAL = 5;
+constexpr int RPC_CHECK_INTERVAL = 1000;
+constexpr int HTTP_CHECK_INTERVAL = 5000;
+constexpr size_t TIME_MAX_DIFF_SEC = 3;
 
 // KNOWLEDGE
 

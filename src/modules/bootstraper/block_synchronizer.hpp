@@ -9,6 +9,7 @@
 #include "../../services/storage.hpp"
 #include "../../utils/bytes_builder.hpp"
 #include "../../utils/compressor.hpp"
+#include "../../utils/periodic_task.hpp"
 #include "../../utils/random_number_generator.hpp"
 #include "../../utils/rsa.hpp"
 #include "../../utils/sha256.hpp"
@@ -42,8 +43,8 @@ private:
   MessageProxy m_msg_proxy;
   merger_id_type m_my_id;
 
-  std::unique_ptr<boost::asio::deadline_timer> m_msg_fetching_loop_timer;
-  std::unique_ptr<boost::asio::deadline_timer> m_sync_ctrl_loop_timer;
+  PeriodicTask m_msg_fetch_scheduler;
+  PeriodicTask m_sync_control_scheduler;
   std::unique_ptr<boost::asio::deadline_timer> m_sync_begin_timer;
 
   std::function<void(ExitCode)> m_sync_finish_callback;

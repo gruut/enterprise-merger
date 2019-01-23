@@ -146,7 +146,7 @@ void SignatureRequester::startSignatureCollectTimer() {
   m_is_collect_timer_running = true;
 
   m_collect_timer->expires_from_now(
-      boost::posix_time::milliseconds(config::SIGNATURE_COLLECTION_INTERVAL));
+      boost::posix_time::milliseconds(config::SIGNATURE_COLLECTION_TIMEOUT));
   m_collect_timer->async_wait([this](const boost::system::error_code &error) {
     if (!error) {
       if (m_is_collect_timer_running)

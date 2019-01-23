@@ -22,7 +22,7 @@ template <typename T>
 std::shared_ptr<T> TemplateSingleton<T>::m_instance = nullptr;
 template <typename T> std::once_flag TemplateSingleton<T>::m_once_flag;
 
-/*
+#if 0
 template <typename T> class TemplateSingleton {
 protected:
   TemplateSingleton() {}
@@ -47,6 +47,6 @@ private:
 };
 
 template <typename T> T *TemplateSingleton<T>::m_instance = 0;
- */
+#endif
 
 #endif
