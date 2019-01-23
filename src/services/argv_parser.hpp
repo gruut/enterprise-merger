@@ -125,7 +125,7 @@ public:
         CLOG(INFO, "ARGV") << "EXISTING DB HAS BEEN CLEARED.";
       }
 
-      if(result.count("dbcheck")) {
+      if (result.count("dbcheck")) {
         setting->setDBCheck();
         CLOG(INFO, "ARGV") << "DB HEALTH CHECKING IS ENABLED.";
       }

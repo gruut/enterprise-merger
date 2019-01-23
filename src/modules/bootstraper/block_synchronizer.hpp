@@ -75,7 +75,6 @@ private:
   void syncFinish(ExitCode exit_code);
   void blockSyncControl();
   void messageFetch();
-  bool checkMsgFromOtherMerger(MessageType msg_type);
   bool checkMsgFromSigner(MessageType msg_type);
 };
 } // namespace gruut

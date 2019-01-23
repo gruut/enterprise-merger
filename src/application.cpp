@@ -107,7 +107,7 @@ void Application::setup() {
   m_custom_ledger_manager = make_shared<CustomLedgerManager>();
 
   // step 2 - running scenario
-  if(Setting::getInstance()->getDBCheck())
+  if (Setting::getInstance()->getDBCheck())
     registerModule(m_block_health_checker, 0, true);
 
   registerModule(m_block_processor, 1);

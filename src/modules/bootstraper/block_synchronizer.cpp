@@ -230,10 +230,24 @@ void BlockSynchronizer::sendRequestLastBlock() {
     return;
   }
 
-  sendRequestBlock(last_block_height, last_block_hash_b64,
-                   TypeConverter::decodeBase64(t_merger_id_b64));
+  if (last_block_height < m_link_from.height ||
+      (m_link_from.height == last_block_height &&
+       TypeConverter::encodeBase64(m_link_from.hash) ==
+           last_block_hash_b64)) { // no need to sync
+    syncFinish(ExitCode::NORMAL);
+    return;
+  }
+
+  if (m_link_from.height == last_block_height) {
+    sendRequestBlock(last_block_height, last_block_hash_b64,
+                     TypeConverter::decodeBase64(t_merger_id_b64));
+    syncFinish(ExitCode::NORMAL);
+    return;
+  }
 
   if (last_block_height > m_link_from.height) {
+    sendRequestBlock(last_block_height, last_block_hash_b64,
+                     TypeConverter::decodeBase64(t_merger_id_b64));
     size_t req_map_size = last_block_height - m_link_from.height;
     if (m_sync_flags.size() < req_map_size)
       m_sync_flags.resize(req_map_size, false);
@@ -278,13 +292,6 @@ void BlockSynchronizer::sendRequestStatus() {
   CLOG(INFO, "BSYN") << "send MSG_REQ_STATUS";
 
   m_msg_proxy.deliverOutputMessage(msg_req_status);
-}
-
-inline bool BlockSynchronizer::checkMsgFromOtherMerger(MessageType msg_type) {
-  return (
-      msg_type == MessageType::MSG_UP || msg_type == MessageType::MSG_PING ||
-      msg_type == MessageType::MSG_REQ_BLOCK ||
-      msg_type == MessageType::MSG_BLOCK || msg_type == MessageType::MSG_ERROR);
 }
 
 inline bool BlockSynchronizer::checkMsgFromSigner(MessageType msg_type) {
