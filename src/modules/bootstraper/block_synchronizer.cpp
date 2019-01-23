@@ -206,7 +206,7 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
     }
   }
 
-  if (max_hgt != 0 && !have_max_hgt)
+  if (max_hgt != 0 && !have_max_hgt) {
     CLOG(INFO, "BSYN") << "Waiting Mergers that have max height block";
     while (!conn_check) {
       for (auto &merger : max_hgt_merger_list) {
@@ -215,6 +215,8 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
       // TODO: 500ms 임시값.
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
+  }
+  conn_manager->clearBlockHgtList();
 
   m_link_from = Application::app().getBlockProcessor().getMostPossibleLink();
 

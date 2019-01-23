@@ -20,6 +20,10 @@ MergerClient::MergerClient() {
 
 void MergerClient::accessToTracker() {
   auto setting = Setting::getInstance();
+  auto storage = Storage::getInstance();
+
+  auto latest_block_info = storage->getNthBlockLinkInfo();
+
   std::string my_id_b64 = TypeConverter::encodeBase64(setting->getMyId());
   json request_msg;
   request_msg["mID"] = my_id_b64;
@@ -27,12 +31,11 @@ void MergerClient::accessToTracker() {
   request_msg["port"] = setting->getMyPort();
   request_msg["mCert"] = setting->getMyCert();
   request_msg["time"] = Time::now();
-  // TODO: 아래는 현재 테스트를 위한 값으로 수정 될 것.
-  request_msg["hgt"] = to_string(0);
-  request_msg["bID"] = to_string(0);
-  request_msg["hash"] = to_string(0);
-  request_msg["prevHash"] = to_string(0);
-  request_msg["prevbID"] = to_string(0);
+  request_msg["hgt"] = latest_block_info.height;
+  request_msg["bID"] = TypeConverter::encodeBase64(latest_block_info.id);
+  request_msg["hash"] = TypeConverter::encodeBase64(latest_block_info.hash);
+  request_msg["prevHash"] = TypeConverter::encodeBase64(latest_block_info.prev_hash);
+  request_msg["prevbID"] = TypeConverter::encodeBase64(latest_block_info.prev_id);
 
   // ToDO: 현재 local주소, setting에 tracker 정보 세팅 필요.
   CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";

@@ -236,26 +236,29 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   // if not linked initially, we cannot interpret this block because of previous
   // missing blocks!
-  if (block_push_result.linked)
+  if (block_push_result.linked) {
     Application::app().getCustomLedgerManager().procLedgerBlock(
         entry.body["tx"], recv_block.getBlockIdB64());
 
+    auto possible_link = getMostPossibleLink();
+
+    OutputMsgEntry msg_chain_info;
+    msg_chain_info.type = MessageType::MSG_CHAIN_INFO; // MSG_CHAIN_INFO = 0xB7
+    msg_chain_info.body["mID"] = Safe::getString(entry.body, "mID");
+    msg_chain_info.body["time"] = Time::now();
+    msg_chain_info.body["hgt"] = to_string(possible_link.height);
+    msg_chain_info.body["bID"] = TypeConverter::encodeBase64(possible_link.id);
+    msg_chain_info.body["prevbID"] = TypeConverter::encodeBase64(possible_link.prev_id);
+    msg_chain_info.body["hash"] = TypeConverter::encodeBase64(possible_link.hash);
+    msg_chain_info.body["prevHash"] = TypeConverter::encodeBase64(possible_link.prev_hash);
+    // TODO : mSig 는 임시.
+    msg_chain_info.body["mSig"] = "";
+
+    m_msg_proxy.deliverOutputMessage(msg_chain_info);
+  }
+
   Application::app().getTransactionPool().removeDuplicatedTransactions(
       recv_block.getTxIds());
-
-  OutputMsgEntry msg_chain_info;
-  msg_chain_info.type = MessageType::MSG_CHAIN_INFO; // MSG_CHAIN_INFO = 0xB7
-  msg_chain_info.body["mID"] = Safe::getString(entry.body, "mID");
-  msg_chain_info.body["time"] = Time::now();
-  msg_chain_info.body["hgt"] = to_string(recv_block.getHeight());
-  msg_chain_info.body["bID"] = recv_block.getBlockIdB64();
-  msg_chain_info.body["prevbID"] = recv_block.getPrevBlockIdB64();
-  msg_chain_info.body["hash"] = recv_block.getHashB64();
-  msg_chain_info.body["prevHash"] = recv_block.getPrevHashB64();
-  // TODO : mSig 는 임시.
-  // msg_chain_info.body["mSig"] = "";
-
-  m_msg_proxy.deliverOutputMessage(msg_chain_info);
 
   resolveBlocks();
 
