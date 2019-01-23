@@ -101,10 +101,9 @@ public:
   bool hasMergerInfo(merger_id_type &merger_id) {
     std::string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
     return m_merger_info.find(merger_id_b64) != m_merger_info.end();
-
   }
 
-  bool hasSeInfo(servend_id_type &se_id){
+  bool hasSeInfo(servend_id_type &se_id) {
     std::string se_id_b64 = TypeConverter::encodeBase64(se_id);
     return m_se_info.find(se_id_b64) != m_se_info.end();
   }

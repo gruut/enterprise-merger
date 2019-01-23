@@ -32,13 +32,13 @@ void Communication::setUpConnList() {
 
   auto conn_manager = ConnManager::getInstance();
 
-  for(auto &merger_info : merger_list){
-    if(merger_info.id == my_id)
+  for (auto &merger_info : merger_list) {
+    if (merger_info.id == my_id)
       continue;
 
     conn_manager->setMergerInfo(merger_info, true);
   }
-  for(auto &se_info : se_list){
+  for (auto &se_info : se_list) {
     conn_manager->setSeInfo(se_info, true);
   }
 }

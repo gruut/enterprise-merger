@@ -253,7 +253,7 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   msg_chain_info.body["hash"] = recv_block.getHashB64();
   msg_chain_info.body["prevHash"] = recv_block.getPrevHashB64();
   // TODO : mSig 는 임시.
-  //msg_chain_info.body["mSig"] = "";
+  // msg_chain_info.body["mSig"] = "";
 
   m_msg_proxy.deliverOutputMessage(msg_chain_info);
 
