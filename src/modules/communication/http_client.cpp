@@ -12,6 +12,7 @@ CURLcode HttpClient::post(const string &packed_msg) {
   try {
     m_curl.setOpt(CURLOPT_URL, m_address.data());
     m_curl.setOpt(CURLOPT_POST, 1L);
+    m_curl.setOpt(CURLOPT_TIMEOUT, 2L);
 
     const auto escaped_field_data = m_curl.escape(packed_msg);
     const string post_field = getPostField("message", escaped_field_data);

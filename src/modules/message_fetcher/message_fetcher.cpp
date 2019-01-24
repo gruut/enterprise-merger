@@ -1,14 +1,5 @@
-#include <chrono>
-#include <iostream>
-#include <thread>
-
-#include "../../application.hpp"
-#include "../../chain/types.hpp"
-#include "../../config/config.hpp"
-#include "../../services/message_proxy.hpp"
-
 #include "message_fetcher.hpp"
-
+#include "../../application.hpp"
 #include "easy_logging.hpp"
 
 namespace gruut {
@@ -16,7 +7,6 @@ MessageFetcher::MessageFetcher() {
 
   m_input_queue = InputQueueAlt::getInstance();
   m_fetch_scheduler.setIoService(Application::app().getIoService());
-  ;
 
   el::Loggers::getLogger("MFCT");
 }
