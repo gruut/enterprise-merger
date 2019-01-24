@@ -106,10 +106,14 @@ public:
     storage->flushSerializedUnresolvdBlock();
   }
 
-  void restoreUnresolvedBlockPool() {
+  bool restoreUnresolvedBlockPool() {
     auto storage = Storage::getInstance();
-    std::string temp =
-        storage->readSerializedUnreslovedBlock(m_unresolved_blocks_key);
+
+    std::string temp;
+    if(storage->readSerializedUnreslovedBlock(m_unresolved_blocks_key).empty())
+      return false;
+
+    temp = storage->readSerializedUnreslovedBlock(m_unresolved_blocks_key);
 
     iarchive_stream << temp;
 
@@ -127,11 +131,9 @@ public:
       Block temp;
       temp.initialize(block_raw, block_body);
       push(temp);
-
-      std::cout << "block raw : " << TypeConverter::bytesToString(block_raw)
-                << std::endl;
-      std::cout << "block body : " << block_body << std::endl;
     }
+
+    return true;
   }
 
   void unresolvedBlockPoolBackUp(
