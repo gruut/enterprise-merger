@@ -20,6 +20,8 @@ void Communication::start() {
 
   auto &io_service = Application::app().getIoService();
   io_service.post([this]() { m_merger_server.runServer(m_port_num); });
+
+  stageOver(ExitCode::NORMAL);
 }
 
 void Communication::setUpConnList() {
