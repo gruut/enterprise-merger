@@ -19,68 +19,58 @@ BlockProcessor::BlockProcessor() {
   // TODO : resotre m_unresolved_block_pool from backup
 
   auto &io_service = Application::app().getIoService();
-  m_timer.reset(new boost::asio::deadline_timer(io_service));
-  m_task_strand.reset(new boost::asio::io_service::strand(io_service));
+  m_task_scheduler.setIoService(io_service);
 
   el::Loggers::getLogger("BPRO");
 }
 
-void BlockProcessor::start() { periodicTask(); }
+void BlockProcessor::start() {
+  m_task_scheduler.setTaskFunction([this]() { periodicTask(); });
+  m_task_scheduler.setInterval(config::BROC_PROCESSOR_TASK_INTERVAL);
+  m_task_scheduler.setStrandMod();
+  m_task_scheduler.runTask();
+}
 
 void BlockProcessor::periodicTask() {
-  auto &io_service = Application::app().getIoService();
-  io_service.post(m_task_strand->wrap([this]() {
-    timestamp_t current_time = Time::now_int();
+  timestamp_t current_time = Time::now_int();
+  std::vector<BlockRequestRecord> request_this_time;
 
-    std::vector<BlockRequestRecord> request_this_time;
+  std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
 
-    std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
-
-    for (auto &each_request : m_request_list) {
-      if (current_time > each_request.request_time &&
-          current_time >
-              config::BROC_PROCESSOR_REQ_WAIT + each_request.request_time) {
-        request_this_time.emplace_back(each_request);
-        each_request.request_time = current_time;
-      }
+  for (auto &each_request : m_request_list) {
+    if (current_time > each_request.request_time &&
+        current_time >
+            config::BROC_PROCESSOR_REQ_WAIT + each_request.request_time) {
+      request_this_time.emplace_back(each_request);
+      each_request.request_time = current_time;
     }
+  }
 
-    m_request_mutex.unlock();
+  m_request_mutex.unlock();
 
-    for (auto &each_request : request_this_time) {
+  for (auto &each_request : request_this_time) {
 
-      OutputMsgEntry msg_req_block;
+    OutputMsgEntry msg_req_block;
 
-      msg_req_block.type = MessageType::MSG_REQ_BLOCK;
-      msg_req_block.body["mID"] = m_my_id_b64; // my_id
-      msg_req_block.body["time"] = to_string(current_time);
-      msg_req_block.body["mCert"] = "";
-      msg_req_block.body["hgt"] = to_string(each_request.height);
-      msg_req_block.body["prevHash"] = each_request.prev_hash_b64;
-      msg_req_block.body["hash"] = each_request.hash_b64;
-      msg_req_block.body["mSig"] = "";
+    msg_req_block.type = MessageType::MSG_REQ_BLOCK;
+    msg_req_block.body["mID"] = m_my_id_b64; // my_id
+    msg_req_block.body["time"] = to_string(current_time);
+    msg_req_block.body["mCert"] = "";
+    msg_req_block.body["hgt"] = to_string(each_request.height);
+    msg_req_block.body["prevHash"] = each_request.prev_hash_b64;
+    msg_req_block.body["hash"] = each_request.hash_b64;
+    msg_req_block.body["mSig"] = "";
 
-      if (each_request.recv_id.empty())
-        msg_req_block.receivers = {};
-      else
-        msg_req_block.receivers = {each_request.recv_id};
+    if (each_request.recv_id.empty())
+      msg_req_block.receivers = {};
+    else
+      msg_req_block.receivers = {each_request.recv_id};
 
-      CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (height=" << each_request.height
-                         << ",prevHash=" << each_request.prev_hash_b64 << ")";
+    CLOG(INFO, "BPRO") << "send MSG_REQ_BLOCK (height=" << each_request.height
+                       << ",prevHash=" << each_request.prev_hash_b64 << ")";
 
-      m_msg_proxy.deliverOutputMessage(msg_req_block);
-    }
-  }));
-
-  m_timer->expires_from_now(
-      boost::posix_time::milliseconds(config::BROC_PROCESSOR_TASK_INTERVAL));
-  m_timer->async_wait([this](const boost::system::error_code &error) {
-    if (!error) {
-      periodicTask();
-    } else {
-      CLOG(INFO, "BPRO") << error.message();
-    }
-  });
+    m_msg_proxy.deliverOutputMessage(msg_req_block);
+  }
 }
 
 nth_link_type BlockProcessor::getMostPossibleLink() {

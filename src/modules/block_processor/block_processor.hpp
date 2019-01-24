@@ -7,6 +7,7 @@
 #include "../../utils/bytes_builder.hpp"
 #include "../../utils/compressor.hpp"
 #include "../../utils/ecdsa.hpp"
+#include "../../utils/periodic_task.hpp"
 #include "../../utils/sha256.hpp"
 
 #include "../../services/input_queue.hpp"
@@ -45,10 +46,9 @@ private:
   LayeredStorage *m_layered_storage;
   std::string m_my_id_b64;
   UnresolvedBlockPool m_unresolved_block_pool;
-  std::unique_ptr<boost::asio::deadline_timer> m_timer;
-  std::unique_ptr<boost::asio::io_service::strand> m_task_strand;
   std::list<BlockRequestRecord> m_request_list;
   std::recursive_mutex m_request_mutex;
+  PeriodicTask m_task_scheduler;
 
 public:
   BlockProcessor();
