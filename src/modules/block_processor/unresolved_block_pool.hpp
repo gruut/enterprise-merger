@@ -13,11 +13,6 @@
 #include <list>
 #include <vector>
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/string.hpp>
-#include <sstream>
-
 namespace gruut {
 
 const std::string UNRESOLVED_BLOCK_IDS_KEY = "UNRESOLVED_BLOCK_IDS_KEY";
@@ -68,7 +63,6 @@ private:
 public:
   UnresolvedBlockPool() {
     el::Loggers::getLogger("URBK");
-    restorePool();
   };
 
   size_t size() { return m_block_pool.size(); }
@@ -113,7 +107,7 @@ public:
   }
 
   unblk_push_result_type
-  push(Block &block) { // we assume this block has valid structure at least
+  push(Block &block, bool is_restore = false) { // we assume this block has valid structure at least
     unblk_push_result_type ret_val;
     ret_val.height = 0;
     ret_val.linked = false;
@@ -161,7 +155,8 @@ public:
 
     invalidateCaches();
 
-    backupPool();
+    if(!is_restore)
+      backupPool();
 
     int queue_idx = m_block_pool[bin_pos].size() - 1; // last
 
@@ -199,14 +194,14 @@ public:
       return false;
     }
 
-    int bin_pos = t_height - m_last_height;
+    int bin_pos = t_height - m_last_height - 1;
 
     hash_t block_hash = t_hash;
     hash_t prev_hash = t_prev_hash;
 
     if (t_height == 0) {
       nth_link_type most_possible_link = getMostPossibleLink();
-      bin_pos = most_possible_link.height - m_last_height;
+      bin_pos = most_possible_link.height - m_last_height - 1;
       prev_hash = most_possible_link.prev_hash;
       block_hash = most_possible_link.hash;
     }
@@ -248,7 +243,7 @@ public:
 
     json id_array = readBackupIds();
 
-    if (id_array.empty())
+    if (id_array.empty() || !id_array.is_array())
       return;
 
     json del_id_array = json::array();
@@ -279,7 +274,6 @@ public:
         TypeConverter::bytesToString(json::to_cbor(new_id_array)));
     storage->flushBackup();
 
-    // TODO : del_id_array
     for (auto &each_id : del_id_array) {
       std::string block_id_b64 = Safe::getString(each_id);
       storage->delBackup(block_id_b64);
@@ -390,23 +384,39 @@ public:
   void restorePool() {
 
     json id_array = readBackupIds();
-    if (id_array.empty())
+    if (id_array.empty() || !id_array.is_array())
       return;
 
     auto storage = Storage::getInstance();
+
+    size_t num_pused_block = 0;
 
     for (auto &id_each : id_array) {
       std::string block_id_b64 = Safe::getString(id_each);
       if (!block_id_b64.empty()) {
         std::string serialized_block =
             storage->readUnreslovedBlocks(block_id_b64);
-        if (!serialized_block.empty()) {
-          Block new_block;
-          new_block.deserialize(serialized_block);
-          push(new_block);
+        if (serialized_block.empty()) {
+          CLOG(ERROR, "URBK") << "Failed to read block [" << block_id_b64 << "]";
+          continue;
+        }
+
+        Block new_block;
+        if(!new_block.deserialize(serialized_block)) {
+          CLOG(ERROR, "URBK") << "Failed to deserialize block [" << block_id_b64 << "]";
+          continue;
+        }
+
+        auto push_result = push(new_block, true);
+        if(push_result.height == 0) {
+            CLOG(ERROR, "URBK") << "Failed to restore block [" << block_id_b64 << "]";
+        } else {
+          ++num_pused_block;
         }
       }
     }
+
+    CLOG(INFO, "URBK") << num_pused_block << " unresolved block(s) have been restored.";
   }
 
 private:
