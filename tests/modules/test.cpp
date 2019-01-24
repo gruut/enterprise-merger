@@ -143,11 +143,11 @@ BOOST_AUTO_TEST_CASE(serialize) {
   std::string block_id_b64 = Safe::getString(block_header, "bID");
 
   // 두번째
-  BasicBlockInfo q_block;
-  q_block.merger_id = TypeConverter::integerToBytes(2);
-  q_block.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(2);
-  q_block.height = 2;
-  q_block.transaction_root = vector<uint8_t>(4, 1);
+  BasicBlockInfo p_block_2;
+  p_block_2.merger_id = TypeConverter::integerToBytes(2);
+  p_block_2.chain_id = TypeConverter::integerToArray<CHAIN_ID_TYPE_SIZE>(2);
+  p_block_2.height = 2;
+  p_block_2.transaction_root = vector<uint8_t>(4, 1);
 
   Transaction test_tx_2;
   string tx_id_str_2 = "2";
@@ -158,28 +158,31 @@ BOOST_AUTO_TEST_CASE(serialize) {
   test_tx_2.setSignature(TypeConverter::integerToBytes(2));
   test_tx_2.setContents({"Hello 2!","Hello 2!"});
 
-  q_block.transactions.push_back(test_tx_2);
+  p_block_2.transactions.push_back(test_tx_2);
 
   vector<Signature> signature_2;
   Signature tmp_sig_2(static_cast<signer_id_type>(TypeConverter::integerToBytes(2)),static_cast<signature_type>(TypeConverter::integerToBytes(2)));
-  signature.emplace_back(tmp_sig_2);
+  signature_2.emplace_back(tmp_sig_2);
 
   MerkleTree tree_2;
   vector<Transaction> transactions_2 = {test_tx_2};
-  tree.generate(transactions_2);
+  tree_2.generate(transactions_2);
 
   Block new_block_2;
-  new_block_2.initialize(q_block, tree_2.getMerkleTree());
+  new_block_2.initialize(p_block_2, tree_2.getMerkleTree());
   new_block_2.setSupportSignatures(signature_2);
-  new_block_2.linkPreviousBlock(q_block.prev_id_b64,
-                              q_block.prev_hash_b64);
+  new_block_2.linkPreviousBlock(p_block_2.prev_id_b64,
+                                p_block_2.prev_hash_b64);
   new_block_2.finalize();
 
   UnresolvedBlockPool test;
 
-  test.setUnresolvedBlockSize(2);
+
   test.serializeUnresolvedBlock(new_block);
   test.serializeUnresolvedBlock(new_block_2);
+
+  test.setUnresolvedBlockCount(2);
+  test.saveUnresolvedBlockCount();
 
   test.saveSerializedUnresolvedBlocks();
   test.restoreUnresolvedBlockPool();

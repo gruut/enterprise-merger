@@ -34,8 +34,10 @@ void MergerClient::accessToTracker() {
   request_msg["hgt"] = latest_block_info.height;
   request_msg["bID"] = TypeConverter::encodeBase64(latest_block_info.id);
   request_msg["hash"] = TypeConverter::encodeBase64(latest_block_info.hash);
-  request_msg["prevHash"] = TypeConverter::encodeBase64(latest_block_info.prev_hash);
-  request_msg["prevbID"] = TypeConverter::encodeBase64(latest_block_info.prev_id);
+  request_msg["prevHash"] =
+      TypeConverter::encodeBase64(latest_block_info.prev_hash);
+  request_msg["prevbID"] =
+      TypeConverter::encodeBase64(latest_block_info.prev_id);
 
   // ToDO: 현재 local주소, setting에 tracker 정보 세팅 필요.
   CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";

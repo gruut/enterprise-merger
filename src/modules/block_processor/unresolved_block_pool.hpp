@@ -13,8 +13,8 @@
 #include <list>
 #include <vector>
 
-#include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/string.hpp>
 #include <sstream>
 
@@ -33,24 +33,6 @@ public:
                   bool init_linked_)
       : block(block_), prev_queue_idx(prev_queue_idx_),
         confirm_level(confirm_level_), init_linked(init_linked_) {}
-
-  UnresolvedBlock(Block &block) :
-  block_raw_str(TypeConverter::bytesToString(block.getBlockRaw())),
-  block_body_str(block.getBlockBodyJson().dump()) {}
-  bytes getUnresolvedBlockRaw() { return TypeConverter::stringToBytes(block_raw_str); }
-  json getUnresolvedBlockBody() { return Safe::parseJson(block_body_str); }
-
-private:
-  friend class boost::serialization::access;
-
-  template <class Archive>
-  void serialize(Archive &ar, const unsigned int version)
-  {
-    ar & block_raw_str;
-    ar & block_body_str;
-  }
-  std::string block_raw_str;
-  std::string block_body_str;
 };
 
 struct BlockPosOnMap {
@@ -71,14 +53,6 @@ private:
 
   std::atomic<size_t> m_height_range_max{0};
   std::atomic<bool> m_force_unresolved{false};
-  std::stringstream oarchive_stream;
-  std::stringstream iarchive_stream;
-  std::string key = "unresolvedBlocks";
-
-  boost::archive::text_oarchive serialize{oarchive_stream};
-
-  std::string block_count_key = "unresolvedBlockCount";
-  int m_unresolve_block_count;
 
   std::atomic<bool> m_cache_link_valid{false};
   nth_link_type m_cache_possible_link;
@@ -89,26 +63,35 @@ private:
   std::atomic<bool> m_cache_pos_valid{false};
   BlockPosOnMap m_cache_possible_pos;
 
+  std::stringstream oarchive_stream;
+  std::stringstream iarchive_stream;
+  boost::archive::text_oarchive serialize{oarchive_stream};
+
+  const std::string m_unresolved_blocks_key = "unresolvedBlocks";
+  const std::string m_unresolved_block_count_key = "unresolvedBlockCount";
+  int m_unresolve_block_count;
+
 public:
   UnresolvedBlockPool() { el::Loggers::getLogger("URBK"); };
 
-  void setUnresolvedBlockSize(int count) {
-    m_unresolve_block_count = count;
+  void setUnresolvedBlockCount(int count) { m_unresolve_block_count += count; }
 
+  void saveUnresolvedBlockCount() {
     auto storage = Storage::getInstance();
     std::string value = to_string(m_unresolve_block_count);
-    storage->saveSerializedUnreslovedBlock(block_count_key, value);
+    storage->saveSerializedUnreslovedBlock(m_unresolved_block_count_key, value);
     storage->flushSerializedUnresolvdBlock();
   }
 
   int getUnresolvedBlockSize() {
     auto storage = Storage::getInstance();
-    m_unresolve_block_count = stoi(storage->readSerializedUnreslovedBlock(block_count_key));
+    m_unresolve_block_count = stoi(
+        storage->readSerializedUnreslovedBlock(m_unresolved_block_count_key));
     return m_unresolve_block_count;
   }
 
   void serializeUnresolvedBlock(Block &block) {
-    UnresolvedBlock unresolved_block{block};
+    BlockSerialize unresolved_block{block};
     serialize << unresolved_block;
   }
 
@@ -118,13 +101,15 @@ public:
     std::string serializedUnresolvedBlockStr;
     serializedUnresolvedBlockStr = oarchive_stream.str();
 
-    storage->saveSerializedUnreslovedBlock(key, serializedUnresolvedBlockStr);
+    storage->saveSerializedUnreslovedBlock(m_unresolved_blocks_key,
+                                           serializedUnresolvedBlockStr);
     storage->flushSerializedUnresolvdBlock();
   }
 
   void restoreUnresolvedBlockPool() {
     auto storage = Storage::getInstance();
-    std::string temp = storage->readSerializedUnreslovedBlock(key);
+    std::string temp =
+        storage->readSerializedUnreslovedBlock(m_unresolved_blocks_key);
 
     iarchive_stream << temp;
 
@@ -133,7 +118,7 @@ public:
     boost::archive::text_iarchive deserialize{iarchive_stream};
 
     for (size_t i = 0; i < getUnresolvedBlockSize(); ++i) {
-      UnresolvedBlock unresolved_block;
+      BlockSerialize unresolved_block;
       deserialize >> unresolved_block;
 
       bytes block_raw = unresolved_block.getUnresolvedBlockRaw();
@@ -142,26 +127,26 @@ public:
       Block temp;
       temp.initialize(block_raw, block_body);
       push(temp);
-      
-//      std::cout << "block raw : " << TypeConverter::bytesToString(block_raw) << std::endl;
-//      std::cout << "block body : " << block_body << std::endl;
 
-      
+      std::cout << "block raw : " << TypeConverter::bytesToString(block_raw)
+                << std::endl;
+      std::cout << "block body : " << block_body << std::endl;
     }
   }
 
-  void unresolvedBlockPoolBackUp(std::deque<std::vector<UnresolvedBlock>> &unresolved_block_pool) {
-    // unresolve_block_count = unresolved_block_pool.size() * unresolved_block_pool[0].size();
-
+  void unresolvedBlockPoolBackUp(
+      std::deque<std::vector<UnresolvedBlock>> &unresolved_block_pool) {
     for (auto &each_level : unresolved_block_pool) {
       for (auto &each_block : each_level) {
         serializeUnresolvedBlock(each_block.block);
+        setUnresolvedBlockCount(1);
       }
     }
 
+    saveUnresolvedBlockCount();
   }
 
-size_t size() { return m_block_pool.size(); }
+  size_t size() { return m_block_pool.size(); }
 
   bool empty() { return m_block_pool.empty(); }
 

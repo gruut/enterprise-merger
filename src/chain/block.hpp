@@ -18,6 +18,11 @@
 
 #include <vector>
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/string.hpp>
+#include <sstream>
+
 using namespace std;
 
 namespace gruut {
@@ -544,6 +549,30 @@ private:
 
     return block_header_json;
   }
+};
+
+class BlockSerialize {
+private:
+  friend class boost::serialization::access;
+  std::string block_raw_str;
+  std::string block_body_str;
+
+  template <class Archive>
+  void serialize(Archive &ar, const unsigned int version) {
+    ar &block_raw_str;
+    ar &block_body_str;
+  }
+
+public:
+  BlockSerialize(){};
+  BlockSerialize(Block &block)
+      : block_raw_str(TypeConverter::bytesToString(block.getBlockRaw())),
+        block_body_str(block.getBlockBodyJson().dump()) {}
+
+  bytes getUnresolvedBlockRaw() {
+    return TypeConverter::stringToBytes(block_raw_str);
+  }
+  json getUnresolvedBlockBody() { return Safe::parseJson(block_body_str); }
 };
 
 } // namespace gruut

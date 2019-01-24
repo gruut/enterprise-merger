@@ -34,7 +34,9 @@ Storage::Storage() {
   errorOnCritical(leveldb::DB::Open(
       m_options, m_db_path + "/" + config::DB_SUB_DIR_LEDGER, &m_db_ledger));
   errorOnCritical(leveldb::DB::Open(
-      m_options, m_db_path + "/" + config::DB_SUB_DIR_SERIALIZED_UNRESOLVED_BLOCK, &m_db_serialized_unresolved_block));
+      m_options,
+      m_db_path + "/" + config::DB_SUB_DIR_SERIALIZED_UNRESOLVED_BLOCK,
+      &m_db_serialized_unresolved_block));
 }
 
 Storage::~Storage() {
@@ -408,7 +410,8 @@ void Storage::destroyDB() {
                                 config::DB_SUB_DIR_TRANSACTION);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_IDHEIGHT);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_LEDGER);
-  boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_SERIALIZED_UNRESOLVED_BLOCK);
+  boost::filesystem::remove_all(m_db_path + "/" +
+                                config::DB_SUB_DIR_SERIALIZED_UNRESOLVED_BLOCK);
 }
 
 std::string Storage::getNthBlockIdB64(block_height_type height) {
@@ -560,12 +563,14 @@ void Storage::flushLedger() {
   clearLedger();
 }
 
-void Storage::saveSerializedUnreslovedBlock(std::string &key, std::string &value) {
+void Storage::saveSerializedUnreslovedBlock(const std::string &key,
+                                            std::string &value) {
   addBatch(DBType::SERIALIZED_UNRESOLVED_BLOCK, key, value);
 }
 
 void Storage::flushSerializedUnresolvdBlock() {
-  m_db_serialized_unresolved_block->Write(m_write_options, &m_batch_serialized_unresolved_block);
+  m_db_serialized_unresolved_block->Write(m_write_options,
+                                          &m_batch_serialized_unresolved_block);
   clearSerializedUnresolvdBlock();
 }
 
@@ -573,17 +578,8 @@ void Storage::clearSerializedUnresolvdBlock() {
   m_batch_serialized_unresolved_block.Clear();
 }
 
-std::string Storage::readSerializedUnreslovedBlock(std::string &key) {
+std::string Storage::readSerializedUnreslovedBlock(const std::string &key) {
   return getValueByKey(DBType::SERIALIZED_UNRESOLVED_BLOCK, key);
-}
-
-std::string Storage::getAllUnresolvedBlock() {
-  leveldb::Iterator* it = m_db_serialized_unresolved_block->NewIterator(leveldb::ReadOptions());
-  for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    it->value().ToString();
-  }
-  assert(it->status().ok());  // Check for any errors found during the scan
-  delete it;
 }
 
 } // namespace gruut

@@ -37,11 +37,13 @@ namespace gruut {
 using namespace std;
 
 const std::map<DBType, std::string> DB_PREFIX = {
-    {DBType::BLOCK_HEADER, "B"}, {DBType::BLOCK_HEIGHT, "H"},
-    {DBType::BLOCK_RAW, "R"},    {DBType::BLOCK_LATEST, "L"},
-    {DBType::TRANSACTION, "T"},  {DBType::LEDGER, "G"},
-    {DBType::SERIALIZED_UNRESOLVED_BLOCK, "S"}
-};
+    {DBType::BLOCK_HEADER, "B"},
+    {DBType::BLOCK_HEIGHT, "H"},
+    {DBType::BLOCK_RAW, "R"},
+    {DBType::BLOCK_LATEST, "L"},
+    {DBType::TRANSACTION, "T"},
+    {DBType::LEDGER, "G"},
+    {DBType::SERIALIZED_UNRESOLVED_BLOCK, "S"}};
 
 const std::vector<std::pair<std::string, std::string>> DB_BLOCK_HEADER_SUFFIX =
     {{"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
@@ -69,11 +71,11 @@ public:
   void clearLedger();
   void flushLedger();
   bool empty();
-  void saveSerializedUnreslovedBlock(std::string &key, std::string &value);
-  std::string readSerializedUnreslovedBlock(std::string &key);
+  void saveSerializedUnreslovedBlock(const std::string &key,
+                                     std::string &value);
+  std::string readSerializedUnreslovedBlock(const std::string &key);
   void flushSerializedUnresolvdBlock();
   void clearSerializedUnresolvdBlock();
-  std::string getAllUnresolvedBlock();
 
 private:
   std::string getNthBlockIdB64(block_height_type height = 0);
