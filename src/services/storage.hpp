@@ -37,12 +37,9 @@ namespace gruut {
 using namespace std;
 
 const std::map<DBType, std::string> DB_PREFIX = {
-    {DBType::BLOCK_HEADER, "B"},
-    {DBType::BLOCK_HEIGHT, "H"},
-    {DBType::BLOCK_RAW, "R"},
-    {DBType::BLOCK_LATEST, "L"},
-    {DBType::TRANSACTION, "T"},
-    {DBType::LEDGER, "G"},
+    {DBType::BLOCK_HEADER, "B"}, {DBType::BLOCK_HEIGHT, "H"},
+    {DBType::BLOCK_RAW, "R"},    {DBType::BLOCK_LATEST, "L"},
+    {DBType::TRANSACTION, "T"},  {DBType::LEDGER, "G"},
     {DBType::BLOCK_BACKUP, "S"}};
 
 const std::vector<std::pair<std::string, std::string>> DB_BLOCK_HEADER_SUFFIX =
@@ -71,8 +68,7 @@ public:
   void clearLedger();
   void flushLedger();
   bool empty();
-  void saveUnresolvedBlocks(const std::string &key,
-                            const std::string &value);
+  void saveUnresolvedBlocks(const std::string &key, const std::string &value);
   std::string readUnreslovedBlocks(const std::string &key);
   void flushBackup();
   void clearBackup();

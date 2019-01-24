@@ -379,17 +379,16 @@ public:
     return true;
   }
 
-  std::string serialize(){
+  std::string serialize() {
     json block_body = getBlockBodyJson();
     block_body["blockraw"] = TypeConverter::encodeBase64(m_block_raw);
     return TypeConverter::bytesToString(json::to_cbor(block_body));
   }
 
-  template <typename T = std::string>
-  bool deserialize(T&& serialized_block){
+  template <typename T = std::string> bool deserialize(T &&serialized_block) {
     json block_body = json::from_cbor(serialized_block);
-    bytes block_raw = Safe::getBytesFromB64<bytes>(block_body,"blockraw");
-    return initialize(block_raw,block_body);
+    bytes block_raw = Safe::getBytesFromB64<bytes>(block_body, "blockraw");
+    return initialize(block_raw, block_body);
   }
 
 private:

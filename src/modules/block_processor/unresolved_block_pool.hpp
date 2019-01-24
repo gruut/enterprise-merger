@@ -20,6 +20,8 @@
 
 namespace gruut {
 
+const std::string UNRESOLVED_BLOCK_IDS_KEY = "UNRESOLVED_BLOCK_IDS_KEY";
+
 struct UnresolvedBlock {
 public:
   Block block;
@@ -243,40 +245,47 @@ public:
     m_push_mutex.unlock();
 
     auto storage = Storage::getInstance();
-    json id_array = json::from_cbor(storage->readUnreslovedBlocks("unresolved_block_ids"));
+
+    json id_array = readBackupIds();
+
+    if (id_array.empty())
+      return;
+
     json del_id_array = json::array();
     json new_id_array = json::array();
 
-    for(auto &each_id : id_array) {
+    for (auto &each_id : id_array) {
       bool is_dux = false;
       std::string block_id_b64 = Safe::getString(each_id);
-      if(block_id_b64.empty())
+      if (block_id_b64.empty())
         continue;
 
-      for(auto &each_block : blocks) {
-        if(block_id_b64 == each_block.first.getBlockIdB64()) {
+      for (auto &each_block : blocks) {
+        if (block_id_b64 == each_block.first.getBlockIdB64()) {
           is_dux = true;
           break;
         }
       }
 
-      if(!is_dux) {
+      if (!is_dux) {
         new_id_array.push_back(block_id_b64);
       } else {
         del_id_array.push_back(block_id_b64);
       }
     }
 
-    storage->saveUnresolvedBlocks("unresolved_block_ids", TypeConverter::bytesToString(json::to_cbor(new_id_array)));
+    storage->saveUnresolvedBlocks(
+        UNRESOLVED_BLOCK_IDS_KEY,
+        TypeConverter::bytesToString(json::to_cbor(new_id_array)));
     storage->flushBackup();
 
     // TODO : del_id_array
-    for(auto &each_id : del_id_array) {
+    for (auto &each_id : del_id_array) {
       std::string block_id_b64 = Safe::getString(each_id);
       storage->delBackup(block_id_b64);
     }
-    storage->flushBackup();
 
+    storage->flushBackup();
   }
 
   nth_link_type getUnresolvedLowestLink() {
@@ -330,8 +339,8 @@ public:
 
     if (ret_link.height < longest_pos.height) {
 
-      int deque_idx = longest_pos.height - m_last_height -
-                      1; // must be larger or equal to 0
+      // must be larger or equal to 0
+      int deque_idx = longest_pos.height - m_last_height - 1;
 
       if (deque_idx >= 0) {
         auto &t_block = m_block_pool[deque_idx][longest_pos.vector_idx];
@@ -378,15 +387,20 @@ public:
     return m_force_unresolved;
   }
 
+  void restorePool() {
 
-  void restorePool(){
+    json id_array = readBackupIds();
+    if (id_array.empty())
+      return;
+
     auto storage = Storage::getInstance();
-    json id_array = json::from_cbor(storage->readUnreslovedBlocks("unresolved_block_ids"));
-    for(auto &id_each : id_array) {
+
+    for (auto &id_each : id_array) {
       std::string block_id_b64 = Safe::getString(id_each);
-      if(!block_id_b64.empty()) {
-        std::string serialized_block = storage->readUnreslovedBlocks(block_id_b64);
-        if(!serialized_block.empty()) {
+      if (!block_id_b64.empty()) {
+        std::string serialized_block =
+            storage->readUnreslovedBlocks(block_id_b64);
+        if (!serialized_block.empty()) {
           Block new_block;
           new_block.deserialize(serialized_block);
           push(new_block);
@@ -396,8 +410,26 @@ public:
   }
 
 private:
+  json readBackupIds() {
+    json id_array = json::array();
 
-  void backupPool(){
+    auto storage = Storage::getInstance();
+    std::string backup_block_ids =
+        storage->readUnreslovedBlocks(UNRESOLVED_BLOCK_IDS_KEY);
+    if (backup_block_ids.empty())
+      return id_array;
+
+    try {
+      id_array = json::from_cbor(backup_block_ids);
+    } catch (json::exception &e) {
+      CLOG(ERROR, "URBK") << "Failed to restore unresolved pool - " << e.what();
+      return id_array;
+    }
+
+    return id_array;
+  }
+
+  void backupPool() {
 
     json id_array = json::array();
     auto storage = Storage::getInstance();
@@ -405,12 +437,14 @@ private:
     for (auto &each_level : m_block_pool) {
       for (auto &each_block : each_level) {
         std::string key = each_block.block.getBlockIdB64();
-        storage->saveUnresolvedBlocks(key,each_block.block.serialize());
+        storage->saveUnresolvedBlocks(key, each_block.block.serialize());
         id_array.push_back(key);
       }
     }
 
-    storage->saveUnresolvedBlocks("unresolved_block_ids",TypeConverter::bytesToString(json::to_cbor(id_array)));
+    storage->saveUnresolvedBlocks(
+        UNRESOLVED_BLOCK_IDS_KEY,
+        TypeConverter::bytesToString(json::to_cbor(id_array)));
 
     storage->flushBackup();
   }

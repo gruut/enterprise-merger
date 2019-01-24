@@ -34,8 +34,7 @@ Storage::Storage() {
   errorOnCritical(leveldb::DB::Open(
       m_options, m_db_path + "/" + config::DB_SUB_DIR_LEDGER, &m_db_ledger));
   errorOnCritical(leveldb::DB::Open(
-      m_options,
-      m_db_path + "/" + config::DB_SUB_DIR_UNRESOLVED_BLOCK,
+      m_options, m_db_path + "/" + config::DB_SUB_DIR_UNRESOLVED_BLOCK,
       &m_db_block_backup));
 }
 
@@ -569,21 +568,19 @@ void Storage::saveUnresolvedBlocks(const std::string &key,
 }
 
 void Storage::flushBackup() {
-  m_db_block_backup->Write(m_write_options,
-                                          &m_batch_block_backup);
+  m_db_block_backup->Write(m_write_options, &m_batch_block_backup);
   clearBackup();
 }
 
-void Storage::clearBackup() {
-  m_batch_block_backup.Clear();
-}
+void Storage::clearBackup() { m_batch_block_backup.Clear(); }
 
 std::string Storage::readUnreslovedBlocks(const std::string &key) {
   return getValueByKey(DBType::BLOCK_BACKUP, key);
 }
 
 void Storage::delBackup(const std::string &block_id_b64) {
-  m_batch_block_backup.Delete(block_id_b64);
+  if (!block_id_b64.empty())
+    m_batch_block_backup.Delete(block_id_b64);
 }
 
 } // namespace gruut
