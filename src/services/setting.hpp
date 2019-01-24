@@ -43,6 +43,14 @@ struct MergerInfo {
   bool conn_status;
 };
 
+struct TrackerInfo {
+  id_type id;
+  std::string address;
+  std::string port;
+  std::string cert;
+  bool conn_status;
+};
+
 const json SCHEMA_SETTING = R"(
 {
   "title": "Setting",
@@ -84,6 +92,21 @@ const json SCHEMA_SETTING = R"(
       "required": [
         "id",
         "address",
+        "cert"
+      ]
+    },
+    "TK": {
+      "type":"object",
+      "properties" : {
+        "id" : {"type":"string"},
+        "address" : {"type":"string"},
+        "port" : {"type":"string"},
+        "cert" : {"type":"array"}
+      },
+      "required": [
+        "id",
+        "address",
+        "port",
         "cert"
       ]
     },
@@ -145,6 +168,7 @@ private:
   std::string m_db_path;
 
   GruutAuthorityInfo m_gruut_authority;
+  TrackerInfo m_tracker;
   std::vector<ServiceEndpointInfo> m_service_endpoints;
   std::vector<MergerInfo> m_mergers;
   bool m_db_check{false};
@@ -194,9 +218,15 @@ public:
         Safe::getBytesFromB64<id_type>(setting_json["GA"], "id");
     m_gruut_authority.address = Safe::getString(setting_json["GA"], "address");
     m_gruut_authority.cert = joinMultiLine(setting_json["GA"]["cert"]);
-
     //
     cert_pool->pushCert(m_gruut_authority.id, m_gruut_authority.cert);
+
+    m_tracker.id = Safe::getBytesFromB64<id_type>(setting_json["TK"], "id");
+    m_tracker.address = Safe::getString(setting_json["TK"], "address");
+    m_tracker.port = Safe::getString(setting_json["TK"], "port");
+    m_tracker.cert = joinMultiLine(setting_json["TK"]["cert"]);
+    //
+    cert_pool->pushCert(m_tracker.id, m_tracker.cert);
 
     m_service_endpoints.clear();
     for (size_t i = 0; i < setting_json["SE"].size(); ++i) {
@@ -255,6 +285,8 @@ public:
   inline GruutAuthorityInfo getGruutAuthorityInfo() {
     return m_gruut_authority;
   }
+
+  inline TrackerInfo getTrackerInfo() { return m_tracker; }
 
   inline std::vector<MergerInfo> getMergerInfo() { return m_mergers; }
 
