@@ -63,90 +63,11 @@ private:
   std::atomic<bool> m_cache_pos_valid{false};
   BlockPosOnMap m_cache_possible_pos;
 
-  std::stringstream oarchive_stream;
-  std::stringstream iarchive_stream;
-  boost::archive::text_oarchive serialize{oarchive_stream};
-
-  const std::string m_unresolved_blocks_key = "unresolvedBlocks";
-  const std::string m_unresolved_block_count_key = "unresolvedBlockCount";
-  int m_unresolve_block_count;
-
 public:
-  UnresolvedBlockPool() { el::Loggers::getLogger("URBK"); };
-
-  void setUnresolvedBlockCount(int count) { m_unresolve_block_count += count; }
-
-  void saveUnresolvedBlockCount() {
-    auto storage = Storage::getInstance();
-    std::string value = to_string(m_unresolve_block_count);
-    storage->saveSerializedUnreslovedBlock(m_unresolved_block_count_key, value);
-    storage->flushSerializedUnresolvdBlock();
-  }
-
-  int getUnresolvedBlockSize() {
-    auto storage = Storage::getInstance();
-    m_unresolve_block_count = stoi(
-        storage->readSerializedUnreslovedBlock(m_unresolved_block_count_key));
-    return m_unresolve_block_count;
-  }
-
-  void serializeUnresolvedBlock(Block &block) {
-    BlockSerialize unresolved_block{block};
-    serialize << unresolved_block;
-  }
-
-  void saveSerializedUnresolvedBlocks() {
-    auto storage = Storage::getInstance();
-
-    std::string serializedUnresolvedBlockStr;
-    serializedUnresolvedBlockStr = oarchive_stream.str();
-
-    storage->saveSerializedUnreslovedBlock(m_unresolved_blocks_key,
-                                           serializedUnresolvedBlockStr);
-    storage->flushSerializedUnresolvdBlock();
-  }
-
-  bool restoreUnresolvedBlockPool() {
-    auto storage = Storage::getInstance();
-
-    std::string temp;
-    if(storage->readSerializedUnreslovedBlock(m_unresolved_blocks_key).empty())
-      return false;
-
-    temp = storage->readSerializedUnreslovedBlock(m_unresolved_blocks_key);
-
-    iarchive_stream << temp;
-
-    std::cout << iarchive_stream.str() << std::endl;
-
-    boost::archive::text_iarchive deserialize{iarchive_stream};
-
-    for (size_t i = 0; i < getUnresolvedBlockSize(); ++i) {
-      BlockSerialize unresolved_block;
-      deserialize >> unresolved_block;
-
-      bytes block_raw = unresolved_block.getUnresolvedBlockRaw();
-      json block_body = unresolved_block.getUnresolvedBlockBody();
-
-      Block temp;
-      temp.initialize(block_raw, block_body);
-      push(temp);
-    }
-
-    return true;
-  }
-
-  void unresolvedBlockPoolBackUp(
-      std::deque<std::vector<UnresolvedBlock>> &unresolved_block_pool) {
-    for (auto &each_level : unresolved_block_pool) {
-      for (auto &each_block : each_level) {
-        serializeUnresolvedBlock(each_block.block);
-        setUnresolvedBlockCount(1);
-      }
-    }
-
-    saveUnresolvedBlockCount();
-  }
+  UnresolvedBlockPool() {
+    el::Loggers::getLogger("URBK");
+    restorePool();
+  };
 
   size_t size() { return m_block_pool.size(); }
 
@@ -238,6 +159,8 @@ public:
 
     invalidateCaches();
 
+    backupPool();
+
     int queue_idx = m_block_pool[bin_pos].size() - 1; // last
 
     if (bin_pos + 1 < m_block_pool.size()) { // if there is next bin
@@ -317,8 +240,43 @@ public:
       resolveBlocksStepByStep(blocks, drop_blocks);
     } while (num_resolved_block < blocks.size());
 
-    unresolvedBlockPoolBackUp(m_block_pool);
     m_push_mutex.unlock();
+
+    auto storage = Storage::getInstance();
+    json id_array = json::from_cbor(storage->readUnreslovedBlocks("unresolved_block_ids"));
+    json del_id_array = json::array();
+    json new_id_array = json::array();
+
+    for(auto &each_id : id_array) {
+      bool is_dux = false;
+      std::string block_id_b64 = Safe::getString(each_id);
+      if(block_id_b64.empty())
+        continue;
+
+      for(auto &each_block : blocks) {
+        if(block_id_b64 == each_block.first.getBlockIdB64()) {
+          is_dux = true;
+          break;
+        }
+      }
+
+      if(!is_dux) {
+        new_id_array.push_back(block_id_b64);
+      } else {
+        del_id_array.push_back(block_id_b64);
+      }
+    }
+
+    storage->saveUnresolvedBlocks("unresolved_block_ids", TypeConverter::bytesToString(json::to_cbor(new_id_array)));
+    storage->flushBackup();
+
+    // TODO : del_id_array
+    for(auto &each_id : del_id_array) {
+      std::string block_id_b64 = Safe::getString(each_id);
+      storage->delBackup(block_id_b64);
+    }
+    storage->flushBackup();
+
   }
 
   nth_link_type getUnresolvedLowestLink() {
@@ -420,7 +378,43 @@ public:
     return m_force_unresolved;
   }
 
+
+  void restorePool(){
+    auto storage = Storage::getInstance();
+    json id_array = json::from_cbor(storage->readUnreslovedBlocks("unresolved_block_ids"));
+    for(auto &id_each : id_array) {
+      std::string block_id_b64 = Safe::getString(id_each);
+      if(!block_id_b64.empty()) {
+        std::string serialized_block = storage->readUnreslovedBlocks(block_id_b64);
+        if(!serialized_block.empty()) {
+          Block new_block;
+          new_block.deserialize(serialized_block);
+          push(new_block);
+        }
+      }
+    }
+  }
+
 private:
+
+  void backupPool(){
+
+    json id_array = json::array();
+    auto storage = Storage::getInstance();
+
+    for (auto &each_level : m_block_pool) {
+      for (auto &each_block : each_level) {
+        std::string key = each_block.block.getBlockIdB64();
+        storage->saveUnresolvedBlocks(key,each_block.block.serialize());
+        id_array.push_back(key);
+      }
+    }
+
+    storage->saveUnresolvedBlocks("unresolved_block_ids",TypeConverter::bytesToString(json::to_cbor(id_array)));
+
+    storage->flushBackup();
+  }
+
   BlockPosOnMap getLongestBlockPos() {
     if (m_cache_pos_valid)
       return m_cache_possible_pos;

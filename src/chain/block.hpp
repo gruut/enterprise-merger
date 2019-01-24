@@ -379,6 +379,19 @@ public:
     return true;
   }
 
+  std::string serialize(){
+    json block_body = getBlockBodyJson();
+    block_body["blockraw"] = TypeConverter::encodeBase64(m_block_raw);
+    return TypeConverter::bytesToString(json::to_cbor(block_body));
+  }
+
+  template <typename T = std::string>
+  bool deserialize(T&& serialized_block){
+    json block_body = json::from_cbor(serialized_block);
+    bytes block_raw = Safe::getBytesFromB64<bytes>(block_body,"blockraw");
+    return initialize(block_raw,block_body);
+  }
+
 private:
   bytes generateMetaWithCompHeader() {
 
@@ -550,30 +563,5 @@ private:
     return block_header_json;
   }
 };
-
-class BlockSerialize {
-private:
-  friend class boost::serialization::access;
-  std::string block_raw_str;
-  std::string block_body_str;
-
-  template <class Archive>
-  void serialize(Archive &ar, const unsigned int version) {
-    ar &block_raw_str;
-    ar &block_body_str;
-  }
-
-public:
-  BlockSerialize(){};
-  BlockSerialize(Block &block)
-      : block_raw_str(TypeConverter::bytesToString(block.getBlockRaw())),
-        block_body_str(block.getBlockBodyJson().dump()) {}
-
-  bytes getUnresolvedBlockRaw() {
-    return TypeConverter::stringToBytes(block_raw_str);
-  }
-  json getUnresolvedBlockBody() { return Safe::parseJson(block_body_str); }
-};
-
 } // namespace gruut
 #endif
