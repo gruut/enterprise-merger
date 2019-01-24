@@ -30,18 +30,21 @@ void MergerClient::accessToTracker() {
   request_msg["ip"] = setting->getMyAddress();
   request_msg["port"] = setting->getMyPort();
   request_msg["mCert"] = setting->getMyCert();
-  request_msg["time"] = Time::now();
+  request_msg["time"] = to_string(latest_block_info.time);
   request_msg["hgt"] = latest_block_info.height;
   request_msg["bID"] = TypeConverter::encodeBase64(latest_block_info.id);
   request_msg["hash"] = TypeConverter::encodeBase64(latest_block_info.hash);
-  request_msg["prevHash"] = TypeConverter::encodeBase64(latest_block_info.prev_hash);
-  request_msg["prevbID"] = TypeConverter::encodeBase64(latest_block_info.prev_id);
+  request_msg["prevHash"] =
+      TypeConverter::encodeBase64(latest_block_info.prev_hash);
+  request_msg["prevbID"] =
+      TypeConverter::encodeBase64(latest_block_info.prev_id);
 
-  // ToDO: 현재 local주소, setting에 tracker 정보 세팅 필요.
   CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";
   json response_msg;
-  HttpClient http_client("ec2-13-125-221-27.ap-northeast-2.compute.amazonaws."
-                         "com/src/JoinMerger.php");
+  auto tk_info = m_conn_manager->getTrackerInfo();
+  std::string tk_address = tk_info.address + ":" + tk_info.port;
+
+  HttpClient http_client(tk_address + "/src/JoinMerger.php");
   CURLcode status =
       http_client.postAndGetReply(request_msg.dump(), response_msg);
 
@@ -114,11 +117,17 @@ void MergerClient::checkHttpConnection() {
 
   io_service.post(m_http_check_strand->wrap([this]() {
     auto se_list = m_conn_manager->getAllSeInfo();
+    auto tk_info = m_conn_manager->getTrackerInfo();
+
+    bool status;
+
+    HttpClient tk_http_client(tk_info.address + ":" + tk_info.port);
+    status = tk_http_client.checkServStatus();
+    m_conn_manager->setTrackerStatus(status);
 
     for (auto &se_info : se_list) {
-      HttpClient http_client(se_info.address + ":" + se_info.port);
-      bool status = http_client.checkServStatus();
-
+      HttpClient se_http_client(se_info.address + ":" + se_info.port);
+      status = se_http_client.checkServStatus();
       m_conn_manager->setSeStatus(se_info.id, status);
     }
   }));
@@ -190,17 +199,20 @@ void MergerClient::sendMessage(MessageType msg_type,
 
 json MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
   std::string send_msg = output_msg.body.dump();
-  // TODO : setting에서 tracker 정보 받아 올 수 있도록 수정 필요.
-  std::string address =
-      "ec2-13-125-221-27.ap-northeast-2.compute.amazonaws.com/src/";
+
+  auto tk_info = m_conn_manager->getTrackerInfo();
+  std::string address = tk_info.address + ":" + tk_info.port + "/src";
 
   json reply_json;
+  if (!tk_info.conn_status)
+    return reply_json;
+
   if (output_msg.type == MessageType::MSG_CHAIN_INFO) {
-    address += "ChainInfo.php";
+    address += "/ChainInfo.php";
     HttpClient http_client(address);
     http_client.post(send_msg);
   } else {
-    address += "CheckExist.php";
+    address += "/CheckExist.php";
     HttpClient http_client(address);
     http_client.postAndGetReply(send_msg, reply_json);
   }

@@ -245,12 +245,15 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     OutputMsgEntry msg_chain_info;
     msg_chain_info.type = MessageType::MSG_CHAIN_INFO; // MSG_CHAIN_INFO = 0xB7
     msg_chain_info.body["mID"] = Safe::getString(entry.body, "mID");
-    msg_chain_info.body["time"] = Time::now();
+    msg_chain_info.body["time"] = to_string(possible_link.time);
     msg_chain_info.body["hgt"] = to_string(possible_link.height);
     msg_chain_info.body["bID"] = TypeConverter::encodeBase64(possible_link.id);
-    msg_chain_info.body["prevbID"] = TypeConverter::encodeBase64(possible_link.prev_id);
-    msg_chain_info.body["hash"] = TypeConverter::encodeBase64(possible_link.hash);
-    msg_chain_info.body["prevHash"] = TypeConverter::encodeBase64(possible_link.prev_hash);
+    msg_chain_info.body["prevbID"] =
+        TypeConverter::encodeBase64(possible_link.prev_id);
+    msg_chain_info.body["hash"] =
+        TypeConverter::encodeBase64(possible_link.hash);
+    msg_chain_info.body["prevHash"] =
+        TypeConverter::encodeBase64(possible_link.prev_hash);
     // TODO : mSig 는 임시.
     msg_chain_info.body["mSig"] = "";
 

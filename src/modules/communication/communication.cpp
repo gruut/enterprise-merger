@@ -15,7 +15,6 @@ Communication::Communication() {
 };
 
 void Communication::start() {
-  // TODO : Tracker에 접속하지 못하였을때 처리 필요.
   m_merger_client.accessToTracker();
   m_merger_client.checkRpcConnection();
   m_merger_client.checkHttpConnection();
@@ -28,9 +27,14 @@ void Communication::setUpConnList() {
   auto setting = Setting::getInstance();
   auto merger_list = setting->getMergerInfo();
   auto se_list = setting->getServiceEndpointInfo();
+
+  auto tracker_info = setting->getTrackerInfo();
+
   merger_id_type my_id = setting->getMyId();
 
   auto conn_manager = ConnManager::getInstance();
+
+  conn_manager->setTrackerInfo(tracker_info, true);
 
   for (auto &merger_info : merger_list) {
     if (merger_info.id == my_id)

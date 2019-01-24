@@ -16,6 +16,14 @@ class ConnManager : public TemplateSingleton<ConnManager> {
 public:
   ConnManager() = default;
 
+  void setTrackerInfo(TrackerInfo &tracker_info, bool conn_status = false) {
+    std::string tk_id_b64 = TypeConverter::encodeBase64(tracker_info.id);
+    std::lock_guard<std::mutex> lock(m_tk_mutex);
+    m_tracker_info = tracker_info;
+    m_tracker_info.conn_status = conn_status;
+    m_tk_mutex.unlock();
+  }
+
   void setMergerInfo(MergerInfo &merger_info, bool conn_status = false) {
     std::string merger_id_b64 = TypeConverter::encodeBase64(merger_info.id);
     std::lock_guard<std::mutex> lock(m_merger_mutex);
@@ -30,6 +38,12 @@ public:
     m_se_info[se_id_b64] = se_info;
     m_se_info[se_id_b64].conn_status = conn_status;
     m_se_mutex.unlock();
+  }
+
+  void setTrackerStatus(bool status) {
+    std::lock_guard<std::mutex> lock(m_tk_mutex);
+    m_tracker_info.conn_status = status;
+    m_tk_mutex.unlock();
   }
 
   void setMergerStatus(merger_id_type &merger_id, bool status) {
@@ -56,14 +70,16 @@ public:
     m_init_block_hgt_list.push_back({block_height, merger_id});
   }
 
+  TrackerInfo getTrackerInfo() { return m_tracker_info; }
+
   MergerInfo getMergerInfo(merger_id_type &merger_id) {
-    string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
+    std::string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
 
     return m_merger_info[merger_id_b64];
   }
 
   ServiceEndpointInfo getSeInfo(servend_id_type &se_id) {
-    string se_id_64 = TypeConverter::encodeBase64(se_id);
+    std::string se_id_64 = TypeConverter::encodeBase64(se_id);
 
     return m_se_info[se_id_64];
   }
@@ -131,11 +147,13 @@ public:
   void clearBlockHgtList() { m_init_block_hgt_list.clear(); }
 
 private:
+  TrackerInfo m_tracker_info;
   std::map<string, MergerInfo> m_merger_info;
   std::map<string, ServiceEndpointInfo> m_se_info;
   std::vector<pair<uint64_t, merger_id_type>> m_init_block_hgt_list;
   std::mutex m_merger_mutex;
   std::mutex m_se_mutex;
+  std::mutex m_tk_mutex;
 
   std::atomic<bool> m_enabled_merger_check{true};
   std::atomic<bool> m_enabled_se_check{true};
