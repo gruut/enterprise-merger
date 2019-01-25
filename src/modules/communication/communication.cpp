@@ -5,6 +5,7 @@
 
 namespace gruut {
 Communication::Communication() {
+  el::Loggers::getLogger("COMM");
   m_port_num = Setting::getInstance()->getMyPort();
   if (m_port_num.empty())
     m_port_num = config::DEFAULT_PORT_NUM;
@@ -14,14 +15,35 @@ Communication::Communication() {
   setUpConnList();
 };
 
-void Communication::start() {
-  m_merger_client.accessToTracker();
-  m_merger_client.checkConnection();
+void Communication::checkUpTracker() {
+  auto setting = Setting::getInstance();
 
-  auto &io_service = Application::app().getIoService();
-  io_service.post([this]() { m_merger_server.runServer(m_port_num); });
+  if (setting->getDBCheck()) {
+    CLOG(INFO, "COMM") << "Waiting end of Block health check";
+    while (!m_health_checker->isFinished()) {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+  }
+
+  if (!setting->getDisableTracker()) {
+    CLOG(INFO, "COMM") << "Access to tracker";
+    m_merger_client.accessToTracker();
+  } else {
+    auto conn_manager = ConnManager::getInstance();
+    conn_manager->disableTracker();
+  }
 
   stageOver(ExitCode::NORMAL);
+}
+
+void Communication::start() {
+  auto &io_service = Application::app().getIoService();
+
+  io_service.post([this]() { checkUpTracker(); });
+
+  m_merger_client.checkConnection();
+
+  io_service.post([this]() { m_merger_server.runServer(m_port_num); });
 }
 
 void Communication::setUpConnList() {

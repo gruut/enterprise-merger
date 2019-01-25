@@ -21,9 +21,12 @@ public:
   BlockHealthChecker();
   void start() override;
 
+  bool isFinished();
+
 private:
   void startHealthCheck();
   void endCheck(ExitCode exit_code);
+  std::atomic<bool> m_finish{false};
 };
 
 } // namespace gruut

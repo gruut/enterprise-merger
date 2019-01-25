@@ -121,6 +121,7 @@ void Application::setup() {
 
   // setp 3 - link services
 
+  m_communication->setBlockHealthCheck(m_block_health_checker);
   m_bootstraper->setCommunication(m_communication);
 }
 
