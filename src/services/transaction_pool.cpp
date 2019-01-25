@@ -5,11 +5,9 @@ TransactionPool::TransactionPool() {
   m_transaction_pool.reserve(config::MAX_COLLECT_TRANSACTION_SIZE * 2);
 }
 
-bool TransactionPool::push(Transaction &transaction) {
+bool TransactionPool::push(Transaction transaction) {
 
-  std::string tx_id_str =
-      TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
-          transaction.getId());
+  std::string tx_id_str = transaction.getIdStr();
   std::lock_guard<std::mutex> lock(m_push_mutex);
   if (!m_txid_pool.has(tx_id_str)) {
     m_txid_pool.set(tx_id_str, true);
@@ -30,8 +28,7 @@ bool TransactionPool::isDuplicated(tx_id_type &&tx_id) {
   return isDuplicated(tx_id);
 }
 bool TransactionPool::isDuplicated(tx_id_type &tx_id) {
-  return m_txid_pool.has(
-      TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(tx_id));
+  return m_txid_pool.has(TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(tx_id));
 }
 
 bool TransactionPool::pop(Transaction &transaction) {
@@ -40,9 +37,7 @@ bool TransactionPool::pop(Transaction &transaction) {
 
   bool success = false;
   for (int i = (int)m_transaction_pool.size() - 1; i >= 0; --i) {
-    std::string tx_id_str =
-        TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
-            m_transaction_pool[i].getId());
+    std::string tx_id_str = m_transaction_pool[i].getIdStr();
     if (m_txid_pool.get_copy_or_default(tx_id_str, false)) {
       transaction = m_transaction_pool[i];
       m_txid_pool.unset(tx_id_str);
@@ -59,9 +54,7 @@ std::vector<Transaction> TransactionPool::fetchLastN(size_t n) {
   std::vector<Transaction> transactions;
 
   for (int i = (int)m_transaction_pool.size() - 1; i >= 0; --i) {
-    std::string tx_id_str =
-        TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
-            m_transaction_pool[i].getId());
+    std::string tx_id_str = m_transaction_pool[i].getIdStr();
     if (m_txid_pool.get_copy_or_default(tx_id_str, false)) {
       transactions.emplace_back(m_transaction_pool[i]);
       m_txid_pool.unset(tx_id_str);
