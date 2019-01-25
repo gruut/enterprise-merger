@@ -61,9 +61,7 @@ private:
   BlockPosOnMap m_cache_possible_pos;
 
 public:
-  UnresolvedBlockPool() {
-    el::Loggers::getLogger("URBK");
-  };
+  UnresolvedBlockPool() { el::Loggers::getLogger("URBK"); };
 
   size_t size() { return m_block_pool.size(); }
 
@@ -107,7 +105,9 @@ public:
   }
 
   unblk_push_result_type
-  push(Block &block, bool is_restore = false) { // we assume this block has valid structure at least
+  push(Block &block,
+       bool is_restore =
+           false) { // we assume this block has valid structure at least
     unblk_push_result_type ret_val;
     ret_val.height = 0;
     ret_val.linked = false;
@@ -155,7 +155,7 @@ public:
 
     invalidateCaches();
 
-    if(!is_restore)
+    if (!is_restore)
       backupPool();
 
     int queue_idx = m_block_pool[bin_pos].size() - 1; // last
@@ -397,26 +397,30 @@ public:
         std::string serialized_block =
             storage->readUnreslovedBlocks(block_id_b64);
         if (serialized_block.empty()) {
-          CLOG(ERROR, "URBK") << "Failed to read block [" << block_id_b64 << "]";
+          CLOG(ERROR, "URBK")
+              << "Failed to read block [" << block_id_b64 << "]";
           continue;
         }
 
         Block new_block;
-        if(!new_block.deserialize(serialized_block)) {
-          CLOG(ERROR, "URBK") << "Failed to deserialize block [" << block_id_b64 << "]";
+        if (!new_block.deserialize(serialized_block)) {
+          CLOG(ERROR, "URBK")
+              << "Failed to deserialize block [" << block_id_b64 << "]";
           continue;
         }
 
         auto push_result = push(new_block, true);
-        if(push_result.height == 0) {
-            CLOG(ERROR, "URBK") << "Failed to restore block [" << block_id_b64 << "]";
+        if (push_result.height == 0) {
+          CLOG(ERROR, "URBK")
+              << "Failed to restore block [" << block_id_b64 << "]";
         } else {
           ++num_pused_block;
         }
       }
     }
 
-    CLOG(INFO, "URBK") << num_pused_block << " unresolved block(s) have been restored.";
+    CLOG(INFO, "URBK") << num_pused_block
+                       << " unresolved block(s) have been restored.";
   }
 
 private:

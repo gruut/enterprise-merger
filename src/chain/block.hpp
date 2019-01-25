@@ -98,7 +98,8 @@ public:
     if (block_header_json.empty())
       return false;
 
-    m_version = static_cast<block_version_type >(Safe::getInt(block_header_json, "ver"));
+    m_version =
+        static_cast<block_version_type>(Safe::getInt(block_header_json, "ver"));
     m_time = Safe::getTime(block_header_json, "time");
     m_merger_id =
         Safe::getBytesFromB64<merger_id_type>(block_header_json, "mID");
@@ -391,8 +392,7 @@ public:
       json block_body = json::from_cbor(serialized_block);
       bytes block_raw = Safe::getBytesFromB64(block_body, "blockraw");
       return initialize(block_raw, block_body["tx"]);
-    }
-    catch(json::exception &e) {
+    } catch (json::exception &e) {
       CLOG(ERROR, "BLOC") << "Failed to deserialize - " << e.what();
       return false;
     }
