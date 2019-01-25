@@ -5,6 +5,7 @@
 
 namespace gruut {
 Communication::Communication() {
+  el::Loggers::getLogger("COMM");
   m_port_num = Setting::getInstance()->getMyPort();
   if (m_port_num.empty())
     m_port_num = config::DEFAULT_PORT_NUM;
@@ -14,12 +15,34 @@ Communication::Communication() {
   setUpConnList();
 };
 
+void Communication::checkUpTracker() {
+  auto setting = Setting::getInstance();
+
+  if (setting->getDBCheck()) {
+    CLOG(INFO, "COMM") << "Waiting end of Block health check";
+    while (!m_health_checker->isFinished()) {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+  }
+
+  if (!setting->getDisableTracker()) {
+    CLOG(INFO, "COMM") << "Access to tracker";
+    m_merger_client.accessToTracker();
+  } else {
+    auto conn_manager = ConnManager::getInstance();
+    conn_manager->disableTracker();
+  }
+
+  stageOver(ExitCode::NORMAL);
+}
+
 void Communication::start() {
-  // TODO : Tracker에 접속하지 못하였을때 처리 필요.
-  m_merger_client.accessToTracker();
+  auto &io_service = Application::app().getIoService();
+
+  io_service.post([this]() { checkUpTracker(); });
+
   m_merger_client.checkConnection();
 
-  auto &io_service = Application::app().getIoService();
   io_service.post([this]() { m_merger_server.runServer(m_port_num); });
 }
 
@@ -27,9 +50,14 @@ void Communication::setUpConnList() {
   auto setting = Setting::getInstance();
   auto merger_list = setting->getMergerInfo();
   auto se_list = setting->getServiceEndpointInfo();
+
+  auto tracker_info = setting->getTrackerInfo();
+
   merger_id_type my_id = setting->getMyId();
 
   auto conn_manager = ConnManager::getInstance();
+
+  conn_manager->setTrackerInfo(tracker_info, true);
 
   for (auto &merger_info : merger_list) {
     if (merger_info.id == my_id)

@@ -73,6 +73,12 @@ const std::vector<std::tuple<MessageType, std::string, EntryType, EntryLength>> 
     {MessageType::MSG_UP, "mID", EntryType::BASE64, EntryLength::ID},
     {MessageType::MSG_UP, "time", EntryType::TIMESTAMP_NOW, EntryLength::NOT_LIMITED},
     {MessageType::MSG_UP, "cID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_UP, "ip", EntryType::STRING, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_UP, "port", EntryType::STRING, EntryLength::NOT_LIMITED},
+
+    {MessageType::MSG_WELCOME, "mID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_WELCOME, "time", EntryType::TIMESTAMP_NOW, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_WELCOME, "val", EntryType::BOOL, EntryLength::NOT_LIMITED},
 
     {MessageType::MSG_REQ_CHECK, "sender", EntryType::BASE64, EntryLength::ID},
     {MessageType::MSG_REQ_CHECK, "time", EntryType::TIMESTAMP_NOW, EntryLength::NOT_LIMITED},
