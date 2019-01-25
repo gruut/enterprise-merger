@@ -104,65 +104,42 @@ void MergerClient::accessToTracker() {
 
 void MergerClient::setup() {
   auto &io_service = Application::app().getIoService();
-  m_rpc_check_strand.reset(new boost::asio::io_service::strand(io_service));
-  m_rpc_check_timer.reset(new boost::asio::deadline_timer(io_service));
 
-  m_http_check_strand.reset(new boost::asio::io_service::strand(io_service));
-  m_http_check_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_rpc_check_scheduler.setIoService(io_service);
+  m_rpc_check_scheduler.setStrandMod();
+  m_rpc_check_scheduler.setTaskFunction(std::bind(&MergerClient::checkRpcConnection,this));
+  m_rpc_check_scheduler.setInterval(config::RPC_CHECK_INTERVAL);
+
+  m_http_check_scheduler.setIoService(io_service);
+  m_http_check_scheduler.setStrandMod();
+  m_http_check_scheduler.setTaskFunction(std::bind(&MergerClient::checkHttpConnection,this));
+  m_http_check_scheduler.setInterval(config::HTTP_CHECK_INTERVAL);
+
+}
+
+void MergerClient::checkConnection(){
+  m_rpc_check_scheduler.runTask();
+  m_http_check_scheduler.runTask();
 }
 
 void MergerClient::checkHttpConnection() {
-  auto &io_service = Application::app().getIoService();
+  auto se_list = m_conn_manager->getAllSeInfo();
 
-  io_service.post(m_http_check_strand->wrap([this]() {
-    auto se_list = m_conn_manager->getAllSeInfo();
+  for (auto &se_info : se_list) {
+    HttpClient http_client(se_info.address + ":" + se_info.port);
+    bool status = http_client.checkServStatus();
 
-    for (auto &se_info : se_list) {
-      HttpClient http_client(se_info.address + ":" + se_info.port);
-      bool status = http_client.checkServStatus();
-
-      m_conn_manager->setSeStatus(se_info.id, status);
-    }
-  }));
-
-  m_http_check_timer->expires_from_now(
-      boost::posix_time::seconds(config::HTTP_CHECK_INTERVAL));
-  m_http_check_timer->async_wait([this](const boost::system::error_code &ec) {
-    if (ec == boost::asio::error::operation_aborted) {
-      CLOG(INFO, "MCLN") << "HttpConnCheckTimer ABORTED";
-    } else if (ec.value() == 0) {
-      checkHttpConnection();
-    } else {
-      CLOG(ERROR, "MCLN") << ec.message();
-      // throw;
-    }
-  });
+    m_conn_manager->setSeStatus(se_info.id, status);
+  }
 }
 
 void MergerClient::checkRpcConnection() {
-  auto &io_service = Application::app().getIoService();
+  auto merger_list = m_conn_manager->getAllMergerInfo();
+  for (auto &merger_info : merger_list) {
 
-  io_service.post(m_rpc_check_strand->wrap([this]() {
-    auto merger_list = m_conn_manager->getAllMergerInfo();
-    for (auto &merger_info : merger_list) {
-
-      Status st = sendHealthCheck(merger_info);
-      m_conn_manager->setMergerStatus(merger_info.id, st.ok());
-    }
-  }));
-
-  m_rpc_check_timer->expires_from_now(
-      boost::posix_time::seconds(config::RPC_CHECK_INTERVAL));
-  m_rpc_check_timer->async_wait([this](const boost::system::error_code &ec) {
-    if (ec == boost::asio::error::operation_aborted) {
-      CLOG(INFO, "MCLN") << "RpcConnCheckTimer ABORTED";
-    } else if (ec.value() == 0) {
-      checkRpcConnection();
-    } else {
-      CLOG(ERROR, "MCLN") << ec.message();
-      // throw;
-    }
-  });
+    Status st = sendHealthCheck(merger_info);
+    m_conn_manager->setMergerStatus(merger_info.id, st.ok());
+  }
 }
 
 void MergerClient::sendMessage(MessageType msg_type,

@@ -10,8 +10,9 @@ BlockSynchronizer::BlockSynchronizer() {
 
   auto &io_service = Application::app().getIoService();
 
-  m_msg_fetching_loop_timer.reset(new boost::asio::deadline_timer(io_service));
-  m_sync_ctrl_loop_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_msg_fetch_scheduler.setIoService(io_service);
+  m_sync_control_scheduler.setIoService(io_service);
+
   m_sync_begin_timer.reset(new boost::asio::deadline_timer(io_service));
 
   m_inputQueue = InputQueueAlt::getInstance();
@@ -27,8 +28,8 @@ void BlockSynchronizer::syncFinish(ExitCode exit_code) {
   m_is_sync_done = true;
 
   std::call_once(m_sync_finish_call_flag, [this, &exit_code]() {
-    m_msg_fetching_loop_timer->cancel();
-    m_sync_ctrl_loop_timer->cancel();
+    m_msg_fetch_scheduler.stopTask();
+    m_sync_control_scheduler.stopTask();
 
     m_sync_finish_callback(exit_code);
     m_is_sync_done = true;
@@ -38,40 +39,20 @@ void BlockSynchronizer::syncFinish(ExitCode exit_code) {
 }
 
 void BlockSynchronizer::blockSyncControl() {
-
-  if (m_is_sync_done) {
+  if (m_is_sync_done || !m_is_sync_begin) {
     return;
   }
 
-  auto &io_service = Application::app().getIoService();
-  io_service.post([this]() {
-    if (!m_is_sync_begin) {
-      return;
+  bool is_done = true;
+  for (auto each_flag : m_sync_flags) {
+    if (each_flag == false) {
+      is_done = false;
+      break;
     }
+  }
 
-    bool is_done = true;
-
-    for (auto each_flag : m_sync_flags) {
-      if (each_flag == false) {
-        is_done = false;
-        break;
-      }
-    }
-
-    if (is_done)
-      syncFinish(ExitCode::NORMAL);
-  });
-
-  m_sync_ctrl_loop_timer->expires_from_now(
-      boost::posix_time::milliseconds(config::SYNC_CONTROL_INTERVAL));
-  m_sync_ctrl_loop_timer->async_wait(
-      [this](const boost::system::error_code &error) {
-        if (!error) {
-          blockSyncControl();
-        } else {
-          CLOG(INFO, "BSYN") << error.message();
-        }
-      });
+  if (is_done)
+    syncFinish(ExitCode::NORMAL);
 }
 
 void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry) {
@@ -96,73 +77,55 @@ void BlockSynchronizer::sendErrorToSigner(InputMsgEntry &input_msg_entry) {
 }
 
 void BlockSynchronizer::messageFetch() {
-  if (m_is_sync_done)
+  if (m_is_sync_done || m_inputQueue->empty())
     return;
 
-  auto &io_service = Application::app().getIoService();
-  io_service.post([this]() {
-    if (m_is_sync_done || m_inputQueue->empty())
-      return;
+  InputMsgEntry input_msg_entry = m_inputQueue->fetch();
 
-    InputMsgEntry input_msg_entry = m_inputQueue->fetch();
+  if (input_msg_entry.type == MessageType::MSG_NULL)
+    return;
 
-    if (input_msg_entry.type == MessageType::MSG_NULL)
-      return;
+  CLOG(INFO, "BSYN") << "MSG IN: 0x" << std::hex << (int)input_msg_entry.type;
 
-    CLOG(INFO, "BSYN") << "MSG IN: 0x" << std::hex << (int)input_msg_entry.type;
+  if (checkMsgFromSigner(input_msg_entry.type)) {
+    sendErrorToSigner(input_msg_entry);
+  }
 
-    if (checkMsgFromSigner(input_msg_entry.type)) {
-      sendErrorToSigner(input_msg_entry);
+  switch (input_msg_entry.type) {
+  case MessageType::MSG_ERROR: {
+    if (Safe::getString(input_msg_entry.body, "type") ==
+        std::to_string(
+            static_cast<int>(ErrorMsgType::BSYNC_NO_BLOCK))) { // Oh! No block!
+      syncFinish(ExitCode::NORMAL);
     }
+  } break;
 
-    switch (input_msg_entry.type) {
-    case MessageType::MSG_ERROR: {
-      if (Safe::getString(input_msg_entry.body, "type") ==
-          std::to_string(static_cast<int>(
-              ErrorMsgType::BSYNC_NO_BLOCK))) { // Oh! No block!
-        syncFinish(ExitCode::NORMAL);
+  case MessageType::MSG_BLOCK: {
+    auto pushed_block_height =
+        Application::app().getBlockProcessor().handleMsgBlock(input_msg_entry);
+    if (pushed_block_height > 0) {
+
+      if (pushed_block_height > m_link_from.height) {
+        size_t req_map_size = pushed_block_height - m_link_from.height;
+        if (m_sync_flags.size() < req_map_size)
+          m_sync_flags.resize(req_map_size, false);
+
+        m_sync_flags[req_map_size - 1] = true; // last or this
       }
-    } break;
-
-    case MessageType::MSG_BLOCK: {
-      auto pushed_block_height =
-          Application::app().getBlockProcessor().handleMsgBlock(
-              input_msg_entry);
-      if (pushed_block_height > 0) {
-
-        if (pushed_block_height > m_link_from.height) {
-          size_t req_map_size = pushed_block_height - m_link_from.height;
-          if (m_sync_flags.size() < req_map_size)
-            m_sync_flags.resize(req_map_size, false);
-
-          m_sync_flags[req_map_size - 1] = true; // last or this
-        }
-      }
-    } break;
-
-    case MessageType::MSG_RES_STATUS: {
-      collectingStatus(input_msg_entry);
-    } break;
-
-    case MessageType::MSG_REQ_STATUS: {
-      Application::app().getBlockProcessor().handleMessage(input_msg_entry);
-    } break;
-
-    default:
-      break;
     }
-  });
+  } break;
 
-  m_msg_fetching_loop_timer->expires_from_now(
-      boost::posix_time::milliseconds(config::INQUEUE_MSG_FETCHER_INTERVAL));
-  m_msg_fetching_loop_timer->async_wait(
-      [this](const boost::system::error_code &error) {
-        if (!error) {
-          messageFetch();
-        } else {
-          CLOG(INFO, "BSYN") << error.message();
-        }
-      });
+  case MessageType::MSG_RES_STATUS: {
+    collectingStatus(input_msg_entry);
+  } break;
+
+  case MessageType::MSG_REQ_STATUS: {
+    Application::app().getBlockProcessor().handleMessage(input_msg_entry);
+  } break;
+
+  default:
+    break;
+  }
 }
 
 void BlockSynchronizer::collectingStatus(InputMsgEntry &entry) {
@@ -182,6 +145,16 @@ void BlockSynchronizer::collectingStatus(InputMsgEntry &entry) {
 void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 
   m_sync_finish_callback = std::move(callback);
+
+  m_msg_fetch_scheduler.setInterval(config::INQUEUE_MSG_FETCHER_INTERVAL);
+  m_msg_fetch_scheduler.setTaskFunction(
+      std::bind(&BlockSynchronizer::messageFetch, this));
+  m_msg_fetch_scheduler.runTask();
+
+  m_sync_control_scheduler.setInterval(config::SYNC_CONTROL_INTERVAL);
+  m_sync_control_scheduler.setTaskFunction(
+      std::bind(&BlockSynchronizer::blockSyncControl, this));
+  m_sync_control_scheduler.runTask();
 
   CLOG(INFO, "BSYN") << "BLOCK SYNCHRONIZATION ---- START";
 
@@ -216,16 +189,15 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
   }
+
   conn_manager->clearBlockHgtList();
 
   m_link_from = Application::app().getBlockProcessor().getMostPossibleLink();
 
   sendRequestStatus();
-  messageFetch();
-  blockSyncControl();
 
   m_sync_begin_timer->expires_from_now(
-      boost::posix_time::seconds(config::STATUS_COLLECTING_TIMEOUT_SEC));
+      boost::posix_time::microseconds(config::STATUS_COLLECTING_TIMEOUT));
   m_sync_begin_timer->async_wait(
       [this](const boost::system::error_code &error) {
         if (!error) {
