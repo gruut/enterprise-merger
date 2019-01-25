@@ -109,14 +109,12 @@ void MergerClient::setup() {
 
   m_rpc_check_scheduler.setIoService(io_service);
   m_rpc_check_scheduler.setStrandMod();
-  m_rpc_check_scheduler.setTaskFunction(
-      std::bind(&MergerClient::checkRpcConnection, this));
+  m_rpc_check_scheduler.setTaskFunction([this]() { checkRpcConnection(); });
   m_rpc_check_scheduler.setInterval(config::RPC_CHECK_INTERVAL);
 
   m_http_check_scheduler.setIoService(io_service);
   m_http_check_scheduler.setStrandMod();
-  m_http_check_scheduler.setTaskFunction(
-      std::bind(&MergerClient::checkHttpConnection, this));
+  m_http_check_scheduler.setTaskFunction([this]() { checkHttpConnection(); });
   m_http_check_scheduler.setInterval(config::HTTP_CHECK_INTERVAL);
 }
 

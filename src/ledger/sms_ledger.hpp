@@ -11,8 +11,8 @@ public:
 
   bool isValidTx(const Transaction &tx) override { return true; }
 
-  bool procBlock(const json &txs_json,
-                 const std::string &block_id_b64) override {
+  bool procBlock(const json &txs_json, const std::string &block_id_b64,
+                 const block_layer_t &block_layer) override {
     return true;
   }
 };

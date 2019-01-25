@@ -59,8 +59,8 @@ public:
   void handleMessage(InputMsgEntry &entry);
   block_height_type handleMsgBlock(InputMsgEntry &entry);
 
+  block_layer_t getBlockLayer(const std::string &block_id_b64);
   nth_link_type getMostPossibleLink();
-  std::vector<std::string> getMostPossibleBlockLayer();
   bool hasUnresolvedBlocks();
 
 private:
@@ -70,6 +70,7 @@ private:
   void handleMsgReqStatus(InputMsgEntry &entry);
   void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
   void resolveBlocks();
+  void invalidateBlockLayer();
 };
 } // namespace gruut
 

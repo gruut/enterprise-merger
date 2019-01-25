@@ -73,12 +73,12 @@ void BlockProcessor::periodicTask() {
   }
 }
 
-nth_link_type BlockProcessor::getMostPossibleLink() {
-  return m_unresolved_block_pool.getMostPossibleLink();
+block_layer_t BlockProcessor::getBlockLayer(const std::string &block_id_b64) {
+  return m_unresolved_block_pool.getBlockLayer(block_id_b64);
 }
 
-std::vector<std::string> BlockProcessor::getMostPossibleBlockLayer() {
-  return m_unresolved_block_pool.getMostPossibleBlockLayer();
+nth_link_type BlockProcessor::getMostPossibleLink() {
+  return m_unresolved_block_pool.getMostPossibleLink();
 }
 
 bool BlockProcessor::hasUnresolvedBlocks() {
@@ -227,10 +227,13 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   // if not linked initially, we cannot interpret this block because of previous
   // missing blocks!
   if (block_push_result.linked) {
-    Application::app().getCustomLedgerManager().procLedgerBlock(
-        entry.body["tx"], recv_block.getBlockIdB64());
-
     auto possible_link = getMostPossibleLink();
+
+    Application::app().getCustomLedgerManager().procLedgerBlock(
+        entry.body["tx"], recv_block.getBlockIdB64(),
+        block_push_result.block_layer);
+
+    invalidateBlockLayer();
 
     OutputMsgEntry msg_chain_info;
     msg_chain_info.type = MessageType::MSG_CHAIN_INFO; // MSG_CHAIN_INFO = 0xB7
@@ -258,8 +261,13 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   return block_push_result.height;
 }
 
+void BlockProcessor::invalidateBlockLayer() {
+  LayeredStorage::getInstance()->setBlockLayer(
+      m_unresolved_block_pool.getMostPossibleBlockLayer());
+}
+
 void BlockProcessor::resolveBlocks() {
-  std::vector<std::pair<Block, bool>> resolved_blocks;
+  std::vector<UnresolvedBlock> resolved_blocks;
   std::vector<std::string> drop_blocks;
 
   m_unresolved_block_pool.getResolvedBlocks(resolved_blocks, drop_blocks);
@@ -273,28 +281,33 @@ void BlockProcessor::resolveBlocks() {
 
     for (auto &each_block : resolved_blocks) {
 
-      if (!each_block.first.isValidLate()) {
+      if (!each_block.block.isValidLate()) {
         CLOG(ERROR, "BPRO")
             << "Block dropped (invalid - late stage validation)";
         continue;
       }
 
-      json block_header = each_block.first.getBlockHeaderJson();
-      bytes block_raw = each_block.first.getBlockRaw();
-      json block_body = each_block.first.getBlockBodyJson();
+      json block_header = each_block.block.getBlockHeaderJson();
+      bytes block_raw = each_block.block.getBlockRaw();
+      json block_body = each_block.block.getBlockBodyJson();
 
-      if (!each_block.second) // this block was not interpreted into the
-        // ledger because of link failure
+      if (each_block.linked) {
+        // this block was not interpreted into the ledger because of link
+        // failure
         Application::app().getCustomLedgerManager().procLedgerBlock(
-            block_body["tx"], each_block.first.getBlockIdB64());
+            block_body["tx"], each_block.block.getBlockIdB64(),
+            each_block.block_layer);
+
+        invalidateBlockLayer();
+      }
 
       m_storage->saveBlock(block_raw, block_header, block_body);
-      m_layered_storage->moveToDiskLedger(each_block.first.getBlockIdB64());
+      m_layered_storage->moveToDiskLedger(each_block.block.getBlockIdB64());
 
       CLOG(INFO, "BPRO") << "BLOCK SAVED (height="
-                         << each_block.first.getHeight()
-                         << ",#tx=" << each_block.first.getNumTransactions()
-                         << ",#ssig=" << each_block.first.getNumSSigs() << ")";
+                         << each_block.block.getHeight()
+                         << ",#tx=" << each_block.block.getNumTransactions()
+                         << ",#ssig=" << each_block.block.getNumSSigs() << ")";
     }
   }
 

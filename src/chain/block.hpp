@@ -61,6 +61,10 @@ private:
 public:
   Block() { el::Loggers::getLogger("BLOC"); };
 
+  bool operator==(Block &other) const {
+    return (m_height == other.getHeight() && m_block_hash == other.getHash());
+  }
+
   bool initialize(BasicBlockInfo &basic_info,
                   std::vector<hash_t> &&merkle_Tree_node = {}) {
     m_time = basic_info.time;

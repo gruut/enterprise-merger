@@ -32,9 +32,8 @@ void SignatureRequester::waitCollectDone() {
 }
 
 bool SignatureRequester::isNewSigner(Signer &signer) {
-  auto cert = m_cert_ledger.getCertificate(
-      signer.user_id, 0,
-      Application::app().getBlockProcessor().getMostPossibleBlockLayer());
+
+  auto cert = m_cert_ledger.getCertificate(signer.user_id);
   return (cert.empty() || cert != signer.pk_cert);
 }
 

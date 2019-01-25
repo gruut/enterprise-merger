@@ -17,25 +17,15 @@ Storage::Storage() {
 
   boost::filesystem::create_directories(m_db_path);
 
-  errorOnCritical(leveldb::DB::Open(m_options,
-                                    m_db_path + "/" + config::DB_SUB_DIR_HEADER,
-                                    &m_db_block_header));
-  errorOnCritical(leveldb::DB::Open(
-      m_options, m_db_path + "/" + config::DB_SUB_DIR_RAW, &m_db_block_raw));
-  errorOnCritical(leveldb::DB::Open(m_options,
-                                    m_db_path + "/" + config::DB_SUB_DIR_LATEST,
-                                    &m_db_latest_block_header));
-  errorOnCritical(leveldb::DB::Open(
-      m_options, m_db_path + "/" + config::DB_SUB_DIR_TRANSACTION,
-      &m_db_transaction));
-  errorOnCritical(leveldb::DB::Open(
-      m_options, m_db_path + "/" + config::DB_SUB_DIR_IDHEIGHT,
-      &m_db_blockid_height));
-  errorOnCritical(leveldb::DB::Open(
-      m_options, m_db_path + "/" + config::DB_SUB_DIR_LEDGER, &m_db_ledger));
-  errorOnCritical(leveldb::DB::Open(
-      m_options, m_db_path + "/" + config::DB_SUB_DIR_UNRESOLVED_BLOCK,
-      &m_db_block_backup));
+  // clang-format off
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/" + config::DB_SUB_DIR_HEADER, &m_db_block_header));
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/" + config::DB_SUB_DIR_RAW, &m_db_block_raw));
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/" + config::DB_SUB_DIR_LATEST, &m_db_latest_block_header));
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/" + config::DB_SUB_DIR_TRANSACTION, &m_db_transaction));
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/" + config::DB_SUB_DIR_IDHEIGHT, &m_db_blockid_height));
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/" + config::DB_SUB_DIR_LEDGER, &m_db_ledger));
+  errorOnCritical(leveldb::DB::Open(m_options, m_db_path + "/" + config::DB_SUB_DIR_UNRESOLVED_BLOCK,&m_db_block_backup));
+  // clang-format on
 }
 
 Storage::~Storage() {
@@ -402,15 +392,15 @@ std::vector<std::string> Storage::getNthTxIdList(block_height_type t_height) {
 }
 
 void Storage::destroyDB() {
+  // clang-format off
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_HEADER);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_RAW);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_LATEST);
-  boost::filesystem::remove_all(m_db_path + "/" +
-                                config::DB_SUB_DIR_TRANSACTION);
+  boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_TRANSACTION);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_IDHEIGHT);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_LEDGER);
-  boost::filesystem::remove_all(m_db_path + "/" +
-                                config::DB_SUB_DIR_UNRESOLVED_BLOCK);
+  boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_UNRESOLVED_BLOCK);
+  // clang-format on
 }
 
 std::string Storage::getNthBlockIdB64(block_height_type height) {

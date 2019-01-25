@@ -14,7 +14,7 @@ MessageFetcher::MessageFetcher() {
 void MessageFetcher::start() {
 
   m_fetch_scheduler.setInterval(config::INQUEUE_MSG_FETCHER_INTERVAL);
-  m_fetch_scheduler.setTaskFunction(std::bind(&MessageFetcher::fetch, this));
+  m_fetch_scheduler.setTaskFunction([this]() { fetch(); });
   m_fetch_scheduler.runTask();
 }
 

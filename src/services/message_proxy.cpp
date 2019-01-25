@@ -50,8 +50,7 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
       break;
     }
   } else {
-    CLOG(INFO, "MPRX") << "Incomming message is not valid";
-    CLOG(INFO, "MPRX") << input_message.body.dump();
+    CLOG(ERROR, "MPRX") << "Incomming message is not valid";
   }
 }
 

@@ -39,6 +39,8 @@ public:
         m_requestor_id(requestor_id), m_transaction_type(transaction_type),
         m_signature(signature), m_content_list(content_list) {}
 
+  ~Transaction() noexcept = default;
+
   bool setJson(json &tx_json) {
 
     auto new_txid_bytes = Safe::getBytesFromB64(tx_json, "txid");
@@ -79,8 +81,9 @@ public:
     return TypeConverter::encodeBase64(m_transaction_id);
   }
 
-  std::string getIdStr(){
-    return TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(m_transaction_id);
+  std::string getIdStr() {
+    return TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
+        m_transaction_id);
   }
 
   void setTime(timestamp_t sent_time) { m_sent_time = sent_time; }
