@@ -140,6 +140,8 @@ using header_length_type = uint32_t;
 using content_type = std::string;
 using hmac_key_type = Botan::secure_vector<uint8_t>;
 
+using block_layer_t = std::vector<std::string>;
+
 using proof_type = struct _proof_type {
   std::string block_id_b64;
   std::vector<std::pair<bool, std::string>> siblings;
@@ -168,6 +170,7 @@ using nth_link_type = struct _nth_link_type {
 using unblk_push_result_type = struct _unblk_push_result_type {
   block_height_type height;
   bool linked;
+  block_layer_t block_layer;
 };
 
 // All of the blows are the same type. Use them according to the context.

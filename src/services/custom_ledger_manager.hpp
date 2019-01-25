@@ -49,10 +49,10 @@ public:
     return is_valid;
   }
 
-  void procLedgerBlock(const json &txs_json, const std::string &block_id_b64) {
+  void procLedgerBlock(const json &txs_json, const std::string &block_id_b64, const block_layer_t &block_layer) {
     // CLOG(INFO, "CLMA") << "called procLedgerBlock()";
     for (auto &ledger : m_ledgers) {
-      ledger->procBlock(txs_json, block_id_b64);
+      ledger->procBlock(txs_json, block_id_b64, block_layer);
     }
   }
 

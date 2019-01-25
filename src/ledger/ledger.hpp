@@ -25,7 +25,7 @@ public:
 
   virtual bool isValidTx(const Transaction &tx) = 0;
   virtual bool procBlock(const json &txs_json,
-                         const std::string &block_id_b64) = 0;
+                         const std::string &block_id_b64, const block_layer_t &block_layer) = 0;
 
 protected:
   template <typename T = std::string> void setPrefix(T &&prefix) {
@@ -40,21 +40,17 @@ protected:
   }
 
   bool saveLedger(mem_ledger_t &ledger) {
-    for (auto &record : ledger) {
-      record.key = m_prefix + record.key; // key to wrap key
-    }
-
-    bool ret_val = m_layered_storage->saveLedger(ledger);
+    bool ret_val = m_layered_storage->saveLedger(ledger, m_prefix);
     if (ret_val)
       m_layered_storage->flushLedger();
     return ret_val;
   }
 
-  template <typename T = std::string, typename V = std::vector<std::string>>
-  std::string readLedgerByKey(T &&key, V &&block_layer = {}) {
+  template <typename T = std::string, typename V = block_layer_t>
+  std::string readLedgerByKey(T &&key, V&& bloc_layer = {}) {
     std::string wrap_key = m_prefix + key;
     // CLOG(INFO, "LEDG") << "Search ledger (key=" << wrap_key << ")";
-    return m_layered_storage->readLedgerByKey(wrap_key, block_layer);
+    return m_layered_storage->readLedgerByKey(wrap_key, bloc_layer);
   }
 };
 } // namespace gruut

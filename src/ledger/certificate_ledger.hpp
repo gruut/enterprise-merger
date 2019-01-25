@@ -44,27 +44,27 @@ public:
   bool isValidTx(const Transaction &tx) override { return true; }
 
   bool procBlock(const json &txs_json,
-                 const std::string &block_id_b64) override {
+                 const std::string &block_id_b64, const block_layer_t &block_layer) override {
     if (!txs_json.is_array())
       return false;
 
-    mem_ledger_t &&mem_ledger = blockToLedger(txs_json, block_id_b64);
+    mem_ledger_t mem_ledger;
+    blockToLedger(txs_json, block_id_b64, block_layer, mem_ledger);
     saveLedger(mem_ledger);
 
     return true;
   }
 
   std::string getCertificate(const std::string &user_id_b64,
-                             const timestamp_t &at_this_time = 0,
-                             const std::vector<std::string> block_layer = {}) {
+                             const timestamp_t &at_this_time = 0) {
     std::string ret_cert;
-    std::string cert_size = readLedgerByKey(user_id_b64, block_layer);
+    std::string cert_size = readLedgerByKey(user_id_b64);
 
     if (!cert_size.empty()) {
       int num_certs = stoi(cert_size);
       if (at_this_time == 0) {
         std::string latest_cert = readLedgerByKey(
-            user_id_b64 + "_" + to_string(num_certs - 1), block_layer);
+            user_id_b64 + "_" + to_string(num_certs - 1));
 
         json latest_cert_json = Safe::parseJsonAsArray(latest_cert);
         if (!latest_cert_json.empty())
@@ -73,8 +73,7 @@ public:
 
         timestamp_t lastest_valid_begin = 0;
         for (int i = 0; i < num_certs; ++i) {
-          std::string nth_cert =
-              readLedgerByKey(user_id_b64 + "_" + to_string(i), block_layer);
+          std::string nth_cert = readLedgerByKey(user_id_b64 + "_" + to_string(i));
 
           json cert_json = Safe::parseJson(nth_cert);
           if (cert_json.empty())
@@ -98,18 +97,14 @@ public:
   }
 
   std::string getCertificate(const signer_id_type &user_id,
-                             const timestamp_t &at_this_time = 0,
-                             const std::vector<std::string> block_layer = {}) {
+                             const timestamp_t &at_this_time = 0) {
     std::string user_id_b64 = TypeConverter::encodeBase64(user_id);
-    return getCertificate(user_id_b64, at_this_time, block_layer);
+    return getCertificate(user_id_b64, at_this_time);
   }
 
 private:
-  mem_ledger_t blockToLedger(const json &txs_json,
-                             const std::string &block_id_b64,
-                             const std::vector<std::string> &block_layer = {}) {
+  void blockToLedger(const json &txs_json, const std::string &block_id_b64, const block_layer_t &block_layer, mem_ledger_t &ret_mem_ledger) {
 
-    mem_ledger_t ret_mem_ledger;
 
     if (txs_json.is_array()) {
 
@@ -131,7 +126,7 @@ private:
           key = user_id_b64;
           value = (cert_idx.empty()) ? "1" : to_string(stoi(cert_idx) + 1);
 
-          ret_mem_ledger.emplace_back(key, value, block_id_b64);
+          ret_mem_ledger.push(key, value, block_id_b64);
 
           key += (cert_idx.empty()) ? "_0" : "_" + cert_idx;
           value = parseCert(Safe::getString(content[c_idx + 1]));
@@ -139,12 +134,10 @@ private:
           if (value.empty())
             continue;
 
-          ret_mem_ledger.emplace_back(key, value, block_id_b64);
+          ret_mem_ledger.push(key, value, block_id_b64);
         }
       }
     }
-
-    return ret_mem_ledger;
   }
 
   void loadCACert() {
