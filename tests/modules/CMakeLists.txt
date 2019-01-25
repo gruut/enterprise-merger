@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(Boost REQUIRED COMPONENTS system thread unit_test_framework random filesystem)
+find_package(Boost REQUIRED COMPONENTS system thread unit_test_framework random filesystem serialization)
 find_package(CURL REQUIRED)
 
 file(GLOB UNIT_TEST_SOURCE_FILES

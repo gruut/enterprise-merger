@@ -18,6 +18,11 @@
 
 #include <vector>
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/string.hpp>
+#include <sstream>
+
 using namespace std;
 
 namespace gruut {
@@ -93,6 +98,8 @@ public:
     if (block_header_json.empty())
       return false;
 
+    m_version =
+        static_cast<block_version_type>(Safe::getInt(block_header_json, "ver"));
     m_time = Safe::getTime(block_header_json, "time");
     m_merger_id =
         Safe::getBytesFromB64<merger_id_type>(block_header_json, "mID");
@@ -374,6 +381,23 @@ public:
     return true;
   }
 
+  std::string serialize() {
+    json block_body = getBlockBodyJson();
+    block_body["blockraw"] = TypeConverter::encodeBase64(m_block_raw);
+    return TypeConverter::bytesToString(json::to_cbor(block_body));
+  }
+
+  template <typename T = std::string> bool deserialize(T &&serialized_block) {
+    try {
+      json block_body = json::from_cbor(serialized_block);
+      bytes block_raw = Safe::getBytesFromB64(block_body, "blockraw");
+      return initialize(block_raw, block_body["tx"]);
+    } catch (json::exception &e) {
+      CLOG(ERROR, "BLOC") << "Failed to deserialize - " << e.what();
+      return false;
+    }
+  }
+
 private:
   bytes generateMetaWithCompHeader() {
 
@@ -545,6 +569,5 @@ private:
     return block_header_json;
   }
 };
-
 } // namespace gruut
 #endif

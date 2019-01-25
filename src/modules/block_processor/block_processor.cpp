@@ -16,7 +16,7 @@ BlockProcessor::BlockProcessor() {
   m_unresolved_block_pool.setPool(last_block_info.id, last_block_info.hash,
                                   last_block_info.height, last_block_info.time);
 
-  // TODO : resotre m_unresolved_block_pool from backup
+  m_unresolved_block_pool.restorePool();
 
   auto &io_service = Application::app().getIoService();
   m_task_scheduler.setIoService(io_service);

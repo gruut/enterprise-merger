@@ -39,7 +39,8 @@ using namespace std;
 const std::map<DBType, std::string> DB_PREFIX = {
     {DBType::BLOCK_HEADER, "B"}, {DBType::BLOCK_HEIGHT, "H"},
     {DBType::BLOCK_RAW, "R"},    {DBType::BLOCK_LATEST, "L"},
-    {DBType::TRANSACTION, "T"},  {DBType::LEDGER, "G"}};
+    {DBType::TRANSACTION, "T"},  {DBType::LEDGER, "G"},
+    {DBType::BLOCK_BACKUP, "S"}};
 
 const std::vector<std::pair<std::string, std::string>> DB_BLOCK_HEADER_SUFFIX =
     {{"bID", "_bID"},   {"ver", "_ver"},         {"cID", "_cID"},
@@ -67,6 +68,11 @@ public:
   void clearLedger();
   void flushLedger();
   bool empty();
+  void saveUnresolvedBlocks(const std::string &key, const std::string &value);
+  std::string readUnreslovedBlocks(const std::string &key);
+  void flushBackup();
+  void clearBackup();
+  void delBackup(const std::string &block_id_b64);
 
 private:
   std::string getNthBlockIdB64(block_height_type height = 0);
@@ -98,6 +104,7 @@ private:
   leveldb::DB *m_db_transaction;
   leveldb::DB *m_db_blockid_height;
   leveldb::DB *m_db_ledger;
+  leveldb::DB *m_db_block_backup;
 
   leveldb::WriteBatch m_batch_block_header;
   leveldb::WriteBatch m_batch_block_raw;
@@ -105,6 +112,7 @@ private:
   leveldb::WriteBatch m_batch_transaction;
   leveldb::WriteBatch m_batch_blockid_height;
   leveldb::WriteBatch m_batch_ledger;
+  leveldb::WriteBatch m_batch_block_backup;
 };
 } // namespace gruut
 #endif
