@@ -11,6 +11,8 @@
 #include "../../src/modules/message_fetcher/message_fetcher.hpp"
 #include "../../src/config/config.hpp"
 
+#include "../../src/modules/block_processor/unresolved_block_pool.hpp"
+
 using namespace std;
 using namespace gruut;
 

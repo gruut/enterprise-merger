@@ -33,6 +33,9 @@ Storage::Storage() {
       &m_db_blockid_height));
   errorOnCritical(leveldb::DB::Open(
       m_options, m_db_path + "/" + config::DB_SUB_DIR_LEDGER, &m_db_ledger));
+  errorOnCritical(leveldb::DB::Open(
+      m_options, m_db_path + "/" + config::DB_SUB_DIR_UNRESOLVED_BLOCK,
+      &m_db_block_backup));
 }
 
 Storage::~Storage() {
@@ -42,6 +45,7 @@ Storage::~Storage() {
   delete m_db_transaction;
   delete m_db_blockid_height;
   delete m_db_ledger;
+  delete m_db_block_backup;
 
   m_db_block_header = nullptr;
   m_db_block_raw = nullptr;
@@ -49,6 +53,7 @@ Storage::~Storage() {
   m_db_transaction = nullptr;
   m_db_blockid_height = nullptr;
   m_db_ledger = nullptr;
+  m_db_block_backup = nullptr;
 }
 
 bool Storage::saveBlock(bytes &block_raw, json &block_header,
@@ -110,6 +115,9 @@ bool Storage::addBatch(DBType what, const string &base_suffix_key,
     break;
   case DBType::LEDGER:
     m_batch_ledger.Put(key, value);
+    break;
+  case DBType::BLOCK_BACKUP:
+    m_batch_block_backup.Put(key, value);
     break;
   default:
     break;
@@ -289,6 +297,9 @@ std::string Storage::getValueByKey(DBType what,
   case DBType::LEDGER:
     status = m_db_ledger->Get(m_read_options, key, &value);
     break;
+  case DBType::BLOCK_BACKUP:
+    status = m_db_block_backup->Get(m_read_options, key, &value);
+    break;
   default:
     break;
   }
@@ -398,6 +409,8 @@ void Storage::destroyDB() {
                                 config::DB_SUB_DIR_TRANSACTION);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_IDHEIGHT);
   boost::filesystem::remove_all(m_db_path + "/" + config::DB_SUB_DIR_LEDGER);
+  boost::filesystem::remove_all(m_db_path + "/" +
+                                config::DB_SUB_DIR_UNRESOLVED_BLOCK);
 }
 
 std::string Storage::getNthBlockIdB64(block_height_type height) {
@@ -547,6 +560,27 @@ void Storage::clearLedger() { m_batch_ledger.Clear(); }
 void Storage::flushLedger() {
   m_db_ledger->Write(m_write_options, &m_batch_ledger);
   clearLedger();
+}
+
+void Storage::saveUnresolvedBlocks(const std::string &key,
+                                   const std::string &value) {
+  addBatch(DBType::BLOCK_BACKUP, key, value);
+}
+
+void Storage::flushBackup() {
+  m_db_block_backup->Write(m_write_options, &m_batch_block_backup);
+  clearBackup();
+}
+
+void Storage::clearBackup() { m_batch_block_backup.Clear(); }
+
+std::string Storage::readUnreslovedBlocks(const std::string &key) {
+  return getValueByKey(DBType::BLOCK_BACKUP, key);
+}
+
+void Storage::delBackup(const std::string &block_id_b64) {
+  if (!block_id_b64.empty())
+    m_batch_block_backup.Delete(block_id_b64);
 }
 
 } // namespace gruut

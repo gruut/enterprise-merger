@@ -101,7 +101,8 @@ enum class DBType : int {
   BLOCK_RAW,
   BLOCK_LATEST,
   TRANSACTION,
-  LEDGER
+  LEDGER,
+  BLOCK_BACKUP
 };
 
 enum class BlockState { RECEIVED, TOSAVE, TODELETE, RETRIED, RESERVED };

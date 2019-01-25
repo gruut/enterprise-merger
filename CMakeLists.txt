@@ -6,7 +6,7 @@ project(gruut_enterprise_merger LANGUAGES CXX)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 include(cmake/clang-cxx-dev-tools.cmake)
-find_package(Boost REQUIRED COMPONENTS system thread filesystem)
+find_package(Boost REQUIRED COMPONENTS system thread filesystem serialization)
 find_package(CURL REQUIRED)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
