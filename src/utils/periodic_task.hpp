@@ -18,13 +18,13 @@ private:
 public:
   PeriodicTask() = default;
 
-  template <typename T = boost::asio::io_service>
-  PeriodicTask(T&&io_service) {
+  template <typename T = boost::asio::io_service> PeriodicTask(T &&io_service) {
     setIoService(io_service);
   }
 
   template <typename T = boost::asio::io_service>
-  PeriodicTask(T&&io_service, uint64_t intval, int after, const std::function<void()> &task_function) {
+  PeriodicTask(T &&io_service, uint64_t intval, int after,
+               const std::function<void()> &task_function) {
 
     setIoService(io_service);
     setTaskFunction(task_function);
@@ -37,8 +37,9 @@ public:
     }
   }
 
-
-  PeriodicTask(std::shared_ptr<boost::asio::io_service> io_service, uint64_t intval, int after, const std::function<void()> &task_function)  {
+  PeriodicTask(std::shared_ptr<boost::asio::io_service> io_service,
+               uint64_t intval, int after,
+               const std::function<void()> &task_function) {
 
     setIoService(io_service);
     setTaskFunction(task_function);
@@ -93,9 +94,7 @@ public:
     }
   }
 
-  void stopTask(){
-    m_event_timer->cancel();
-  }
+  void stopTask() { m_event_timer->cancel(); }
 
 private:
   void event_loop() {
@@ -107,7 +106,8 @@ private:
       }
     }
 
-    m_event_timer->expires_from_now(boost::posix_time::milliseconds(m_interval));
+    m_event_timer->expires_from_now(
+        boost::posix_time::milliseconds(m_interval));
     m_event_timer->async_wait([this](const boost::system::error_code &error) {
       if (!error && error != boost::asio::error::operation_aborted) {
         event_loop();
@@ -168,4 +168,4 @@ public:
 
 #endif
 
-#endif //GRUUT_ENTERPRISE_MERGER_PERIODIC_TASK_HPP
+#endif // GRUUT_ENTERPRISE_MERGER_PERIODIC_TASK_HPP
