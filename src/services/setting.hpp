@@ -172,6 +172,7 @@ private:
   std::vector<ServiceEndpointInfo> m_service_endpoints;
   std::vector<MergerInfo> m_mergers;
   bool m_db_check{false};
+  bool m_disable_tracker{false};
 
 public:
   Setting()
@@ -189,6 +190,9 @@ public:
   ~Setting() {
     // TODO :: wipe-out m_sk securely
   }
+  void setDisableTracker() { m_disable_tracker = true; }
+
+  bool getDisableTracker() { return m_disable_tracker; }
 
   void setDBCheck() { m_db_check = true; }
 

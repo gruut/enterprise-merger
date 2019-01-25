@@ -39,7 +39,6 @@ void MergerClient::accessToTracker() {
   request_msg["prevbID"] =
       TypeConverter::encodeBase64(most_possible_link.prev_id);
 
-  CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";
   json response_msg;
   auto tk_info = m_conn_manager->getTrackerInfo();
   std::string tk_address = tk_info.address + ":" + tk_info.port;
@@ -105,20 +104,23 @@ void MergerClient::accessToTracker() {
 
 void MergerClient::setup() {
   auto &io_service = Application::app().getIoService();
+  auto setting = Setting::getInstance();
+  m_disable_tracker = setting->getDisableTracker();
 
   m_rpc_check_scheduler.setIoService(io_service);
   m_rpc_check_scheduler.setStrandMod();
-  m_rpc_check_scheduler.setTaskFunction(std::bind(&MergerClient::checkRpcConnection,this));
+  m_rpc_check_scheduler.setTaskFunction(
+      std::bind(&MergerClient::checkRpcConnection, this));
   m_rpc_check_scheduler.setInterval(config::RPC_CHECK_INTERVAL);
 
   m_http_check_scheduler.setIoService(io_service);
   m_http_check_scheduler.setStrandMod();
-  m_http_check_scheduler.setTaskFunction(std::bind(&MergerClient::checkHttpConnection,this));
+  m_http_check_scheduler.setTaskFunction(
+      std::bind(&MergerClient::checkHttpConnection, this));
   m_http_check_scheduler.setInterval(config::HTTP_CHECK_INTERVAL);
-
 }
 
-void MergerClient::checkConnection(){
+void MergerClient::checkConnection() {
   m_rpc_check_scheduler.runTask();
   m_http_check_scheduler.runTask();
 }
@@ -129,9 +131,11 @@ void MergerClient::checkHttpConnection() {
 
   bool status;
 
-  HttpClient tk_http_client(tk_info.address + ":" + tk_info.port);
-  status = tk_http_client.checkServStatus();
-  m_conn_manager->setTrackerStatus(status);
+  if (!m_disable_tracker) {
+    HttpClient tk_http_client(tk_info.address + ":" + tk_info.port);
+    status = tk_http_client.checkServStatus();
+    m_conn_manager->setTrackerStatus(status);
+  }
 
   for (auto &se_info : se_list) {
     HttpClient se_http_client(se_info.address + ":" + se_info.port);
@@ -175,14 +179,14 @@ void MergerClient::sendMessage(MessageType msg_type,
 }
 
 json MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
+  json reply_json;
+  if (!m_conn_manager->getTrackerStatus())
+    return reply_json;
+
   std::string send_msg = output_msg.body.dump();
 
   auto tk_info = m_conn_manager->getTrackerInfo();
   std::string address = tk_info.address + ":" + tk_info.port + "/src";
-
-  json reply_json;
-  if (!tk_info.conn_status)
-    return reply_json;
 
   if (output_msg.type == MessageType::MSG_CHAIN_INFO) {
     address += "/ChainInfo.php";
@@ -238,7 +242,7 @@ void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
   if (receiver_list.empty()) {
     auto merger_list = m_conn_manager->getAllMergerInfo();
     for (auto &merger_info : merger_list) {
-      if (merger_info.conn_status) {
+      if (m_conn_manager->getMergerStatus(merger_info.id)) {
         sendMsgToMerger(merger_info, request);
         sent_somewhere = true;
       }
@@ -270,7 +274,7 @@ void MergerClient::sendToMerger(std::vector<id_type> &receiver_list,
         m_conn_manager->setMergerInfo(merger_info, true);
       }
       MergerInfo merger_info = m_conn_manager->getMergerInfo(receiver_id);
-      if (merger_info.conn_status) {
+      if (m_conn_manager->getMergerStatus(merger_info.id)) {
         sendMsgToMerger(merger_info, request);
         sent_somewhere = true;
         break;

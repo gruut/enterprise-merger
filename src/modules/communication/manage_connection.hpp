@@ -124,6 +124,13 @@ public:
     return m_se_info.find(se_id_b64) != m_se_info.end();
   }
 
+  bool getTrackerStatus() {
+    if (!m_enabled_tracker)
+      return false;
+
+    return m_tracker_info.conn_status;
+  }
+
   bool getMergerStatus(merger_id_type &merger_id) {
     if (!m_enabled_merger_check)
       return true;
@@ -139,6 +146,7 @@ public:
     std::string se_id_b64 = TypeConverter::encodeBase64(se_id);
     return m_se_info[se_id_b64].conn_status;
   }
+  void disableTracker() { m_enabled_tracker = false; }
 
   void disableMergerCheck() { m_enabled_merger_check = false; }
 
@@ -155,6 +163,7 @@ private:
   std::mutex m_se_mutex;
   std::mutex m_tk_mutex;
 
+  std::atomic<bool> m_enabled_tracker{true};
   std::atomic<bool> m_enabled_merger_check{true};
   std::atomic<bool> m_enabled_se_check{true};
 };
