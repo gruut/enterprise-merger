@@ -28,7 +28,8 @@ bool TransactionPool::isDuplicated(tx_id_type &&tx_id) {
   return isDuplicated(tx_id);
 }
 bool TransactionPool::isDuplicated(tx_id_type &tx_id) {
-  return m_txid_pool.has(TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(tx_id));
+  return m_txid_pool.has(
+      TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(tx_id));
 }
 
 bool TransactionPool::pop(Transaction &transaction) {

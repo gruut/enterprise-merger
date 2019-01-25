@@ -33,15 +33,15 @@ public:
     return true;
   }
   template <typename V = std::vector<std::string>>
-  void setBlockLayer(V&& block_layer = {}){
+  void setBlockLayer(V &&block_layer = {}) {
     m_block_layer = block_layer;
   }
 
   template <typename T = std::string, typename V = block_layer_t>
-  std::string readLedgerByKey(T &&key, V && block_layer = {}) {
+  std::string readLedgerByKey(T &&key, V &&block_layer = {}) {
     std::string ret_val;
 
-    if(block_layer.empty()) {
+    if (block_layer.empty()) {
       for (auto &each_block_id_b64 : m_block_layer) { // reverse_order
         if (m_mem_ledger.getVal(key, each_block_id_b64, ret_val)) {
           break;
@@ -63,9 +63,7 @@ public:
 
   void flushLedger() { m_storage->flushLedger(); }
 
-  void clearLedger() {
-    m_mem_ledger.clear();
-  }
+  void clearLedger() { m_mem_ledger.clear(); }
 
   template <typename T = std::string> void moveToDiskLedger(T &&block_id_b64) {
 
@@ -82,7 +80,6 @@ public:
   template <typename T = std::string> void dropLedger(T &&block_id_b64) {
     m_mem_ledger.dropKV(block_id_b64);
   }
-
 };
 
 } // namespace gruut

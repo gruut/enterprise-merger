@@ -147,13 +147,11 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
   m_sync_finish_callback = std::move(callback);
 
   m_msg_fetch_scheduler.setInterval(config::INQUEUE_MSG_FETCHER_INTERVAL);
-  m_msg_fetch_scheduler.setTaskFunction(
-      std::bind(&BlockSynchronizer::messageFetch, this));
+  m_msg_fetch_scheduler.setTaskFunction([this]() { messageFetch(); });
   m_msg_fetch_scheduler.runTask();
 
   m_sync_control_scheduler.setInterval(config::SYNC_CONTROL_INTERVAL);
-  m_sync_control_scheduler.setTaskFunction(
-      std::bind(&BlockSynchronizer::blockSyncControl, this));
+  m_sync_control_scheduler.setTaskFunction([this]() { blockSyncControl(); });
   m_sync_control_scheduler.runTask();
 
   CLOG(INFO, "BSYN") << "BLOCK SYNCHRONIZATION ---- START";

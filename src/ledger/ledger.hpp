@@ -24,8 +24,8 @@ public:
   };
 
   virtual bool isValidTx(const Transaction &tx) = 0;
-  virtual bool procBlock(const json &txs_json,
-                         const std::string &block_id_b64, const block_layer_t &block_layer) = 0;
+  virtual bool procBlock(const json &txs_json, const std::string &block_id_b64,
+                         const block_layer_t &block_layer) = 0;
 
 protected:
   template <typename T = std::string> void setPrefix(T &&prefix) {
@@ -47,7 +47,7 @@ protected:
   }
 
   template <typename T = std::string, typename V = block_layer_t>
-  std::string readLedgerByKey(T &&key, V&& bloc_layer = {}) {
+  std::string readLedgerByKey(T &&key, V &&bloc_layer = {}) {
     std::string wrap_key = m_prefix + key;
     // CLOG(INFO, "LEDG") << "Search ledger (key=" << wrap_key << ")";
     return m_layered_storage->readLedgerByKey(wrap_key, bloc_layer);

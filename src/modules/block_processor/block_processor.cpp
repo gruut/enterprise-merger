@@ -73,8 +73,8 @@ void BlockProcessor::periodicTask() {
   }
 }
 
-block_layer_t BlockProcessor::getBlockLayer(const std::string &block_id_b64){
- return m_unresolved_block_pool.getBlockLayer(block_id_b64);
+block_layer_t BlockProcessor::getBlockLayer(const std::string &block_id_b64) {
+  return m_unresolved_block_pool.getBlockLayer(block_id_b64);
 }
 
 nth_link_type BlockProcessor::getMostPossibleLink() {
@@ -230,7 +230,8 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     auto possible_link = getMostPossibleLink();
 
     Application::app().getCustomLedgerManager().procLedgerBlock(
-        entry.body["tx"], recv_block.getBlockIdB64(), block_push_result.block_layer);
+        entry.body["tx"], recv_block.getBlockIdB64(),
+        block_push_result.block_layer);
 
     invalidateBlockLayer();
 
@@ -260,8 +261,9 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   return block_push_result.height;
 }
 
-void BlockProcessor::invalidateBlockLayer(){
-  LayeredStorage::getInstance()->setBlockLayer(m_unresolved_block_pool.getMostPossibleBlockLayer());
+void BlockProcessor::invalidateBlockLayer() {
+  LayeredStorage::getInstance()->setBlockLayer(
+      m_unresolved_block_pool.getMostPossibleBlockLayer());
 }
 
 void BlockProcessor::resolveBlocks() {
@@ -290,9 +292,11 @@ void BlockProcessor::resolveBlocks() {
       json block_body = each_block.block.getBlockBodyJson();
 
       if (each_block.linked) {
-        // this block was not interpreted into the ledger because of link failure
+        // this block was not interpreted into the ledger because of link
+        // failure
         Application::app().getCustomLedgerManager().procLedgerBlock(
-            block_body["tx"], each_block.block.getBlockIdB64(), each_block.block_layer);
+            block_body["tx"], each_block.block.getBlockIdB64(),
+            each_block.block_layer);
 
         invalidateBlockLayer();
       }

@@ -131,50 +131,93 @@ private:
       std::string temp = Safe::getString(msg_body, key);
       std::regex rgx(
           "([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)");
-      return !temp.empty() && std::regex_match(temp, rgx);
+
+      if (!temp.empty() && std::regex_match(temp, rgx))
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on BASE64 [" << key << "]";
+      return false;
     }
     case EntryType::TIMESTAMP: {
       std::string temp = Safe::getString(msg_body, key);
-      return !temp.empty() && std::all_of(temp.begin(), temp.end(), ::isdigit);
+      if (!temp.empty() && std::all_of(temp.begin(), temp.end(), ::isdigit))
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on TIMESTAMP [" << key << "]";
+      return false;
     }
     case EntryType::TIMESTAMP_NOW: {
       std::string temp = Safe::getString(msg_body, key);
       timestamp_t tt_time = Safe::getTime(msg_body, key);
       timestamp_t current_time = Time::now_int();
-      return !temp.empty() &&
-             std::all_of(temp.begin(), temp.end(), ::isdigit) &&
-             abs((int)(current_time - tt_time)) < config::TIME_MAX_DIFF_SEC;
+
+      if (!temp.empty() && std::all_of(temp.begin(), temp.end(), ::isdigit) &&
+          abs((int)(current_time - tt_time)) < config::TIME_MAX_DIFF_SEC)
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on TIMESTAMP_NOW [" << key << "]";
+      return false;
     }
     case EntryType::HEX: {
       std::string temp = Safe::getString(msg_body, key);
-      return !temp.empty() && std::all_of(temp.begin(), temp.end(), ::isxdigit);
+      if (!temp.empty() && std::all_of(temp.begin(), temp.end(), ::isxdigit))
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on HEX [" << key << "]";
+      return false;
     }
     case EntryType::TYPE: {
       std::string temp = Safe::getString(msg_body, key);
-      return (temp == TXTYPE_CERTIFICATES || temp == TXTYPE_DIGESTS ||
-              temp == TXTYPE_IMMORTALSMS);
+      if (temp == TXTYPE_CERTIFICATES || temp == TXTYPE_DIGESTS ||
+          temp == TXTYPE_IMMORTALSMS)
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on TYPE [" << key << "]";
+      return false;
     }
     case EntryType::STRING: {
-      return msg_body["key"].is_string();
+      if (msg_body[key].is_string())
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on STRING [" << key << "]";
+      return false;
     }
     case EntryType::DECIMAL: {
       std::string temp = Safe::getString(msg_body, key);
-      return !temp.empty() && std::all_of(temp.begin(), temp.end(), ::isdigit);
+      if (!temp.empty() && std::all_of(temp.begin(), temp.end(), ::isdigit))
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on DECIMAL [" << key << "]";
+      return false;
     }
     case EntryType::UINT: {
       std::string temp = Safe::getString(msg_body, key);
-      return !temp.empty() &&
-             std::all_of(temp.begin(), temp.end(), ::isdigit) &&
-             (stoi(temp) >= 0);
+      if (!temp.empty() && std::all_of(temp.begin(), temp.end(), ::isdigit) &&
+          (stoi(temp) >= 0))
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on UINT [" << key << "]";
+      return false;
     }
     case EntryType::BOOL: {
-      return msg_body[key].is_boolean();
+      if (msg_body[key].is_boolean())
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on BOOL [" << key << "]";
+      return false;
     }
     case EntryType::ARRAYOFSTRING: {
-      return (msg_body[key].is_array() && !msg_body[key].empty());
+      if (msg_body[key].is_array() && !msg_body[key].empty())
+        return true;
+
+      CLOG(ERROR, "MVAL") << "Error on ARRAYOFSTRING [" << key << "]";
+      return false;
     }
     case EntryType::ARRAYOFOBJECT: {
-      return (msg_body[key].is_array() && !msg_body[key].empty());
+      if (msg_body[key].is_array() && !msg_body[key].empty())
+        return true;
+      CLOG(ERROR, "MVAL") << "Error on ARRAYOFOBJECT [" << key << "]";
+      return false;
     }
     default:
       return true;

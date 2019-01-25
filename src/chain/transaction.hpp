@@ -81,8 +81,9 @@ public:
     return TypeConverter::encodeBase64(m_transaction_id);
   }
 
-  std::string getIdStr(){
-    return TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(m_transaction_id);
+  std::string getIdStr() {
+    return TypeConverter::arrayToString<TRANSACTION_ID_TYPE_SIZE>(
+        m_transaction_id);
   }
 
   void setTime(timestamp_t sent_time) { m_sent_time = sent_time; }

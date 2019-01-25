@@ -35,36 +35,23 @@ void Bootstrapper::sendMsgUp() {
 }
 
 void Bootstrapper::selfCheckUp() {
-  CLOG(INFO, "BOOT") << "1) Waiting server to start";
+  CLOG(INFO, "BOOT") << "[1] Waiting server to start";
   while (!m_communication->isStarted()) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 
-  CLOG(INFO, "BOOT") << "2) Waiting connection check (in 5 sec)";
+  CLOG(INFO, "BOOT") << "[2] Waiting connection check (in 5 sec)";
   std::this_thread::sleep_for(std::chrono::seconds(5));
 
   // TODO :: do jobs for self check-up
 
-  CLOG(INFO, "BOOT") << "3) Starting block synchronization";
+  CLOG(INFO, "BOOT") << "[3] Starting block synchronization";
 
   m_block_synchronizer.startBlockSync(
       std::bind(&Bootstrapper::endSync, this, std::placeholders::_1));
 }
 
 void Bootstrapper::endSync(ExitCode exit_code) {
-  /*
-  if (exit_code == ExitCode::NORMAL ||
-      exit_code == ExitCode::ERROR_SYNC_ALONE) { // complete done or alone
-    sendMsgUp();
-
-    stageOver(exit_code);
-
-  } else {
-    std::this_thread::sleep_for(
-        std::chrono::seconds(config::BOOTSTRAP_RETRY_TIMEOUT));
-    startSync();
-  }
-  */
 
   // TODO : rewrite these codes after fixing boot-hang bug
   sendMsgUp();

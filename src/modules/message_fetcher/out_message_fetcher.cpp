@@ -11,7 +11,7 @@ OutMessageFetcher::OutMessageFetcher() {
 
 void OutMessageFetcher::start() {
   m_fetch_scheduler.setInterval(config::OUTQUEUE_MSG_FETCHER_INTERVAL);
-  m_fetch_scheduler.setTaskFunction(std::bind(&OutMessageFetcher::fetch, this));
+  m_fetch_scheduler.setTaskFunction([this]() { fetch(); });
   m_fetch_scheduler.runTask();
 }
 

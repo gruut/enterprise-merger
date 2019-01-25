@@ -22,7 +22,7 @@ public:
   Block block;
   int prev_queue_idx{-1};
   bool linked{false}; // This is for unresolved block because of previous
-                           // missing blocks!
+                      // missing blocks!
   size_t confirm_level{0};
   block_layer_t block_layer;
 
@@ -152,7 +152,7 @@ public:
     m_block_pool[bin_idx].emplace_back(block, prev_queue_idx, 0, false);
 
     block_layer_t block_layer_of_this;
-    if(bin_idx > 0)
+    if (bin_idx > 0)
       block_layer_of_this = getBlockLayer(block.getBlockIdB64());
 
     ret_val.height = block_height;
@@ -169,8 +169,9 @@ public:
       for (auto &each_block : m_block_pool[bin_idx + 1]) {
         if (each_block.block.getPrevBlockId() == block.getBlockId() &&
             each_block.block.getPrevHash() == block.getHash()) {
-          if(each_block.prev_queue_idx < 0) // now linked previous one
-            each_block.block_layer = getBlockLayer(each_block.block.getPrevBlockIdB64());
+          if (each_block.prev_queue_idx < 0) // now linked previous one
+            each_block.block_layer =
+                getBlockLayer(each_block.block.getPrevBlockIdB64());
           each_block.prev_queue_idx = queue_idx;
         }
       }
@@ -229,7 +230,8 @@ public:
   }
 
   // flushing out resolved blocks
-  void getResolvedBlocks(std::vector<UnresolvedBlock> &resolved_blocks, std::vector<std::string> &drop_blocks) {
+  void getResolvedBlocks(std::vector<UnresolvedBlock> &resolved_blocks,
+                         std::vector<std::string> &drop_blocks) {
     resolved_blocks.clear();
     drop_blocks.clear();
 
@@ -312,27 +314,28 @@ public:
     return ret_link;
   }
 
-  block_layer_t getBlockLayer(const std::string &block_id_b64){
+  block_layer_t getBlockLayer(const std::string &block_id_b64) {
     block_layer_t block_layer_of_this;
     int bin_idx = -1;
     int queue_idx = -1;
-    for (size_t i = 0 ; i < m_block_pool.size(); ++i) {
-      for(size_t j = 0; j < m_block_pool[j].size(); ++j) {
+    for (size_t i = 0; i < m_block_pool.size(); ++i) {
+      for (size_t j = 0; j < m_block_pool[j].size(); ++j) {
 
-        if(block_id_b64 == m_block_pool[i][j].block.getBlockIdB64()){
+        if (block_id_b64 == m_block_pool[i][j].block.getBlockIdB64()) {
           bin_idx = i;
           queue_idx = j;
           break;
         }
       }
-      if(bin_idx >= 0 && queue_idx >= 0)
+      if (bin_idx >= 0 && queue_idx >= 0)
         break;
     }
 
-    for(int i = bin_idx; i >= 0; --i){
-      block_layer_of_this.emplace_back(m_block_pool[i][queue_idx].block.getBlockIdB64());
+    for (int i = bin_idx; i >= 0; --i) {
+      block_layer_of_this.emplace_back(
+          m_block_pool[i][queue_idx].block.getBlockIdB64());
       queue_idx = m_block_pool[i][queue_idx].prev_queue_idx;
-      if(queue_idx < 0) {
+      if (queue_idx < 0) {
         block_layer_of_this.clear();
         break;
       }
@@ -545,9 +548,8 @@ private:
     }
   }
 
-  void
-  resolveBlocksStepByStep(std::vector<UnresolvedBlock> &resolved_blocks,
-                          std::vector<std::string> &drop_blocks) {
+  void resolveBlocksStepByStep(std::vector<UnresolvedBlock> &resolved_blocks,
+                               std::vector<std::string> &drop_blocks) {
 
     updateConfirmLevel();
 
@@ -587,7 +589,6 @@ private:
     m_last_height = m_block_pool[0][resolved_block_idx].block.getHeight();
 
     resolved_blocks.emplace_back(m_block_pool[0][resolved_block_idx]);
-
 
     // clear this height list
 
