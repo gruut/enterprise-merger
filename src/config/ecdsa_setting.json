@@ -51,6 +51,33 @@
       "-----END CERTIFICATE-----"
     ]
   },
+  "TK" : {
+    "id": "R0VOVFRLLTE=",
+    "address" : "13.125.221.27",
+    "port" : "80",
+    "cert" : [
+      "-----BEGIN CERTIFICATE-----",
+      "MIIDMDCCAZigAwIBAgIRALnUPxp3k7kOffbr+pUUkX8wDQYJKoZIhvcNAQELBQAw",
+      "PTEVMBMGA1UEAxMMLy8vLy8vLy8vLzg9MQswCQYDVQQGEwJLUjEXMBUGA1UEChMO",
+      "R3J1dXQgTmV0d29ya3MwHhcNMTkwMTI0MDExMzA0WhcNMjkwMTIxMDExMzA0WjA9",
+      "MRUwEwYDVQQDEwxSMFZPVkZSTExURT0xCzAJBgNVBAYTAktSMRcwFQYDVQQKEw5H",
+      "cnV1dCBOZXR3b3JrczBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABNKB3TbGZpLc",
+      "YD4eRuNs3cm472MllJpo12wbsyCSH0D+UBMZc5ZrB169Ciwn5Sa4R9kuzrfZ33mx",
+      "iGMWO5V+ZA6jdjB0MCEGA1UdDgQaBBgYAvpXJ0AD5LrCWgajRrVEnrT+kFzKVnAw",
+      "HAYDVR0RBBUwE4ERY29udGFjdEBncnV1dC5uZXQwDAYDVR0TAQH/BAIwADAjBgNV",
+      "HSMEHDAagBgYJqo0iW9v/30tECWTkkYcGNgp5t6Ms/0wDQYJKoZIhvcNAQELBQAD",
+      "ggGBAIACPOHF1LmeQcL+kYl2cwWUHLO3Y8tf7UO7ZsFbWHwTHt0xkfSFpT+pV20F",
+      "YhEdCNFJYnHLhl6Sd+wiHesTCPqoOXzDkxzRGql0H2D4H5Cx0H11gPLJN7lCP/3M",
+      "9DHlV9Hu8OhhSxT0D5arg3c3wljo7Um6JHXgzxKRMBtlhIoMDaJS1d/xbtfx/sGO",
+      "IDpEgzBj0aQ+334RmiJnOikFwoHeAIQt+C1lRYCBq++kk3I0a5nbxgR/w2KqHimz",
+      "ZbicqqdaWMqTcV3nLSl9bN+7gW95OMbtbyB6dliJdkQjj4euXrHHBP3Z7Ip8L3UI",
+      "SJPJ2oxlZ2eJh77WU6iHZE3LRijvfHA/qqDKdvb2GBtSSD54Yd8xn9tNh/wtMRcQ",
+      "xhXAnZuvMhztXmf5hI+jS2srka8rcJPHEeG/eGR3osENS5c5JVnEW+4/2EShPCms",
+      "x9dEOPgwyfdY6IjaVCbQWc/1Zk1I0fRk8TyaQgBrlqpOl0OlbTs5eiSGeEBCe/+Z",
+      "R/ydyQ==",
+      "-----END CERTIFICATE-----"
+    ]
+  },
   "SE" : [
     {
       "id": "R0VOVFNFLTE=",

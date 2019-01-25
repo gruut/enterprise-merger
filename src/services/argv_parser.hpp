@@ -34,7 +34,8 @@ public:
     ("port", "Port number", cxxopts::value<string>()->default_value(""))
     ("dbpath", "Location where LevelDB stores data", cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH))
     ("dbclear", "To wipe out the existing LevelDB")
-    ("dbcheck", "Perform DB health check before running");
+    ("dbcheck", "Perform DB health check before running")
+    ("disableTK", "Merger do not access to tracker anymore");
     // clang-format on
 
     if (argc == 1) {
@@ -128,6 +129,11 @@ public:
       if (result.count("dbcheck")) {
         setting->setDBCheck();
         CLOG(INFO, "ARGV") << "DB HEALTH CHECKING IS ENABLED.";
+      }
+
+      if (result.count("disableTK")) {
+        setting->setDisableTracker();
+        CLOG(INFO, "ARGV") << "MERGER DO NOT ACCESS TO TRACKER ANYMORE.";
       }
 
     } catch (json::parse_error &e) {

@@ -37,6 +37,7 @@ public:
 private:
   RpcReceiverList *m_rpc_receiver_list;
   ConnManager *m_conn_manager;
+  bool m_disable_tracker{false};
 
   PeriodicTask m_rpc_check_scheduler;
   PeriodicTask m_http_check_scheduler;

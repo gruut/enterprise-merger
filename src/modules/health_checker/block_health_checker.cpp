@@ -11,6 +11,8 @@ void BlockHealthChecker::start() {
   io_service.post([this]() { startHealthCheck(); });
 }
 
+bool BlockHealthChecker::isFinished() { return m_finish; }
+
 void BlockHealthChecker::startHealthCheck() {
 
   auto storage = Storage::getInstance();
@@ -116,6 +118,7 @@ void BlockHealthChecker::startHealthCheck() {
 }
 
 void BlockHealthChecker::endCheck(ExitCode exit_code) {
+  m_finish = true;
   stageOver(exit_code);
 } // keep running post handler
 
