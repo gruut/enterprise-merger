@@ -20,9 +20,9 @@ MergerClient::MergerClient() {
 
 void MergerClient::accessToTracker() {
   auto setting = Setting::getInstance();
-  auto storage = Storage::getInstance();
 
-  auto latest_block_info = storage->getNthBlockLinkInfo();
+  auto &block_processor = Application::app().getBlockProcessor();
+  auto most_possible_link = block_processor.getMostPossibleLink();
 
   std::string my_id_b64 = TypeConverter::encodeBase64(setting->getMyId());
   json request_msg;
@@ -30,14 +30,14 @@ void MergerClient::accessToTracker() {
   request_msg["ip"] = setting->getMyAddress();
   request_msg["port"] = setting->getMyPort();
   request_msg["mCert"] = setting->getMyCert();
-  request_msg["time"] = to_string(latest_block_info.time);
-  request_msg["hgt"] = latest_block_info.height;
-  request_msg["bID"] = TypeConverter::encodeBase64(latest_block_info.id);
-  request_msg["hash"] = TypeConverter::encodeBase64(latest_block_info.hash);
+  request_msg["time"] = to_string(most_possible_link.time);
+  request_msg["hgt"] = most_possible_link.height;
+  request_msg["bID"] = TypeConverter::encodeBase64(most_possible_link.id);
+  request_msg["hash"] = TypeConverter::encodeBase64(most_possible_link.hash);
   request_msg["prevHash"] =
-      TypeConverter::encodeBase64(latest_block_info.prev_hash);
+      TypeConverter::encodeBase64(most_possible_link.prev_hash);
   request_msg["prevbID"] =
-      TypeConverter::encodeBase64(latest_block_info.prev_id);
+      TypeConverter::encodeBase64(most_possible_link.prev_id);
 
   CLOG(INFO, "MCLN") << "ACCESS TO TRACKER";
   json response_msg;
