@@ -252,6 +252,7 @@ void BpScheduler::postSendPingJob() {
     OutputMsgEntry output_msg;
     output_msg.type = MessageType::MSG_PING;
     output_msg.body["mID"] = m_my_mid_b64;
+    output_msg.body["cID"] = m_my_cid_b64;
     output_msg.body["time"] = to_string(current_time);
     output_msg.body["sCnt"] = to_string(num_signers);
     output_msg.body["stat"] = statusToString(m_current_status);
@@ -294,6 +295,9 @@ void BpScheduler::updateRecvStatus(const std::string &id_b64, size_t timeslot,
 
 void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
+  if (Safe::getString(msg.body, "cID") != m_my_cid_b64)
+    return; // wrong chain
+
   std::string merger_id_b64 = Safe::getString(msg.body, "mID");
   timestamp_t merger_time = Safe::getTime(msg.body, "time");
   size_t timeslot = merger_time / config::BP_INTERVAL;
@@ -315,44 +319,36 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
   } break;
   case MessageType::MSG_UP: {
+
+    MergerInfo merger_info;
+    merger_info.id = TypeConverter::decodeBase64(merger_id_b64);
+    merger_info.address = Safe::getString(msg.body, "ip");
+    merger_info.port = Safe::getString(msg.body, "port");
+    merger_info.cert = Safe::getString(msg.body, "mCert");
+    m_conn_manager->setMergerInfo(merger_info, true);
+
+    updateRecvStatus(merger_id_b64, timeslot, BpStatus::IN_BOOT_WAIT);
+
+    OutputMsgEntry output_msg;
+    output_msg.type = MessageType::MSG_WELCOME;
+    output_msg.body["mID"] = m_my_mid_b64;
+    output_msg.body["cID"] = m_my_cid_b64;
+    output_msg.body["time"] = Time::now();
+    output_msg.body["val"] = true;
+    output_msg.receivers = {TypeConverter::decodeBase64(merger_id_b64)};
+
     MessageProxy msg_proxy;
-    OutputMsgEntry output_message;
-    std::vector<merger_id_type> receivers{
-        TypeConverter::decodeBase64(merger_id_b64)};
-    output_message.receivers = receivers;
-    output_message.type = MessageType::MSG_WELCOME;
-    output_message.body["mID"] = m_my_mid_b64;
-    output_message.body["time"] = Time::now();
+    msg_proxy.deliverOutputMessage(output_msg);
 
-    // TODO : MSG_UP에 대해 검증 할 요소가 추가 될 수 있습니다.
-    if (Safe::getString(msg.body, "cID") != m_my_cid_b64) {
-      output_message.body["val"] = false;
-    } else {
-      std::string ip = Safe::getString(msg.body, "ip");
-      std::string port = Safe::getString(msg.body, "port");
-      std::string mCert = Safe::getString(msg.body, "mCert");
-
-      MergerInfo merger_info;
-      merger_info.id = TypeConverter::decodeBase64(merger_id_b64);
-      merger_info.address = ip;
-      merger_info.port = port;
-      merger_info.cert = mCert;
-      m_conn_manager->setMergerInfo(merger_info, true);
-
-      output_message.body["val"] = true;
-      updateRecvStatus(merger_id_b64, timeslot, BpStatus::IN_BOOT_WAIT);
-    }
-    msg_proxy.deliverOutputMessage(output_message);
   } break;
 
   case MessageType::MSG_WELCOME: {
     bool val = Safe::getBoolean(msg.body, "val");
     if (val) {
-      CLOG(INFO, "BPSC") << "WELCOME! From(" << merger_id_b64 << ")";
+      CLOG(INFO, "BPSC") << "WELCOME! [" << merger_id_b64 << "]";
       m_welcome = true;
     }
 
-    // TODO: Merger network에 등록되지 못 할시 처리 필요.
   } break;
 
   default:

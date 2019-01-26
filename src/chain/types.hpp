@@ -154,7 +154,6 @@ using id_type = bytes;
 // Message
 using message_version_type = uint8_t;
 
-
 using proof_type = struct _proof_type {
   std::string block_id_b64;
   std::vector<std::pair<bool, std::string>> siblings;
@@ -186,11 +185,11 @@ using unblk_push_result_type = struct _unblk_push_result_type {
   block_layer_t block_layer;
 };
 
-
-using merger_height_type = struct _merger_height_type{
+using merger_height_type = struct _merger_height_type {
   id_type merger_id;
   block_height_type height;
-  _merger_height_type(id_type merger_id_, block_height_type height_) : merger_id(std::move(merger_id_)), height(height_){}
+  _merger_height_type(id_type merger_id_, block_height_type height_)
+      : merger_id(std::move(merger_id_)), height(height_) {}
 };
 
 } // namespace gruut
