@@ -47,6 +47,7 @@ constexpr size_t SIGNATURE_COLLECTION_CHECK_INTERVAL = 500;
 constexpr int RPC_CHECK_INTERVAL = 1000;
 constexpr int HTTP_CHECK_INTERVAL = 5000;
 constexpr size_t TIME_MAX_DIFF_SEC = 3;
+constexpr size_t MAX_WAIT_CONNECT_OTHERS_BSYNC_SEC = 5;
 
 // KNOWLEDGE
 

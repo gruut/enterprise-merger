@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <mutex>
 
 namespace gruut {
 
@@ -31,6 +32,7 @@ private:
   localchain_id_type m_my_localchain_id;
   MessageProxy m_msg_proxy;
   std::shared_ptr<Communication> m_communication;
+  std::once_flag m_endsync_flag;
 
 public:
   Bootstrapper();

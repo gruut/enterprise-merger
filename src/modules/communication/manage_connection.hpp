@@ -67,7 +67,7 @@ public:
   }
 
   void setMergerBlockHgt(merger_id_type &merger_id, uint64_t block_height) {
-    m_init_block_hgt_list.push_back({block_height, merger_id});
+    m_init_block_hgt_list.emplace_back(merger_id, block_height);
   }
 
   TrackerInfo getTrackerInfo() { return m_tracker_info; }
@@ -101,18 +101,24 @@ public:
     return se_list;
   }
 
-  std::vector<pair<uint64_t, merger_id_type>> getMaxBlockHgtMergers() {
-    std::vector<pair<uint64_t, merger_id_type>> merger_list;
+  std::pair<block_height_type,std::vector<id_type>> getMaxBlockHgtMergers() {
+
+    if(m_init_block_hgt_list.empty()) {
+      return {0,{}};
+    }
+
+    std::vector<id_type> merger_list;
+
     auto max_height = std::max_element(m_init_block_hgt_list.begin(),
-                                       m_init_block_hgt_list.end());
+                                       m_init_block_hgt_list.end(), [this](merger_height_type &a, merger_height_type &b){ return (a.height > b.height); });
 
     for (auto &info : m_init_block_hgt_list) {
-      if (info.first == max_height->first) {
-        merger_list.emplace_back(info);
+      if (info.height == max_height->height) {
+        merger_list.emplace_back(info.merger_id);
       }
     }
 
-    return merger_list;
+    return {max_height->height, merger_list};
   }
   bool hasMergerInfo(merger_id_type &merger_id) {
     std::string merger_id_b64 = TypeConverter::encodeBase64(merger_id);
@@ -158,7 +164,7 @@ private:
   TrackerInfo m_tracker_info;
   std::map<string, MergerInfo> m_merger_info;
   std::map<string, ServiceEndpointInfo> m_se_info;
-  std::vector<pair<uint64_t, merger_id_type>> m_init_block_hgt_list;
+  std::vector<merger_height_type> m_init_block_hgt_list;
   std::mutex m_merger_mutex;
   std::mutex m_se_mutex;
   std::mutex m_tk_mutex;

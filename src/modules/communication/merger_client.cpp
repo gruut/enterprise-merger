@@ -20,13 +20,15 @@ MergerClient::MergerClient() {
 
 void MergerClient::accessToTracker() {
   auto setting = Setting::getInstance();
-
-  auto &block_processor = Application::app().getBlockProcessor();
-  auto most_possible_link = block_processor.getMostPossibleLink();
+  auto most_possible_link = Application::app().getBlockProcessor().getMostPossibleLink();
 
   std::string my_id_b64 = TypeConverter::encodeBase64(setting->getMyId());
+  std::string my_chain_id_b64 = TypeConverter::encodeBase64(setting->getLocalChainId());
+
   json request_msg;
+  request_msg["msgID"] = to_string((int) MessageType::MSG_JOIN_MERGER);
   request_msg["mID"] = my_id_b64;
+  request_msg["cID"] = my_chain_id_b64;
   request_msg["ip"] = setting->getMyAddress();
   request_msg["port"] = setting->getMyPort();
   request_msg["mCert"] = setting->getMyCert();
@@ -48,7 +50,7 @@ void MergerClient::accessToTracker() {
       http_client.postAndGetReply(request_msg.dump(), response_msg);
 
   if (status != CURLE_OK) {
-    CLOG(ERROR, "MCLN") << "Could not get Merger informations from Tracker";
+    CLOG(ERROR, "MCLN") << "Could not get Merger information from Tracker";
     return;
   }
 
