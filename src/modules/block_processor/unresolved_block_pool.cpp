@@ -175,7 +175,8 @@ void UnresolvedBlockPool::forwardBlocksToLedgerFrom(int bin_idx,
       auto &each_block = m_block_pool[bin_idx][i];
       if (each_block.prev_vector_idx == prev_vector_idx) {
         each_block.block_layer = block_layer;
-        block_layer.emplace_back(each_block.block.getBlockIdB64());
+        block_layer.insert(block_layer.begin(),
+                           each_block.block.getBlockIdB64());
         forwardBlockToLedgerAt(bin_idx, i);
         recBlockToLedger(bin_idx + 1, i, block_layer);
       }
