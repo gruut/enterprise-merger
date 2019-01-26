@@ -49,13 +49,15 @@ enum class MessageType : uint8_t {
   MSG_SUCCESS = 0x58,
   MSG_ACCEPT = 0x59,
   MSG_LEAVE = 0x5B,
+
+  MSG_JOIN_MERGER = 0x70,
+  MSG_CHAIN_INFO = 0x71,
+
   MSG_TX = 0xB1,
   MSG_REQ_SSIG = 0xB2,
   MSG_SSIG = 0xB3,
   MSG_BLOCK = 0xB4,
   MSG_HEADER = 0xB5,
-  // TODO: MSG_CHAIN_INFO 번호는 변경 될 수 있습니다.
-  MSG_CHAIN_INFO = 0xB7,
   MSG_ERROR = 0xFF,
   MSG_REQ_CHECK = 0xC0,
   MSG_RES_CHECK = 0xC1
@@ -139,8 +141,19 @@ using signature_type = bytes;
 using header_length_type = uint32_t;
 using content_type = std::string;
 using hmac_key_type = Botan::secure_vector<uint8_t>;
-
 using block_layer_t = std::vector<std::string>;
+
+// All of the blows are the same type. Use them according to the context.
+// If you cannot distinguish it, just use id_type
+using requestor_id_type = bytes;
+using merger_id_type = bytes;
+using signer_id_type = bytes;
+using servend_id_type = bytes;
+using id_type = bytes;
+
+// Message
+using message_version_type = uint8_t;
+
 
 using proof_type = struct _proof_type {
   std::string block_id_b64;
@@ -173,16 +186,12 @@ using unblk_push_result_type = struct _unblk_push_result_type {
   block_layer_t block_layer;
 };
 
-// All of the blows are the same type. Use them according to the context.
-// If you cannot distinguish it, just use id_type
-using requestor_id_type = bytes;
-using merger_id_type = bytes;
-using signer_id_type = bytes;
-using servend_id_type = bytes;
-using id_type = bytes;
 
-// Message
-using message_version_type = uint8_t;
+using merger_height_type = struct _merger_height_type{
+  id_type merger_id;
+  block_height_type height;
+  _merger_height_type(id_type merger_id_, block_height_type height_) : merger_id(std::move(merger_id_)), height(height_){}
+};
 
 } // namespace gruut
 #endif
