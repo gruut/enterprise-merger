@@ -42,21 +42,24 @@ void Bootstrapper::selfCheckUp() {
 
   CLOG(INFO, "BOOT") << "[2] Waiting connection check";
 
-  std::this_thread::sleep_for(std::chrono::seconds(config::MAX_WAIT_CONNECT_OTHERS_BSYNC_SEC));
+  std::this_thread::sleep_for(
+      std::chrono::seconds(config::MAX_WAIT_CONNECT_OTHERS_BSYNC_SEC));
 
-  auto last_block_status = Application::app().getBlockProcessor().getMostPossibleLink();
+  auto last_block_status =
+      Application::app().getBlockProcessor().getMostPossibleLink();
   auto conn_manager = ConnManager::getInstance();
   auto max_height_mids = conn_manager->getMaxBlockHgtMergers();
   conn_manager->clearBlockHgtList();
 
   block_height_type max_block_height = max_height_mids.first;
 
-  if(max_height_mids.second.empty()) {
+  if (max_height_mids.second.empty()) {
     CLOG(INFO, "BOOT") << "[3] Starting block synchronization (not sure)";
-    m_block_synchronizer.startBlockSync(std::bind(&Bootstrapper::endSync, this, std::placeholders::_1));
+    m_block_synchronizer.startBlockSync(
+        std::bind(&Bootstrapper::endSync, this, std::placeholders::_1));
     return;
   } else {
-    if(last_block_status.height >= max_block_height) {
+    if (last_block_status.height >= max_block_height) {
       CLOG(INFO, "BOOT") << "[3] Skip block synchronization (no need)";
       endSync(ExitCode::NORMAL);
       return;
@@ -75,13 +78,15 @@ void Bootstrapper::selfCheckUp() {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    if ((Time::now_int() - start_time) > config::MAX_WAIT_CONNECT_OTHERS_BSYNC_SEC)
+    if ((Time::now_int() - start_time) >
+        config::MAX_WAIT_CONNECT_OTHERS_BSYNC_SEC)
       break;
   }
 
-  if(conn_check) {
+  if (conn_check) {
     CLOG(INFO, "BOOT") << "[4] Starting block synchronization";
-    m_block_synchronizer.startBlockSync(std::bind(&Bootstrapper::endSync, this, std::placeholders::_1));
+    m_block_synchronizer.startBlockSync(
+        std::bind(&Bootstrapper::endSync, this, std::placeholders::_1));
   } else {
     CLOG(INFO, "BOOT") << "[4] Skip block synchronization (no connection)";
     endSync(ExitCode::ERROR_SYNC_ALONE);
@@ -90,7 +95,7 @@ void Bootstrapper::selfCheckUp() {
 
 void Bootstrapper::endSync(ExitCode exit_code) {
 
-  std::call_once(m_endsync_flag,[this, &exit_code](){
+  std::call_once(m_endsync_flag, [this, &exit_code]() {
     sendMsgUp();
     stageOver(exit_code);
   });

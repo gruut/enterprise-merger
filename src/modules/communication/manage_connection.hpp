@@ -101,16 +101,19 @@ public:
     return se_list;
   }
 
-  std::pair<block_height_type,std::vector<id_type>> getMaxBlockHgtMergers() {
+  std::pair<block_height_type, std::vector<id_type>> getMaxBlockHgtMergers() {
 
-    if(m_init_block_hgt_list.empty()) {
-      return {0,{}};
+    if (m_init_block_hgt_list.empty()) {
+      return {0, {}};
     }
 
     std::vector<id_type> merger_list;
 
-    auto max_height = std::max_element(m_init_block_hgt_list.begin(),
-                                       m_init_block_hgt_list.end(), [this](merger_height_type &a, merger_height_type &b){ return (a.height > b.height); });
+    auto max_height = std::max_element(
+        m_init_block_hgt_list.begin(), m_init_block_hgt_list.end(),
+        [this](merger_height_type &a, merger_height_type &b) {
+          return (a.height > b.height);
+        });
 
     for (auto &info : m_init_block_hgt_list) {
       if (info.height == max_height->height) {

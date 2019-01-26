@@ -47,6 +47,9 @@ const json SCHEMA_PING = R"({
     "mID": {
       "type": "string"
     },
+    "cID": {
+      "type": "string"
+    },
     "time": {
       "type": "string"
     },
@@ -103,6 +106,9 @@ const json SCHEMA_WELCOME = R"({
   "type": "object",
   "properties": {
     "mID": {
+      "type": "string"
+    },
+    "cID": {
       "type": "string"
     },
     "time": {

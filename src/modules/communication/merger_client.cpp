@@ -20,13 +20,15 @@ MergerClient::MergerClient() {
 
 void MergerClient::accessToTracker() {
   auto setting = Setting::getInstance();
-  auto most_possible_link = Application::app().getBlockProcessor().getMostPossibleLink();
+  auto most_possible_link =
+      Application::app().getBlockProcessor().getMostPossibleLink();
 
   std::string my_id_b64 = TypeConverter::encodeBase64(setting->getMyId());
-  std::string my_chain_id_b64 = TypeConverter::encodeBase64(setting->getLocalChainId());
+  std::string my_chain_id_b64 =
+      TypeConverter::encodeBase64(setting->getLocalChainId());
 
   json request_msg;
-  request_msg["msgID"] = to_string((int) MessageType::MSG_JOIN_MERGER);
+  request_msg["msgID"] = to_string((int)MessageType::MSG_JOIN_MERGER);
   request_msg["mID"] = my_id_b64;
   request_msg["cID"] = my_chain_id_b64;
   request_msg["ip"] = setting->getMyAddress();
