@@ -10,6 +10,7 @@ BlockProcessor::BlockProcessor() {
 
   auto setting = Setting::getInstance();
   m_my_id_b64 = TypeConverter::encodeBase64(setting->getMyId());
+  m_my_chain_id_b64 = TypeConverter::encodeBase64(setting->getLocalChainId());
 
   auto last_block_info = m_storage->getNthBlockLinkInfo();
 
@@ -224,20 +225,14 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   m_request_mutex.unlock();
 
-  // if not linked initially, we cannot interpret this block because of previous
-  // missing blocks!
   if (block_push_result.linked) {
     auto possible_link = getMostPossibleLink();
 
-    Application::app().getCustomLedgerManager().procLedgerBlock(
-        entry.body["tx"], recv_block.getBlockIdB64(),
-        block_push_result.block_layer);
-
-    invalidateBlockLayer();
-
     OutputMsgEntry msg_chain_info;
-    msg_chain_info.type = MessageType::MSG_CHAIN_INFO; // MSG_CHAIN_INFO = 0xB7
+    msg_chain_info.type = MessageType::MSG_CHAIN_INFO;
+    msg_chain_info.body["msgID"] = to_string((int)MessageType::MSG_CHAIN_INFO);
     msg_chain_info.body["mID"] = Safe::getString(entry.body, "mID");
+    msg_chain_info.body["cID"] = m_my_chain_id_b64;
     msg_chain_info.body["time"] = to_string(possible_link.time);
     msg_chain_info.body["hgt"] = to_string(possible_link.height);
     msg_chain_info.body["bID"] = TypeConverter::encodeBase64(possible_link.id);
@@ -247,7 +242,6 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
         TypeConverter::encodeBase64(possible_link.hash);
     msg_chain_info.body["prevHash"] =
         TypeConverter::encodeBase64(possible_link.prev_hash);
-    // TODO : mSig 는 임시.
     msg_chain_info.body["mSig"] = "";
 
     m_msg_proxy.deliverOutputMessage(msg_chain_info);
@@ -256,17 +250,12 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   Application::app().getTransactionPool().removeDuplicatedTransactions(
       recv_block.getTxIds());
 
-  resolveBlocks();
+  resolveBlocksIf();
 
   return block_push_result.height;
 }
 
-void BlockProcessor::invalidateBlockLayer() {
-  LayeredStorage::getInstance()->setBlockLayer(
-      m_unresolved_block_pool.getMostPossibleBlockLayer());
-}
-
-void BlockProcessor::resolveBlocks() {
+void BlockProcessor::resolveBlocksIf() {
   std::vector<UnresolvedBlock> resolved_blocks;
   std::vector<std::string> drop_blocks;
 
@@ -290,16 +279,6 @@ void BlockProcessor::resolveBlocks() {
       json block_header = each_block.block.getBlockHeaderJson();
       bytes block_raw = each_block.block.getBlockRaw();
       json block_body = each_block.block.getBlockBodyJson();
-
-      if (each_block.linked) {
-        // this block was not interpreted into the ledger because of link
-        // failure
-        Application::app().getCustomLedgerManager().procLedgerBlock(
-            block_body["tx"], each_block.block.getBlockIdB64(),
-            each_block.block_layer);
-
-        invalidateBlockLayer();
-      }
 
       m_storage->saveBlock(block_raw, block_header, block_body);
       m_layered_storage->moveToDiskLedger(each_block.block.getBlockIdB64());

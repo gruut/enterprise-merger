@@ -61,7 +61,7 @@ const std::string DB_SUB_DIR_LATEST = "latest_block_header";
 const std::string DB_SUB_DIR_TRANSACTION = "transaction";
 const std::string DB_SUB_DIR_IDHEIGHT = "blockid_height";
 const std::string DB_SUB_DIR_LEDGER = "ledger";
-const std::string DB_SUB_DIR_UNRESOLVED_BLOCK = "unresolved_block";
+const std::string DB_SUB_DIR_BACKUP = "backup";
 
 // clang-format on
 

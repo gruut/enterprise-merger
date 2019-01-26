@@ -63,13 +63,15 @@ public:
   storage_block_type readBlock(block_height_type height);
   proof_type getProof(const std::string &txid_b64);
   bool isDuplicatedTx(const std::string &txid_b64);
+
   bool saveLedger(std::string &key, std::string &ledger);
   std::string readLedgerByKey(std::string &key);
   void clearLedger();
   void flushLedger();
   bool empty();
-  void saveUnresolvedBlocks(const std::string &key, const std::string &value);
-  std::string readUnreslovedBlocks(const std::string &key);
+
+  void saveBackup(const std::string &key, const std::string &value);
+  std::string readBackup(const std::string &key);
   void flushBackup();
   void clearBackup();
   void delBackup(const std::string &block_id_b64);
@@ -104,7 +106,7 @@ private:
   leveldb::DB *m_db_transaction;
   leveldb::DB *m_db_blockid_height;
   leveldb::DB *m_db_ledger;
-  leveldb::DB *m_db_block_backup;
+  leveldb::DB *m_db_backup;
 
   leveldb::WriteBatch m_batch_block_header;
   leveldb::WriteBatch m_batch_block_raw;
@@ -112,7 +114,7 @@ private:
   leveldb::WriteBatch m_batch_transaction;
   leveldb::WriteBatch m_batch_blockid_height;
   leveldb::WriteBatch m_batch_ledger;
-  leveldb::WriteBatch m_batch_block_backup;
+  leveldb::WriteBatch m_batch_backup;
 };
 } // namespace gruut
 #endif

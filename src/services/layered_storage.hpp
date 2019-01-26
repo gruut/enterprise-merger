@@ -3,7 +3,7 @@
 
 #include "../chain/mem_ledger.hpp"
 #include "../utils/template_singleton.hpp"
-
+#include "easy_logging.hpp"
 #include "storage.hpp"
 
 namespace gruut {
@@ -15,7 +15,10 @@ private:
   std::vector<std::string> m_block_layer;
 
 public:
-  LayeredStorage() { m_storage = Storage::getInstance(); }
+  LayeredStorage() {
+    el::Loggers::getLogger("LAYS");
+    m_storage = Storage::getInstance();
+  }
 
   bool saveLedger(mem_ledger_t &mem_ledger, const std::string &prefix = "") {
     m_mem_ledger.append(mem_ledger, prefix);

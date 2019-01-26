@@ -45,6 +45,7 @@ private:
   Storage *m_storage;
   LayeredStorage *m_layered_storage;
   std::string m_my_id_b64;
+  std::string m_my_chain_id_b64;
   UnresolvedBlockPool m_unresolved_block_pool;
   std::list<BlockRequestRecord> m_request_list;
   std::recursive_mutex m_request_mutex;
@@ -69,8 +70,7 @@ private:
   void handleMsgReqCheck(InputMsgEntry &entry);
   void handleMsgReqStatus(InputMsgEntry &entry);
   void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
-  void resolveBlocks();
-  void invalidateBlockLayer();
+  void resolveBlocksIf();
 };
 } // namespace gruut
 

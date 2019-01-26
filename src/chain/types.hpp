@@ -51,7 +51,8 @@ enum class MessageType : uint8_t {
   MSG_LEAVE = 0x5B,
 
   MSG_JOIN_MERGER = 0x70,
-  MSG_CHAIN_INFO = 0x71,
+  MSG_NETWORK_INFO = 0x71,
+  MSG_CHAIN_INFO = 0x72,
 
   MSG_TX = 0xB1,
   MSG_REQ_SSIG = 0xB2,
