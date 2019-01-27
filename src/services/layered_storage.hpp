@@ -3,7 +3,7 @@
 
 #include "../chain/mem_ledger.hpp"
 #include "../utils/template_singleton.hpp"
-
+#include "easy_logging.hpp"
 #include "storage.hpp"
 
 namespace gruut {
@@ -15,15 +15,20 @@ private:
   std::vector<std::string> m_block_layer;
 
 public:
-  LayeredStorage() { m_storage = Storage::getInstance(); }
+  LayeredStorage() {
+    el::Loggers::getLogger("LAYS");
+    m_storage = Storage::getInstance();
+  }
 
   bool saveLedger(mem_ledger_t &mem_ledger, const std::string &prefix = "") {
     m_mem_ledger.append(mem_ledger, prefix);
     return true;
   }
 
-  template <typename T = std::string>
-  bool saveLedger(T &&key, T &&value, T &&block_id_b64 = "") {
+  bool saveLedger(const std::string &key, const std::string &value,
+                  const std::string &block_id_b64 = "") {
+
+    CLOG(INFO, "LAYS") << "new record : " << key << "[" << block_id_b64 << "]";
 
     if (block_id_b64.empty())
       return m_storage->saveLedger(key, value);

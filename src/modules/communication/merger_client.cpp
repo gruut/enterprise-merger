@@ -190,7 +190,8 @@ json MergerClient::sendToTracker(OutputMsgEntry &output_msg) {
   auto tk_info = m_conn_manager->getTrackerInfo();
   std::string address = tk_info.address + ":" + tk_info.port + "/src";
 
-  if (output_msg.type == MessageType::MSG_CHAIN_INFO) {
+  if (output_msg.type == MessageType::MSG_CHAIN_INFO ||
+      output_msg.type == MessageType::MSG_JOIN_MERGER) {
     address += "/ChainInfo.php";
     HttpClient http_client(address);
     http_client.post(send_msg);
@@ -382,7 +383,12 @@ bool MergerClient::checkSEMsgType(MessageType msg_type) {
 }
 
 bool MergerClient::checkTrackerMsgType(gruut::MessageType msg_type) {
-  return (msg_type == MessageType::MSG_CHAIN_INFO);
+  // clang-format off
+  return (
+    msg_type == MessageType::MSG_CHAIN_INFO ||
+    msg_type == MessageType::MSG_JOIN_MERGER
+    );
+  // clang-format on
 }
 
 std::string MergerClient::getApiPath(MessageType msg_type) {

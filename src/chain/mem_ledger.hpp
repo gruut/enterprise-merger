@@ -1,6 +1,7 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_MEM_LEDGER_HPP
 #define GRUUT_ENTERPRISE_MERGER_MEM_LEDGER_HPP
 
+#include "easy_logging.hpp"
 #include <list>
 #include <memory>
 #include <mutex>
@@ -31,12 +32,13 @@ private:
   std::mutex m_active_mutex;
 
 public:
-  MemLedger() = default;
+  MemLedger() { el::Loggers::getLogger("MEML"); }
 
   bool push(std::string key, std::string value, std::string block_id_b64) {
     std::lock_guard<std::mutex> lock(m_active_mutex);
     m_ledger.emplace_back(std::move(key), std::move(value),
                           std::move(block_id_b64));
+
     return true;
   }
 

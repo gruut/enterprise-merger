@@ -28,14 +28,12 @@ public:
                          const block_layer_t &block_layer) = 0;
 
 protected:
-  template <typename T = std::string> void setPrefix(T &&prefix) {
-    m_prefix = prefix;
-  }
+  void setPrefix(std::string prefix) { m_prefix = std::move(prefix); }
 
-  template <typename T = std::string> bool saveLedger(T &&key, T &&value) {
+  bool saveLedger(const std::string &key, const std::string &value,
+                  const std::string &block_id_b64 = "") {
     std::string wrap_key = m_prefix + key;
-    // CLOG(INFO, "LEDG") << "Save ledger (key=" << wrap_key << ")";
-    m_layered_storage->saveLedger(wrap_key, value);
+    m_layered_storage->saveLedger(wrap_key, value, block_id_b64);
     return true;
   }
 
@@ -46,10 +44,14 @@ protected:
     return ret_val;
   }
 
-  template <typename T = std::string, typename V = block_layer_t>
-  std::string readLedgerByKey(T &&key, V &&bloc_layer = {}) {
+  std::string readLedgerByKey(const std::string &key) {
     std::string wrap_key = m_prefix + key;
-    // CLOG(INFO, "LEDG") << "Search ledger (key=" << wrap_key << ")";
+    return m_layered_storage->readLedgerByKey(wrap_key);
+  }
+
+  std::string readLedgerByKeyOnLayer(const std::string &key,
+                                     const block_layer_t &bloc_layer = {}) {
+    std::string wrap_key = m_prefix + key;
     return m_layered_storage->readLedgerByKey(wrap_key, bloc_layer);
   }
 };
