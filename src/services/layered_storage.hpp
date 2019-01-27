@@ -25,8 +25,10 @@ public:
     return true;
   }
 
-  template <typename T = std::string>
-  bool saveLedger(T &&key, T &&value, T &&block_id_b64 = "") {
+  bool saveLedger(const std::string &key, const std::string &value,
+                  const std::string &block_id_b64 = "") {
+
+    CLOG(INFO, "LAYS") << "new record : " << key << "[" << block_id_b64 << "]";
 
     if (block_id_b64.empty())
       return m_storage->saveLedger(key, value);

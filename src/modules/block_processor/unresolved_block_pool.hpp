@@ -51,13 +51,13 @@ private:
   std::atomic<size_t> m_height_range_max{0};
   std::atomic<bool> m_force_unresolved{false};
 
-  std::atomic<bool> m_cache_link_valid{false};
+  std::atomic<bool> m_has_cache_link{false};
   nth_link_type m_cache_possible_link;
 
-  std::atomic<bool> m_cache_layer_valid{false};
+  std::atomic<bool> m_has_cache_block_layer{false};
   std::vector<std::string> m_cache_possible_block_layer;
 
-  std::atomic<bool> m_cache_pos_valid{false};
+  std::atomic<bool> m_has_cache_pos{false};
   BlockPosOnMap m_cache_possible_pos;
 
   LayeredStorage *m_layered_storage;

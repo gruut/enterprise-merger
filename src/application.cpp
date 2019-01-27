@@ -97,14 +97,13 @@ void Application::setup() {
   m_thread_group = make_shared<std::vector<std::thread>>();
 
   m_bp_scheduler = make_shared<BpScheduler>();
+  m_custom_ledger_manager = make_shared<CustomLedgerManager>();
   m_block_processor = make_shared<BlockProcessor>();
   m_bootstraper = make_shared<Bootstrapper>();
   m_block_health_checker = make_shared<BlockHealthChecker>();
   m_communication = make_shared<Communication>();
   m_out_message_fetcher = make_shared<OutMessageFetcher>();
   m_message_fetcher = make_shared<MessageFetcher>();
-
-  m_custom_ledger_manager = make_shared<CustomLedgerManager>();
 
   // step 2 - running scenario
   if (Setting::getInstance()->getDBCheck())

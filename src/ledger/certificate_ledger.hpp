@@ -48,9 +48,7 @@ public:
     if (!txs_json.is_array())
       return false;
 
-    mem_ledger_t mem_ledger;
-    blockToLedger(txs_json, block_id_b64, block_layer, mem_ledger);
-    saveLedger(mem_ledger);
+    blockToLedger(txs_json, block_id_b64, block_layer);
 
     return true;
   }
@@ -90,8 +88,6 @@ public:
           }
         }
       }
-    } else {
-      CLOG(INFO, "CERT") << "No certificate for [" << user_id_b64 << "]";
     }
 
     return ret_cert;
@@ -105,16 +101,14 @@ public:
 
 private:
   void blockToLedger(const json &txs_json, const std::string &block_id_b64,
-                     const block_layer_t &block_layer,
-                     mem_ledger_t &ret_mem_ledger) {
+                     const block_layer_t &block_layer) {
 
     if (txs_json.is_array()) {
 
       std::string key, value;
 
       for (auto &tx_json : txs_json) {
-        if (Safe::getString(tx_json, "type") !=
-            TXTYPE_CERTIFICATES) // important !!
+        if (Safe::getString(tx_json, "type") != TXTYPE_CERTIFICATES)
           continue;
 
         auto &content = tx_json["content"];
@@ -123,12 +117,12 @@ private:
 
         for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
           string user_id_b64 = Safe::getString(content[c_idx]);
-          string cert_idx = readLedgerByKey(user_id_b64, block_layer);
+          string cert_idx = readLedgerByKeyOnLayer(user_id_b64, block_layer);
 
           key = user_id_b64;
           value = (cert_idx.empty()) ? "1" : to_string(stoi(cert_idx) + 1);
 
-          ret_mem_ledger.push(key, value, block_id_b64);
+          saveLedger(key, value, block_id_b64);
 
           key += (cert_idx.empty()) ? "_0" : "_" + cert_idx;
           value = parseCert(Safe::getString(content[c_idx + 1]));
@@ -136,7 +130,7 @@ private:
           if (value.empty())
             continue;
 
-          ret_mem_ledger.push(key, value, block_id_b64);
+          saveLedger(key, value, block_id_b64);
         }
       }
     }

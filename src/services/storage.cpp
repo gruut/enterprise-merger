@@ -536,12 +536,12 @@ bool Storage::isDuplicatedTx(const std::string &txid_b64) {
   return !block_id_b64.empty();
 }
 
-bool Storage::saveLedger(std::string &key, std::string &ledger) {
-  addBatch(DBType::LEDGER, key, ledger);
+bool Storage::saveLedger(const std::string &key, const std::string &value) {
+  addBatch(DBType::LEDGER, key, value);
   return true;
 }
 
-std::string Storage::readLedgerByKey(std::string &key) {
+std::string Storage::readLedgerByKey(const std::string &key) {
   return getValueByKey(DBType::LEDGER, key);
 }
 

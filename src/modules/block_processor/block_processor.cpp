@@ -12,13 +12,6 @@ BlockProcessor::BlockProcessor() {
   m_my_id_b64 = TypeConverter::encodeBase64(setting->getMyId());
   m_my_chain_id_b64 = TypeConverter::encodeBase64(setting->getLocalChainId());
 
-  auto last_block_info = m_storage->getNthBlockLinkInfo();
-
-  m_unresolved_block_pool.setPool(last_block_info.id, last_block_info.hash,
-                                  last_block_info.height, last_block_info.time);
-
-  m_unresolved_block_pool.restorePool();
-
   auto &io_service = Application::app().getIoService();
   m_task_scheduler.setIoService(io_service);
 
@@ -26,6 +19,13 @@ BlockProcessor::BlockProcessor() {
 }
 
 void BlockProcessor::start() {
+  auto last_block_info = m_storage->getNthBlockLinkInfo();
+
+  m_unresolved_block_pool.setPool(last_block_info.id, last_block_info.hash,
+                                  last_block_info.height, last_block_info.time);
+
+  m_unresolved_block_pool.restorePool();
+
   m_task_scheduler.setTaskFunction([this]() { periodicTask(); });
   m_task_scheduler.setInterval(config::BROC_PROCESSOR_TASK_INTERVAL);
   m_task_scheduler.setStrandMod();

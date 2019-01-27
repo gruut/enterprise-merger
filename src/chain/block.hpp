@@ -264,14 +264,18 @@ public:
           TypeConverter::encodeBase64(m_merkle_tree_node[i]));
     }
 
-    std::vector<json> txs;
+    return json({{"mtree", mtree_node_b64},
+                 {"txCnt", to_string(m_transactions.size())},
+                 {"tx", getBlockTXsAsJson()}});
+  }
+
+  json getBlockTXsAsJson() {
+    json txs = json::array();
     for (auto &each_tx : m_transactions) {
       txs.push_back(each_tx.getJson());
     }
 
-    return json({{"mtree", mtree_node_b64},
-                 {"txCnt", to_string(m_transactions.size())},
-                 {"tx", txs}});
+    return txs;
   }
 
   block_height_type getHeight() { return m_height; }

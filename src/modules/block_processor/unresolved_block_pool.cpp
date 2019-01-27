@@ -10,9 +10,9 @@ UnresolvedBlockPool::UnresolvedBlockPool() {
 }
 
 void UnresolvedBlockPool::invalidateCaches() {
-  m_cache_link_valid = false;
-  m_cache_layer_valid = false;
-  m_cache_pos_valid = false;
+  m_has_cache_link = false;
+  m_has_cache_block_layer = false;
+  m_has_cache_pos = false;
 }
 
 bool UnresolvedBlockPool::hasUnresolvedBlocks() {
@@ -151,7 +151,7 @@ block_layer_t UnresolvedBlockPool::forwardBlockToLedgerAt(int bin_idx,
 
   auto &t_block = m_block_pool[bin_idx][vector_idx];
   Application::app().getCustomLedgerManager().procLedgerBlock(
-      t_block.block.getBlockBodyJson(), t_block.block.getBlockIdB64(),
+      t_block.block.getBlockTXsAsJson(), t_block.block.getBlockIdB64(),
       t_block.block_layer);
 
   return t_block.block_layer;
@@ -426,7 +426,7 @@ UnresolvedBlockPool::getBlockLayer(const std::string &block_id_b64) {
 
 nth_link_type UnresolvedBlockPool::getMostPossibleLink() {
 
-  if (m_cache_link_valid)
+  if (m_has_cache_link)
     return m_cache_possible_link;
 
   nth_link_type ret_link;
@@ -442,7 +442,7 @@ nth_link_type UnresolvedBlockPool::getMostPossibleLink() {
 
   if (m_block_pool.empty()) {
     m_cache_possible_link = ret_link;
-    m_cache_link_valid = true;
+    m_has_cache_link = true;
     return ret_link;
   }
 
@@ -462,7 +462,7 @@ nth_link_type UnresolvedBlockPool::getMostPossibleLink() {
   }
 
   m_cache_possible_link = ret_link;
-  m_cache_link_valid = true;
+  m_has_cache_link = true;
 
   return ret_link;
 }
@@ -470,7 +470,7 @@ nth_link_type UnresolvedBlockPool::getMostPossibleLink() {
 // reverse order
 block_layer_t UnresolvedBlockPool::getMostPossibleBlockLayer() {
 
-  if (m_cache_layer_valid) {
+  if (m_has_cache_block_layer) {
     return m_cache_possible_block_layer;
   }
 
@@ -488,7 +488,7 @@ block_layer_t UnresolvedBlockPool::getMostPossibleBlockLayer() {
   }
 
   m_cache_possible_block_layer = ret_block_layer;
-  m_cache_layer_valid = true;
+  m_has_cache_block_layer = true;
   return ret_block_layer;
 }
 
@@ -570,14 +570,14 @@ void UnresolvedBlockPool::backupPool() {
 }
 
 BlockPosOnMap UnresolvedBlockPool::getLongestBlockPos() {
-  if (m_cache_pos_valid)
+  if (m_has_cache_pos)
     return m_cache_possible_pos;
 
   // search prev_level
-  std::function<void(size_t, size_t, BlockPosOnMap &)> recSearchLongestLink;
-  recSearchLongestLink = [this, &recSearchLongestLink](
-                             size_t bin_idx, size_t prev_vector_idx,
-                             BlockPosOnMap &longest_pos) {
+  std::function<void(size_t, size_t, BlockPosOnMap &)> recSearchLongestLinkPos;
+  recSearchLongestLinkPos = [this, &recSearchLongestLinkPos](
+                                size_t bin_idx, size_t prev_vector_idx,
+                                BlockPosOnMap &longest_pos) {
     if (m_block_pool.size() < bin_idx + 1)
       return;
 
@@ -590,7 +590,7 @@ BlockPosOnMap UnresolvedBlockPool::getLongestBlockPos() {
           longest_pos.vector_idx = i;
         }
 
-        recSearchLongestLink(bin_idx + 1, i, longest_pos);
+        recSearchLongestLinkPos(bin_idx + 1, i, longest_pos);
       }
     }
   };
@@ -607,13 +607,13 @@ BlockPosOnMap UnresolvedBlockPool::getLongestBlockPos() {
           longest_pos.vector_idx = i;
         }
 
-        recSearchLongestLink(1, i, longest_pos); // recursive call
+        recSearchLongestLinkPos(1, i, longest_pos); // recursive call
       }
     }
   }
 
   m_cache_possible_pos = longest_pos;
-  m_cache_pos_valid = true;
+  m_has_cache_pos = true;
 
   return longest_pos;
 }
