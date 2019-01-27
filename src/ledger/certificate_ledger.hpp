@@ -66,7 +66,7 @@ public:
 
         json latest_cert_json = Safe::parseJsonAsArray(latest_cert);
         if (!latest_cert_json.empty())
-          ret_cert = Safe::getString(latest_cert_json[2]);
+          ret_cert = Safe::getString(latest_cert_json,2);
       } else {
 
         timestamp_t lastest_valid_begin = 0;
@@ -78,12 +78,12 @@ public:
           if (cert_json.empty())
             break;
 
-          auto valid_begin = Safe::getTime(Safe::getString(cert_json[0]));
-          auto valid_end = Safe::getTime(Safe::getString(cert_json[1]));
+          auto valid_begin = Safe::getTime(Safe::getString(cert_json,0));
+          auto valid_end = Safe::getTime(Safe::getString(cert_json,1));
           if (valid_begin < at_this_time && at_this_time < valid_end) {
             if (lastest_valid_begin < valid_begin) {
               lastest_valid_begin = valid_begin;
-              ret_cert = Safe::getString(cert_json[2]);
+              ret_cert = Safe::getString(cert_json,2);
             }
           }
         }
@@ -116,7 +116,7 @@ private:
           continue;
 
         for (size_t c_idx = 0; c_idx < content.size(); c_idx += 2) {
-          string user_id_b64 = Safe::getString(content[c_idx]);
+          string user_id_b64 = Safe::getString(content,c_idx);
           string cert_idx = readLedgerByKeyOnLayer(user_id_b64, block_layer);
 
           key = user_id_b64;
@@ -125,7 +125,7 @@ private:
           saveLedger(key, value, block_id_b64);
 
           key += (cert_idx.empty()) ? "_0" : "_" + cert_idx;
-          value = parseCert(Safe::getString(content[c_idx + 1]));
+          value = parseCert(Safe::getString(content,c_idx + 1));
 
           if (value.empty())
             continue;
@@ -140,6 +140,7 @@ private:
     try {
       Botan::X509_Certificate ca_cert =
           pemToX509(Setting::getInstance()->getGruutAuthorityInfo().cert);
+
       m_ca_cert.reset(new Botan::X509_Certificate(ca_cert));
 
       if (!m_ca_cert->is_CA_cert()) {
@@ -205,8 +206,8 @@ private:
     auto &content = tx_json["content"];
 
     for (size_t i = 0; i < content.size(); i += 2) {
-      std::string user_id = Safe::getString(content[i]);
-      std::string user_pem = Safe::getString(content[i + 1]);
+      std::string user_id = Safe::getString(content,i);
+      std::string user_pem = Safe::getString(content,i + 1);
 
       if (user_pem.empty() || !isValidCert(user_pem))
         return false;

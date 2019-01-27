@@ -31,14 +31,6 @@ public:
     return ret_json;
   }
 
-  static std::string getString(const nlohmann::json &json_obj,
-                               const std::string &key) {
-    if (json_obj.find(key) != json_obj.end()) {
-      return getString(json_obj[key]);
-    }
-    return std::string();
-  }
-
   static std::string getString(const nlohmann::json &json_obj) {
     std::string ret_str;
     if (!json_obj.empty()) {
@@ -49,6 +41,29 @@ public:
       }
     }
 
+    return ret_str;
+  }
+
+  static std::string getString(const nlohmann::json &json_obj,
+                               const std::string &key) {
+    std::string ret_str;
+    if (json_obj.find(key) != json_obj.end()) {
+      ret_str = getString(json_obj[key]);
+    }
+    return ret_str;
+  }
+
+  static std::string getString(const nlohmann::json &json_obj, size_t idx) {
+    std::string ret_str;
+    if(json_obj.is_array() && !json_obj.empty()){
+      if(json_obj.size() >= idx + 1){
+        try {
+          ret_str = json_obj[idx].get<std::string>();
+        } catch (...) {
+          /* do nothing */
+        }
+      }
+    }
     return ret_str;
   }
 
@@ -83,10 +98,7 @@ public:
 
   template <typename S = nlohmann::json, typename K = std::string>
   static gruut::timestamp_t getTime(S &&json_obj, K &&key) {
-    std::string dec_str = getString(json_obj, key);
-    if (dec_str.empty())
-      return 0;
-    return static_cast<gruut::timestamp_t>(stoll(dec_str));
+    return getTime(getString(json_obj, key));
   }
 
   static bool getBoolean(const nlohmann::json &json_obj,
