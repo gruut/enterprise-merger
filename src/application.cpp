@@ -109,9 +109,9 @@ void Application::setup() {
   if (Setting::getInstance()->getDBCheck())
     registerModule(m_block_health_checker, 0, true);
 
+  registerModule(m_block_processor, 1);
   registerModule(m_communication, 1, true);
 
-  registerModule(m_block_processor, 2);
   registerModule(m_out_message_fetcher, 2);
   registerModule(m_bootstraper, 2, true);
 
