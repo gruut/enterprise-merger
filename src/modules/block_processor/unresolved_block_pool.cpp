@@ -330,23 +330,27 @@ void UnresolvedBlockPool::getResolvedBlocks(
   json del_id_array = json::array();
   json new_id_array = json::array();
 
+  for (auto &each_block_id : drop_blocks) {
+    del_id_array.push_back(each_block_id);
+  }
+
   for (auto &each_id : id_array) {
-    bool is_dux = false;
+    bool is_resolved = false;
     std::string block_id_b64 = Safe::getString(each_id);
     if (block_id_b64.empty())
       continue;
 
     for (auto &each_block : resolved_blocks) {
       if (block_id_b64 == each_block.block.getBlockIdB64()) {
-        is_dux = true;
+        is_resolved = true;
         break;
       }
     }
 
-    if (!is_dux) {
-      new_id_array.push_back(block_id_b64);
-    } else {
+    if (is_resolved) {
       del_id_array.push_back(block_id_b64);
+    } else {
+      new_id_array.push_back(block_id_b64);
     }
   }
 
