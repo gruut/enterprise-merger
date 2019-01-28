@@ -55,8 +55,8 @@ public:
 
   static std::string getString(const nlohmann::json &json_obj, size_t idx) {
     std::string ret_str;
-    if(json_obj.is_array() && !json_obj.empty()){
-      if(json_obj.size() >= idx + 1){
+    if (json_obj.is_array() && !json_obj.empty()) {
+      if (json_obj.size() >= idx + 1) {
         try {
           ret_str = json_obj[idx].get<std::string>();
         } catch (...) {

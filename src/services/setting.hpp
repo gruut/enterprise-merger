@@ -309,7 +309,7 @@ private:
   std::string joinMultiLine(json &mline_json) {
     std::string ret_str;
     for (size_t i = 0; i < mline_json.size(); ++i) {
-      ret_str += Safe::getString(mline_json,i);
+      ret_str += Safe::getString(mline_json, i);
       if (i != mline_json.size() - 1) {
         ret_str += "\n";
       }

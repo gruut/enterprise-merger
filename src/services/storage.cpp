@@ -479,7 +479,7 @@ proof_type Storage::getProof(const std::string &txid_b64) {
 
       for (size_t i = 0; i < mtree_json.size(); ++i) {
         mtree_digests[i] =
-            TypeConverter::decodeBase64(Safe::getString(mtree_json,i));
+            TypeConverter::decodeBase64(Safe::getString(mtree_json, i));
       }
 
       MerkleTree mtree_generator(mtree_digests);
@@ -491,7 +491,7 @@ proof_type Storage::getProof(const std::string &txid_b64) {
       int node_idx = base_offset;
       int merkle_tree_size = config::MAX_MERKLE_LEAVES;
 
-      std::string my_digest_b64 = Safe::getString(mtree_json,node_idx);
+      std::string my_digest_b64 = Safe::getString(mtree_json, node_idx);
 
       if (my_digest_b64.empty()) {
         proof.siblings.clear();
