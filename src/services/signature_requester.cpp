@@ -6,29 +6,15 @@ namespace gruut {
 
 SignatureRequester::SignatureRequester() {
   auto &io_service = Application::app().getIoService();
-  m_check_timer.reset(new boost::asio::deadline_timer(io_service));
-  m_collect_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_collect_check_scheduler.setIoService(io_service);
+  m_collect_check_scheduler.setStrandMod();
+  m_collect_check_scheduler.setInterval(
+      config::SIGNATURE_COLLECTION_CHECK_INTERVAL);
+  m_collect_over_scheduler.setIoService(io_service);
+
   m_block_gen_strand.reset(new boost::asio::io_service::strand(io_service));
+
   el::Loggers::getLogger("SIGR");
-}
-
-void SignatureRequester::waitCollectDone() {
-  if (!m_is_collect_timer_running)
-    return;
-
-  if (Application::app().getSignaturePool().size() >= m_max_signers) {
-    doCreateBlock();
-  }
-
-  m_check_timer->expires_from_now(boost::posix_time::milliseconds(
-      config::SIGNATURE_COLLECTION_CHECK_INTERVAL));
-  m_check_timer->async_wait([this](const boost::system::error_code &error) {
-    if (!error) {
-      waitCollectDone();
-    } else {
-      CLOG(INFO, "SIGR") << error.message();
-    }
-  });
 }
 
 bool SignatureRequester::isNewSigner(Signer &signer) {
@@ -73,7 +59,7 @@ void SignatureRequester::requestSignatures() {
 
   // step 2 - fetching transactions and making basic info for block
 
-  Transactions transactions = transaction_pool.fetchLastN(
+  std::vector<Transaction> transactions = transaction_pool.fetchLastN(
       std::min(transaction_pool.size(), config::MAX_COLLECT_TRANSACTION_SIZE));
   transaction_pool.clear();
 
@@ -102,18 +88,32 @@ void SignatureRequester::requestSignatures() {
   // step 4 - collect signatures
 
   sendRequestMessage(target_signers);
-  startSignatureCollectTimer();
-  waitCollectDone();
+
+  m_collect_over_scheduler.runTask(config::SIGNATURE_COLLECTION_TIMEOUT,
+                                   [this]() {
+                                     if (m_is_collect_running)
+                                       doCreateBlock();
+                                   });
+
+  m_collect_check_scheduler.runTask([this]() {
+    if (!m_is_collect_running)
+      return;
+
+    if (Application::app().getSignaturePool().size() >= m_max_signers) {
+      doCreateBlock();
+    }
+  });
+
+  m_is_collect_running = true;
 }
 
 void SignatureRequester::doCreateBlock() {
 
   CLOG(INFO, "SIGR") << "START MAKING BLOCK";
 
-  m_is_collect_timer_running = false;
+  m_is_collect_running = false;
 
-  m_collect_timer->cancel();
-  m_check_timer->cancel();
+  m_collect_check_scheduler.stopTask();
 
   Application::app().getSignaturePool().disablePool(); // disable pool now!
 
@@ -141,22 +141,7 @@ void SignatureRequester::doCreateBlock() {
   }));
 }
 
-void SignatureRequester::startSignatureCollectTimer() {
-  m_is_collect_timer_running = true;
-
-  m_collect_timer->expires_from_now(
-      boost::posix_time::milliseconds(config::SIGNATURE_COLLECTION_TIMEOUT));
-  m_collect_timer->async_wait([this](const boost::system::error_code &error) {
-    if (!error) {
-      if (m_is_collect_timer_running)
-        doCreateBlock();
-    } else {
-      CLOG(INFO, "SIGR") << error.message();
-    }
-  });
-}
-
-void SignatureRequester::sendRequestMessage(Signers &signers) {
+void SignatureRequester::sendRequestMessage(std::vector<Signer> &signers) {
   if (signers.empty()) {
     CLOG(ERROR, "SIGR") << "No signer";
     return;
@@ -183,8 +168,8 @@ void SignatureRequester::sendRequestMessage(Signers &signers) {
   proxy.deliverOutputMessage(output_message);
 }
 
-Signers SignatureRequester::selectSigners() {
-  Signers selected_signers;
+std::vector<Signer> SignatureRequester::selectSigners() {
+  std::vector<Signer> selected_signers;
 
   auto signer_pool = SignerPool::getInstance();
   size_t num_available_signers =

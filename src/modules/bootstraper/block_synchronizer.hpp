@@ -45,11 +45,10 @@ private:
 
   PeriodicTask m_msg_fetch_scheduler;
   PeriodicTask m_sync_control_scheduler;
-  std::unique_ptr<boost::asio::deadline_timer> m_sync_begin_timer;
+  DelayedTask m_sync_begin_scheduler;
 
   std::function<void(ExitCode)> m_sync_finish_callback;
   std::once_flag m_sync_finish_call_flag;
-  ExitCode m_sync_finish_code;
 
   std::atomic<bool> m_is_sync_begin{false};
   std::atomic<bool> m_is_sync_done{false};

@@ -4,6 +4,7 @@
 #include <atomic>
 #include <boost/asio.hpp>
 #include <memory>
+#include <mutex>
 
 class PeriodicTask : boost::noncopyable {
 private:
@@ -75,6 +76,21 @@ public:
 
   void setInterval(uint64_t intval) { m_interval = intval; }
 
+  void runTask(const std::function<void()> &task_function) {
+    setTaskFunction(task_function);
+    runTaskAfter(0);
+  }
+
+  void runTask(int after, const std::function<void()> &task_function) {
+    setTaskFunction(task_function);
+    runTaskAfter(after);
+  }
+
+  void runTask(const std::function<void()> &task_function, int after) {
+    setTaskFunction(task_function);
+    runTaskAfter(after);
+  }
+
   void runTask() { runTaskAfter(0); }
 
   void runTaskAfter(int after) {
@@ -116,48 +132,53 @@ private:
   }
 };
 
-#if 0
-
-class SetTimeout : boost::noncopyable {
+class DelayedTask : boost::noncopyable {
 private:
   std::unique_ptr<boost::asio::deadline_timer> m_event_timer;
   std::function<void()> m_task_function;
-  std::once_flag m_event_once_flag;
-public:
-  SetTimeout() = default;
 
-  template <typename T = boost::asio::io_service>
-  SetTimeout(T&&io_service) {
+public:
+  DelayedTask() = default;
+
+  template <typename T = boost::asio::io_service> DelayedTask(T &&io_service) {
     setIoService(io_service);
   }
 
   template <typename T = boost::asio::io_service>
-  SetTimeout(T&&io_service, const std::function<void()> &task_function, uint64_t timeout){
+  DelayedTask(T &&io_service, const std::function<void()> &task_function,
+              uint64_t timeout) {
     setIoService(io_service);
     setTaskFunction(task_function);
     runTask(timeout);
   }
 
   template <typename T = boost::asio::io_service>
-  void setIoService(T&& io_service) {
+  void setIoService(T &&io_service) {
     m_event_timer.reset(new boost::asio::deadline_timer(io_service));
   }
 
-  void setTaskFunction(const std::function<void()> &task_function){
+  void setTaskFunction(const std::function<void()> &task_function) {
     m_task_function = task_function;
   }
 
-  void runTask(const std::function<void()> &task_function, uint64_t timeout){
+  void runTask(uint64_t timeout, const std::function<void()> &task_function) {
     setTaskFunction(task_function);
     runTask(timeout);
   }
 
-  void runTask(uint64_t timeout){
+  void runTask(const std::function<void()> &task_function, uint64_t timeout) {
+    setTaskFunction(task_function);
+    runTask(timeout);
+  }
+
+  void runTask(uint64_t timeout) {
     if (timeout > 0) {
       m_event_timer->expires_from_now(boost::posix_time::milliseconds(timeout));
       m_event_timer->async_wait([this](const boost::system::error_code &error) {
-        if (m_task_function)
-          m_task_function();
+        if (!error) {
+          if (m_task_function)
+            m_task_function();
+        }
       });
     } else {
       if (m_task_function)
@@ -165,7 +186,5 @@ public:
     }
   }
 };
-
-#endif
 
 #endif // GRUUT_ENTERPRISE_MERGER_PERIODIC_TASK_HPP

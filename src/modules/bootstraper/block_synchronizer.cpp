@@ -12,8 +12,7 @@ BlockSynchronizer::BlockSynchronizer() {
 
   m_msg_fetch_scheduler.setIoService(io_service);
   m_sync_control_scheduler.setIoService(io_service);
-
-  m_sync_begin_timer.reset(new boost::asio::deadline_timer(io_service));
+  m_sync_begin_scheduler.setIoService(io_service);
 
   m_inputQueue = InputQueueAlt::getInstance();
   auto setting = Setting::getInstance();
@@ -160,16 +159,8 @@ void BlockSynchronizer::startBlockSync(std::function<void(ExitCode)> callback) {
 
   sendRequestStatus();
 
-  m_sync_begin_timer->expires_from_now(
-      boost::posix_time::microseconds(config::STATUS_COLLECTING_TIMEOUT));
-  m_sync_begin_timer->async_wait(
-      [this](const boost::system::error_code &error) {
-        if (!error) {
-          sendRequestLastBlock();
-        } else {
-          CLOG(INFO, "BSYN") << error.message();
-        }
-      });
+  m_sync_begin_scheduler.runTask(config::STATUS_COLLECTING_TIMEOUT,
+                                 [this]() { sendRequestLastBlock(); });
 }
 
 void BlockSynchronizer::sendRequestLastBlock() {

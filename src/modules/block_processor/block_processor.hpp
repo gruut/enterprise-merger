@@ -24,7 +24,6 @@
 #include <botan-2/botan/buf_comp.h>
 
 #include <algorithm>
-#include <boost/asio/deadline_timer.hpp>
 #include <cstring>
 #include <iostream>
 #include <vector>
@@ -49,6 +48,7 @@ private:
   UnresolvedBlockPool m_unresolved_block_pool;
   std::list<BlockRequestRecord> m_request_list;
   std::recursive_mutex m_request_mutex;
+
   PeriodicTask m_task_scheduler;
 
 public:

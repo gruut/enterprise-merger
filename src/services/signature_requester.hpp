@@ -11,6 +11,8 @@
 
 #include "../ledger/certificate_ledger.hpp"
 
+#include "../utils/periodic_task.hpp"
+
 #include "block_generator.hpp"
 #include "message_proxy.hpp"
 #include "signature_requester.hpp"
@@ -28,39 +30,27 @@
 
 namespace gruut {
 
-using RandomSignerIndices = std::set<int>;
-using Transactions = std::vector<Transaction>;
-using Signers = std::vector<Signer>;
-
 class SignatureRequester {
 public:
   SignatureRequester();
-
   void requestSignatures();
 
-  void waitCollectDone();
-
 private:
-  void startSignatureCollectTimer();
-
   void doCreateBlock();
-
-  void sendRequestMessage(Signers &signers);
-
-  Signers selectSigners();
-
+  void sendRequestMessage(std::vector<Signer> &signers);
+  std::vector<Signer> selectSigners();
   bool isNewSigner(Signer &signer);
 
-  Transaction genCertificateTransaction(vector<Signer> &signers);
+  Transaction genCertificateTransaction(std::vector<Signer> &signers);
 
-  std::unique_ptr<boost::asio::deadline_timer> m_collect_timer;
-  std::unique_ptr<boost::asio::deadline_timer> m_check_timer;
   std::unique_ptr<boost::asio::io_service::strand> m_block_gen_strand;
+  PeriodicTask m_collect_check_scheduler;
+  DelayedTask m_collect_over_scheduler;
 
   MerkleTree m_merkle_tree;
   BasicBlockInfo m_basic_block_info;
 
-  std::atomic<bool> m_is_collect_timer_running{false};
+  std::atomic<bool> m_is_collect_running{false};
   size_t m_max_signers;
 
   CertificateLedger m_cert_ledger;
