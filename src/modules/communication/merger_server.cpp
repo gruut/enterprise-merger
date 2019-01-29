@@ -122,8 +122,8 @@ void RecvFromSE::proceed(bool st) {
   switch (m_receive_status) {
   case RpcCallStatus::CREATE: {
     m_receive_status = RpcCallStatus::PROCESS;
-    m_service->Requesttransaction(&m_context, &m_request, &m_responder,
-                                  m_completion_queue, m_completion_queue, this);
+    m_service->RequestseService(&m_context, &m_request, &m_responder,
+                                m_completion_queue, m_completion_queue, this);
   } break;
 
   case RpcCallStatus::PROCESS: {
@@ -133,21 +133,21 @@ void RecvFromSE::proceed(bool st) {
     io_service.post([this]() {
       Status rpc_status;
       servend_id_type receiver_id;
-      TxReply m_reply;
+      Reply m_reply;
       try {
         std::string packed_msg = m_request.message();
         MessageHandler message_handler;
         message_handler.unpackMsg(packed_msg, rpc_status, receiver_id);
 
         if (rpc_status.ok()) {
-          m_reply.set_status(TxReply_Status_SUCCESS);
+          m_reply.set_status(Reply_Status_SUCCESS);
           m_reply.set_message("OK");
         } else {
-          m_reply.set_status(TxReply_Status_INVALID);
+          m_reply.set_status(Reply_Status_INVALID);
           m_reply.set_message(rpc_status.error_message());
         }
       } catch (std::exception &e) {
-        m_reply.set_status(TxReply_Status_INTERNAL);
+        m_reply.set_status(Reply_Status_INTERNAL);
         m_reply.set_message("Merger internal error");
         CLOG(INFO, "MSVR") << e.what();
       }
