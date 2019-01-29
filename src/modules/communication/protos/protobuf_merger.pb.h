@@ -38,7 +38,7 @@ namespace protobuf_protobuf_5fmerger_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[2];
+  static const ::google::protobuf::internal::ParseTable schema[4];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -46,6 +46,12 @@ struct TableStruct {
 void AddDescriptors();
 }  // namespace protobuf_protobuf_5fmerger_2eproto
 namespace grpc_merger {
+class ConnCheckRequest;
+class ConnCheckRequestDefaultTypeInternal;
+extern ConnCheckRequestDefaultTypeInternal _ConnCheckRequest_default_instance_;
+class ConnCheckResponse;
+class ConnCheckResponseDefaultTypeInternal;
+extern ConnCheckResponseDefaultTypeInternal _ConnCheckResponse_default_instance_;
 class MergerDataReply;
 class MergerDataReplyDefaultTypeInternal;
 extern MergerDataReplyDefaultTypeInternal _MergerDataReply_default_instance_;
@@ -55,6 +61,8 @@ extern MergerDataRequestDefaultTypeInternal _MergerDataRequest_default_instance_
 }  // namespace grpc_merger
 namespace google {
 namespace protobuf {
+template<> ::grpc_merger::ConnCheckRequest* Arena::CreateMaybeMessage<::grpc_merger::ConnCheckRequest>(Arena*);
+template<> ::grpc_merger::ConnCheckResponse* Arena::CreateMaybeMessage<::grpc_merger::ConnCheckResponse>(Arena*);
 template<> ::grpc_merger::MergerDataReply* Arena::CreateMaybeMessage<::grpc_merger::MergerDataReply>(Arena*);
 template<> ::grpc_merger::MergerDataRequest* Arena::CreateMaybeMessage<::grpc_merger::MergerDataRequest>(Arena*);
 }  // namespace protobuf
@@ -275,6 +283,205 @@ class MergerDataReply : public ::google::protobuf::Message /* @@protoc_insertion
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::protobuf_protobuf_5fmerger_2eproto::TableStruct;
 };
+// -------------------------------------------------------------------
+
+class ConnCheckRequest : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_merger.ConnCheckRequest) */ {
+ public:
+  ConnCheckRequest();
+  virtual ~ConnCheckRequest();
+
+  ConnCheckRequest(const ConnCheckRequest& from);
+
+  inline ConnCheckRequest& operator=(const ConnCheckRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ConnCheckRequest(ConnCheckRequest&& from) noexcept
+    : ConnCheckRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline ConnCheckRequest& operator=(ConnCheckRequest&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ConnCheckRequest& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const ConnCheckRequest* internal_default_instance() {
+    return reinterpret_cast<const ConnCheckRequest*>(
+               &_ConnCheckRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  void Swap(ConnCheckRequest* other);
+  friend void swap(ConnCheckRequest& a, ConnCheckRequest& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ConnCheckRequest* New() const final {
+    return CreateMaybeMessage<ConnCheckRequest>(NULL);
+  }
+
+  ConnCheckRequest* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<ConnCheckRequest>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const ConnCheckRequest& from);
+  void MergeFrom(const ConnCheckRequest& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ConnCheckRequest* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bool checker = 1;
+  void clear_checker();
+  static const int kCheckerFieldNumber = 1;
+  bool checker() const;
+  void set_checker(bool value);
+
+  // @@protoc_insertion_point(class_scope:grpc_merger.ConnCheckRequest)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  bool checker_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fmerger_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ConnCheckResponse : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_merger.ConnCheckResponse) */ {
+ public:
+  ConnCheckResponse();
+  virtual ~ConnCheckResponse();
+
+  ConnCheckResponse(const ConnCheckResponse& from);
+
+  inline ConnCheckResponse& operator=(const ConnCheckResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ConnCheckResponse(ConnCheckResponse&& from) noexcept
+    : ConnCheckResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline ConnCheckResponse& operator=(ConnCheckResponse&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ConnCheckResponse& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const ConnCheckResponse* internal_default_instance() {
+    return reinterpret_cast<const ConnCheckResponse*>(
+               &_ConnCheckResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    3;
+
+  void Swap(ConnCheckResponse* other);
+  friend void swap(ConnCheckResponse& a, ConnCheckResponse& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ConnCheckResponse* New() const final {
+    return CreateMaybeMessage<ConnCheckResponse>(NULL);
+  }
+
+  ConnCheckResponse* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<ConnCheckResponse>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const ConnCheckResponse& from);
+  void MergeFrom(const ConnCheckResponse& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ConnCheckResponse* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:grpc_merger.ConnCheckResponse)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_protobuf_5fmerger_2eproto::TableStruct;
+};
 // ===================================================================
 
 
@@ -357,9 +564,35 @@ inline void MergerDataReply::set_checker(bool value) {
   // @@protoc_insertion_point(field_set:grpc_merger.MergerDataReply.checker)
 }
 
+// -------------------------------------------------------------------
+
+// ConnCheckRequest
+
+// bool checker = 1;
+inline void ConnCheckRequest::clear_checker() {
+  checker_ = false;
+}
+inline bool ConnCheckRequest::checker() const {
+  // @@protoc_insertion_point(field_get:grpc_merger.ConnCheckRequest.checker)
+  return checker_;
+}
+inline void ConnCheckRequest::set_checker(bool value) {
+  
+  checker_ = value;
+  // @@protoc_insertion_point(field_set:grpc_merger.ConnCheckRequest.checker)
+}
+
+// -------------------------------------------------------------------
+
+// ConnCheckResponse
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 

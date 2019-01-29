@@ -4,6 +4,7 @@ package grpc_merger;
 
 service MergerCommunication {
     rpc pushData (MergerDataRequest) returns (MergerDataReply) {}
+    rpc ConnCheck (ConnCheckRequest) returns (ConnCheckResponse) {}
 }
 
 message MergerDataRequest{
@@ -12,5 +13,13 @@ message MergerDataRequest{
 
 message MergerDataReply{
     bool checker = 1;
+}
+
+message ConnCheckRequest{
+    bool checker = 1;
+}
+
+message ConnCheckResponse{
+
 }
 
