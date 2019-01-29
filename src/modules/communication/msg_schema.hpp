@@ -388,6 +388,40 @@ const json SCHEMA_REQ_CHECK = R"({
   ]
 })"_json;
 
+const json SCHEMA_REQ_HEADER_CHECK = R"({
+  "title": "Request Block Header",
+  "type": "object",
+  "properties": {
+    "rID": {
+      "description": "requestor's ID",
+      "type": "string"
+    },
+    "time": {
+      "description": "요청 시간",
+      "type": "string"
+    },
+    "rCert": {
+      "description": "requestor's certificate",
+      "type": "string"
+    },
+    "hgt": {
+      "description": "block height",
+      "type": "string"
+    },
+    "rSig": {
+      "description": "requestor's signature",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rID",
+    "time",
+    "rCert",
+    "hgt",
+    "rSig"
+  ]
+})"_json;
+
 const json SCHEMA_REQ_STATUS = R"({
   "title": "Request Status",
   "type": "object",
@@ -452,6 +486,7 @@ const std::map<MessageType, json> MSG_SCHEMA_MAP = {
     {MessageType::MSG_ERROR, SCHEMA_ERROR},
     {MessageType::MSG_TX, SCHEMA_TX},
     {MessageType::MSG_REQ_CHECK, SCHEMA_REQ_CHECK},
+    {MessageType::MSG_REQ_HEADER, SCHEMA_REQ_HEADER_CHECK},
     {MessageType::MSG_REQ_STATUS, SCHEMA_REQ_STATUS},
     {MessageType::MSG_RES_STATUS, SCHEMA_RES_STATUS}};
 

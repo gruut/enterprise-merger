@@ -90,8 +90,8 @@ public:
 
 private:
   GruutSeService::AsyncService *m_service;
-  GrpcMsgTX m_request;
-  ServerAsyncResponseWriter<TxReply> m_responder;
+  Request m_request;
+  ServerAsyncResponseWriter<Reply> m_responder;
 };
 
 class OpenChannel final : public CallData {

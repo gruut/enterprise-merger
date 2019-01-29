@@ -3,12 +3,12 @@ syntax = "proto3";
 package grpc_se;
 
 service  GruutSeService {
-    rpc transaction(GrpcMsgTX) returns (TxReply) {}
+    rpc seService(Request) returns (Reply) {}
 }
-message GrpcMsgTX {
+message Request {
     bytes message = 1;
 }
-message TxReply {
+message Reply {
     enum Status{
         SUCCESS = 0;
         INVALID = 1;

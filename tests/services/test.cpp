@@ -374,6 +374,17 @@ BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
     msg_req_check_test.type = MessageType::MSG_REQ_CHECK;
     msg_req_check_test.body = msg_req_check_json;
 
+    InputMsgEntry msg_req_header_test;
+    json msg_req_header_json = R"({
+      "rID": "AAAAAAAAAAE=",
+      "time": "1543323592",
+      "rCert": "-----BEGIN CERTIFICATE-----\n....\n-----END CERTIFICATE-----",
+      "hgt": "1",
+      "rSig": "Sv0pJ9tbpvFJVYCE3HaCRZSKFkX6Z9M8uKaI+Y6LtVg="
+    })"_json;
+    msg_req_header_test.type = MessageType::MSG_REQ_HEADER;
+    msg_req_header_test.body = msg_req_header_json;
+
     InputMsgEntry msg_block_test;
     json msg_block_json = R"({
       "mID": "AAAAAAAAAAE=",
@@ -431,6 +442,7 @@ BOOST_AUTO_TEST_SUITE(Test_MessageValidator)
     BOOST_CHECK_EQUAL(validator_test.validate(msg_req_check_test), true);
     BOOST_CHECK_EQUAL(validator_test.validate(msg_block_test), true);
     BOOST_CHECK_EQUAL(validator_test.validate(msg_req_block_test), true);
+    BOOST_CHECK_EQUAL(validator_test.validate(msg_req_header_test), true);
   }
 
 BOOST_AUTO_TEST_CASE(validationFailure) {

@@ -47,63 +47,63 @@ struct TableStruct {
 void AddDescriptors();
 }  // namespace protobuf_protobuf_5fse_2eproto
 namespace grpc_se {
-class GrpcMsgTX;
-class GrpcMsgTXDefaultTypeInternal;
-extern GrpcMsgTXDefaultTypeInternal _GrpcMsgTX_default_instance_;
-class TxReply;
-class TxReplyDefaultTypeInternal;
-extern TxReplyDefaultTypeInternal _TxReply_default_instance_;
+class Reply;
+class ReplyDefaultTypeInternal;
+extern ReplyDefaultTypeInternal _Reply_default_instance_;
+class Request;
+class RequestDefaultTypeInternal;
+extern RequestDefaultTypeInternal _Request_default_instance_;
 }  // namespace grpc_se
 namespace google {
 namespace protobuf {
-template<> ::grpc_se::GrpcMsgTX* Arena::CreateMaybeMessage<::grpc_se::GrpcMsgTX>(Arena*);
-template<> ::grpc_se::TxReply* Arena::CreateMaybeMessage<::grpc_se::TxReply>(Arena*);
+template<> ::grpc_se::Reply* Arena::CreateMaybeMessage<::grpc_se::Reply>(Arena*);
+template<> ::grpc_se::Request* Arena::CreateMaybeMessage<::grpc_se::Request>(Arena*);
 }  // namespace protobuf
 }  // namespace google
 namespace grpc_se {
 
-enum TxReply_Status {
-  TxReply_Status_SUCCESS = 0,
-  TxReply_Status_INVALID = 1,
-  TxReply_Status_INTERNAL = 2,
-  TxReply_Status_TxReply_Status_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
-  TxReply_Status_TxReply_Status_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
+enum Reply_Status {
+  Reply_Status_SUCCESS = 0,
+  Reply_Status_INVALID = 1,
+  Reply_Status_INTERNAL = 2,
+  Reply_Status_Reply_Status_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
+  Reply_Status_Reply_Status_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
-bool TxReply_Status_IsValid(int value);
-const TxReply_Status TxReply_Status_Status_MIN = TxReply_Status_SUCCESS;
-const TxReply_Status TxReply_Status_Status_MAX = TxReply_Status_INTERNAL;
-const int TxReply_Status_Status_ARRAYSIZE = TxReply_Status_Status_MAX + 1;
+bool Reply_Status_IsValid(int value);
+const Reply_Status Reply_Status_Status_MIN = Reply_Status_SUCCESS;
+const Reply_Status Reply_Status_Status_MAX = Reply_Status_INTERNAL;
+const int Reply_Status_Status_ARRAYSIZE = Reply_Status_Status_MAX + 1;
 
-const ::google::protobuf::EnumDescriptor* TxReply_Status_descriptor();
-inline const ::std::string& TxReply_Status_Name(TxReply_Status value) {
+const ::google::protobuf::EnumDescriptor* Reply_Status_descriptor();
+inline const ::std::string& Reply_Status_Name(Reply_Status value) {
   return ::google::protobuf::internal::NameOfEnum(
-    TxReply_Status_descriptor(), value);
+    Reply_Status_descriptor(), value);
 }
-inline bool TxReply_Status_Parse(
-    const ::std::string& name, TxReply_Status* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<TxReply_Status>(
-    TxReply_Status_descriptor(), name, value);
+inline bool Reply_Status_Parse(
+    const ::std::string& name, Reply_Status* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Reply_Status>(
+    Reply_Status_descriptor(), name, value);
 }
 // ===================================================================
 
-class GrpcMsgTX : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_se.GrpcMsgTX) */ {
+class Request : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_se.Request) */ {
  public:
-  GrpcMsgTX();
-  virtual ~GrpcMsgTX();
+  Request();
+  virtual ~Request();
 
-  GrpcMsgTX(const GrpcMsgTX& from);
+  Request(const Request& from);
 
-  inline GrpcMsgTX& operator=(const GrpcMsgTX& from) {
+  inline Request& operator=(const Request& from) {
     CopyFrom(from);
     return *this;
   }
   #if LANG_CXX11
-  GrpcMsgTX(GrpcMsgTX&& from) noexcept
-    : GrpcMsgTX() {
+  Request(Request&& from) noexcept
+    : Request() {
     *this = ::std::move(from);
   }
 
-  inline GrpcMsgTX& operator=(GrpcMsgTX&& from) noexcept {
+  inline Request& operator=(Request&& from) noexcept {
     if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
       if (this != &from) InternalSwap(&from);
     } else {
@@ -113,34 +113,34 @@ class GrpcMsgTX : public ::google::protobuf::Message /* @@protoc_insertion_point
   }
   #endif
   static const ::google::protobuf::Descriptor* descriptor();
-  static const GrpcMsgTX& default_instance();
+  static const Request& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const GrpcMsgTX* internal_default_instance() {
-    return reinterpret_cast<const GrpcMsgTX*>(
-               &_GrpcMsgTX_default_instance_);
+  static inline const Request* internal_default_instance() {
+    return reinterpret_cast<const Request*>(
+               &_Request_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     0;
 
-  void Swap(GrpcMsgTX* other);
-  friend void swap(GrpcMsgTX& a, GrpcMsgTX& b) {
+  void Swap(Request* other);
+  friend void swap(Request& a, Request& b) {
     a.Swap(&b);
   }
 
   // implements Message ----------------------------------------------
 
-  inline GrpcMsgTX* New() const final {
-    return CreateMaybeMessage<GrpcMsgTX>(NULL);
+  inline Request* New() const final {
+    return CreateMaybeMessage<Request>(NULL);
   }
 
-  GrpcMsgTX* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<GrpcMsgTX>(arena);
+  Request* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<Request>(arena);
   }
   void CopyFrom(const ::google::protobuf::Message& from) final;
   void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const GrpcMsgTX& from);
-  void MergeFrom(const GrpcMsgTX& from);
+  void CopyFrom(const Request& from);
+  void MergeFrom(const Request& from);
   void Clear() final;
   bool IsInitialized() const final;
 
@@ -157,7 +157,7 @@ class GrpcMsgTX : public ::google::protobuf::Message /* @@protoc_insertion_point
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(GrpcMsgTX* other);
+  void InternalSwap(Request* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -187,7 +187,7 @@ class GrpcMsgTX : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::std::string* release_message();
   void set_allocated_message(::std::string* message);
 
-  // @@protoc_insertion_point(class_scope:grpc_se.GrpcMsgTX)
+  // @@protoc_insertion_point(class_scope:grpc_se.Request)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
@@ -197,24 +197,24 @@ class GrpcMsgTX : public ::google::protobuf::Message /* @@protoc_insertion_point
 };
 // -------------------------------------------------------------------
 
-class TxReply : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_se.TxReply) */ {
+class Reply : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:grpc_se.Reply) */ {
  public:
-  TxReply();
-  virtual ~TxReply();
+  Reply();
+  virtual ~Reply();
 
-  TxReply(const TxReply& from);
+  Reply(const Reply& from);
 
-  inline TxReply& operator=(const TxReply& from) {
+  inline Reply& operator=(const Reply& from) {
     CopyFrom(from);
     return *this;
   }
   #if LANG_CXX11
-  TxReply(TxReply&& from) noexcept
-    : TxReply() {
+  Reply(Reply&& from) noexcept
+    : Reply() {
     *this = ::std::move(from);
   }
 
-  inline TxReply& operator=(TxReply&& from) noexcept {
+  inline Reply& operator=(Reply&& from) noexcept {
     if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
       if (this != &from) InternalSwap(&from);
     } else {
@@ -224,34 +224,34 @@ class TxReply : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   }
   #endif
   static const ::google::protobuf::Descriptor* descriptor();
-  static const TxReply& default_instance();
+  static const Reply& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const TxReply* internal_default_instance() {
-    return reinterpret_cast<const TxReply*>(
-               &_TxReply_default_instance_);
+  static inline const Reply* internal_default_instance() {
+    return reinterpret_cast<const Reply*>(
+               &_Reply_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     1;
 
-  void Swap(TxReply* other);
-  friend void swap(TxReply& a, TxReply& b) {
+  void Swap(Reply* other);
+  friend void swap(Reply& a, Reply& b) {
     a.Swap(&b);
   }
 
   // implements Message ----------------------------------------------
 
-  inline TxReply* New() const final {
-    return CreateMaybeMessage<TxReply>(NULL);
+  inline Reply* New() const final {
+    return CreateMaybeMessage<Reply>(NULL);
   }
 
-  TxReply* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<TxReply>(arena);
+  Reply* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<Reply>(arena);
   }
   void CopyFrom(const ::google::protobuf::Message& from) final;
   void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const TxReply& from);
-  void MergeFrom(const TxReply& from);
+  void CopyFrom(const Reply& from);
+  void MergeFrom(const Reply& from);
   void Clear() final;
   bool IsInitialized() const final;
 
@@ -268,7 +268,7 @@ class TxReply : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(TxReply* other);
+  void InternalSwap(Reply* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -282,32 +282,32 @@ class TxReply : public ::google::protobuf::Message /* @@protoc_insertion_point(c
 
   // nested types ----------------------------------------------------
 
-  typedef TxReply_Status Status;
+  typedef Reply_Status Status;
   static const Status SUCCESS =
-    TxReply_Status_SUCCESS;
+    Reply_Status_SUCCESS;
   static const Status INVALID =
-    TxReply_Status_INVALID;
+    Reply_Status_INVALID;
   static const Status INTERNAL =
-    TxReply_Status_INTERNAL;
+    Reply_Status_INTERNAL;
   static inline bool Status_IsValid(int value) {
-    return TxReply_Status_IsValid(value);
+    return Reply_Status_IsValid(value);
   }
   static const Status Status_MIN =
-    TxReply_Status_Status_MIN;
+    Reply_Status_Status_MIN;
   static const Status Status_MAX =
-    TxReply_Status_Status_MAX;
+    Reply_Status_Status_MAX;
   static const int Status_ARRAYSIZE =
-    TxReply_Status_Status_ARRAYSIZE;
+    Reply_Status_Status_ARRAYSIZE;
   static inline const ::google::protobuf::EnumDescriptor*
   Status_descriptor() {
-    return TxReply_Status_descriptor();
+    return Reply_Status_descriptor();
   }
   static inline const ::std::string& Status_Name(Status value) {
-    return TxReply_Status_Name(value);
+    return Reply_Status_Name(value);
   }
   static inline bool Status_Parse(const ::std::string& name,
       Status* value) {
-    return TxReply_Status_Parse(name, value);
+    return Reply_Status_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
@@ -326,13 +326,13 @@ class TxReply : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   ::std::string* release_message();
   void set_allocated_message(::std::string* message);
 
-  // .grpc_se.TxReply.Status status = 1;
+  // .grpc_se.Reply.Status status = 1;
   void clear_status();
   static const int kStatusFieldNumber = 1;
-  ::grpc_se::TxReply_Status status() const;
-  void set_status(::grpc_se::TxReply_Status value);
+  ::grpc_se::Reply_Status status() const;
+  void set_status(::grpc_se::Reply_Status value);
 
-  // @@protoc_insertion_point(class_scope:grpc_se.TxReply)
+  // @@protoc_insertion_point(class_scope:grpc_se.Reply)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
@@ -350,130 +350,130 @@ class TxReply : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// GrpcMsgTX
+// Request
 
 // bytes message = 1;
-inline void GrpcMsgTX::clear_message() {
+inline void Request::clear_message() {
   message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& GrpcMsgTX::message() const {
-  // @@protoc_insertion_point(field_get:grpc_se.GrpcMsgTX.message)
+inline const ::std::string& Request::message() const {
+  // @@protoc_insertion_point(field_get:grpc_se.Request.message)
   return message_.GetNoArena();
 }
-inline void GrpcMsgTX::set_message(const ::std::string& value) {
+inline void Request::set_message(const ::std::string& value) {
   
   message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:grpc_se.GrpcMsgTX.message)
+  // @@protoc_insertion_point(field_set:grpc_se.Request.message)
 }
 #if LANG_CXX11
-inline void GrpcMsgTX::set_message(::std::string&& value) {
+inline void Request::set_message(::std::string&& value) {
   
   message_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:grpc_se.GrpcMsgTX.message)
+  // @@protoc_insertion_point(field_set_rvalue:grpc_se.Request.message)
 }
 #endif
-inline void GrpcMsgTX::set_message(const char* value) {
+inline void Request::set_message(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:grpc_se.GrpcMsgTX.message)
+  // @@protoc_insertion_point(field_set_char:grpc_se.Request.message)
 }
-inline void GrpcMsgTX::set_message(const void* value, size_t size) {
+inline void Request::set_message(const void* value, size_t size) {
   
   message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:grpc_se.GrpcMsgTX.message)
+  // @@protoc_insertion_point(field_set_pointer:grpc_se.Request.message)
 }
-inline ::std::string* GrpcMsgTX::mutable_message() {
+inline ::std::string* Request::mutable_message() {
   
-  // @@protoc_insertion_point(field_mutable:grpc_se.GrpcMsgTX.message)
+  // @@protoc_insertion_point(field_mutable:grpc_se.Request.message)
   return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* GrpcMsgTX::release_message() {
-  // @@protoc_insertion_point(field_release:grpc_se.GrpcMsgTX.message)
+inline ::std::string* Request::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_se.Request.message)
   
   return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void GrpcMsgTX::set_allocated_message(::std::string* message) {
+inline void Request::set_allocated_message(::std::string* message) {
   if (message != NULL) {
     
   } else {
     
   }
   message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
-  // @@protoc_insertion_point(field_set_allocated:grpc_se.GrpcMsgTX.message)
+  // @@protoc_insertion_point(field_set_allocated:grpc_se.Request.message)
 }
 
 // -------------------------------------------------------------------
 
-// TxReply
+// Reply
 
-// .grpc_se.TxReply.Status status = 1;
-inline void TxReply::clear_status() {
+// .grpc_se.Reply.Status status = 1;
+inline void Reply::clear_status() {
   status_ = 0;
 }
-inline ::grpc_se::TxReply_Status TxReply::status() const {
-  // @@protoc_insertion_point(field_get:grpc_se.TxReply.status)
-  return static_cast< ::grpc_se::TxReply_Status >(status_);
+inline ::grpc_se::Reply_Status Reply::status() const {
+  // @@protoc_insertion_point(field_get:grpc_se.Reply.status)
+  return static_cast< ::grpc_se::Reply_Status >(status_);
 }
-inline void TxReply::set_status(::grpc_se::TxReply_Status value) {
+inline void Reply::set_status(::grpc_se::Reply_Status value) {
   
   status_ = value;
-  // @@protoc_insertion_point(field_set:grpc_se.TxReply.status)
+  // @@protoc_insertion_point(field_set:grpc_se.Reply.status)
 }
 
 // string message = 2;
-inline void TxReply::clear_message() {
+inline void Reply::clear_message() {
   message_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& TxReply::message() const {
-  // @@protoc_insertion_point(field_get:grpc_se.TxReply.message)
+inline const ::std::string& Reply::message() const {
+  // @@protoc_insertion_point(field_get:grpc_se.Reply.message)
   return message_.GetNoArena();
 }
-inline void TxReply::set_message(const ::std::string& value) {
+inline void Reply::set_message(const ::std::string& value) {
   
   message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:grpc_se.TxReply.message)
+  // @@protoc_insertion_point(field_set:grpc_se.Reply.message)
 }
 #if LANG_CXX11
-inline void TxReply::set_message(::std::string&& value) {
+inline void Reply::set_message(::std::string&& value) {
   
   message_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:grpc_se.TxReply.message)
+  // @@protoc_insertion_point(field_set_rvalue:grpc_se.Reply.message)
 }
 #endif
-inline void TxReply::set_message(const char* value) {
+inline void Reply::set_message(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:grpc_se.TxReply.message)
+  // @@protoc_insertion_point(field_set_char:grpc_se.Reply.message)
 }
-inline void TxReply::set_message(const char* value, size_t size) {
+inline void Reply::set_message(const char* value, size_t size) {
   
   message_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:grpc_se.TxReply.message)
+  // @@protoc_insertion_point(field_set_pointer:grpc_se.Reply.message)
 }
-inline ::std::string* TxReply::mutable_message() {
+inline ::std::string* Reply::mutable_message() {
   
-  // @@protoc_insertion_point(field_mutable:grpc_se.TxReply.message)
+  // @@protoc_insertion_point(field_mutable:grpc_se.Reply.message)
   return message_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* TxReply::release_message() {
-  // @@protoc_insertion_point(field_release:grpc_se.TxReply.message)
+inline ::std::string* Reply::release_message() {
+  // @@protoc_insertion_point(field_release:grpc_se.Reply.message)
   
   return message_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void TxReply::set_allocated_message(::std::string* message) {
+inline void Reply::set_allocated_message(::std::string* message) {
   if (message != NULL) {
     
   } else {
     
   }
   message_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), message);
-  // @@protoc_insertion_point(field_set_allocated:grpc_se.TxReply.message)
+  // @@protoc_insertion_point(field_set_allocated:grpc_se.Reply.message)
 }
 
 #ifdef __GNUC__
@@ -489,10 +489,10 @@ inline void TxReply::set_allocated_message(::std::string* message) {
 namespace google {
 namespace protobuf {
 
-template <> struct is_proto_enum< ::grpc_se::TxReply_Status> : ::std::true_type {};
+template <> struct is_proto_enum< ::grpc_se::Reply_Status> : ::std::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::grpc_se::TxReply_Status>() {
-  return ::grpc_se::TxReply_Status_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::grpc_se::Reply_Status>() {
+  return ::grpc_se::Reply_Status_descriptor();
 }
 
 }  // namespace protobuf
