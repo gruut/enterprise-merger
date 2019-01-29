@@ -5,6 +5,7 @@
 #include "../../services/input_queue.hpp"
 #include "../../services/message_proxy.hpp"
 #include "../../services/setting.hpp"
+#include "../../utils/periodic_task.hpp"
 #include "../../utils/time.hpp"
 #include "../../utils/type_converter.hpp"
 #include "../communication/manage_connection.hpp"
@@ -40,10 +41,8 @@ public:
   void setWelcome(bool st);
 
 private:
-  void sendPingloop();
-  void postSendPingJob();
-  void lockStatusloop();
-  void postLockJob();
+  void sendPingMessage();
+  void lockStatus();
 
   void updateRecvStatus(const std::string &id_b64, size_t timeslot,
                         BpStatus stat);
@@ -60,16 +59,15 @@ private:
   size_t m_up_slot{0};
   BpStatus m_current_status{BpStatus::IN_BOOT_WAIT};
 
-  bool m_is_lock{true};
+  std::atomic<bool> m_is_lock{true};
   std::atomic<bool> m_welcome{true};
 
   std::vector<BpRecvStatusInfo> m_recv_status;
 
   std::mutex m_recv_status_mutex;
 
-  std::unique_ptr<boost::asio::deadline_timer> m_timer;
-  std::unique_ptr<boost::asio::deadline_timer> m_lock_timer;
-  std::unique_ptr<boost::asio::strand> m_set_strand;
+  TaskOnTime m_lock_scheduler;
+  TaskOnTime m_ping_scheduler;
 
   MessageProxy m_msg_proxy;
   ConnManager *m_conn_manager;

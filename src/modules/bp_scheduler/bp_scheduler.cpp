@@ -15,10 +15,21 @@ BpScheduler::BpScheduler() {
   m_my_mid_b64 = TypeConverter::encodeBase64(m_my_mid);
   m_my_cid_b64 = TypeConverter::encodeBase64(m_my_cid);
 
+  int rand_ping_time = PRNG::getRange(1, config::BP_PING_PERIOD + 1) * 1000 +
+                       PRNG::getRange(0, 999);
+
   auto &io_service = Application::app().getIoService();
-  m_timer.reset(new boost::asio::deadline_timer(io_service));
-  m_lock_timer.reset(new boost::asio::deadline_timer(io_service));
-  m_set_strand.reset(new boost::asio::strand(io_service));
+
+  m_ping_scheduler.setIoService(io_service);
+  m_ping_scheduler.setTaskFunction([this]() { sendPingMessage(); });
+  m_ping_scheduler.setTime(rand_ping_time, config::BP_INTERVAL * 1000);
+  m_ping_scheduler.setStrandMod();
+
+  m_lock_scheduler.setIoService(io_service);
+  m_lock_scheduler.setTaskFunction([this]() { lockStatus(); });
+  m_lock_scheduler.setTime((config::BP_INTERVAL - 1) * 1000,
+                           config::BP_INTERVAL * 1000);
+  m_lock_scheduler.setStrandMod();
 
   el::Loggers::getLogger("BPSC");
 }
@@ -28,8 +39,8 @@ void BpScheduler::start() {
   m_up_slot = Time::now_int() / config::BP_INTERVAL;
   updateRecvStatus(m_my_mid_b64, m_up_slot, BpStatus::IN_BOOT_WAIT);
 
-  lockStatusloop();
-  sendPingloop();
+  m_lock_scheduler.runTaskOnTime();
+  m_ping_scheduler.runTaskOnTime();
 }
 
 void BpScheduler::setWelcome(bool st) { m_welcome = st; }
@@ -137,8 +148,8 @@ void BpScheduler::reschedule() {
     }
   }
 
-  if (!found_primary) { // no secondary, in this case, primary becomes primary
-                        // again
+  // no secondary, in this case, primary becomes primary again
+  if (!found_primary) {
     for (size_t i = 0; i < num_possible_mergers; ++i) {
       if (std::get<1>(possible_merger_list[i]) == BpStatus::PRIMARY) {
         std::get<2>(possible_merger_list[i]) = BpStatus::PRIMARY;
@@ -167,101 +178,44 @@ void BpScheduler::reschedule() {
   m_current_status = std::get<2>(possible_merger_list[my_pos]);
 }
 
-void BpScheduler::lockStatusloop() {
+void BpScheduler::lockStatus() {
+  m_is_lock = true; // lock to update status
+  Application::app().getTransactionCollector().setTxCollectStatus(
+      m_current_status);
+}
 
+void BpScheduler::sendPingMessage() {
   timestamp_t current_time = Time::now_int();
-
   size_t current_slot = current_time / config::BP_INTERVAL;
-  time_t next_slot_begin = (current_slot + 1) * config::BP_INTERVAL;
-  time_t next_lock_time = (current_time >= next_slot_begin - 1)
-                              ? (next_slot_begin - 1 + config::BP_INTERVAL)
-                              : (next_slot_begin - 1);
-  boost::posix_time::ptime lock_time =
-      boost::posix_time::from_time_t(next_lock_time);
 
-  // CLOG(INFO, "BPSC") << "called lockStatus (time=" << next_lock_time << ")";
+  size_t num_signers = SignerPool::getInstance()->getNumSignerBy();
 
-  m_lock_timer->expires_at(lock_time);
-  m_lock_timer->async_wait([this](const boost::system::error_code &ec) {
-    if (ec == boost::asio::error::operation_aborted) {
-      CLOG(INFO, "BPSC") << "LockTimer ABORTED";
-    } else if (ec.value() == 0) {
-      postLockJob();
-      lockStatusloop();
-    } else {
-      CLOG(ERROR, "BPSC") << ec.message();
-      // throw;
-    }
-  });
-}
+  if (m_current_status != BpStatus::IN_BOOT_WAIT &&
+      num_signers < config::MIN_SIGNATURE_COLLECT_SIZE) {
+    m_current_status = BpStatus::ERROR_ON_SIGNERS;
+  }
 
-void BpScheduler::postLockJob() {
-  auto &io_service = Application::app().getIoService();
-  io_service.post(m_set_strand->wrap([this]() {
-    m_is_lock = true; // lock to update status
-    Application::app().getTransactionCollector().setTxCollectStatus(
-        m_current_status);
-  }));
-}
+  if (m_current_status == BpStatus::ERROR_ON_SIGNERS &&
+      num_signers >= config::MIN_SIGNATURE_COLLECT_SIZE) {
+    // It was IDLE, even I said ERROR_ON_SIGNERS.
+    m_current_status = BpStatus::IDLE;
+  }
 
-void BpScheduler::sendPingloop() {
-  size_t current_slot = Time::now_int() / config::BP_INTERVAL;
-  time_t next_slot_begin = (current_slot + 1) * config::BP_INTERVAL;
+  OutputMsgEntry output_msg;
+  output_msg.type = MessageType::MSG_PING;
+  output_msg.body["mID"] = m_my_mid_b64;
+  output_msg.body["cID"] = m_my_cid_b64;
+  output_msg.body["time"] = to_string(current_time);
+  output_msg.body["sCnt"] = to_string(num_signers);
+  output_msg.body["stat"] = statusToString(m_current_status);
 
-  boost::posix_time::ptime ping_time = boost::posix_time::from_time_t(
-      PRNG::getRange(1, config::BP_PING_PERIOD + 1) + next_slot_begin);
-  ping_time += boost::posix_time::milliseconds(PRNG::getRange(0, 999));
+  m_msg_proxy.deliverOutputMessage(output_msg);
 
-  m_timer->expires_at(ping_time);
-  m_timer->async_wait([this](const boost::system::error_code &error) {
-    if (!error) {
-      if (m_welcome)
-        postSendPingJob();
-      sendPingloop();
-    } else {
-      CLOG(ERROR, "BPSC") << error.message();
-    }
-  });
-}
+  CLOG(INFO, "BPSC") << "Send MSG_PING (" << m_my_mid_b64 << "," << num_signers
+                     << "," << statusToString(m_current_status) << ")";
 
-void BpScheduler::postSendPingJob() {
-  auto &io_service = Application::app().getIoService();
-
-  io_service.post([this]() {
-    timestamp_t current_time = Time::now_int();
-    size_t current_slot = current_time / config::BP_INTERVAL;
-
-    auto signer_pool = SignerPool::getInstance();
-
-    size_t num_signers = signer_pool->getNumSignerBy();
-    if (m_current_status != BpStatus::IN_BOOT_WAIT &&
-        num_signers < config::MIN_SIGNATURE_COLLECT_SIZE) {
-      m_current_status = BpStatus::ERROR_ON_SIGNERS;
-    }
-
-    if (m_current_status == BpStatus::ERROR_ON_SIGNERS &&
-        num_signers >= config::MIN_SIGNATURE_COLLECT_SIZE) {
-      m_current_status =
-          BpStatus::IDLE; // It was IDLE, even I said ERROR_ON_SIGNERS.
-    }
-
-    CLOG(INFO, "BPSC") << "Send MSG_PING (" << m_my_mid_b64 << ","
-                       << num_signers << "," << statusToString(m_current_status)
-                       << ")";
-
-    OutputMsgEntry output_msg;
-    output_msg.type = MessageType::MSG_PING;
-    output_msg.body["mID"] = m_my_mid_b64;
-    output_msg.body["cID"] = m_my_cid_b64;
-    output_msg.body["time"] = to_string(current_time);
-    output_msg.body["sCnt"] = to_string(num_signers);
-    output_msg.body["stat"] = statusToString(m_current_status);
-
-    m_msg_proxy.deliverOutputMessage(output_msg);
-
-    m_is_lock = false; // unlock to update status
-    updateRecvStatus(m_my_mid_b64, current_slot, m_current_status);
-  });
+  m_is_lock = false; // unlock to update status
+  updateRecvStatus(m_my_mid_b64, current_slot, m_current_status);
 }
 
 void BpScheduler::updateRecvStatus(const std::string &id_b64, size_t timeslot,

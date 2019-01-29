@@ -102,18 +102,18 @@ public:
       m_start_timer->expires_from_now(boost::posix_time::milliseconds(after));
       m_start_timer->async_wait([this](const boost::system::error_code &error) {
         if (!error) {
-          event_loop();
+          eventLoop();
         }
       });
     } else {
-      event_loop();
+      eventLoop();
     }
   }
 
   void stopTask() { m_event_timer->cancel(); }
 
 private:
-  void event_loop() {
+  void eventLoop() {
     if (m_task_function) {
       if (m_strand_mode) {
         m_io_service->post(m_strand->wrap([this]() { m_task_function(); }));
@@ -126,7 +126,7 @@ private:
         boost::posix_time::milliseconds(m_interval));
     m_event_timer->async_wait([this](const boost::system::error_code &error) {
       if (!error && error != boost::asio::error::operation_aborted) {
-        event_loop();
+        eventLoop();
       }
     });
   }
@@ -184,6 +184,142 @@ public:
       if (m_task_function)
         m_task_function();
     }
+  }
+};
+
+class TaskOnTime : boost::noncopyable {
+private:
+  std::shared_ptr<boost::asio::io_service> m_io_service;
+  std::unique_ptr<boost::asio::deadline_timer> m_event_timer;
+  std::unique_ptr<boost::asio::strand> m_strand;
+  std::function<void()> m_task_function;
+  int m_at_time{1000};
+  uint64_t m_intval{10000};
+  std::atomic<bool> m_strand_mode{false};
+
+public:
+  TaskOnTime() = default;
+
+  template <typename T = boost::asio::io_service> TaskOnTime(T &&io_service) {
+    setIoService(io_service);
+  }
+
+  template <typename T = boost::asio::io_service>
+  TaskOnTime(T &&io_service, int at_time, uint64_t intval,
+             const std::function<void()> &task_function) {
+    setIoService(io_service);
+    setTaskFunction(task_function);
+    setTime(at_time, intval);
+    runTaskOnTime();
+  }
+
+  TaskOnTime(std::shared_ptr<boost::asio::io_service> io_service, int at_time,
+             uint64_t intval, const std::function<void()> &task_function) {
+    setIoService(io_service);
+    setTaskFunction(task_function);
+    setTime(at_time, intval);
+    runTaskOnTime();
+  }
+
+  void setStrandMod() { m_strand_mode = true; }
+
+  template <typename T = boost::asio::io_service>
+  void setIoService(T &&io_service) {
+    m_io_service = std::shared_ptr<boost::asio::io_service>(&io_service);
+    m_event_timer.reset(new boost::asio::deadline_timer(io_service));
+    m_strand.reset(new boost::asio::strand(io_service));
+  }
+
+  void setIoService(std::shared_ptr<boost::asio::io_service> io_service) {
+    m_io_service = io_service;
+    m_event_timer.reset(new boost::asio::deadline_timer(*io_service));
+    m_strand.reset(new boost::asio::strand(*io_service));
+  }
+
+  void setTaskFunction(const std::function<void()> &task_function) {
+    m_task_function = task_function;
+  }
+
+  void setTime(int at_time, uint64_t intval) {
+    if (at_time >= intval) {
+      at_time %= intval;
+    }
+
+    if (at_time < 0) {
+      at_time = 0;
+    }
+
+    m_at_time = at_time;
+    m_intval = intval;
+  }
+
+  void runTask(int at_time, uint64_t intval,
+               const std::function<void()> &task_function) {
+    setTaskFunction(task_function);
+    setTime(at_time, intval);
+    runTaskOnTime();
+  }
+
+  void runTask(const std::function<void()> &task_function, int at_time,
+               uint64_t intval) {
+    setTaskFunction(task_function);
+    setTime(at_time, intval);
+    runTaskOnTime();
+  }
+
+  void runTaskOnTime() {
+    if (!m_task_function) {
+      return;
+    }
+
+    if (m_at_time >= 0 && m_intval >= 1000) {
+      eventLoop();
+    }
+  }
+
+  void stopTask() { m_event_timer->cancel(); }
+
+private:
+  void eventLoop() {
+
+    uint64_t this_time = now_ms();
+    uint64_t this_slot = this_time / m_intval;
+    uint64_t this_slot_event_time = this_slot * m_intval + m_at_time;
+    uint64_t next_slot_event_time = (this_slot + 1) * m_intval + m_at_time;
+
+    uint64_t remain_time = 0;
+    if (this_slot_event_time <= this_time) {
+      remain_time = next_slot_event_time - this_time;
+    } else {
+      remain_time = this_slot_event_time - this_time;
+    }
+
+    if (remain_time < 100) { // too close, skip this event
+      remain_time += m_intval;
+    }
+
+    m_event_timer->expires_from_now(
+        boost::posix_time::milliseconds(remain_time));
+    m_event_timer->async_wait([this](const boost::system::error_code &error) {
+      if (!error && error != boost::asio::error::operation_aborted) {
+        eventLoop();
+        if (m_task_function) {
+          if (m_strand_mode) {
+            m_io_service->post(m_strand->wrap([this]() { m_task_function(); }));
+          } else {
+            m_io_service->post([this]() { m_task_function(); });
+          }
+        }
+      }
+    });
+  }
+
+  uint64_t now_ms() {
+    auto milliseconds_since_epoch = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count());
+    return milliseconds_since_epoch;
   }
 };
 

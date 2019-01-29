@@ -7,6 +7,7 @@
 #include "../chain/types.hpp"
 #include "../modules/module.hpp"
 #include "../utils/bytes_builder.hpp"
+#include "../utils/periodic_task.hpp"
 #include "../utils/rsa.hpp"
 #include "../utils/type_converter.hpp"
 #include "certificate_pool.hpp"
@@ -37,13 +38,11 @@ public:
 private:
   bool isRunnable();
   void turnOnTimer();
-  void updateStatus();
-  void postJob();
+  void checkBpJob();
 
   BpStatus m_current_tx_status{BpStatus::IN_BOOT_WAIT};
   BpStatus m_next_tx_status{BpStatus::UNKNOWN};
-  std::unique_ptr<boost::asio::deadline_timer> m_timer;
-  std::unique_ptr<boost::asio::strand> m_postjob_strand;
+  TaskOnTime m_update_status_scheduler;
   SignatureRequester m_signature_requester;
   std::deque<BpJobStatus> m_bpjob_sequence;
 
