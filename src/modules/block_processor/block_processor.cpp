@@ -15,6 +15,16 @@ BlockProcessor::BlockProcessor() {
   auto &io_service = Application::app().getIoService();
   m_task_scheduler.setIoService(io_service);
 
+  m_get_cert_func = [this](id_type &id) {
+    return CertificatePool::getInstance()->getCert(id);
+  };
+
+  m_get_user_cert_func = [this](std::string &id_b64, timestamp_t t_time) {
+    auto &cert_ledger =
+        Application::app().getCustomLedgerManager().getCertificateLedger();
+    return cert_ledger.getCertificate(id_b64, t_time);
+  };
+
   el::Loggers::getLogger("BPRO");
 }
 
@@ -197,7 +207,7 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     return 0;
   }
 
-  if (!recv_block.isValidEarly()) {
+  if (!recv_block.isValidEarly(m_get_cert_func)) {
     CLOG(ERROR, "BPRO") << "Block dropped (invalid - early stage validation)";
     return 0;
   }
@@ -270,7 +280,7 @@ void BlockProcessor::resolveBlocksIf() {
 
     for (auto &each_block : resolved_blocks) {
 
-      if (!each_block.block.isValidLate()) {
+      if (!each_block.block.isValidLate(m_get_user_cert_func)) {
         CLOG(ERROR, "BPRO")
             << "Block dropped (invalid - late stage validation)";
         continue;
