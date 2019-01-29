@@ -399,7 +399,7 @@ UnresolvedBlockPool::getBlockLayer(const std::string &block_id_b64) {
 
   if (!block_id_b64.empty()) {
     for (size_t i = 0; i < m_block_pool.size(); ++i) {
-      for (size_t j = 0; j < m_block_pool[j].size(); ++j) {
+      for (size_t j = 0; j < m_block_pool[i].size(); ++j) {
 
         if (block_id_b64 == m_block_pool[i][j].block.getBlockIdB64()) {
           bin_idx = static_cast<int>(i);
