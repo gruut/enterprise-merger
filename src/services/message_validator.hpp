@@ -85,6 +85,12 @@ const std::vector<std::tuple<MessageType, std::string, EntryType, EntryLength>> 
     {MessageType::MSG_REQ_CHECK, "dID", EntryType::BASE64, EntryLength::ID},
     {MessageType::MSG_REQ_CHECK, "txid", EntryType::BASE64, EntryLength::TX_ID},
 
+    {MessageType::MSG_REQ_HEADER, "rID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_REQ_HEADER, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_REQ_HEADER, "rCert", EntryType::STRING, EntryLength::ID},
+    {MessageType::MSG_REQ_HEADER, "hgt", EntryType::UINT, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_REQ_HEADER, "rSig", EntryType::BASE64, EntryLength::NOT_LIMITED},
+
     {MessageType::MSG_BLOCK, "mID", EntryType::BASE64, EntryLength::ID},
     {MessageType::MSG_BLOCK, "tx", EntryType::ARRAYOFOBJECT, EntryLength::NOT_LIMITED},
 
