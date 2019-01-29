@@ -104,6 +104,7 @@ void BlockSynchronizer::messageFetch() {
         Application::app().getBlockProcessor().handleMsgBlock(input_msg_entry);
     if (pushed_block_height > 0) {
 
+      std::lock_guard<std::mutex> guard(m_sync_flags_mutex);
       if (pushed_block_height > m_link_from.height) {
         size_t req_map_size = pushed_block_height - m_link_from.height;
         if (m_sync_flags.size() < req_map_size)
@@ -111,6 +112,7 @@ void BlockSynchronizer::messageFetch() {
 
         m_sync_flags[req_map_size - 1] = true; // last or this
       }
+      m_sync_flags_mutex.unlock();
     }
   } break;
 

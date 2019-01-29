@@ -59,6 +59,7 @@ private:
   std::map<std::string, OtherStatusData> m_chain_status;
 
   std::mutex m_chain_mutex;
+  std::mutex m_sync_flags_mutex;
 
 public:
   BlockSynchronizer();
