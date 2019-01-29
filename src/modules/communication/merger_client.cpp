@@ -59,6 +59,8 @@ void MergerClient::accessToTracker() {
   if (response_msg.find("merger") != response_msg.end() &&
       response_msg.find("se") != response_msg.end()) {
 
+    auto cert_pool = CertificatePool::getInstance();
+
     for (auto &merger : response_msg["merger"]) {
       string merger_id_b64 = Safe::getString(merger, "mID");
       merger_id_type merger_id = TypeConverter::decodeBase64(merger_id_b64);
@@ -75,6 +77,8 @@ void MergerClient::accessToTracker() {
       merger_info.port = Safe::getString(merger, "port");
       merger_info.cert = Safe::getString(merger, "mCert");
 
+      cert_pool->pushCert(merger_id, merger_info.cert);
+
       m_conn_manager->setMergerInfo(merger_info, true);
     }
 
@@ -90,6 +94,8 @@ void MergerClient::accessToTracker() {
       se_info.address = Safe::getString(se, "ip");
       se_info.port = Safe::getString(se, "port");
       se_info.cert = Safe::getString(se, "seCert");
+
+      cert_pool->pushCert(se_id, se_info.cert);
 
       m_conn_manager->setSeInfo(se_info, true);
     }
