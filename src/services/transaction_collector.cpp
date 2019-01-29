@@ -13,13 +13,16 @@ TransactionCollector::TransactionCollector() {
   m_storage = Storage::getInstance();
 
   auto &io_service = Application::app().getIoService();
-  m_timer.reset(new boost::asio::deadline_timer(io_service));
-  m_postjob_strand.reset(new boost::asio::strand(io_service));
+
+  m_update_status_scheduler.setIoService(io_service);
+  m_update_status_scheduler.setTaskFunction([this]() { checkBpJob(); });
+  m_update_status_scheduler.setTime(0, config::BP_INTERVAL * 1000);
+  m_update_status_scheduler.setStrandMod();
 }
 
 void TransactionCollector::handleMessage(json &msg_body_json) {
   if (!isRunnable()) {
-    CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
+    // CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
     return;
   }
 
@@ -98,47 +101,20 @@ void TransactionCollector::turnOnTimer() {
     m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
     m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
 
-    updateStatus();
+    m_update_status_scheduler.runTaskOnTime();
   });
 }
 
-void TransactionCollector::updateStatus() {
+void TransactionCollector::checkBpJob() {
+  m_current_tx_status = m_next_tx_status;
 
-  // CLOG(INFO, "TXCO") << "called updateStatus()";
-
-  size_t current_time = Time::now_ms();
-  size_t current_slot = current_time / (BP_INTERVAL * 1000);
-  timestamp_t next_slot_begin = (current_slot + 1) * (BP_INTERVAL * 1000);
-  timestamp_t time_to_next = next_slot_begin - current_time;
-
-  if (time_to_next < 1000) // may be system time rewind
-    time_to_next = BP_INTERVAL * 1000 - time_to_next;
-
-  m_timer->expires_from_now(boost::posix_time::milliseconds(time_to_next));
-  m_timer->async_wait([this](const boost::system::error_code &error) {
-    if (!error) {
-      postJob();
-      updateStatus();
-    } else {
-      CLOG(ERROR, "TXCO") << error.message();
-    }
-  });
-}
-
-void TransactionCollector::postJob() {
-  auto &io_service = Application::app().getIoService();
-
-  io_service.post([this]() {
-    m_current_tx_status = m_next_tx_status;
-
-    BpJobStatus this_job = m_bpjob_sequence.front();
-    m_bpjob_sequence.pop_front();
-    m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
-    if (this_job == BpJobStatus::DO &&
-        Application::app().getTransactionPool().size() > 0) {
-      m_signature_requester.requestSignatures();
-    }
-  });
+  BpJobStatus this_job = m_bpjob_sequence.front();
+  m_bpjob_sequence.pop_front();
+  m_bpjob_sequence.push_back(BpJobStatus::UNKNOWN);
+  if (this_job == BpJobStatus::DO &&
+      Application::app().getTransactionPool().size() > 0) {
+    m_signature_requester.requestSignatures();
+  }
 }
 
 } // namespace gruut
