@@ -104,6 +104,8 @@ void BlockSynchronizer::messageFetch() {
         Application::app().getBlockProcessor().handleMsgBlock(input_msg_entry);
     if (pushed_block_height > 0) {
 
+      std::lock_guard<std::mutex> guard(m_sync_flags_mutex);
+
       if (pushed_block_height > m_link_from.height) {
         size_t req_map_size = pushed_block_height - m_link_from.height;
         if (m_sync_flags.size() < req_map_size)
@@ -111,6 +113,8 @@ void BlockSynchronizer::messageFetch() {
 
         m_sync_flags[req_map_size - 1] = true; // last or this
       }
+
+      m_sync_flags_mutex.unlock();
     }
   } break;
 
@@ -208,9 +212,14 @@ void BlockSynchronizer::sendRequestLastBlock() {
   if (last_block_height > m_link_from.height) {
     sendRequestBlock(last_block_height, last_block_hash_b64,
                      TypeConverter::decodeBase64(t_merger_id_b64));
+
+    std::lock_guard<std::mutex> guard(m_sync_flags_mutex);
+
     size_t req_map_size = last_block_height - m_link_from.height;
     if (m_sync_flags.size() < req_map_size)
       m_sync_flags.resize(req_map_size, false);
+
+    m_sync_flags_mutex.unlock();
   }
 
   m_is_sync_begin = true;
