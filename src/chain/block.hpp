@@ -1,27 +1,18 @@
 #ifndef GRUUT_ENTERPRISE_MERGER_TEMPORARY_BLOCK_HPP
 #define GRUUT_ENTERPRISE_MERGER_TEMPORARY_BLOCK_HPP
 
-#include "mem_ledger.hpp"
 #include "merkle_tree.hpp"
 #include "signature.hpp"
 #include "transaction.hpp"
 #include "types.hpp"
 
-#include "../services/certificate_pool.hpp"
-#include "../services/storage.hpp"
 #include "../utils/compressor.hpp"
 #include "../utils/ecdsa.hpp"
 
-#include "../ledger/certificate_ledger.hpp"
 #include "easy_logging.hpp"
 #include "nlohmann/json.hpp"
 
 #include <vector>
-
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/string.hpp>
-#include <sstream>
 
 using namespace std;
 
@@ -193,13 +184,8 @@ public:
         static_cast<block_id_type>(Sha256::hash(block_id_builder.getBytes()));
   }
 
-  void finalize() {
+  void finalize(const std::string &ecdsa_sk, const std::string &ecdsa_sk_pass) {
     bytes block_meta_comp_header = generateMetaWithCompHeader();
-
-    auto setting = Setting::getInstance();
-
-    string ecdsa_sk = setting->getMySK();
-    string ecdsa_sk_pass = setting->getMyPass();
     m_signature =
         ECDSA::doSign(ecdsa_sk, block_meta_comp_header, ecdsa_sk_pass);
 
@@ -212,12 +198,7 @@ public:
     m_block_hash = Sha256::hash(m_block_raw);
   }
 
-  bytes getBlockRaw() {
-    if (m_block_raw.empty()) {
-      finalize();
-    }
-    return m_block_raw;
-  }
+  bytes getBlockRaw() { return m_block_raw; }
 
   std::vector<tx_id_type> getTxIds() {
     std::vector<tx_id_type> ret_txids;
@@ -302,15 +283,13 @@ public:
     return TypeConverter::encodeBase64(m_prev_block_id);
   }
 
-  bool isValid() { return (isValidEarly() && isValidLate()); }
-
   // Support signature cannot be verified unless storage or block itself has
   // suitable certificates Therefore, the verification of support signatures
   // should be delayed until the previous block has been saved.
-  bool isValidLate() {
+  bool isValidLate(
+      std::function<std::string(std::string &, timestamp_t)> &get_user_cert) {
     // step - check support signatures
     bytes ssig_msg_after_sid = getSupportSigMessageCommon();
-    CertificateLedger cert_ledger;
 
     for (auto &each_ssig : m_ssigs) {
       BytesBuilder ssig_msg_builder;
@@ -325,8 +304,8 @@ public:
       if (it_map != m_user_certs.end()) {
         user_pk_pem = it_map->second;
       } else {
-        user_pk_pem = cert_ledger.getCertificate(
-            user_id_b64, m_time); // this is from storage
+        user_pk_pem =
+            get_user_cert(user_id_b64, m_time); // this is from storage
       }
 
       if (user_pk_pem.empty()) {
@@ -344,7 +323,7 @@ public:
     return true;
   }
 
-  bool isValidEarly() {
+  bool isValidEarly(std::function<std::string(id_type &)> &get_cert) {
 
     if (m_block_raw.empty() || m_signature.empty()) {
       CLOG(ERROR, "BLOC") << "Empty blockraw or signature";
@@ -359,11 +338,9 @@ public:
 
     // step - transactions
 
-    auto cert_pool = CertificatePool::getInstance();
-
     for (auto &each_tx : m_transactions) {
       id_type requster_id = each_tx.getRequesterId();
-      std::string pk_cert = cert_pool->getCert(requster_id);
+      std::string pk_cert = get_cert(requster_id);
       if (!each_tx.isValid(pk_cert)) {
         CLOG(ERROR, "BLOC") << "Invalid transaction";
         return false;
@@ -372,7 +349,7 @@ public:
 
     // step - check merger's signature
 
-    std::string merger_pk_cert = cert_pool->getCert(m_merger_id);
+    std::string merger_pk_cert = get_cert(m_merger_id);
 
     if (merger_pk_cert.empty()) {
       CLOG(ERROR, "BLOC") << "No suitable merger certificate";

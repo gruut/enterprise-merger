@@ -57,6 +57,8 @@ public:
     }
   }
 
+  CertificateLedger &getCertificateLedger() { return *m_certificate_ledger; }
+
 private:
   void registerLedger(std::shared_ptr<Ledger> ledger) {
     m_ledgers.emplace_back(ledger);

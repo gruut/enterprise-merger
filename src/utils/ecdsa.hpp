@@ -16,8 +16,8 @@
 
 class ECDSA {
 public:
-  static std::vector<uint8_t> doSign(std::string &ecdsa_sk_pem,
-                                     std::string &msg,
+  static std::vector<uint8_t> doSign(const std::string &ecdsa_sk_pem,
+                                     const std::string &msg,
                                      const std::string &pass = "") {
     try {
       auto ecdsa_sk = getPrivateKey(ecdsa_sk_pem, pass);
@@ -34,7 +34,7 @@ public:
     }
   }
 
-  static std::vector<uint8_t> doSign(std::string &ecdsa_sk_pem,
+  static std::vector<uint8_t> doSign(const std::string &ecdsa_sk_pem,
                                      const std::vector<uint8_t> &data,
                                      const std::string &pass = "") {
     try {
@@ -103,7 +103,7 @@ public:
   }
 
 private:
-  static Botan::ECDSA_PrivateKey getPrivateKey(std::string &ecdsa_sk_pem,
+  static Botan::ECDSA_PrivateKey getPrivateKey(const std::string &ecdsa_sk_pem,
                                                const std::string &pass = "") {
     try {
       Botan::DataSource_Memory signkey_datasource(ecdsa_sk_pem);

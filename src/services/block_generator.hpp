@@ -12,14 +12,14 @@
 #include "../utils/time.hpp"
 #include "../utils/type_converter.hpp"
 
+#include "setting.hpp"
+
 #include "message_proxy.hpp"
 #include "signature_requester.hpp"
 
 #include "easy_logging.hpp"
 
 #include <vector>
-
-using namespace std;
 
 namespace gruut {
 class BlockGenerator {
@@ -30,6 +30,11 @@ public:
   void generateBlock(BasicBlockInfo basic_info, vector<Signature> support_sigs,
                      MerkleTree merkle_tree) {
 
+    auto setting = Setting::getInstance();
+
+    std::string ecdsa_sk = setting->getMySK();
+    std::string ecdsa_sk_pass = setting->getMyPass();
+
     // step-1) make block
 
     Block new_block;
@@ -37,7 +42,7 @@ public:
     new_block.setSupportSignatures(support_sigs);
     new_block.linkPreviousBlock(basic_info.prev_id_b64,
                                 basic_info.prev_hash_b64);
-    new_block.finalize();
+    new_block.finalize(ecdsa_sk, ecdsa_sk_pass);
 
     json block_header = new_block.getBlockHeaderJson();
     bytes block_raw = new_block.getBlockRaw();
@@ -48,8 +53,6 @@ public:
                        << ",#ssig=" << new_block.getNumSSigs() << ")";
 
     // setp-2) send blocks to others
-
-    auto setting = Setting::getInstance();
 
     OutputMsgEntry msg_header_msg;
     msg_header_msg.type = MessageType::MSG_HEADER;  // MSG_HEADER = 0xB5

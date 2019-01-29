@@ -33,10 +33,21 @@ void BlockHealthChecker::startHealthCheck() {
   bool is_healthy = true;
   std::string prev_hash_b64 = config::GENESIS_BLOCK_PREV_HASH_B64;
   std::string prev_block_id_b64 = config::GENESIS_BLOCK_PREV_ID_B64;
-  size_t last_healty_block = 0;
+  size_t last_healthy_block = 0;
 
   size_t unit_step =
       (latest_block_info.height < 10) ? 1 : latest_block_info.height / 10;
+
+  std::function<std::string(id_type &)> get_cert_func = [this](id_type &id) {
+    return CertificatePool::getInstance()->getCert(id);
+  };
+
+  std::function<std::string(std::string &, timestamp_t)> get_user_cert_func =
+      [this](std::string &id_b64, timestamp_t t_time) {
+        auto &cert_ledger =
+            Application::app().getCustomLedgerManager().getCertificateLedger();
+        return cert_ledger.getCertificate(id_b64, t_time);
+      };
 
   for (size_t i = 1; i <= latest_block_info.height; ++i) {
 
@@ -47,11 +58,12 @@ void BlockHealthChecker::startHealthCheck() {
     storage_block_type nth_block = storage->readBlock(i);
     test_block.reset(new Block);
     test_block->initialize(nth_block);
-    if (test_block->isValidEarly() &&
+    if (test_block->isValidEarly(get_cert_func) &&
+        test_block->isValidLate(get_user_cert_func) &&
         test_block->getPrevHashB64() == prev_hash_b64 &&
         test_block->getPrevBlockIdB64() == prev_block_id_b64) {
 
-      last_healty_block = i;
+      last_healthy_block = i;
 
       prev_hash_b64 = test_block->getHashB64();
       prev_block_id_b64 = test_block->getBlockIdB64();
