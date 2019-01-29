@@ -87,8 +87,7 @@ void RecvFromMerger::proceed(bool st) {
   case RpcCallStatus::PROCESS: {
     new RecvFromMerger(m_service, m_completion_queue);
 
-    auto &io_service = Application::app().getIoService();
-    io_service.post([this]() {
+    std::async(std::launch::async, [this]() {
       std::string packed_msg = m_request.data();
       Status rpc_status;
       id_type recv_id;
@@ -129,8 +128,7 @@ void RecvFromSE::proceed(bool st) {
   case RpcCallStatus::PROCESS: {
     new RecvFromSE(m_service, m_completion_queue);
 
-    auto &io_service = Application::app().getIoService();
-    io_service.post([this]() {
+    std::async(std::launch::async, [this]() {
       Status rpc_status;
       servend_id_type receiver_id;
       Reply m_reply;
@@ -222,8 +220,7 @@ void SignerService::proceed(bool st) {
   case RpcCallStatus::PROCESS: {
     new SignerService(m_service, m_completion_queue);
 
-    auto &io_service = Application::app().getIoService();
-    io_service.post([this]() {
+    std::async(std::launch::async, [this]() {
       Status rpc_status;
       id_type receiver_id;
       MsgStatus m_reply;
