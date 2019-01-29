@@ -112,7 +112,7 @@ public:
     auto max_height = std::max_element(
         m_init_block_hgt_list.begin(), m_init_block_hgt_list.end(),
         [this](merger_height_type &a, merger_height_type &b) {
-          return (a.height > b.height);
+          return (a.height < b.height);
         });
 
     for (auto &info : m_init_block_hgt_list) {
