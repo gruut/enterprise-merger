@@ -242,7 +242,7 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     OutputMsgEntry msg_chain_info;
     msg_chain_info.type = MessageType::MSG_CHAIN_INFO;
     msg_chain_info.body["msgID"] = to_string((int)MessageType::MSG_CHAIN_INFO);
-    msg_chain_info.body["mID"] = Safe::getString(entry.body, "mID");
+    msg_chain_info.body["mID"] = m_my_id_b64;
     msg_chain_info.body["cID"] = m_my_chain_id_b64;
     msg_chain_info.body["time"] = to_string(possible_link.time);
     msg_chain_info.body["hgt"] = to_string(possible_link.height);
