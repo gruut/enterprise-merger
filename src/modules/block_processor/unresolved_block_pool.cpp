@@ -22,11 +22,15 @@ bool UnresolvedBlockPool::hasUnresolvedBlocks() {
 }
 
 void UnresolvedBlockPool::setPool(const block_id_type &last_block_id,
+                                  const block_id_type &prev_block_id,
                                   const hash_t &last_hash,
+                                  const hash_t &prev_hash,
                                   block_height_type last_height,
                                   timestamp_t last_time) {
   m_last_block_id = last_block_id;
+  m_prev_block_id = prev_block_id;
   m_last_hash = last_hash;
+  m_prev_block_id = prev_hash;
   m_last_height = last_height;
   m_last_time = last_time;
   m_height_range_max = last_height;
@@ -276,6 +280,9 @@ void UnresolvedBlockPool::getResolvedBlocks(
         if (!is_after)
           return;
 
+        m_prev_block_id = m_last_block_id;
+        m_prev_hash = m_last_hash;
+
         m_last_block_id =
             m_block_pool[0][resolved_block_idx].block.getBlockId();
         m_last_hash = m_block_pool[0][resolved_block_idx].block.getHash();
@@ -443,6 +450,9 @@ nth_link_type UnresolvedBlockPool::getMostPossibleLink() {
   ret_link.height = m_last_height;
   ret_link.id = m_last_block_id;
   ret_link.hash = m_last_hash;
+  ret_link.prev_id = m_prev_block_id;
+  ret_link.prev_hash = m_prev_hash;
+  ret_link.time = m_last_time;
 
   if (m_block_pool.empty()) {
     m_cache_possible_link = ret_link;
@@ -462,6 +472,9 @@ nth_link_type UnresolvedBlockPool::getMostPossibleLink() {
       ret_link.height = t_block.block.getHeight();
       ret_link.id = t_block.block.getBlockId();
       ret_link.hash = t_block.block.getHash();
+      ret_link.prev_hash = t_block.block.getPrevBlockId();
+      ret_link.prev_id = t_block.block.getPrevHash();
+      ret_link.time = t_block.block.getTime();
     }
   }
 

@@ -31,8 +31,9 @@ BlockProcessor::BlockProcessor() {
 void BlockProcessor::start() {
   auto last_block_info = m_storage->getNthBlockLinkInfo();
 
-  m_unresolved_block_pool.setPool(last_block_info.id, last_block_info.hash,
-                                  last_block_info.height, last_block_info.time);
+  m_unresolved_block_pool.setPool(
+      last_block_info.id, last_block_info.prev_id, last_block_info.hash,
+      last_block_info.prev_hash, last_block_info.height, last_block_info.time);
 
   m_unresolved_block_pool.restorePool();
 
