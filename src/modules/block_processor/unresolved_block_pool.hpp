@@ -44,7 +44,9 @@ private:
   std::recursive_mutex m_push_mutex;
 
   block_id_type m_last_block_id;
+  block_id_type m_prev_block_id;
   hash_t m_last_hash;
+  hash_t m_prev_hash;
   std::atomic<block_height_type> m_last_height;
   timestamp_t m_last_time;
 
@@ -67,8 +69,10 @@ public:
   inline size_t size() { return m_block_pool.size(); }
   inline bool empty() { return m_block_pool.empty(); }
   inline void clear() { m_block_pool.clear(); }
-  void setPool(const block_id_type &last_block_id, const hash_t &last_hash,
-               block_height_type last_height, timestamp_t last_time);
+  void setPool(const block_id_type &last_block_id,
+               const block_id_type &prev_block_id, const hash_t &last_hash,
+               const hash_t &prev_hash, block_height_type last_height,
+               timestamp_t last_time);
   bool prepareBins(block_height_type t_height);
   void invalidateCaches();
   unblk_push_result_type push(Block &block, bool is_restore = false);

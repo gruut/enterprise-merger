@@ -31,8 +31,9 @@ BlockProcessor::BlockProcessor() {
 void BlockProcessor::start() {
   auto last_block_info = m_storage->getNthBlockLinkInfo();
 
-  m_unresolved_block_pool.setPool(last_block_info.id, last_block_info.hash,
-                                  last_block_info.height, last_block_info.time);
+  m_unresolved_block_pool.setPool(
+      last_block_info.id, last_block_info.prev_id, last_block_info.hash,
+      last_block_info.prev_hash, last_block_info.height, last_block_info.time);
 
   m_unresolved_block_pool.restorePool();
 
@@ -241,7 +242,7 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     OutputMsgEntry msg_chain_info;
     msg_chain_info.type = MessageType::MSG_CHAIN_INFO;
     msg_chain_info.body["msgID"] = to_string((int)MessageType::MSG_CHAIN_INFO);
-    msg_chain_info.body["mID"] = Safe::getString(entry.body, "mID");
+    msg_chain_info.body["mID"] = m_my_id_b64;
     msg_chain_info.body["cID"] = m_my_chain_id_b64;
     msg_chain_info.body["time"] = to_string(possible_link.time);
     msg_chain_info.body["hgt"] = to_string(possible_link.height);
