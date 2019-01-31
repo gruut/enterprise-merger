@@ -23,7 +23,7 @@ class SignaturePool {
 public:
   SignaturePool();
 
-  void handleMessage(json &);
+  void handleMessage(InputMsgEntry &input_message);
 
   void push(Signature &signature);
 

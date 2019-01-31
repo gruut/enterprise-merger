@@ -37,7 +37,7 @@ BpScheduler::BpScheduler() {
 void BpScheduler::start() {
 
   m_up_slot = Time::now_int() / config::BP_INTERVAL;
-  updateRecvStatus(m_my_mid_b64, m_up_slot, BpStatus::IN_BOOT_WAIT);
+  updateRecvStatus(m_my_mid, m_up_slot, BpStatus::IN_BOOT_WAIT);
 
   m_lock_scheduler.runTaskOnTime();
   m_ping_scheduler.runTaskOnTime();
@@ -74,7 +74,7 @@ void BpScheduler::reschedule() {
 
   BpRecvStatusInfo my_bp_status;
   for (BpRecvStatusInfo &item : m_recv_status) {
-    if (m_my_mid_b64 == std::get<0>(item)) {
+    if (m_my_mid == std::get<0>(item)) {
       my_bp_status = item;
       break;
     }
@@ -89,7 +89,7 @@ void BpScheduler::reschedule() {
   }
 
   size_t my_pos = 0;
-  std::vector<std::tuple<std::string, BpStatus, BpStatus>> possible_merger_list;
+  std::vector<std::tuple<merger_id_type, BpStatus, BpStatus>> possible_merger_list;
   bool is_all_idle = true;
   for (BpRecvStatusInfo &item : m_recv_status) {
     size_t time_slot = std::get<1>(item);
@@ -104,20 +104,23 @@ void BpScheduler::reschedule() {
       is_all_idle = false;
     }
 
-    if (m_my_mid_b64 == std::get<0>(item)) {
+    if (m_my_mid == std::get<0>(item)) {
       my_pos = possible_merger_list.size() - 1;
     }
   }
 
   size_t num_possible_mergers = possible_merger_list.size();
 
-  if (num_possible_mergers ==
-      0) { // in this case, we cannot determine current status
+  if (num_possible_mergers == 0) {
+    // in this case, we cannot determine current status
     return;
   }
 
+  m_block_producers.clear();
+
   if (num_possible_mergers == 1) { // I am the only merger
     m_current_status = BpStatus::PRIMARY;
+    m_block_producers.emplace_back(m_my_mid);
     return;
   }
 
@@ -129,6 +132,11 @@ void BpScheduler::reschedule() {
       m_current_status = BpStatus::SECONDARY;
     else
       m_current_status = BpStatus::IDLE;
+
+    m_block_producers.emplace_back(std::get<0>(possible_merger_list[0]));
+    if(num_possible_mergers >= 2){
+      m_block_producers.emplace_back(std::get<0>(possible_merger_list[1]));
+    }
 
     return;
   }
@@ -159,10 +167,14 @@ void BpScheduler::reschedule() {
     }
   }
 
+
   // step 2) find SECONDARY
 
   size_t secondary_pos = (primary_pos + 1) % num_possible_mergers;
   std::get<2>(possible_merger_list[secondary_pos]) = BpStatus::SECONDARY;
+
+  m_block_producers.emplace_back(std::get<0>(possible_merger_list[primary_pos]));
+  m_block_producers.emplace_back(std::get<0>(possible_merger_list[secondary_pos]));
 
   // step 3) all others will be IDLE
 
@@ -181,7 +193,7 @@ void BpScheduler::reschedule() {
 void BpScheduler::lockStatus() {
   m_is_lock = true; // lock to update status
   Application::app().getTransactionCollector().setTxCollectStatus(
-      m_current_status);
+      m_current_status, m_block_producers);
 }
 
 void BpScheduler::sendPingMessage() {
@@ -215,17 +227,17 @@ void BpScheduler::sendPingMessage() {
                      << "," << statusToString(m_current_status) << ")";
 
   m_is_lock = false; // unlock to update status
-  updateRecvStatus(m_my_mid_b64, current_slot, m_current_status);
+  updateRecvStatus(m_my_mid, current_slot, m_current_status);
 }
 
-void BpScheduler::updateRecvStatus(const std::string &id_b64, size_t timeslot,
+void BpScheduler::updateRecvStatus(const merger_id_type &merger_id, size_t timeslot,
                                    BpStatus stat) {
 
   // NO-BAKGGU table!
 
   bool is_updatable = false;
   for (BpRecvStatusInfo &item : m_recv_status) {
-    if (std::get<0>(item) == id_b64) {
+    if (std::get<0>(item) == merger_id) {
       std::lock_guard<std::mutex> lock(m_recv_status_mutex);
       is_updatable = true;
       std::get<1>(item) = timeslot;
@@ -237,7 +249,7 @@ void BpScheduler::updateRecvStatus(const std::string &id_b64, size_t timeslot,
 
   if (!is_updatable) {
     std::lock_guard<std::mutex> lock(m_recv_status_mutex);
-    m_recv_status.emplace_back(make_tuple(id_b64, timeslot, stat));
+    m_recv_status.emplace_back(make_tuple(merger_id, timeslot, stat));
     std::sort(m_recv_status.begin(), m_recv_status.end(),
               [](const BpRecvStatusInfo &a, const BpRecvStatusInfo &b) {
                 return get<0>(a) < get<0>(b);
@@ -253,6 +265,7 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
     return; // wrong chain
 
   std::string merger_id_b64 = Safe::getString(msg.body, "mID");
+  merger_id_type merger_id = Safe::getBytesFromB64<merger_id_type>(msg.body, "mID");
   timestamp_t merger_time = Safe::getTime(msg.body, "time");
   size_t timeslot = merger_time / config::BP_INTERVAL;
 
@@ -269,19 +282,19 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
     BpStatus status = stringToStatus(Safe::getString(msg.body, "stat"));
     if (num_singers < config::MIN_SIGNATURE_COLLECT_SIZE)
       status = BpStatus::ERROR_ON_SIGNERS;
-    updateRecvStatus(merger_id_b64, timeslot, status);
+    updateRecvStatus(merger_id, timeslot, status);
 
   } break;
   case MessageType::MSG_UP: {
 
     MergerInfo merger_info;
-    merger_info.id = TypeConverter::decodeBase64(merger_id_b64);
+    merger_info.id = merger_id;
     merger_info.address = Safe::getString(msg.body, "ip");
     merger_info.port = Safe::getString(msg.body, "port");
     merger_info.cert = Safe::getString(msg.body, "mCert");
     m_conn_manager->setMergerInfo(merger_info, true);
 
-    updateRecvStatus(merger_id_b64, timeslot, BpStatus::IN_BOOT_WAIT);
+    updateRecvStatus(merger_id, timeslot, BpStatus::IN_BOOT_WAIT);
 
     OutputMsgEntry output_msg;
     output_msg.type = MessageType::MSG_WELCOME;
@@ -292,7 +305,7 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
     output_msg.body["merger"] = m_conn_manager->getAllMergerInfoJson();
     output_msg.body["se"] = m_conn_manager->getAllSeInfoJson();
 
-    output_msg.receivers = {TypeConverter::decodeBase64(merger_id_b64)};
+    output_msg.receivers = {merger_id};
 
     MessageProxy msg_proxy;
     msg_proxy.deliverOutputMessage(output_msg);

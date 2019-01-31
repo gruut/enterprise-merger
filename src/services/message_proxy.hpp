@@ -20,6 +20,7 @@ public:
 
 private:
   OutputQueueAlt *m_output_queue;
+  MessageValidator m_validator;
 };
 } // namespace gruut
 
