@@ -76,7 +76,7 @@ public:
       std::string merger_id_b64 = Safe::getString(merger, "mID");
       merger_id_type merger_id = TypeConverter::decodeBase64(merger_id_b64);
 
-      if (hasMergerInfo(merger_id) || merger_id_b64 == my_id_b64)
+      if (merger_id_b64 == my_id_b64)
         continue;
 
       MergerInfo merger_info;

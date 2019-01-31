@@ -21,7 +21,6 @@ void Bootstrapper::sendMsgUp() {
   CLOG(INFO, "BOOT") << "send MSG_UP";
 
   auto setting = Setting::getInstance();
-  auto conn_manager = ConnManager::getInstance();
   OutputMsgEntry output_msg;
 
   output_msg.type = MessageType::MSG_UP;
