@@ -67,6 +67,7 @@ public:
 private:
   void periodicTask();
   void handleMsgReqBlock(InputMsgEntry &entry);
+  void handleMsgRequestHeader(InputMsgEntry &entry);
   void handleMsgReqCheck(InputMsgEntry &entry);
   void handleMsgReqStatus(InputMsgEntry &entry);
   void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
