@@ -17,6 +17,7 @@ namespace grpc_merger {
 
 static const char* MergerCommunication_method_names[] = {
   "/grpc_merger.MergerCommunication/pushData",
+  "/grpc_merger.MergerCommunication/ConnCheck",
 };
 
 std::unique_ptr< MergerCommunication::Stub> MergerCommunication::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -27,6 +28,7 @@ std::unique_ptr< MergerCommunication::Stub> MergerCommunication::NewStub(const s
 
 MergerCommunication::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_pushData_(MergerCommunication_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_ConnCheck_(MergerCommunication_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status MergerCommunication::Stub::pushData(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc_merger::MergerDataReply* response) {
@@ -41,18 +43,42 @@ MergerCommunication::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_merger::MergerDataReply>::Create(channel_.get(), cq, rpcmethod_pushData_, context, request, false);
 }
 
+::grpc::Status MergerCommunication::Stub::ConnCheck(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc_merger::ConnCheckResponse* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_ConnCheck_, context, request, response);
+}
+
+::grpc::ClientAsyncResponseReader< ::grpc_merger::ConnCheckResponse>* MergerCommunication::Stub::AsyncConnCheckRaw(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_merger::ConnCheckResponse>::Create(channel_.get(), cq, rpcmethod_ConnCheck_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::grpc_merger::ConnCheckResponse>* MergerCommunication::Stub::PrepareAsyncConnCheckRaw(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::grpc_merger::ConnCheckResponse>::Create(channel_.get(), cq, rpcmethod_ConnCheck_, context, request, false);
+}
+
 MergerCommunication::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       MergerCommunication_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< MergerCommunication::Service, ::grpc_merger::MergerDataRequest, ::grpc_merger::MergerDataReply>(
           std::mem_fn(&MergerCommunication::Service::pushData), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      MergerCommunication_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< MergerCommunication::Service, ::grpc_merger::ConnCheckRequest, ::grpc_merger::ConnCheckResponse>(
+          std::mem_fn(&MergerCommunication::Service::ConnCheck), this)));
 }
 
 MergerCommunication::Service::~Service() {
 }
 
 ::grpc::Status MergerCommunication::Service::pushData(::grpc::ServerContext* context, const ::grpc_merger::MergerDataRequest* request, ::grpc_merger::MergerDataReply* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status MergerCommunication::Service::ConnCheck(::grpc::ServerContext* context, const ::grpc_merger::ConnCheckRequest* request, ::grpc_merger::ConnCheckResponse* response) {
   (void) context;
   (void) request;
   (void) response;

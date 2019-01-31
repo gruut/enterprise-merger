@@ -111,6 +111,9 @@ void BlockProcessor::handleMessage(InputMsgEntry &entry) {
   case MessageType::MSG_REQ_STATUS:
     handleMsgReqStatus(entry);
     break;
+  case MessageType::MSG_REQ_HEADER:
+    handleMsgRequestHeader(entry);
+    break;
   default:
     break;
   }
@@ -198,6 +201,49 @@ void BlockProcessor::handleMsgReqBlock(InputMsgEntry &entry) {
                      << ",#tx=" << ret_block.getNumTransactions() << ")";
 
   m_msg_proxy.deliverOutputMessage(msg_block);
+}
+
+void BlockProcessor::handleMsgRequestHeader(InputMsgEntry &entry) {
+  auto sender_id = Safe::getBytesFromB64<id_type>(entry.body, "rID");
+
+  if (m_unresolved_block_pool.empty() && m_storage->empty()) {
+    CLOG(ERROR, "BPRO") << "Storage is empty";
+    sendErrorMessage(ErrorMsgType::NO_SUCH_BLOCK, sender_id);
+    return;
+  }
+
+  block_height_type req_block_height = Safe::getInt(entry.body, "hgt");
+
+  bool found_block = false;
+  Block ret_block;
+  if (m_unresolved_block_pool.getBlock(req_block_height, ret_block)) {
+    found_block = true;
+  }
+
+  if (!found_block) { // no block in unresolved block pool, then try storage
+    storage_block_type saved_block = m_storage->readBlock(req_block_height);
+    if (saved_block.height > 0) {
+      found_block = true;
+      ret_block.initialize(saved_block);
+    }
+  }
+
+  if (!found_block) {
+    CLOG(ERROR, "BPRO") << "No such block (height=" << req_block_height
+                        << ")";
+    sendErrorMessage(ErrorMsgType::NO_SUCH_BLOCK, sender_id);
+    return;
+  }
+
+  OutputMsgEntry msg_header_msg;
+  msg_header_msg.type = MessageType::MSG_REQ_HEADER;
+  msg_header_msg.body["blockraw"] = ret_block.getBlockHeaderJson();
+  msg_header_msg.receivers = std::vector<id_type>{};
+
+  CLOG(INFO, "BPRO") << "Send MSG_HEADER (height=" << ret_block.getHeight()
+                     << ",#tx=" << ret_block.getNumTransactions() << ")";
+
+  m_msg_proxy.deliverOutputMessage(msg_header_msg);
 }
 
 block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {

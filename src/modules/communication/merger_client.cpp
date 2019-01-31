@@ -5,10 +5,6 @@
 
 #include "easy_logging.hpp"
 
-using grpc::health::v1::Health;
-using grpc::health::v1::HealthCheckRequest;
-using grpc::health::v1::HealthCheckResponse;
-
 namespace gruut {
 
 MergerClient::MergerClient() {
@@ -297,17 +293,18 @@ void MergerClient::sendToSigner(MessageType msg_type,
 }
 
 Status MergerClient::sendHealthCheck(MergerInfo &merger_info) {
-  HealthCheckRequest request;
-  request.set_service("healthy_service");
-  HealthCheckResponse response;
+  ConnCheckRequest request;
+  request.set_checker(true);
+  ConnCheckResponse response;
   ClientContext context;
 
   std::shared_ptr<ChannelCredentials> credential = InsecureChannelCredentials();
   std::shared_ptr<Channel> channel =
       CreateChannel(merger_info.address + ":" + merger_info.port, credential);
-  std::unique_ptr<Health::Stub> hc_stub = health::v1::Health::NewStub(channel);
+  std::unique_ptr<MergerCommunication::Stub> hc_stub =
+      MergerCommunication::NewStub(channel);
 
-  Status st = hc_stub->Check(&context, request, &response);
+  Status st = hc_stub->ConnCheck(&context, request, &response);
   return st;
 }
 

@@ -30,6 +30,16 @@ class MergerDataReplyDefaultTypeInternal {
   ::google::protobuf::internal::ExplicitlyConstructed<MergerDataReply>
       _instance;
 } _MergerDataReply_default_instance_;
+class ConnCheckRequestDefaultTypeInternal {
+ public:
+  ::google::protobuf::internal::ExplicitlyConstructed<ConnCheckRequest>
+      _instance;
+} _ConnCheckRequest_default_instance_;
+class ConnCheckResponseDefaultTypeInternal {
+ public:
+  ::google::protobuf::internal::ExplicitlyConstructed<ConnCheckResponse>
+      _instance;
+} _ConnCheckResponse_default_instance_;
 }  // namespace grpc_merger
 namespace protobuf_protobuf_5fmerger_2eproto {
 static void InitDefaultsMergerDataRequest() {
@@ -60,12 +70,42 @@ static void InitDefaultsMergerDataReply() {
 ::google::protobuf::internal::SCCInfo<0> scc_info_MergerDataReply =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsMergerDataReply}, {}};
 
+static void InitDefaultsConnCheckRequest() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::grpc_merger::_ConnCheckRequest_default_instance_;
+    new (ptr) ::grpc_merger::ConnCheckRequest();
+    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::grpc_merger::ConnCheckRequest::InitAsDefaultInstance();
+}
+
+::google::protobuf::internal::SCCInfo<0> scc_info_ConnCheckRequest =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsConnCheckRequest}, {}};
+
+static void InitDefaultsConnCheckResponse() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::grpc_merger::_ConnCheckResponse_default_instance_;
+    new (ptr) ::grpc_merger::ConnCheckResponse();
+    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::grpc_merger::ConnCheckResponse::InitAsDefaultInstance();
+}
+
+::google::protobuf::internal::SCCInfo<0> scc_info_ConnCheckResponse =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsConnCheckResponse}, {}};
+
 void InitDefaults() {
   ::google::protobuf::internal::InitSCC(&scc_info_MergerDataRequest.base);
   ::google::protobuf::internal::InitSCC(&scc_info_MergerDataReply.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_ConnCheckRequest.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_ConnCheckResponse.base);
 }
 
-::google::protobuf::Metadata file_level_metadata[2];
+::google::protobuf::Metadata file_level_metadata[4];
 
 const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
@@ -80,15 +120,30 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::MergerDataReply, checker_),
+  ~0u,  // no _has_bits_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::ConnCheckRequest, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::ConnCheckRequest, checker_),
+  ~0u,  // no _has_bits_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::grpc_merger::ConnCheckResponse, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::grpc_merger::MergerDataRequest)},
   { 6, -1, sizeof(::grpc_merger::MergerDataReply)},
+  { 12, -1, sizeof(::grpc_merger::ConnCheckRequest)},
+  { 18, -1, sizeof(::grpc_merger::ConnCheckResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::google::protobuf::Message*>(&::grpc_merger::_MergerDataRequest_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::grpc_merger::_MergerDataReply_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::grpc_merger::_ConnCheckRequest_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::grpc_merger::_ConnCheckResponse_default_instance_),
 };
 
 void protobuf_AssignDescriptors() {
@@ -106,7 +161,7 @@ void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 2);
+  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 4);
 }
 
 void AddDescriptorsImpl() {
@@ -114,13 +169,16 @@ void AddDescriptorsImpl() {
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
       "\n\025protobuf_merger.proto\022\013grpc_merger\"!\n\021"
       "MergerDataRequest\022\014\n\004data\030\001 \001(\014\"\"\n\017Merge"
-      "rDataReply\022\017\n\007checker\030\001 \001(\0102a\n\023MergerCom"
-      "munication\022J\n\010pushData\022\036.grpc_merger.Mer"
-      "gerDataRequest\032\034.grpc_merger.MergerDataR"
-      "eply\"\000b\006proto3"
+      "rDataReply\022\017\n\007checker\030\001 \001(\010\"#\n\020ConnCheck"
+      "Request\022\017\n\007checker\030\001 \001(\010\"\023\n\021ConnCheckRes"
+      "ponse2\257\001\n\023MergerCommunication\022J\n\010pushDat"
+      "a\022\036.grpc_merger.MergerDataRequest\032\034.grpc"
+      "_merger.MergerDataReply\"\000\022L\n\tConnCheck\022\035"
+      ".grpc_merger.ConnCheckRequest\032\036.grpc_mer"
+      "ger.ConnCheckResponse\"\000b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 214);
+      descriptor, 351);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "protobuf_merger.proto", &protobuf_RegisterTypes);
 }
@@ -589,6 +647,406 @@ void MergerDataReply::InternalSwap(MergerDataReply* other) {
 }
 
 
+// ===================================================================
+
+void ConnCheckRequest::InitAsDefaultInstance() {
+}
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int ConnCheckRequest::kCheckerFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+ConnCheckRequest::ConnCheckRequest()
+  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_protobuf_5fmerger_2eproto::scc_info_ConnCheckRequest.base);
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:grpc_merger.ConnCheckRequest)
+}
+ConnCheckRequest::ConnCheckRequest(const ConnCheckRequest& from)
+  : ::google::protobuf::Message(),
+      _internal_metadata_(NULL) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  checker_ = from.checker_;
+  // @@protoc_insertion_point(copy_constructor:grpc_merger.ConnCheckRequest)
+}
+
+void ConnCheckRequest::SharedCtor() {
+  checker_ = false;
+}
+
+ConnCheckRequest::~ConnCheckRequest() {
+  // @@protoc_insertion_point(destructor:grpc_merger.ConnCheckRequest)
+  SharedDtor();
+}
+
+void ConnCheckRequest::SharedDtor() {
+}
+
+void ConnCheckRequest::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+const ::google::protobuf::Descriptor* ConnCheckRequest::descriptor() {
+  ::protobuf_protobuf_5fmerger_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_protobuf_5fmerger_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
+}
+
+const ConnCheckRequest& ConnCheckRequest::default_instance() {
+  ::google::protobuf::internal::InitSCC(&protobuf_protobuf_5fmerger_2eproto::scc_info_ConnCheckRequest.base);
+  return *internal_default_instance();
+}
+
+
+void ConnCheckRequest::Clear() {
+// @@protoc_insertion_point(message_clear_start:grpc_merger.ConnCheckRequest)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  checker_ = false;
+  _internal_metadata_.Clear();
+}
+
+bool ConnCheckRequest::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:grpc_merger.ConnCheckRequest)
+  for (;;) {
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // bool checker = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &checker_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:grpc_merger.ConnCheckRequest)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:grpc_merger.ConnCheckRequest)
+  return false;
+#undef DO_
+}
+
+void ConnCheckRequest::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:grpc_merger.ConnCheckRequest)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // bool checker = 1;
+  if (this->checker() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->checker(), output);
+  }
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
+  }
+  // @@protoc_insertion_point(serialize_end:grpc_merger.ConnCheckRequest)
+}
+
+::google::protobuf::uint8* ConnCheckRequest::InternalSerializeWithCachedSizesToArray(
+    bool deterministic, ::google::protobuf::uint8* target) const {
+  (void)deterministic; // Unused
+  // @@protoc_insertion_point(serialize_to_array_start:grpc_merger.ConnCheckRequest)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // bool checker = 1;
+  if (this->checker() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->checker(), target);
+  }
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:grpc_merger.ConnCheckRequest)
+  return target;
+}
+
+size_t ConnCheckRequest::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:grpc_merger.ConnCheckRequest)
+  size_t total_size = 0;
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
+  }
+  // bool checker = 1;
+  if (this->checker() != 0) {
+    total_size += 1 + 1;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void ConnCheckRequest::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:grpc_merger.ConnCheckRequest)
+  GOOGLE_DCHECK_NE(&from, this);
+  const ConnCheckRequest* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const ConnCheckRequest>(
+          &from);
+  if (source == NULL) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:grpc_merger.ConnCheckRequest)
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:grpc_merger.ConnCheckRequest)
+    MergeFrom(*source);
+  }
+}
+
+void ConnCheckRequest::MergeFrom(const ConnCheckRequest& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:grpc_merger.ConnCheckRequest)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.checker() != 0) {
+    set_checker(from.checker());
+  }
+}
+
+void ConnCheckRequest::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:grpc_merger.ConnCheckRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void ConnCheckRequest::CopyFrom(const ConnCheckRequest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:grpc_merger.ConnCheckRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ConnCheckRequest::IsInitialized() const {
+  return true;
+}
+
+void ConnCheckRequest::Swap(ConnCheckRequest* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void ConnCheckRequest::InternalSwap(ConnCheckRequest* other) {
+  using std::swap;
+  swap(checker_, other->checker_);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+}
+
+::google::protobuf::Metadata ConnCheckRequest::GetMetadata() const {
+  protobuf_protobuf_5fmerger_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_protobuf_5fmerger_2eproto::file_level_metadata[kIndexInFileMessages];
+}
+
+
+// ===================================================================
+
+void ConnCheckResponse::InitAsDefaultInstance() {
+}
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+ConnCheckResponse::ConnCheckResponse()
+  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_protobuf_5fmerger_2eproto::scc_info_ConnCheckResponse.base);
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:grpc_merger.ConnCheckResponse)
+}
+ConnCheckResponse::ConnCheckResponse(const ConnCheckResponse& from)
+  : ::google::protobuf::Message(),
+      _internal_metadata_(NULL) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:grpc_merger.ConnCheckResponse)
+}
+
+void ConnCheckResponse::SharedCtor() {
+}
+
+ConnCheckResponse::~ConnCheckResponse() {
+  // @@protoc_insertion_point(destructor:grpc_merger.ConnCheckResponse)
+  SharedDtor();
+}
+
+void ConnCheckResponse::SharedDtor() {
+}
+
+void ConnCheckResponse::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+const ::google::protobuf::Descriptor* ConnCheckResponse::descriptor() {
+  ::protobuf_protobuf_5fmerger_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_protobuf_5fmerger_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
+}
+
+const ConnCheckResponse& ConnCheckResponse::default_instance() {
+  ::google::protobuf::internal::InitSCC(&protobuf_protobuf_5fmerger_2eproto::scc_info_ConnCheckResponse.base);
+  return *internal_default_instance();
+}
+
+
+void ConnCheckResponse::Clear() {
+// @@protoc_insertion_point(message_clear_start:grpc_merger.ConnCheckResponse)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _internal_metadata_.Clear();
+}
+
+bool ConnCheckResponse::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:grpc_merger.ConnCheckResponse)
+  for (;;) {
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+  handle_unusual:
+    if (tag == 0) {
+      goto success;
+    }
+    DO_(::google::protobuf::internal::WireFormat::SkipField(
+          input, tag, _internal_metadata_.mutable_unknown_fields()));
+  }
+success:
+  // @@protoc_insertion_point(parse_success:grpc_merger.ConnCheckResponse)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:grpc_merger.ConnCheckResponse)
+  return false;
+#undef DO_
+}
+
+void ConnCheckResponse::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:grpc_merger.ConnCheckResponse)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
+  }
+  // @@protoc_insertion_point(serialize_end:grpc_merger.ConnCheckResponse)
+}
+
+::google::protobuf::uint8* ConnCheckResponse::InternalSerializeWithCachedSizesToArray(
+    bool deterministic, ::google::protobuf::uint8* target) const {
+  (void)deterministic; // Unused
+  // @@protoc_insertion_point(serialize_to_array_start:grpc_merger.ConnCheckResponse)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:grpc_merger.ConnCheckResponse)
+  return target;
+}
+
+size_t ConnCheckResponse::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:grpc_merger.ConnCheckResponse)
+  size_t total_size = 0;
+
+  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void ConnCheckResponse::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:grpc_merger.ConnCheckResponse)
+  GOOGLE_DCHECK_NE(&from, this);
+  const ConnCheckResponse* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const ConnCheckResponse>(
+          &from);
+  if (source == NULL) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:grpc_merger.ConnCheckResponse)
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:grpc_merger.ConnCheckResponse)
+    MergeFrom(*source);
+  }
+}
+
+void ConnCheckResponse::MergeFrom(const ConnCheckResponse& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:grpc_merger.ConnCheckResponse)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+}
+
+void ConnCheckResponse::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:grpc_merger.ConnCheckResponse)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void ConnCheckResponse::CopyFrom(const ConnCheckResponse& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:grpc_merger.ConnCheckResponse)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ConnCheckResponse::IsInitialized() const {
+  return true;
+}
+
+void ConnCheckResponse::Swap(ConnCheckResponse* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void ConnCheckResponse::InternalSwap(ConnCheckResponse* other) {
+  using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+}
+
+::google::protobuf::Metadata ConnCheckResponse::GetMetadata() const {
+  protobuf_protobuf_5fmerger_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_protobuf_5fmerger_2eproto::file_level_metadata[kIndexInFileMessages];
+}
+
+
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace grpc_merger
 namespace google {
@@ -598,6 +1056,12 @@ template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::grpc_merger::MergerDataRequest* 
 }
 template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::grpc_merger::MergerDataReply* Arena::CreateMaybeMessage< ::grpc_merger::MergerDataReply >(Arena* arena) {
   return Arena::CreateInternal< ::grpc_merger::MergerDataReply >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::grpc_merger::ConnCheckRequest* Arena::CreateMaybeMessage< ::grpc_merger::ConnCheckRequest >(Arena* arena) {
+  return Arena::CreateInternal< ::grpc_merger::ConnCheckRequest >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::grpc_merger::ConnCheckResponse* Arena::CreateMaybeMessage< ::grpc_merger::ConnCheckResponse >(Arena* arena) {
+  return Arena::CreateInternal< ::grpc_merger::ConnCheckResponse >(arena);
 }
 }  // namespace protobuf
 }  // namespace google

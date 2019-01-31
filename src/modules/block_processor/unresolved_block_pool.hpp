@@ -78,6 +78,7 @@ public:
   unblk_push_result_type push(Block &block, bool is_restore = false);
   bool getBlock(block_height_type t_height, const hash_t &t_prev_hash,
                 const hash_t &t_hash, Block &ret_block);
+  bool getBlock(block_height_type t_height, Block &ret_block);
   void getResolvedBlocks(std::vector<UnresolvedBlock> &resolved_blocks,
                          std::vector<std::string> &drop_blocks);
   nth_link_type getUnresolvedLowestLink();

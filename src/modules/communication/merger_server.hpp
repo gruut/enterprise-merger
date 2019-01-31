@@ -10,7 +10,6 @@
 #include <atomic>
 #include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
-#include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
 
@@ -57,6 +56,25 @@ protected:
   ServerCompletionQueue *m_completion_queue;
   ServerContext m_context;
   RpcCallStatus m_receive_status;
+};
+
+class CheckConn final : public CallData {
+public:
+  CheckConn(MergerCommunication::AsyncService *service,
+            ServerCompletionQueue *cq)
+      : m_responder(&m_context) {
+    m_service = service;
+    m_completion_queue = cq;
+    m_receive_status = RpcCallStatus::CREATE;
+    proceed();
+  }
+
+  void proceed(bool st = true);
+
+private:
+  MergerCommunication::AsyncService *m_service;
+  ConnCheckRequest m_request;
+  ServerAsyncResponseWriter<ConnCheckResponse> m_responder;
 };
 
 class RecvFromMerger final : public CallData {
