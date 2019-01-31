@@ -87,7 +87,7 @@ const std::vector<std::tuple<MessageType, std::string, EntryType, EntryLength>> 
 
     {MessageType::MSG_REQ_HEADER, "rID", EntryType::BASE64, EntryLength::ID},
     {MessageType::MSG_REQ_HEADER, "time", EntryType::TIMESTAMP, EntryLength::NOT_LIMITED},
-    {MessageType::MSG_REQ_HEADER, "rCert", EntryType::STRING, EntryLength::ID},
+    {MessageType::MSG_REQ_HEADER, "rCert", EntryType::STRING, EntryLength::NOT_LIMITED},
     {MessageType::MSG_REQ_HEADER, "hgt", EntryType::UINT, EntryLength::NOT_LIMITED},
     {MessageType::MSG_REQ_HEADER, "rSig", EntryType::BASE64, EntryLength::NOT_LIMITED},
 
@@ -136,7 +136,7 @@ private:
     case EntryType::BASE64: {
       std::string temp = Safe::getString(msg_body, key);
       std::regex rgx(
-          "([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)");
+          "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$");
 
       if (!temp.empty() && std::regex_match(temp, rgx))
         return true;
