@@ -14,7 +14,7 @@ void MessageProxy::deliverInputMessage(InputMsgEntry &input_message) {
   if (input_message.type != MessageType::MSG_TX)
     CLOG(INFO, "MPRX") << "MSG IN: 0x" << std::hex << (int)input_message.type;
 
-  if (m_validator.validate(input_message)) {
+  if (!m_validator.validate(input_message)) {
     CLOG(ERROR, "MPRX") << "Incomming message is not valid";
     return;
   }
