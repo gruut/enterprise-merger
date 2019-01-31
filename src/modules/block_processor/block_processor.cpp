@@ -207,8 +207,7 @@ void BlockProcessor::handleMsgRequestHeader(InputMsgEntry &entry) {
   auto sender_id = Safe::getBytesFromB64<id_type>(entry.body, "rID");
 
   if (m_unresolved_block_pool.empty() && m_storage->empty()) {
-    CLOG(ERROR, "BPRO") << "Storage is empty (height=" << req_block_height
-                        << ")";
+    CLOG(ERROR, "BPRO") << "Storage is empty";
     sendErrorMessage(ErrorMsgType::NO_SUCH_BLOCK, sender_id);
     return;
   }
