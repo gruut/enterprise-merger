@@ -41,9 +41,18 @@ class MergerCommunication final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::MergerDataReply>> PrepareAsyncpushData(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::MergerDataReply>>(PrepareAsyncpushDataRaw(context, request, cq));
     }
+    virtual ::grpc::Status ConnCheck(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc_merger::ConnCheckResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::ConnCheckResponse>> AsyncConnCheck(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::ConnCheckResponse>>(AsyncConnCheckRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::ConnCheckResponse>> PrepareAsyncConnCheck(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::ConnCheckResponse>>(PrepareAsyncConnCheckRaw(context, request, cq));
+    }
   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::MergerDataReply>* AsyncpushDataRaw(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::MergerDataReply>* PrepareAsyncpushDataRaw(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::ConnCheckResponse>* AsyncConnCheckRaw(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::grpc_merger::ConnCheckResponse>* PrepareAsyncConnCheckRaw(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -55,12 +64,22 @@ class MergerCommunication final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_merger::MergerDataReply>> PrepareAsyncpushData(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_merger::MergerDataReply>>(PrepareAsyncpushDataRaw(context, request, cq));
     }
+    ::grpc::Status ConnCheck(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc_merger::ConnCheckResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_merger::ConnCheckResponse>> AsyncConnCheck(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_merger::ConnCheckResponse>>(AsyncConnCheckRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_merger::ConnCheckResponse>> PrepareAsyncConnCheck(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::grpc_merger::ConnCheckResponse>>(PrepareAsyncConnCheckRaw(context, request, cq));
+    }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
     ::grpc::ClientAsyncResponseReader< ::grpc_merger::MergerDataReply>* AsyncpushDataRaw(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::grpc_merger::MergerDataReply>* PrepareAsyncpushDataRaw(::grpc::ClientContext* context, const ::grpc_merger::MergerDataRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_merger::ConnCheckResponse>* AsyncConnCheckRaw(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::grpc_merger::ConnCheckResponse>* PrepareAsyncConnCheckRaw(::grpc::ClientContext* context, const ::grpc_merger::ConnCheckRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_pushData_;
+    const ::grpc::internal::RpcMethod rpcmethod_ConnCheck_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -69,6 +88,7 @@ class MergerCommunication final {
     Service();
     virtual ~Service();
     virtual ::grpc::Status pushData(::grpc::ServerContext* context, const ::grpc_merger::MergerDataRequest* request, ::grpc_merger::MergerDataReply* response);
+    virtual ::grpc::Status ConnCheck(::grpc::ServerContext* context, const ::grpc_merger::ConnCheckRequest* request, ::grpc_merger::ConnCheckResponse* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_pushData : public BaseClass {
@@ -90,7 +110,27 @@ class MergerCommunication final {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_pushData<Service > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_ConnCheck : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_ConnCheck() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_ConnCheck() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status ConnCheck(::grpc::ServerContext* context, const ::grpc_merger::ConnCheckRequest* request, ::grpc_merger::ConnCheckResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestConnCheck(::grpc::ServerContext* context, ::grpc_merger::ConnCheckRequest* request, ::grpc::ServerAsyncResponseWriter< ::grpc_merger::ConnCheckResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_pushData<WithAsyncMethod_ConnCheck<Service > > AsyncService;
   template <class BaseClass>
   class WithGenericMethod_pushData : public BaseClass {
    private:
@@ -104,6 +144,23 @@ class MergerCommunication final {
     }
     // disable synchronous version of this method
     ::grpc::Status pushData(::grpc::ServerContext* context, const ::grpc_merger::MergerDataRequest* request, ::grpc_merger::MergerDataReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_ConnCheck : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_ConnCheck() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
+    ~WithGenericMethod_ConnCheck() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status ConnCheck(::grpc::ServerContext* context, const ::grpc_merger::ConnCheckRequest* request, ::grpc_merger::ConnCheckResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -129,6 +186,26 @@ class MergerCommunication final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_ConnCheck : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_ConnCheck() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_ConnCheck() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status ConnCheck(::grpc::ServerContext* context, const ::grpc_merger::ConnCheckRequest* request, ::grpc_merger::ConnCheckResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestConnCheck(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_pushData : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
@@ -148,9 +225,29 @@ class MergerCommunication final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedpushData(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::grpc_merger::MergerDataRequest,::grpc_merger::MergerDataReply>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_pushData<Service > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_ConnCheck : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_ConnCheck() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler< ::grpc_merger::ConnCheckRequest, ::grpc_merger::ConnCheckResponse>(std::bind(&WithStreamedUnaryMethod_ConnCheck<BaseClass>::StreamedConnCheck, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_ConnCheck() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status ConnCheck(::grpc::ServerContext* context, const ::grpc_merger::ConnCheckRequest* request, ::grpc_merger::ConnCheckResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedConnCheck(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::grpc_merger::ConnCheckRequest,::grpc_merger::ConnCheckResponse>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_pushData<WithStreamedUnaryMethod_ConnCheck<Service > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_pushData<Service > StreamedService;
+  typedef WithStreamedUnaryMethod_pushData<WithStreamedUnaryMethod_ConnCheck<Service > > StreamedService;
 };
 
 }  // namespace grpc_merger

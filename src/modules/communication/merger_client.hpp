@@ -3,7 +3,6 @@
 
 #include "../../services/output_queue.hpp"
 #include "../../utils/periodic_task.hpp"
-#include "connection_list.hpp"
 #include "manage_connection.hpp"
 #include "protos/health.grpc.pb.h"
 #include "protos/protobuf_merger.grpc.pb.h"
@@ -12,7 +11,6 @@
 #include "rpc_receiver_list.hpp"
 #include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
-#include <grpcpp/health_check_service_interface.h>
 #include <iostream>
 #include <memory>
 #include <string>

@@ -14,7 +14,6 @@ void MergerServer::runServer(const std::string &port_num) {
   m_port_num = port_num;
   ServerBuilder builder;
 
-  EnableDefaultHealthCheckService(true);
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&m_merger_service);
   builder.RegisterService(&m_se_service);
@@ -22,18 +21,11 @@ void MergerServer::runServer(const std::string &port_num) {
   m_completion_queue = builder.AddCompletionQueue();
   m_server = builder.BuildAndStart();
 
-  HealthCheckServiceInterface *hc_service = m_server->GetHealthCheckService();
-  if (hc_service == nullptr) {
-    ConnManager::getInstance()->disableMergerCheck();
-    CLOG(ERROR, "MSVR") << "gRPC heatlth check is disabled. Connection "
-                           "managing between mergers will be disabled.";
-  } else {
-    hc_service->SetServingStatus("healthy_service", true);
-  }
-
   m_is_started = true;
 
   CLOG(INFO, "MSVR") << "Server listening on " << server_address;
+
+  new CheckConn(&m_merger_service, m_completion_queue.get());
 
   new RecvFromMerger(&m_merger_service, m_completion_queue.get());
   new RecvFromSE(&m_se_service, m_completion_queue.get());
@@ -69,6 +61,34 @@ void MergerServer::recvMessage() {
     m_server.reset();
     CLOG(INFO, "MSVR") << "RPC Server restart";
     runServer(m_port_num);
+  }
+}
+
+void CheckConn::proceed(bool st) {
+  if (!st) {
+    delete this;
+    return;
+  }
+  switch (m_receive_status) {
+  case RpcCallStatus::CREATE: {
+    m_receive_status = RpcCallStatus::PROCESS;
+    m_service->RequestConnCheck(&m_context, &m_request, &m_responder,
+                                m_completion_queue, m_completion_queue, this);
+  } break;
+
+  case RpcCallStatus::PROCESS: {
+    new CheckConn(m_service, m_completion_queue);
+    ConnCheckResponse m_reply;
+    m_receive_status = RpcCallStatus::FINISH;
+    m_responder.Finish(m_reply, Status::OK, this);
+  } break;
+
+  default: {
+    if (m_receive_status != RpcCallStatus::FINISH) {
+      CLOG(ERROR, "MSVR") << "RecvFromMerger() rpc status : Unknown";
+    }
+    delete this;
+  } break;
   }
 }
 
