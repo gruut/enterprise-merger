@@ -31,7 +31,7 @@ const std::map<BpStatus, std::string> STATUS_STRING = {
     {BpStatus::UNKNOWN, "UNKNOWN"},
 };
 
-using BpRecvStatusInfo = std::tuple<std::string, size_t, BpStatus>;
+using BpRecvStatusInfo = std::tuple<merger_id_type, size_t, BpStatus>;
 
 class BpScheduler : public Module {
 public:
@@ -44,7 +44,7 @@ private:
   void sendPingMessage();
   void lockStatus();
 
-  void updateRecvStatus(const std::string &id_b64, size_t timeslot,
+  void updateRecvStatus(const merger_id_type &merger_id, size_t timeslot,
                         BpStatus stat);
   void reschedule();
 
@@ -63,6 +63,7 @@ private:
   std::atomic<bool> m_welcome{true};
 
   std::vector<BpRecvStatusInfo> m_recv_status;
+  std::vector<merger_id_type> m_block_producers;
 
   std::mutex m_recv_status_mutex;
 

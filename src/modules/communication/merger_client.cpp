@@ -351,6 +351,7 @@ bool MergerClient::checkMergerMsgType(MessageType msg_type) {
   return (
       msg_type == MessageType::MSG_UP ||
       msg_type == MessageType::MSG_PING ||
+      msg_type == MessageType::MSG_TX ||
       msg_type == MessageType::MSG_REQ_BLOCK ||
       msg_type == MessageType::MSG_WELCOME ||
       msg_type == MessageType::MSG_REQ_STATUS ||

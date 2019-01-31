@@ -43,7 +43,7 @@ struct JoinTemporaryData {
 class SignerPoolManager {
 public:
   SignerPoolManager();
-  void handleMessage(MessageType &message_type, json &message_body_json);
+  void handleMessage(InputMsgEntry &input_message);
 
 private:
   bool verifySignature(signer_id_type &signer_id, json &message_body_json);

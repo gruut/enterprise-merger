@@ -12,20 +12,20 @@ SignaturePool::SignaturePool() {
   el::Loggers::getLogger("SPOL");
 }
 
-void SignaturePool::handleMessage(json &msg_body_json) {
+void SignaturePool::handleMessage(InputMsgEntry &input_message) {
   if (!m_enabled) {
     CLOG(ERROR, "SPOL") << "Support Signature dropped (disabled pool)";
     return;
   }
 
-  signer_id_type signer_id = Safe::getBytesFromB64(msg_body_json, "sID");
+  signer_id_type signer_id = Safe::getBytesFromB64(input_message.body, "sID");
 
-  if (verifySignature(signer_id, msg_body_json)) {
+  if (verifySignature(signer_id, input_message.body)) {
     Signature ssig;
 
     ssig.signer_id = signer_id;
     ssig.height = m_height;
-    ssig.signer_signature = Safe::getBytesFromB64(msg_body_json, "sig");
+    ssig.signer_signature = Safe::getBytesFromB64(input_message.body, "sig");
 
     push(ssig);
 

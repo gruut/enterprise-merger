@@ -20,13 +20,18 @@ TransactionCollector::TransactionCollector() {
   m_update_status_scheduler.setStrandMod();
 }
 
-void TransactionCollector::handleMessage(json &msg_body_json) {
+void TransactionCollector::handleMessage(InputMsgEntry &input_message) {
   if (!isRunnable()) {
     // CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
+
+    if(!m_current_block_producers.empty()){
+      forwardMessage(m_current_block_producers[0],input_message);
+    }
+
     return;
   }
 
-  std::string txid_b64 = Safe::getString(msg_body_json, "txid");
+  std::string txid_b64 = Safe::getString(input_message.body, "txid");
   auto new_txid =
       TypeConverter::base64ToArray<TRANSACTION_ID_TYPE_SIZE>(txid_b64);
 
@@ -43,9 +48,9 @@ void TransactionCollector::handleMessage(json &msg_body_json) {
   }
 
   Transaction new_tx;
-  new_tx.setJson(msg_body_json);
+  new_tx.setJson(input_message.body);
 
-  id_type requester_id = Safe::getBytesFromB64(msg_body_json, "rID");
+  id_type requester_id = Safe::getBytesFromB64(input_message.body, "rID");
 
   std::string pk_cert = m_cert_pool->getCert(requester_id);
 
@@ -66,7 +71,7 @@ bool TransactionCollector::isRunnable() {
           m_current_tx_status == BpStatus::SECONDARY);
 }
 
-void TransactionCollector::setTxCollectStatus(BpStatus stat) {
+void TransactionCollector::setTxCollectStatus(BpStatus stat, std::vector<merger_id_type> &block_producers) {
   m_next_tx_status = stat;
   turnOnTimer();
 
@@ -92,6 +97,8 @@ void TransactionCollector::setTxCollectStatus(BpStatus stat) {
       m_bpjob_sequence[2] = BpJobStatus::DO;
     }
   }
+
+  m_next_block_producers = block_producers;
 }
 
 void TransactionCollector::turnOnTimer() {
@@ -107,6 +114,7 @@ void TransactionCollector::turnOnTimer() {
 
 void TransactionCollector::checkBpJob() {
   m_current_tx_status = m_next_tx_status;
+  m_current_block_producers = m_next_block_producers;
 
   BpJobStatus this_job = m_bpjob_sequence.front();
   m_bpjob_sequence.pop_front();
@@ -115,6 +123,16 @@ void TransactionCollector::checkBpJob() {
       Application::app().getTransactionPool().size() > 0) {
     m_signature_requester.requestSignatures();
   }
+}
+
+void TransactionCollector::forwardMessage(merger_id_type &block_producer, InputMsgEntry &input_message){
+
+  OutputMsgEntry output_msg;
+  output_msg.type = input_message.type;
+  output_msg.body = input_message.body;
+  output_msg.receivers = {block_producer};
+
+  m_msg_proxy.deliverOutputMessage(output_msg);
 }
 
 } // namespace gruut
