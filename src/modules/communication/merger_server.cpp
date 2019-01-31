@@ -115,8 +115,6 @@ void RecvFromMerger::proceed(bool st) {
       MessageHandler message_handler;
       message_handler.unpackMsg(packed_msg, rpc_status, recv_id);
 
-      ConnectionList::getInstance()->setMergerStatus(recv_id, true);
-
       MergerDataReply m_reply;
       m_receive_status = RpcCallStatus::FINISH;
       m_responder.Finish(m_reply, rpc_status, this);
