@@ -10,13 +10,12 @@ SignerPoolManager::SignerPoolManager() {
   m_signer_pool = SignerPool::getInstance();
   el::Loggers::getLogger("SMGR");
 }
-void SignerPoolManager::handleMessage(MessageType &message_type,
-                                      json &message_body_json) {
+void SignerPoolManager::handleMessage(InputMsgEntry &input_message) {
 
-  string recv_id_b64 = Safe::getString(message_body_json, "sID");
-  signer_id_type recv_id = Safe::getBytesFromB64(message_body_json, "sID");
+  string recv_id_b64 = Safe::getString(input_message.body, "sID");
+  signer_id_type recv_id = Safe::getBytesFromB64(input_message.body, "sID");
 
-  switch (message_type) {
+  switch (input_message.type) {
   case MessageType::MSG_JOIN: {
     if (!isJoinable()) {
       CLOG(ERROR, "SMGR") << "Merger is full";
@@ -57,14 +56,14 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
       return;
     }
 
-    if (!verifySignature(recv_id, message_body_json)) {
+    if (!verifySignature(recv_id, input_message.body)) {
       CLOG(ERROR, "SMGR") << "Invalid Signature";
       sendErrorMessage(recv_id, ErrorMsgType::ECDH_INVALID_SIG);
       return;
     }
 
     m_join_temp_table[recv_id_b64]->signer_cert =
-        Safe::getString(message_body_json, "cert");
+        Safe::getString(input_message.body, "cert");
 
     json message_body;
 
@@ -75,8 +74,8 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     string dhx = public_key.first;
     string dhy = public_key.second;
 
-    auto signer_dhx = Safe::getString(message_body_json, "dhx");
-    auto signer_dhy = Safe::getString(message_body_json, "dhy");
+    auto signer_dhx = Safe::getString(input_message.body, "dhx");
+    auto signer_dhy = Safe::getString(input_message.body, "dhy");
 
     auto shared_sk_bytes =
         key_maker.getSharedSecretKey(signer_dhx, signer_dhy, 32);
@@ -101,7 +100,7 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
     output_message.body["dhy"] = dhy;
     output_message.body["sig"] = signMessage(
         m_join_temp_table[recv_id_b64]->merger_nonce,
-        Safe::getString(message_body_json, "sN"), dhx, dhy, current_time);
+        Safe::getString(input_message.body, "sN"), dhx, dhy, current_time);
     output_message.receivers = {recv_id};
 
     m_proxy.deliverOutputMessage(output_message);
@@ -145,8 +144,8 @@ void SignerPoolManager::handleMessage(MessageType &message_type,
         m_join_temp_table.erase(recv_id_b64);
     }
     if (m_signer_pool->removeSigner(recv_id)) {
-      std::string leave_time = Safe::getString(message_body_json, "time");
-      std::string leave_msg = Safe::getString(message_body_json, "msg");
+      std::string leave_time = Safe::getString(input_message.body, "time");
+      std::string leave_msg = Safe::getString(input_message.body, "msg");
       CLOG(INFO, "SMGR") << "Signer left (" << recv_id_b64 << ")";
     }
 

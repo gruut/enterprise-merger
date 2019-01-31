@@ -32,13 +32,17 @@ enum class BpJobStatus { DO, DONT, UNKNOWN };
 class TransactionCollector {
 public:
   TransactionCollector();
-  void handleMessage(json &msg_body_json);
-  void setTxCollectStatus(BpStatus status);
+  void handleMessage(InputMsgEntry &input_message);
+  void setTxCollectStatus(BpStatus status, std::vector<merger_id_type> &block_producers);
 
 private:
   bool isRunnable();
   void turnOnTimer();
   void checkBpJob();
+
+  void forwardMessage(merger_id_type &block_producer, InputMsgEntry &input_message);
+
+  std::vector<merger_id_type> m_block_producers;
 
   BpStatus m_current_tx_status{BpStatus::IN_BOOT_WAIT};
   BpStatus m_next_tx_status{BpStatus::UNKNOWN};
@@ -46,12 +50,17 @@ private:
   SignatureRequester m_signature_requester;
   std::deque<BpJobStatus> m_bpjob_sequence;
 
+  std::vector<merger_id_type> m_current_block_producers;
+  std::vector<merger_id_type> m_next_block_producers;
+
   Storage *m_storage;
   CertificatePool *m_cert_pool;
 
   std::map<id_type, std::string> m_cert_map;
 
   std::once_flag m_timer_once_flag;
+
+  MessageProxy m_msg_proxy;
 };
 } // namespace gruut
 #endif
