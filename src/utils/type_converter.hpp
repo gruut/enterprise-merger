@@ -163,4 +163,6 @@ public:
   }
 };
 
+using TCONV = TypeConverter;
+
 #endif // GRUUT_ENTERPRISE_MERGER_TYPE_CONVERTER_HPP

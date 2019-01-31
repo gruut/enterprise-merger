@@ -24,8 +24,8 @@ void TransactionCollector::handleMessage(InputMsgEntry &input_message) {
   if (!isRunnable()) {
     // CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
 
-    if(!m_current_block_producers.empty()){
-      forwardMessage(m_current_block_producers[0],input_message);
+    if (!m_current_block_producers.empty()) {
+      forwardMessage(m_current_block_producers[0], input_message);
     }
 
     return;
@@ -71,7 +71,8 @@ bool TransactionCollector::isRunnable() {
           m_current_tx_status == BpStatus::SECONDARY);
 }
 
-void TransactionCollector::setTxCollectStatus(BpStatus stat, std::vector<merger_id_type> &block_producers) {
+void TransactionCollector::setTxCollectStatus(
+    BpStatus stat, std::vector<merger_id_type> &block_producers) {
   m_next_tx_status = stat;
   turnOnTimer();
 
@@ -125,7 +126,8 @@ void TransactionCollector::checkBpJob() {
   }
 }
 
-void TransactionCollector::forwardMessage(merger_id_type &block_producer, InputMsgEntry &input_message){
+void TransactionCollector::forwardMessage(merger_id_type &block_producer,
+                                          InputMsgEntry &input_message) {
 
   OutputMsgEntry output_msg;
   output_msg.type = input_message.type;

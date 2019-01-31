@@ -63,6 +63,7 @@ unblk_push_result_type UnresolvedBlockPool::push(Block &block,
   unblk_push_result_type ret_val;
   ret_val.height = 0;
   ret_val.linked = false;
+  ret_val.duplicated = false;
   ret_val.block_layer = {};
 
   std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
@@ -75,6 +76,8 @@ unblk_push_result_type UnresolvedBlockPool::push(Block &block,
 
   for (auto &each_block : m_block_pool[bin_idx]) {
     if (each_block.block == block) {
+      ret_val.height = block_height;
+      ret_val.duplicated = true;
       return ret_val;
     }
   }
@@ -233,7 +236,8 @@ bool UnresolvedBlockPool::getBlock(block_height_type t_height,
   return is_some;
 }
 
-bool UnresolvedBlockPool::getBlock(block_height_type t_height, Block &ret_block) {
+bool UnresolvedBlockPool::getBlock(block_height_type t_height,
+                                   Block &ret_block) {
   std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
 
   if (m_block_pool.empty()) {
@@ -255,15 +259,16 @@ bool UnresolvedBlockPool::getBlock(block_height_type t_height, Block &ret_block)
   if (bin_pos < 0) // something wrong
     return false;
 
-  auto it = std::find_if(m_block_pool[bin_pos].begin(), m_block_pool[bin_pos].end(), [&t_height](UnresolvedBlock &unresolvedBlock) {
-    return unresolvedBlock.block.getHeight() == t_height;
-  });
+  auto it =
+      std::find_if(m_block_pool[bin_pos].begin(), m_block_pool[bin_pos].end(),
+                   [&t_height](UnresolvedBlock &unresolvedBlock) {
+                     return unresolvedBlock.block.getHeight() == t_height;
+                   });
 
-  if(it != m_block_pool[bin_pos].end()) {
+  if (it != m_block_pool[bin_pos].end()) {
     ret_block = (*it).block;
     return true;
-  }
-  else {
+  } else {
     return false;
   }
 }
@@ -575,6 +580,7 @@ void UnresolvedBlockPool::restorePool() {
         CLOG(ERROR, "URBK")
             << "Failed to restore block [" << block_id_b64 << "]";
       } else {
+        CLOG(INFO, "URBK") << push_result.height << "-th block was restored.";
         ++num_pused_block;
       }
     }

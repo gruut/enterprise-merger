@@ -33,14 +33,16 @@ class TransactionCollector {
 public:
   TransactionCollector();
   void handleMessage(InputMsgEntry &input_message);
-  void setTxCollectStatus(BpStatus status, std::vector<merger_id_type> &block_producers);
+  void setTxCollectStatus(BpStatus status,
+                          std::vector<merger_id_type> &block_producers);
 
 private:
   bool isRunnable();
   void turnOnTimer();
   void checkBpJob();
 
-  void forwardMessage(merger_id_type &block_producer, InputMsgEntry &input_message);
+  void forwardMessage(merger_id_type &block_producer,
+                      InputMsgEntry &input_message);
 
   std::vector<merger_id_type> m_block_producers;
 

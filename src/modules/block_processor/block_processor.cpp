@@ -229,8 +229,7 @@ void BlockProcessor::handleMsgRequestHeader(InputMsgEntry &entry) {
   }
 
   if (!found_block) {
-    CLOG(ERROR, "BPRO") << "No such block (height=" << req_block_height
-                        << ")";
+    CLOG(ERROR, "BPRO") << "No such block (height=" << req_block_height << ")";
     sendErrorMessage(ErrorMsgType::NO_SUCH_BLOCK, sender_id);
     return;
   }
@@ -246,24 +245,35 @@ void BlockProcessor::handleMsgRequestHeader(InputMsgEntry &entry) {
   m_msg_proxy.deliverOutputMessage(msg_header_msg);
 }
 
-block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
+unblk_push_result_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
+
+  unblk_push_result_type ret_result;
+  ret_result.height = 0;
+  ret_result.linked = false;
+  ret_result.duplicated = false;
+  ret_result.block_layer = {};
 
   Block recv_block;
   if (!recv_block.initialize(entry.body)) {
     CLOG(ERROR, "BPRO") << "Block dropped (missing information)";
-    return 0;
+    return ret_result;
   }
 
   if (!recv_block.isValidEarly(m_get_cert_func)) {
     CLOG(ERROR, "BPRO") << "Block dropped (invalid - early stage validation)";
-    return 0;
+    return ret_result;
   }
 
-  auto block_push_result = m_unresolved_block_pool.push(recv_block);
+  ret_result = m_unresolved_block_pool.push(recv_block);
 
-  if (block_push_result.height == 0) {
-    CLOG(ERROR, "BPRO") << "Block dropped (unlinkable or duplicated)";
-    return 0;
+  if (ret_result.height == 0) {
+    CLOG(ERROR, "BPRO") << "Block dropped (unlinkable)";
+    return ret_result;
+  }
+
+  if (ret_result.duplicated) {
+    CLOG(ERROR, "BPRO") << "Block dropped (duplicated)";
+    return ret_result;
   }
 
   std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
@@ -282,7 +292,7 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   m_request_mutex.unlock();
 
-  if (block_push_result.linked) {
+  if (ret_result.linked) {
     auto possible_link = getMostPossibleLink();
 
     OutputMsgEntry msg_chain_info;
@@ -309,7 +319,7 @@ block_height_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   resolveBlocksIf();
 
-  return block_push_result.height;
+  return ret_result;
 }
 
 void BlockProcessor::resolveBlocksIf() {
@@ -363,7 +373,18 @@ void BlockProcessor::resolveBlocksIf() {
     new_request.request_time = 0;
 
     std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
-    m_request_list.emplace_back(new_request);
+    bool is_unique_request = true;
+    for (auto &block_request : m_request_list) {
+      if (block_request.height == new_request.height &&
+          block_request.prev_hash_b64 == new_request.prev_hash_b64) {
+        is_unique_request = false;
+        break;
+      }
+    }
+
+    if (is_unique_request)
+      m_request_list.emplace_back(new_request);
+
     m_request_mutex.unlock();
   }
 }

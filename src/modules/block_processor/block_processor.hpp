@@ -58,7 +58,7 @@ public:
   void start() override;
 
   void handleMessage(InputMsgEntry &entry);
-  block_height_type handleMsgBlock(InputMsgEntry &entry);
+  unblk_push_result_type handleMsgBlock(InputMsgEntry &entry);
 
   block_layer_t getBlockLayer(const std::string &block_id_b64);
   nth_link_type getMostPossibleLink();

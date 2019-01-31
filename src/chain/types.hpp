@@ -182,8 +182,9 @@ using nth_link_type = struct _nth_link_type {
 };
 
 using unblk_push_result_type = struct _unblk_push_result_type {
-  block_height_type height;
   bool linked;
+  bool duplicated;
+  block_height_type height;
   block_layer_t block_layer;
 };
 
