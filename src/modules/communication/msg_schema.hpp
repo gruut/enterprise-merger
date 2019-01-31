@@ -116,6 +116,58 @@ const json SCHEMA_WELCOME = R"({
     },
     "val": {
       "type": "boolean"
+    },
+    "merger": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "mID": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "port": {
+            "type": "string"
+          },
+          "mCert": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mID",
+          "ip",
+          "port",
+          "mCert"
+        ]
+      }
+    },
+    "se": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "seID": {
+            "type": "string"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "port": {
+            "type": "string"
+          },
+          "seCert": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "seID",
+          "ip",
+          "port",
+          "seCert"
+        ]
+      }
     }
   },
   "required": [
