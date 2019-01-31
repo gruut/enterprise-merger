@@ -44,17 +44,19 @@ CURLcode HttpClient::postAndGetReply(const string &msg, json &response_json) {
     m_curl.setOpt(CURLOPT_POSTFIELDS, post_field.data());
     m_curl.setOpt(CURLOPT_POSTFIELDSIZE, post_field.size());
 
-    string http_data;
-
+    string http_response;
     m_curl.setOpt(CURLOPT_WRITEFUNCTION, writeCallback);
-    m_curl.setOpt(CURLOPT_WRITEDATA, &http_data);
+    m_curl.setOpt(CURLOPT_WRITEDATA, &http_response);
     m_curl.perform();
 
-    response_json = json::parse(http_data);
+    response_json = json::parse(http_response);
 
   } catch (curlpp::EasyException &err) {
     CLOG(ERROR, "HTTP") << err.what();
     return err.getErrorId();
+  } catch (json::parse_error &err) {
+    CLOG(ERROR, "HTTP") << err.what();
+    return CURLE_HTTP_POST_ERROR;
   }
 
   return CURLE_OK;
