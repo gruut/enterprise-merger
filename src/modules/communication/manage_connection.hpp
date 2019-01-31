@@ -66,8 +66,89 @@ public:
     m_se_mutex.unlock();
   }
 
+  void setMultiMergerInfo(json &merger_list) {
+
+    auto cert_pool = CertificatePool::getInstance();
+    auto setting = Setting::getInstance();
+    std::string my_id_b64 = TypeConverter::encodeBase64(setting->getMyId());
+    for (auto &merger : merger_list) {
+
+      std::string merger_id_b64 = Safe::getString(merger, "mID");
+      merger_id_type merger_id = TypeConverter::decodeBase64(merger_id_b64);
+
+      if (hasMergerInfo(merger_id) || merger_id_b64 == my_id_b64)
+        continue;
+
+      MergerInfo merger_info;
+      merger_info.id = merger_id;
+      merger_info.address = Safe::getString(merger, "ip");
+      merger_info.port = Safe::getString(merger, "port");
+      merger_info.cert = Safe::getString(merger, "mCert");
+
+      cert_pool->pushCert(merger_id, merger_info.cert);
+      setMergerInfo(merger_info, true);
+
+      if (merger.find("merger") != merger.end()) {
+        auto block_height = Safe::getInt(merger, "hgt");
+        setMergerBlockHgt(merger_id, block_height);
+      }
+    }
+  }
+
+  void setMultiSeInfo(json &se_list) {
+
+    auto cert_pool = CertificatePool::getInstance();
+
+    for (auto &se : se_list) {
+      ServiceEndpointInfo se_info;
+      string se_id_b64 = Safe::getString(se, "seID");
+      servend_id_type se_id = TypeConverter::decodeBase64(se_id_b64);
+
+      if (hasSeInfo(se_id))
+        continue;
+
+      se_info.id = se_id;
+      se_info.address = Safe::getString(se, "ip");
+      se_info.port = Safe::getString(se, "port");
+      se_info.cert = Safe::getString(se, "seCert");
+
+      cert_pool->pushCert(se_id, se_info.cert);
+      setSeInfo(se_info, true);
+    }
+  }
+
   void setMergerBlockHgt(merger_id_type &merger_id, uint64_t block_height) {
     m_init_block_hgt_list.emplace_back(merger_id, block_height);
+  }
+
+  json getAllMergerInfoJson() {
+    json merger_list = json::array();
+
+    for (auto &merger : m_merger_info) {
+      json merger_data;
+      merger_data["mID"] = TypeConverter::encodeBase64(merger.second.id);
+      merger_data["ip"] = merger.second.address;
+      merger_data["port"] = merger.second.port;
+      merger_data["mCert"] = merger.second.cert;
+
+      merger_list.emplace_back(merger_data);
+    }
+    return merger_list;
+  }
+
+  json getAllSeInfoJson() {
+    json se_list = json::array();
+
+    for (auto &se : m_se_info) {
+      json se_data;
+      se_data["seID"] = TypeConverter::encodeBase64(se.second.id);
+      se_data["ip"] = se.second.address;
+      se_data["port"] = se.second.port;
+      se_data["seCert"] = se.second.cert;
+
+      se_list.emplace_back(se_data);
+    }
+    return se_list;
   }
 
   TrackerInfo getTrackerInfo() { return m_tracker_info; }
