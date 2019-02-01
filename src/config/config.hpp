@@ -62,6 +62,7 @@ const std::string DB_SUB_DIR_TRANSACTION = "transaction";
 const std::string DB_SUB_DIR_IDHEIGHT = "blockid_height";
 const std::string DB_SUB_DIR_LEDGER = "ledger";
 const std::string DB_SUB_DIR_BACKUP = "backup";
+const std::string DB_SUB_DIR_MERGER_INFO = "merger_info";
 
 // clang-format on
 
