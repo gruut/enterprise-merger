@@ -35,7 +35,8 @@ public:
     ("dbpath", "Location where LevelDB stores data", cxxopts::value<string>()->default_value(config::DEFAULT_DB_PATH))
     ("dbclear", "To wipe out the existing LevelDB")
     ("dbcheck", "To perform DB health check before running")
-    ("disableTK", "Not to access to the tracker");
+    ("disableTK", "Not to access to the tracker")
+    ("txforward", "To forward MSG_TX to appropriate merger");
     // clang-format on
 
     if (argc == 1) {
@@ -134,6 +135,11 @@ public:
       if (result.count("disableTK")) {
         setting->setDisableTracker();
         CLOG(INFO, "ARGV") << "MERGER DOES NOT ACCESS TO TRACKER.";
+      }
+
+      if (result.count("txforward")) {
+        setting->setTxForward();
+        CLOG(INFO, "ARGV") << "MSG_TX FORWARD IS ENABLED.";
       }
 
     } catch (json::parse_error &e) {

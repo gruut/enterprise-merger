@@ -41,8 +41,7 @@ private:
   void turnOnTimer();
   void checkBpJob();
 
-  void forwardMessage(merger_id_type &block_producer,
-                      InputMsgEntry &input_message);
+  void forwardMessage(InputMsgEntry &input_message);
 
   std::vector<merger_id_type> m_block_producers;
 
@@ -57,6 +56,7 @@ private:
 
   Storage *m_storage;
   CertificatePool *m_cert_pool;
+  Setting *m_setting;
 
   std::map<id_type, std::string> m_cert_map;
 

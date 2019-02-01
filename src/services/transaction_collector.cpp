@@ -11,6 +11,7 @@ TransactionCollector::TransactionCollector() {
 
   m_cert_pool = CertificatePool::getInstance();
   m_storage = Storage::getInstance();
+  m_setting = Setting::getInstance();
 
   auto &io_service = Application::app().getIoService();
 
@@ -24,10 +25,7 @@ void TransactionCollector::handleMessage(InputMsgEntry &input_message) {
   if (!isRunnable()) {
     // CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
 
-    if (!m_current_block_producers.empty()) {
-      forwardMessage(m_current_block_producers[0], input_message);
-    }
-
+    forwardMessage(input_message);
     return;
   }
 
@@ -126,13 +124,16 @@ void TransactionCollector::checkBpJob() {
   }
 }
 
-void TransactionCollector::forwardMessage(merger_id_type &block_producer,
-                                          InputMsgEntry &input_message) {
+
+void TransactionCollector::forwardMessage(InputMsgEntry &input_message) {
+
+  if (m_current_block_producers.empty() || !m_setting->getTxForward())
+    return;
 
   OutputMsgEntry output_msg;
   output_msg.type = input_message.type;
   output_msg.body = input_message.body;
-  output_msg.receivers = {block_producer};
+  output_msg.receivers = {m_current_block_producers[0]};
 
   m_msg_proxy.deliverOutputMessage(output_msg);
 }
