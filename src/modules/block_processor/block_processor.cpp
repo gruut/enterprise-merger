@@ -229,8 +229,7 @@ void BlockProcessor::handleMsgRequestHeader(InputMsgEntry &entry) {
   }
 
   if (!found_block) {
-    CLOG(ERROR, "BPRO") << "No such block (height=" << req_block_height
-                        << ")";
+    CLOG(ERROR, "BPRO") << "No such block (height=" << req_block_height << ")";
     sendErrorMessage(ErrorMsgType::NO_SUCH_BLOCK, sender_id);
     return;
   }

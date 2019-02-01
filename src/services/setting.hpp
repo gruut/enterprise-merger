@@ -173,6 +173,7 @@ private:
   std::vector<MergerInfo> m_mergers;
   bool m_db_check{false};
   bool m_disable_tracker{false};
+  bool m_tx_forward{false};
 
 public:
   Setting()
@@ -197,6 +198,10 @@ public:
   void setDBCheck() { m_db_check = true; }
 
   bool getDBCheck() { return m_db_check; }
+
+  void setTxForward() { m_tx_forward = true; }
+
+  bool getTxForward() { return m_tx_forward; }
 
   bool setJson(json &setting_json) {
     if (!validateSchema(setting_json))
