@@ -100,14 +100,14 @@ void BlockSynchronizer::messageFetch() {
   } break;
 
   case MessageType::MSG_BLOCK: {
-    auto pushed_block_height =
+    auto push_result =
         Application::app().getBlockProcessor().handleMsgBlock(input_msg_entry);
-    if (pushed_block_height > 0) {
+    if (push_result.height > 0) {
 
       std::lock_guard<std::mutex> guard(m_sync_flags_mutex);
 
-      if (pushed_block_height > m_link_from.height) {
-        size_t req_map_size = pushed_block_height - m_link_from.height;
+      if (push_result.height > m_link_from.height) {
+        size_t req_map_size = push_result.height - m_link_from.height;
         if (m_sync_flags.size() < req_map_size)
           m_sync_flags.resize(req_map_size, false);
 

@@ -26,7 +26,6 @@ void TransactionCollector::handleMessage(InputMsgEntry &input_message) {
     // CLOG(ERROR, "TXCO") << "TX dropped (not timing)";
 
     forwardMessage(input_message);
-
     return;
   }
 
