@@ -71,7 +71,8 @@ private:
   void handleMsgReqCheck(InputMsgEntry &entry);
   void handleMsgReqStatus(InputMsgEntry &entry);
   void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
-  void resolveBlocksIf();
+  void procResolvedBlocksIf();
+  void tryResolveUnresolvedBlocksIf();
 
   std::function<std::string(id_type &)> m_get_cert_func;
   std::function<std::string(std::string &, timestamp_t)> m_get_user_cert_func;

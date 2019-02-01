@@ -280,9 +280,10 @@ void UnresolvedBlockPool::getResolvedBlocks(
   resolved_blocks.clear();
   drop_blocks.clear();
 
-  std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
-
+  auto storage = Storage::getInstance();
   size_t num_resolved_block = 0;
+  json del_id_array = json::array();
+  json new_id_array = json::array();
 
   auto resolveBlocksStepByStep =
       [this](std::vector<UnresolvedBlock> &resolved_blocks,
@@ -360,22 +361,17 @@ void UnresolvedBlockPool::getResolvedBlocks(
         }
       };
 
+  std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
+
   do {
     num_resolved_block = resolved_blocks.size();
     resolveBlocksStepByStep(resolved_blocks, drop_blocks);
   } while (num_resolved_block < resolved_blocks.size());
 
-  m_push_mutex.unlock();
-
-  auto storage = Storage::getInstance();
-
   json id_array = readBackupIds();
 
   if (id_array.empty() || !id_array.is_array())
     return;
-
-  json del_id_array = json::array();
-  json new_id_array = json::array();
 
   for (auto &each_block_id : drop_blocks) {
     del_id_array.push_back(each_block_id);
@@ -411,6 +407,8 @@ void UnresolvedBlockPool::getResolvedBlocks(
   }
 
   storage->flushBackup();
+
+  m_push_mutex.unlock();
 }
 
 nth_link_type UnresolvedBlockPool::getUnresolvedLowestLink() {

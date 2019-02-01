@@ -273,6 +273,7 @@ unblk_push_result_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   if (ret_result.duplicated) {
     CLOG(ERROR, "BPRO") << "Block dropped (duplicated)";
+    tryResolveUnresolvedBlocksIf();
     return ret_result;
   }
 
@@ -312,17 +313,19 @@ unblk_push_result_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
     msg_chain_info.body["mSig"] = "";
 
     m_msg_proxy.deliverOutputMessage(msg_chain_info);
+
+    procResolvedBlocksIf();
   }
 
   Application::app().getTransactionPool().removeDuplicatedTransactions(
       recv_block.getTxIds());
 
-  resolveBlocksIf();
+  tryResolveUnresolvedBlocksIf();
 
   return ret_result;
 }
 
-void BlockProcessor::resolveBlocksIf() {
+void BlockProcessor::procResolvedBlocksIf() {
   std::vector<UnresolvedBlock> resolved_blocks;
   std::vector<std::string> drop_blocks;
 
@@ -356,7 +359,9 @@ void BlockProcessor::resolveBlocksIf() {
                          << ",#ssig=" << each_block.block.getNumSSigs() << ")";
     }
   }
+}
 
+void BlockProcessor::tryResolveUnresolvedBlocksIf() {
   nth_link_type unresolved_block =
       m_unresolved_block_pool.getUnresolvedLowestLink();
   if (unresolved_block.height > 0) {

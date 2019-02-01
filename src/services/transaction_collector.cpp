@@ -124,7 +124,6 @@ void TransactionCollector::checkBpJob() {
   }
 }
 
-
 void TransactionCollector::forwardMessage(InputMsgEntry &input_message) {
 
   if (m_current_block_producers.empty() || !m_setting->getTxForward())
