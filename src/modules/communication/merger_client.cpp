@@ -55,46 +55,8 @@ void MergerClient::accessToTracker() {
   if (response_msg.find("merger") != response_msg.end() &&
       response_msg.find("se") != response_msg.end()) {
 
-    auto cert_pool = CertificatePool::getInstance();
-
-    for (auto &merger : response_msg["merger"]) {
-      string merger_id_b64 = Safe::getString(merger, "mID");
-      merger_id_type merger_id = TypeConverter::decodeBase64(merger_id_b64);
-      auto block_height = Safe::getInt(merger, "hgt");
-      m_conn_manager->setMergerBlockHgt(merger_id, block_height);
-
-      if (m_conn_manager->hasMergerInfo(merger_id) ||
-          merger_id_b64 == my_id_b64)
-        continue;
-
-      MergerInfo merger_info;
-      merger_info.id = merger_id;
-      merger_info.address = Safe::getString(merger, "ip");
-      merger_info.port = Safe::getString(merger, "port");
-      merger_info.cert = Safe::getString(merger, "mCert");
-
-      cert_pool->pushCert(merger_id, merger_info.cert);
-
-      m_conn_manager->setMergerInfo(merger_info, true);
-    }
-
-    for (auto &se : response_msg["se"]) {
-      ServiceEndpointInfo se_info;
-      string se_id_b64 = Safe::getString(se, "seID");
-      servend_id_type se_id = TypeConverter::decodeBase64(se_id_b64);
-
-      if (m_conn_manager->hasSeInfo(se_id))
-        continue;
-
-      se_info.id = se_id;
-      se_info.address = Safe::getString(se, "ip");
-      se_info.port = Safe::getString(se, "port");
-      se_info.cert = Safe::getString(se, "seCert");
-
-      cert_pool->pushCert(se_id, se_info.cert);
-
-      m_conn_manager->setSeInfo(se_info, true);
-    }
+    m_conn_manager->setMultiMergerInfo(response_msg["merger"]);
+    m_conn_manager->setMultiSeInfo(response_msg["se"]);
   }
 
   auto merger_list = m_conn_manager->getAllMergerInfo();

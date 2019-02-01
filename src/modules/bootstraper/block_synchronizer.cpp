@@ -252,10 +252,6 @@ void BlockSynchronizer::sendRequestStatus() {
   msg_req_status.type = MessageType::MSG_REQ_STATUS;
   msg_req_status.body["mID"] = TypeConverter::encodeBase64(m_my_id); // my_id
   msg_req_status.body["time"] = Time::now();
-  msg_req_status.body["mCert"] = "";
-  msg_req_status.body["hgt"] = m_link_from.height;
-  msg_req_status.body["hash"] = TypeConverter::encodeBase64(m_link_from.hash);
-  msg_req_status.body["mSig"] = "";
   msg_req_status.receivers = {};
 
   CLOG(INFO, "BSYN") << "send MSG_REQ_STATUS";

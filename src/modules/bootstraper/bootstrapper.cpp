@@ -19,9 +19,10 @@ void Bootstrapper::start() {
 
 void Bootstrapper::sendMsgUp() {
   CLOG(INFO, "BOOT") << "send MSG_UP";
+
   auto setting = Setting::getInstance();
   OutputMsgEntry output_msg;
-  // TODO : Message에 항목은 변경 될 수 있습니다.
+
   output_msg.type = MessageType::MSG_UP;
   output_msg.body["mID"] = TypeConverter::encodeBase64(m_my_id);
   output_msg.body["time"] = Time::now();

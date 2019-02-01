@@ -305,6 +305,9 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
     output_msg.body["cID"] = m_my_cid_b64;
     output_msg.body["time"] = Time::now();
     output_msg.body["val"] = true;
+    output_msg.body["merger"] = m_conn_manager->getAllMergerInfoJson();
+    output_msg.body["se"] = m_conn_manager->getAllSeInfoJson();
+
     output_msg.receivers = {merger_id};
 
     MessageProxy msg_proxy;
@@ -314,9 +317,20 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
   case MessageType::MSG_WELCOME: {
     bool val = Safe::getBoolean(msg.body, "val");
-    if (val) {
-      CLOG(INFO, "BPSC") << "WELCOME! [" << merger_id_b64 << "]";
-      m_welcome = true;
+    if (!val) {
+      CLOG(INFO, "BPSC") << "COULD NOT JOIN MERGER NET [" << merger_id_b64
+                         << "]";
+      break;
+    }
+
+    CLOG(INFO, "BPSC") << "WELCOME! [" << merger_id_b64 << "]";
+    m_welcome = true;
+
+    if (msg.body.find("merger") != msg.body.end() &&
+        msg.body.find("se") != msg.body.end()) {
+
+      m_conn_manager->setMultiMergerInfo(msg.body["merger"]);
+      m_conn_manager->setMultiSeInfo(msg.body["se"]);
     }
 
   } break;
