@@ -4,17 +4,26 @@
 #include "../../services/setting.hpp"
 #include "../../utils/template_singleton.hpp"
 #include "../../utils/type_converter.hpp"
+
 #include <algorithm>
 #include <atomic>
+#include <boost/filesystem.hpp>
+#include <iostream>
 #include <map>
 #include <mutex>
 #include <thread>
+
+using namespace boost::filesystem;
 
 namespace gruut {
 
 class ConnManager : public TemplateSingleton<ConnManager> {
 public:
-  ConnManager() = default;
+  ConnManager() {
+    m_setting = Setting::getInstance();
+    m_merger_info_path =
+        m_setting->getMyDbPath() + "/" + config::DB_SUB_DIR_MERGER_INFO;
+  }
 
   void setTrackerInfo(TrackerInfo &tracker_info, bool conn_status = false) {
     std::string tk_id_b64 = TypeConverter::encodeBase64(tracker_info.id);
@@ -69,8 +78,8 @@ public:
   void setMultiMergerInfo(json &merger_list) {
 
     auto cert_pool = CertificatePool::getInstance();
-    auto setting = Setting::getInstance();
-    std::string my_id_b64 = TypeConverter::encodeBase64(setting->getMyId());
+
+    std::string my_id_b64 = TypeConverter::encodeBase64(m_setting->getMyId());
     for (auto &merger : merger_list) {
 
       std::string merger_id_b64 = Safe::getString(merger, "mID");
@@ -244,7 +253,37 @@ public:
 
   void clearBlockHgtList() { m_init_block_hgt_list.clear(); }
 
+  void readMergerInfo() {
+
+    if (exists(m_merger_info_path))
+      return;
+
+    json merger_list = json::array();
+    for (const auto &entry : directory_iterator(m_merger_info_path)) {
+      std::ifstream ifs(entry.path().string());
+      json merger_info = json::parse(ifs);
+
+      merger_list.emplace_back(merger_info);
+    }
+    setMultiMergerInfo(merger_list);
+  }
+
+  void writeMergerInfo(json &merger_info) {
+
+    if (!exists(m_merger_info_path))
+      create_directories(m_merger_info_path);
+
+    std::string merger_id_b64 = Safe::getString(merger_info, "mID");
+    std::string file_name = m_merger_info_path + "/" + merger_id_b64 + ".json";
+
+    std::ofstream ofs(file_name);
+    ofs << merger_info;
+  }
+
 private:
+  Setting *m_setting;
+  std::string m_merger_info_path;
+
   TrackerInfo m_tracker_info;
   std::map<string, MergerInfo> m_merger_info;
   std::map<string, ServiceEndpointInfo> m_se_info;
