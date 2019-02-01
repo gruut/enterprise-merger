@@ -89,7 +89,8 @@ void BpScheduler::reschedule() {
   }
 
   size_t my_pos = 0;
-  std::vector<std::tuple<merger_id_type, BpStatus, BpStatus>> possible_merger_list;
+  std::vector<std::tuple<merger_id_type, BpStatus, BpStatus>>
+      possible_merger_list;
   bool is_all_idle = true;
   for (BpRecvStatusInfo &item : m_recv_status) {
     size_t time_slot = std::get<1>(item);
@@ -134,7 +135,7 @@ void BpScheduler::reschedule() {
       m_current_status = BpStatus::IDLE;
 
     m_block_producers.emplace_back(std::get<0>(possible_merger_list[0]));
-    if(num_possible_mergers >= 2){
+    if (num_possible_mergers >= 2) {
       m_block_producers.emplace_back(std::get<0>(possible_merger_list[1]));
     }
 
@@ -167,14 +168,15 @@ void BpScheduler::reschedule() {
     }
   }
 
-
   // step 2) find SECONDARY
 
   size_t secondary_pos = (primary_pos + 1) % num_possible_mergers;
   std::get<2>(possible_merger_list[secondary_pos]) = BpStatus::SECONDARY;
 
-  m_block_producers.emplace_back(std::get<0>(possible_merger_list[primary_pos]));
-  m_block_producers.emplace_back(std::get<0>(possible_merger_list[secondary_pos]));
+  m_block_producers.emplace_back(
+      std::get<0>(possible_merger_list[primary_pos]));
+  m_block_producers.emplace_back(
+      std::get<0>(possible_merger_list[secondary_pos]));
 
   // step 3) all others will be IDLE
 
@@ -230,8 +232,8 @@ void BpScheduler::sendPingMessage() {
   updateRecvStatus(m_my_mid, current_slot, m_current_status);
 }
 
-void BpScheduler::updateRecvStatus(const merger_id_type &merger_id, size_t timeslot,
-                                   BpStatus stat) {
+void BpScheduler::updateRecvStatus(const merger_id_type &merger_id,
+                                   size_t timeslot, BpStatus stat) {
 
   // NO-BAKGGU table!
 
@@ -265,7 +267,8 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
     return; // wrong chain
 
   std::string merger_id_b64 = Safe::getString(msg.body, "mID");
-  merger_id_type merger_id = Safe::getBytesFromB64<merger_id_type>(msg.body, "mID");
+  merger_id_type merger_id =
+      Safe::getBytesFromB64<merger_id_type>(msg.body, "mID");
   timestamp_t merger_time = Safe::getTime(msg.body, "time");
   size_t timeslot = merger_time / config::BP_INTERVAL;
 

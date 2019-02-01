@@ -233,7 +233,8 @@ bool UnresolvedBlockPool::getBlock(block_height_type t_height,
   return is_some;
 }
 
-bool UnresolvedBlockPool::getBlock(block_height_type t_height, Block &ret_block) {
+bool UnresolvedBlockPool::getBlock(block_height_type t_height,
+                                   Block &ret_block) {
   std::lock_guard<std::recursive_mutex> guard(m_push_mutex);
 
   if (m_block_pool.empty()) {
@@ -255,15 +256,16 @@ bool UnresolvedBlockPool::getBlock(block_height_type t_height, Block &ret_block)
   if (bin_pos < 0) // something wrong
     return false;
 
-  auto it = std::find_if(m_block_pool[bin_pos].begin(), m_block_pool[bin_pos].end(), [&t_height](UnresolvedBlock &unresolvedBlock) {
-    return unresolvedBlock.block.getHeight() == t_height;
-  });
+  auto it =
+      std::find_if(m_block_pool[bin_pos].begin(), m_block_pool[bin_pos].end(),
+                   [&t_height](UnresolvedBlock &unresolvedBlock) {
+                     return unresolvedBlock.block.getHeight() == t_height;
+                   });
 
-  if(it != m_block_pool[bin_pos].end()) {
+  if (it != m_block_pool[bin_pos].end()) {
     ret_block = (*it).block;
     return true;
-  }
-  else {
+  } else {
     return false;
   }
 }
