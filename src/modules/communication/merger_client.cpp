@@ -56,6 +56,9 @@ void MergerClient::accessToTracker() {
       response_msg.find("se") != response_msg.end()) {
 
     m_conn_manager->setMultiMergerInfo(response_msg["merger"]);
+    for(auto& merger_info : response_msg["merger"])
+      m_conn_manager->writeMergerInfo(merger_info);
+
     m_conn_manager->setMultiSeInfo(response_msg["se"]);
   }
 
