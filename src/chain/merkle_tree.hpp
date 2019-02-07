@@ -17,7 +17,7 @@ using namespace gruut::config;
 namespace gruut {
 
 // clang-format off
-const std::map<std::string, std::string> HASH_LOOKUP = {
+const std::map<std::string, std::string> HASH_LOOKUP_B64 = {
     {"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==", "9aX9QtFqIDAnmO9u0wmXm0MAPSMg2fDo6pgxqSdZ+0s="}, // 1
     {"9aX9QtFqIDAnmO9u0wmXm0MAPSMg2fDo6pgxqSdZ+0v1pf1C0WogMCeY727TCZebQwA9IyDZ8OjqmDGpJ1n7Sw==", "21YRTgD91MH4XIkr81rJqJKJquyx69CpbN5ganSLXXE="}, // 2
     {"21YRTgD91MH4XIkr81rJqJKJquyx69CpbN5ganSLXXHbVhFOAP3UwfhciSvzWsmokomq7LHr0Kls3mBqdItdcQ==", "x4AJ/fB/xWoR8SI3BlijU6qlQu1j5ExLwV/0zRBaszw="}, // 3
@@ -30,6 +30,8 @@ const std::map<std::string, std::string> HASH_LOOKUP = {
     {"UG2GWC0lJAW4QAGHksrSvxJZ8e9apfiH4Tyy8AlPUeFQbYZYLSUkBbhAAYeSytK/Elnx71ql+IfhPLLwCU9R4Q==", "//8K1+ZZdy+VNMGVyBXvxAFO8eHa7UQEwGOF0RGS6Ss="}, // 10
     {"//8K1+ZZdy+VNMGVyBXvxAFO8eHa7UQEwGOF0RGS6Sv//wrX5ll3L5U0wZXIFe/EAU7x4drtRATAY4XREZLpKw==", "bPBBJ9sFRBzYMxB6Ur6FKGiJDkMX5qAqtHaDqnWWQiA="} // 11
 };
+
+static std::map<bytes, hash_t> HASH_LOOKUP = {};
 // clang-format on
 
 class MerkleTree {
@@ -130,19 +132,21 @@ public:
 private:
   void prepareLookUpTable() {
     m_merkle_tree.resize(MAX_MERKLE_LEAVES * 2 - 1);
-    for (auto &hash_entry : HASH_LOOKUP) {
-      hash_t hash_val =
-          static_cast<hash_t>(TypeConverter::decodeBase64(hash_entry.second));
-      m_hash_lookup.emplace(hash_entry.first, hash_val);
+
+    if (HASH_LOOKUP.size() != HASH_LOOKUP_B64.size()) {
+      HASH_LOOKUP.clear();
+      for (auto &hash_entry : HASH_LOOKUP_B64) {
+        HASH_LOOKUP.emplace(TypeConverter::decodeBase64(hash_entry.first),
+                            TypeConverter::decodeBase64(hash_entry.second));
+      }
     }
   }
 
   hash_t makeParent(hash_t left, hash_t &right) {
     left.insert(left.cend(), right.cbegin(), right.cend());
-    std::string lookup_key = TypeConverter::encodeBase64(left);
 
-    auto it_map = m_hash_lookup.find(lookup_key);
-    if (it_map != m_hash_lookup.end()) {
+    auto it_map = HASH_LOOKUP.find(left);
+    if (it_map != HASH_LOOKUP.end()) {
       return it_map->second;
     } else {
       return Sha256::hash(left);
@@ -157,7 +161,6 @@ private:
   }
 
   vector<hash_t> m_merkle_tree;
-  std::map<std::string, hash_t> m_hash_lookup;
 };
 } // namespace gruut
 
