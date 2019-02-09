@@ -30,12 +30,13 @@
 
 namespace gruut {
 
-struct BlockRequestRecord {
+struct BlockRequest {
   std::string hash_b64;
   std::string prev_hash_b64;
   block_height_type height;
   id_type recv_id;
   timestamp_t request_time;
+  int num_retry;
 };
 
 class BlockProcessor : public Module {
@@ -46,7 +47,7 @@ private:
   std::string m_my_id_b64;
   std::string m_my_chain_id_b64;
   UnresolvedBlockPool m_unresolved_block_pool;
-  std::list<BlockRequestRecord> m_request_list;
+  std::list<BlockRequest> m_request_list;
   std::recursive_mutex m_request_mutex;
 
   PeriodicTask m_task_scheduler;
