@@ -51,6 +51,10 @@ private:
 
   PeriodicTask m_task_scheduler;
 
+  std::function<std::string(id_type &)> m_get_cert_func;
+  std::function<std::string(std::string &, timestamp_t)> m_get_user_cert_func;
+  merger_id_type m_last_block_sender;
+
 public:
   BlockProcessor();
   ~BlockProcessor() = default;
@@ -65,7 +69,7 @@ public:
   bool hasUnresolvedBlocks();
 
 private:
-  void periodicTask();
+  void requestMissingBlock();
   void handleMsgReqBlock(InputMsgEntry &entry);
   void handleMsgRequestHeader(InputMsgEntry &entry);
   void handleMsgReqCheck(InputMsgEntry &entry);
@@ -73,9 +77,6 @@ private:
   void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
   void procResolvedBlocksIf();
   void tryResolveUnresolvedBlocksIf();
-
-  std::function<std::string(id_type &)> m_get_cert_func;
-  std::function<std::string(std::string &, timestamp_t)> m_get_user_cert_func;
 };
 } // namespace gruut
 

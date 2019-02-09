@@ -37,13 +37,13 @@ void BlockProcessor::start() {
 
   m_unresolved_block_pool.restorePool();
 
-  m_task_scheduler.setTaskFunction([this]() { periodicTask(); });
+  m_task_scheduler.setTaskFunction([this]() { requestMissingBlock(); });
   m_task_scheduler.setInterval(config::BROC_PROCESSOR_TASK_INTERVAL);
   m_task_scheduler.setStrandMod();
   m_task_scheduler.runTask();
 }
 
-void BlockProcessor::periodicTask() {
+void BlockProcessor::requestMissingBlock() {
   timestamp_t current_time = Time::now_int();
   std::vector<BlockRequestRecord> request_this_time;
 
@@ -74,7 +74,7 @@ void BlockProcessor::periodicTask() {
     msg_req_block.body["mSig"] = "";
 
     if (each_request.recv_id.empty())
-      msg_req_block.receivers = {};
+      msg_req_block.receivers = {m_last_block_sender};
     else
       msg_req_block.receivers = {each_request.recv_id};
 
@@ -292,6 +292,9 @@ unblk_push_result_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
   }
 
   m_request_mutex.unlock();
+
+  m_last_block_sender =
+      Safe::getBytesFromB64<merger_id_type>(entry.body, "mID");
 
   if (ret_result.linked) {
     auto possible_link = getMostPossibleLink();
