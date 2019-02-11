@@ -30,12 +30,13 @@
 
 namespace gruut {
 
-struct BlockRequestRecord {
+struct BlockRequest {
   std::string hash_b64;
   std::string prev_hash_b64;
   block_height_type height;
   id_type recv_id;
   timestamp_t request_time;
+  int num_retry;
 };
 
 class BlockProcessor : public Module {
@@ -46,10 +47,14 @@ private:
   std::string m_my_id_b64;
   std::string m_my_chain_id_b64;
   UnresolvedBlockPool m_unresolved_block_pool;
-  std::list<BlockRequestRecord> m_request_list;
+  std::list<BlockRequest> m_request_list;
   std::recursive_mutex m_request_mutex;
 
   PeriodicTask m_task_scheduler;
+
+  std::function<std::string(id_type &)> m_get_cert_func;
+  std::function<std::string(std::string &, timestamp_t)> m_get_user_cert_func;
+  merger_id_type m_last_block_sender;
 
 public:
   BlockProcessor();
@@ -65,7 +70,7 @@ public:
   bool hasUnresolvedBlocks();
 
 private:
-  void periodicTask();
+  void requestMissingBlock();
   void handleMsgReqBlock(InputMsgEntry &entry);
   void handleMsgRequestHeader(InputMsgEntry &entry);
   void handleMsgReqCheck(InputMsgEntry &entry);
@@ -73,9 +78,6 @@ private:
   void sendErrorMessage(ErrorMsgType t_error_typem, id_type &recv_id);
   void procResolvedBlocksIf();
   void tryResolveUnresolvedBlocksIf();
-
-  std::function<std::string(id_type &)> m_get_cert_func;
-  std::function<std::string(std::string &, timestamp_t)> m_get_user_cert_func;
 };
 } // namespace gruut
 

@@ -37,15 +37,15 @@ void BlockProcessor::start() {
 
   m_unresolved_block_pool.restorePool();
 
-  m_task_scheduler.setTaskFunction([this]() { periodicTask(); });
-  m_task_scheduler.setInterval(config::BROC_PROCESSOR_TASK_INTERVAL);
+  m_task_scheduler.setTaskFunction([this]() { requestMissingBlock(); });
+  m_task_scheduler.setInterval(config::BROC_PROC_REQUEST_MISSING_INTERVAL);
   m_task_scheduler.setStrandMod();
   m_task_scheduler.runTask();
 }
 
-void BlockProcessor::periodicTask() {
+void BlockProcessor::requestMissingBlock() {
   timestamp_t current_time = Time::now_int();
-  std::vector<BlockRequestRecord> request_this_time;
+  std::vector<BlockRequest> request_this_time;
 
   std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
 
@@ -53,8 +53,19 @@ void BlockProcessor::periodicTask() {
     if (current_time > each_request.request_time &&
         current_time >
             config::BROC_PROCESSOR_REQ_WAIT + each_request.request_time) {
-      request_this_time.emplace_back(each_request);
       each_request.request_time = current_time;
+
+      if (each_request.num_retry <= config::MAX_UNICAST_MISSING_BLOCK &&
+          each_request.recv_id != m_last_block_sender)
+        each_request.recv_id = m_last_block_sender;
+
+      if (each_request.num_retry > config::MAX_UNICAST_MISSING_BLOCK &&
+          !each_request.recv_id.empty())
+        each_request.recv_id.clear();
+
+      ++each_request.num_retry;
+
+      request_this_time.emplace_back(each_request);
     }
   }
 
@@ -293,6 +304,9 @@ unblk_push_result_type BlockProcessor::handleMsgBlock(InputMsgEntry &entry) {
 
   m_request_mutex.unlock();
 
+  m_last_block_sender =
+      Safe::getBytesFromB64<merger_id_type>(entry.body, "mID");
+
   if (ret_result.linked) {
     auto possible_link = getMostPossibleLink();
 
@@ -369,13 +383,14 @@ void BlockProcessor::tryResolveUnresolvedBlocksIf() {
     // TODO : use tracker's information, broadcast can cause a lot of block
     // droppings
 
-    BlockRequestRecord new_request;
+    BlockRequest new_request;
     new_request.height = unresolved_block.height;
     new_request.recv_id = id_type();
     new_request.hash_b64 = "";
     new_request.prev_hash_b64 =
         TypeConverter::encodeBase64(unresolved_block.prev_hash);
     new_request.request_time = 0;
+    new_request.num_retry = 0;
 
     std::lock_guard<std::recursive_mutex> guard(m_request_mutex);
     bool is_unique_request = true;
