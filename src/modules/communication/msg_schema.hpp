@@ -172,8 +172,11 @@ const json SCHEMA_WELCOME = R"({
   },
   "required": [
     "mID",
+    "cID",
     "time",
-    "val"
+    "val",
+    "merger",
+    "se"
   ]
 })"_json;
 const json SCHEMA_BLOCK = R"({

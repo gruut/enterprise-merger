@@ -77,8 +77,11 @@ const std::vector<std::tuple<MessageType, std::string, EntryType, EntryLength>> 
     {MessageType::MSG_UP, "port", EntryType::STRING, EntryLength::NOT_LIMITED},
 
     {MessageType::MSG_WELCOME, "mID", EntryType::BASE64, EntryLength::ID},
+    {MessageType::MSG_WELCOME, "cID", EntryType ::BASE64, EntryLength::ID},
     {MessageType::MSG_WELCOME, "time", EntryType::TIMESTAMP_NOW, EntryLength::NOT_LIMITED},
     {MessageType::MSG_WELCOME, "val", EntryType::BOOL, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_WELCOME, "merger", EntryType::ARRAYOFOBJECT, EntryLength::NOT_LIMITED},
+    {MessageType::MSG_WELCOME, "se", EntryType::ARRAYOFOBJECT, EntryLength::NOT_LIMITED},
 
     {MessageType::MSG_REQ_CHECK, "sender", EntryType::BASE64, EntryLength::ID},
     {MessageType::MSG_REQ_CHECK, "time", EntryType::TIMESTAMP_NOW, EntryLength::NOT_LIMITED},
