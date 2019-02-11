@@ -255,7 +255,7 @@ public:
 
   void readMergerInfo() {
 
-    if (exists(m_merger_info_path))
+    if (!exists(m_merger_info_path))
       return;
 
     json merger_list = json::array();

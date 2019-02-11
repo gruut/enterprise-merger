@@ -331,9 +331,11 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
         msg.body.find("se") != msg.body.end()) {
 
       m_conn_manager->setMultiMergerInfo(msg.body["merger"]);
-      for(auto &merger_info : msg.body["merger"])
+      for (auto &merger_info : msg.body["merger"]) {
+        if (m_my_mid_b64 == merger_id_b64)
+          continue;
         m_conn_manager->writeMergerInfo(merger_info);
-
+      }
       m_conn_manager->setMultiSeInfo(msg.body["se"]);
     }
 
