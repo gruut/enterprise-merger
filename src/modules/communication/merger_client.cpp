@@ -56,6 +56,15 @@ void MergerClient::accessToTracker() {
       response_msg.find("se") != response_msg.end()) {
 
     m_conn_manager->setMultiMergerInfo(response_msg["merger"]);
+    for (auto &merger_info : response_msg["merger"]) {
+      std::string merger_id_b64 = Safe::getString(merger_info, "mID");
+      if (my_id_b64 == merger_id_b64)
+        continue;
+
+      merger_info.erase("hgt");
+      m_conn_manager->writeMergerInfo(merger_info);
+    }
+
     m_conn_manager->setMultiSeInfo(response_msg["se"]);
   }
 
@@ -184,6 +193,8 @@ void MergerClient::sendToSE(std::vector<id_type> &receiver_list,
     }
   } else {
     for (auto &receiver_id : receiver_list) {
+      if (!m_conn_manager->hasSeInfo(receiver_id))
+        continue;
       auto service_endpoint = m_conn_manager->getSeInfo(receiver_id);
       if (service_endpoint.conn_status) {
         std::string address =
