@@ -268,10 +268,16 @@ public:
     setMultiMergerInfo(merger_list);
   }
 
-  void writeMergerInfo() {
+  void writeMergerInfo(json &merger_info) {
 
     if (!exists(m_merger_info_path))
       create_directories(m_merger_info_path);
+
+    std::string merger_id_b64 = Safe::getString(merger_info, "mID");
+    std::string file_name = m_merger_info_path + "/" + merger_id_b64 + ".json";
+
+    std::ofstream ofs(file_name);
+    ofs << merger_info;
   }
 
 private:

@@ -296,6 +296,7 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
     merger_info.port = Safe::getString(msg.body, "port");
     merger_info.cert = Safe::getString(msg.body, "mCert");
     m_conn_manager->setMergerInfo(merger_info, true);
+    m_conn_manager->writeMergerInfo(msg.body);
 
     updateRecvStatus(merger_id, timeslot, BpStatus::IN_BOOT_WAIT);
 
@@ -330,6 +331,9 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
         msg.body.find("se") != msg.body.end()) {
 
       m_conn_manager->setMultiMergerInfo(msg.body["merger"]);
+      for(auto &merger_info : msg.body["merger"])
+        m_conn_manager->writeMergerInfo(merger_info);
+
       m_conn_manager->setMultiSeInfo(msg.body["se"]);
     }
 

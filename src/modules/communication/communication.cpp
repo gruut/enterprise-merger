@@ -61,5 +61,7 @@ void Communication::setUpConnList() {
   for (auto &se_info : se_list) {
     conn_manager->setSeInfo(se_info, true);
   }
+
+  conn_manager->readMergerInfo();
 }
 } // namespace gruut
