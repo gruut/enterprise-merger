@@ -61,6 +61,7 @@ void MergerClient::accessToTracker() {
       if (my_id_b64 == merger_id_b64)
         continue;
 
+      merger_info.erase("hgt");
       m_conn_manager->writeMergerInfo(merger_info);
     }
 

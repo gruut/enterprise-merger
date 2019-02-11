@@ -296,6 +296,10 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
     merger_info.port = Safe::getString(msg.body, "port");
     merger_info.cert = Safe::getString(msg.body, "mCert");
     m_conn_manager->setMergerInfo(merger_info, true);
+
+    msg.body.erase("time");
+    msg.body.erase("ver");
+    msg.body.erase("cID");
     m_conn_manager->writeMergerInfo(msg.body);
 
     updateRecvStatus(merger_id, timeslot, BpStatus::IN_BOOT_WAIT);
@@ -334,6 +338,7 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
       for (auto &merger_info : msg.body["merger"]) {
         if (m_my_mid_b64 == merger_id_b64)
           continue;
+
         m_conn_manager->writeMergerInfo(merger_info);
       }
       m_conn_manager->setMultiSeInfo(msg.body["se"]);

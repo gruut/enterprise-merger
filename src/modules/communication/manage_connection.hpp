@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <atomic>
 #include <boost/filesystem.hpp>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <mutex>
@@ -277,7 +278,7 @@ public:
     std::string file_name = m_merger_info_path + "/" + merger_id_b64 + ".json";
 
     std::ofstream ofs(file_name);
-    ofs << merger_info;
+    ofs << std::setw(4) << merger_info << std::endl;
   }
 
 private:
