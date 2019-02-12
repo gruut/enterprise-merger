@@ -336,7 +336,8 @@ void BpScheduler::handleMessage(InputMsgEntry &msg) {
 
       m_conn_manager->setMultiMergerInfo(msg.body["merger"]);
       for (auto &merger_info : msg.body["merger"]) {
-        if (m_my_mid_b64 == merger_id_b64)
+        std::string merger_info_id_b64 = Safe::getString(merger_info, "mID");
+        if (m_my_mid_b64 == merger_info_id_b64)
           continue;
 
         m_conn_manager->writeMergerInfo(merger_info);
