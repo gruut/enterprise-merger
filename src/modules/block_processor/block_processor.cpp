@@ -246,7 +246,7 @@ void BlockProcessor::handleMsgRequestHeader(InputMsgEntry &entry) {
   }
 
   OutputMsgEntry msg_header_msg;
-  msg_header_msg.type = MessageType::MSG_REQ_HEADER;
+  msg_header_msg.type = MessageType::MSG_HEADER;
   msg_header_msg.body["blockraw"] = ret_block.getBlockHeaderJson();
   msg_header_msg.receivers = std::vector<id_type>{};
 
