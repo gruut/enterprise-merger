@@ -35,8 +35,8 @@ constexpr size_t MAX_UNICAST_MISSING_BLOCK = 4;
 // TIMING
 
 constexpr size_t SYNC_CONTROL_INTERVAL = 1000;
-constexpr size_t BP_INTERVAL = 10;
-constexpr size_t BP_PING_PERIOD = 4;
+constexpr size_t BP_INTERVAL = 8;
+constexpr size_t BP_PING_PERIOD = 3;
 constexpr size_t BROC_PROC_REQUEST_MISSING_INTERVAL = 500;
 constexpr size_t BROC_PROCESSOR_REQ_WAIT = 3;
 constexpr size_t STATUS_COLLECTING_TIMEOUT = 4000;
