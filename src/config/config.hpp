@@ -25,8 +25,8 @@ constexpr auto DEFAULT_COMPRESSION_TYPE = CompressionAlgorithmType::LZ4;
 constexpr auto DEFAULT_BLOCKRAW_COMP_ALGO = CompressionAlgorithmType::LZ4;
 constexpr size_t MAX_SIGNER_NUM = 200;
 constexpr size_t AVAILABLE_INPUT_SIZE = 1000;
-constexpr size_t MAX_MERKLE_LEAVES = 8192;
-constexpr size_t MAX_COLLECT_TRANSACTION_SIZE = 8192;
+constexpr size_t MAX_MERKLE_LEAVES = 4096;
+constexpr size_t MAX_COLLECT_TRANSACTION_SIZE = 4096;
 constexpr size_t BLOCK_CONFIRM_LEVEL = 3;
 constexpr size_t MIN_SIGNATURE_COLLECT_SIZE = 1;
 constexpr size_t MAX_SIGNATURE_COLLECT_SIZE = 20;
@@ -35,8 +35,8 @@ constexpr size_t MAX_UNICAST_MISSING_BLOCK = 4;
 // TIMING
 
 constexpr size_t SYNC_CONTROL_INTERVAL = 1000;
-constexpr size_t BP_INTERVAL = 5;
-constexpr size_t BP_PING_PERIOD = 2;
+constexpr size_t BP_INTERVAL = 10;
+constexpr size_t BP_PING_PERIOD = 4;
 constexpr size_t BROC_PROC_REQUEST_MISSING_INTERVAL = 500;
 constexpr size_t BROC_PROCESSOR_REQ_WAIT = 3;
 constexpr size_t STATUS_COLLECTING_TIMEOUT = 4000;
