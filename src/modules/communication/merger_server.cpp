@@ -107,6 +107,7 @@ void RecvFromMerger::proceed(bool st) {
   case RpcCallStatus::PROCESS: {
     new RecvFromMerger(m_service, m_completion_queue);
 
+    std::cout<<"test_key : "<<m_context.client_metadata().find("test_key")->second<<std::endl;
     std::async(std::launch::async, [this]() {
       std::string packed_msg = m_request.data();
       Status rpc_status;

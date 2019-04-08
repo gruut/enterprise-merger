@@ -278,6 +278,8 @@ void MergerClient::sendMsgToMerger(MergerInfo &merger_info,
       MergerCommunication::NewStub(channel);
 
   ClientContext context;
+  auto setting = Setting::getInstance();
+  context.AddMetadata("test_key", setting->getMyAddress());
   MergerDataReply reply;
 
   Status status = stub->pushData(&context, request, &reply);
