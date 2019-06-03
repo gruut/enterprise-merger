@@ -1,4 +1,4 @@
-# NLOK'S 307 - Enterprise Merger Project
+# NLOK'S 307 - Enterprise Merger
 [![Build Status](https://travis-ci.com/gruut/enterprise-merger.svg?branch=develop)](https://travis-ci.com/gruut/enterprise-merger)
 
 ### Prerequisite
