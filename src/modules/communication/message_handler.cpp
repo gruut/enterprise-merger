@@ -96,11 +96,16 @@ void MessageHandler::packMsg(OutputMsgEntry &output_msg) {
 }
 
 bool MessageHandler::validateMsgFormat(MessageHeader &header) {
-  // TODO : Message header에서 확인해야 하는 사항이 있을때 추가예정
+  //TODO : version check
   bool check = (header.identifier == G);
+
+  auto setting = Setting::getInstance();
+  auto local_cid = setting->getLocalChainId();
+  check &= (header.local_chain_id == local_cid);
+
   if (header.mac_algo_type == MACAlgorithmType::HMAC) {
-    check &= (header.message_type == MessageType::MSG_SUCCESS ||
-              header.message_type == MessageType::MSG_SSIG);
+	check &= (header.message_type == MessageType::MSG_SUCCESS ||
+		header.message_type == MessageType::MSG_SSIG);
   }
   return check;
 }
